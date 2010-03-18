@@ -54,7 +54,7 @@ TEMPLATE_LOADERS = (
 TEMPLATE_CONTEXT_PROCESSORS = (
     # 'django.contrib.auth.context_processors.auth',
     # 'django.core.context_processors.debug',
-    'django.core.context_processors.media',
+    # 'django.core.context_processors.media',
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
 )
@@ -65,16 +65,18 @@ MIDDLEWARE_CLASSES = (
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
 )
 
-ROOT_URLCONF = 'appengine.urls'
+ROOT_URLCONF = 'urls'
 
+# Find templates in the same folder as settings.py.
+import os.path
+SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
 TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+    os.path.join(SETTINGS_PATH, 'templates'),
 )
 
 INSTALLED_APPS = (
     # 'django.contrib.auth',
+    'django.contrib.humanize',
     'django.contrib.contenttypes',
     # 'django.contrib.sessions',
     # 'django.contrib.sites',
