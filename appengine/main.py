@@ -1,4 +1,5 @@
-import logging, os
+import os
+import logging
 
 # Google App Engine imports.
 from google.appengine.ext.webapp import util
@@ -17,17 +18,10 @@ import django.core.signals
 import django.db
 import django.dispatch.dispatcher
 
+
 def log_exception(*args, **kwds):
     logging.exception('Exception in request:')
 
-# Log errors.
-django.dispatch.dispatcher.connect(
-    log_exception, django.core.signals.got_request_exception)
-
-# Unregister the rollback event handler.
-django.dispatch.dispatcher.disconnect(
-    django.db._rollback_on_exception,
-    django.core.signals.got_request_exception)
 
 def main():
     # Create a Django application for WSGI.
@@ -35,5 +29,14 @@ def main():
     # Run the WSGI CGI handler with that application.
     util.run_wsgi_app(application)
 
+
 if __name__ == '__main__':
+    # Log errors.
+    django.dispatch.dispatcher.connect(
+        log_exception, django.core.signals.got_request_exception)
+    # Unregister the rollback event handler.
+    django.dispatch.dispatcher.disconnect(
+        django.db._rollback_on_exception,
+        django.core.signals.got_request_exception)
+    # Run Django's WSGI handler.
     main()
