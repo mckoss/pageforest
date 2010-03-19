@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block jquery %}
+<script type="text/javascript">
+function success_callback(message, status, xhr) {
+  $('#status').html(status + message);
+}
+
+function error_callback(xhr, status, error) {
+  $('#status').html(status);
+}
+
+function ajax_put() {
+  $.ajax({
+    type: "PUT",
+    url: '/data/bla/',
+    data: {test: 123},
+    dataType: 'json',
+    success: success_callback,
+    error: error_callback,
+  });
+}
+
+function ajax_get() {
+  $.ajax({
+    type: "GET",
+    url: '/data/bla/',
+    dataType: 'json',
+    success: success_callback,
+    error: error_callback,
+  });
+}
+</script>
+{% endblock %}
+
+{% block title %}Data Test{% endblock %}
+
+{% block content %}
+<h1>Data Test</h1>
+
+<p>
+<input type="button" onclick="ajax_put()" value="PUT" />
+<input type="button" onclick="ajax_get()" value="GET" />
+</p>
+
+<p id="status">Status</p>
+{% endblock %}
