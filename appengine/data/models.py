@@ -17,4 +17,5 @@ class KeyValue(db.Model):
     """
     app = db.ReferenceProperty(App)
     value = db.TextProperty()
+    creator_ip = db.StringProperty()
     created = db.DateTimeProperty(auto_now_add=True)
