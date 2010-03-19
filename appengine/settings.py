@@ -1,5 +1,8 @@
 # Django settings for appengine project.
 
+import os
+import sys
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -9,6 +12,10 @@ ADMINS = (
 )
 
 MANAGERS = ADMINS
+
+# Use appengine database backend for "manage.py test" etc.
+if os.path.basename(sys.argv[0]) == 'manage.py':
+    DATABASE_ENGINE = 'appengine'
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -69,7 +76,6 @@ MIDDLEWARE_CLASSES = (
 ROOT_URLCONF = 'urls'
 
 # Find templates in the same folder as settings.py.
-import os.path
 SETTINGS_PATH = os.path.normpath(os.path.dirname(__file__))
 TEMPLATE_DIRS = (
     os.path.join(SETTINGS_PATH, 'templates'),
@@ -78,7 +84,7 @@ TEMPLATE_DIRS = (
 INSTALLED_APPS = (
     # 'django.contrib.auth',
     'django.contrib.humanize',
-    'django.contrib.contenttypes',
+    # 'django.contrib.contenttypes',
     # 'django.contrib.sessions',
     # 'django.contrib.sites',
     'auth',

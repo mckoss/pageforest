@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+
+import os
+import appengine_django
+
+# Adjust path because appengine_django is not installed
+# in the application directory.
+appengine_django.PARENT_DIR = os.path.dirname(__file__)
+appengine_django.InstallAppengineHelperForDjango()
+
 from django.core.management import execute_manager
 try:
     import settings  # Assumed to be in the same directory.
