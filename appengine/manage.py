@@ -1,5 +1,18 @@
 #!/usr/bin/env python
 
+"""
+App Engine Helper is required to run this manage.py:
+http://code.google.com/p/google-app-engine-django/
+
+Install the appengine_django folder somewhere in sys.path, but not in
+this application directory, because we don't want to deploy it to App
+Engine for the production system.
+
+The following files should be removed because they're broken:
+appengine_django/tests/integration_test.py
+appengine_django/tests/serialization_test.py
+"""
+
 import os
 import appengine_django
 
