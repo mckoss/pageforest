@@ -13,12 +13,12 @@ def index(request):
     week_ago = now - timedelta(days=7)
     month_ago = now - timedelta(days=30)
     new_users = (
-        User.all().filter('created >', day_ago).count(),
-        User.all().filter('created >', week_ago).count(),
-        User.all().filter('created >', month_ago).count())
+        User.all().filter('joined >', day_ago).count(),
+        User.all().filter('joined >', week_ago).count(),
+        User.all().filter('joined >', month_ago).count())
     new_data = (
-        KeyValue.all().filter('created >', day_ago).count(),
-        KeyValue.all().filter('created >', week_ago).count(),
-        KeyValue.all().filter('created >', month_ago).count())
+        KeyValue.all().filter('timestamp >', day_ago).count(),
+        KeyValue.all().filter('timestamp >', week_ago).count(),
+        KeyValue.all().filter('timestamp >', month_ago).count())
     return render_to_response('dashboard/index.html', locals(),
                               context_instance=RequestContext(request))
