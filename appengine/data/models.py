@@ -1,14 +1,6 @@
 from google.appengine.ext import db
 
-from auth.models import User
-
-
-class App(db.Model):
-    """
-    The name string is stored in app.key().name().
-    """
-    creator = db.ReferenceProperty(User)
-    created = db.DateTimeProperty(auto_now_add=True)
+from apps.models import App
 
 
 class KeyValue(db.Model):
@@ -17,5 +9,9 @@ class KeyValue(db.Model):
     """
     app = db.ReferenceProperty(App)
     value = db.TextProperty()
-    creator_ip = db.StringProperty()
-    created = db.DateTimeProperty(auto_now_add=True)
+    ip = db.StringProperty()
+    created = db.DateTimeProperty()
+    modified = db.DateTimeProperty()
+
+    def get_absolute_url(self):
+        return '/data/' + self.key().name()

@@ -13,6 +13,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+CACHE_EXPIRES_SECONDS = 24 * 60 * 60
+
 # Use appengine database backend for "manage.py test" etc.
 if os.path.basename(sys.argv[0]) == 'manage.py':
     DATABASE_ENGINE = 'appengine'
@@ -90,6 +92,7 @@ INSTALLED_APPS = (
     # 'django.contrib.sessions',
     # 'django.contrib.sites',
     'auth',
+    'apps',
     'data',
     'dashboard',
 )
