@@ -47,37 +47,17 @@ def key_value_get(request, key_name):
 
 
 def key_value_put(request, key_name):
-    entity = KeyValue.get_by_key_name(key_name)
-    if entity is None:
-        return key_value_create(request, key_name)
-    elif request.raw_post_data != entity.value:
-        return key_value_update(request, key_name, entity)
-    else:
-        return HttpResponseNotModified()
-
-
-def key_value_create(request, key_name):
-    now = datetime.now()
     entity = KeyValue(
         key_name=key_name,
         value=request.raw_post_data,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'),
-        created=now, modified=now)
+        timestamp=datetime.now())
     entity.put()
-    response = HttpResponseCreated(entity.get_absolute_url())
-    return response
-
-
-def key_value_update(request, key_name, entity):
-    entity.value = request.raw_post_data
-    entity.modified = datetime.now()
-    entity.ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    entity.put()
-    return HttpResponse('OK')
+    return HttpResponseCreated(entity.get_absolute_url())
 
 
 def key_value_delete(request, key_name):
     entity = KeyValue.get_by_key_name(key_name)
     if entity is not None:
         entity.delete()
-    return HttpResponse('OK')
+    return HttpResponse('deleted', mimetype='text/plain')

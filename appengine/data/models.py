@@ -10,8 +10,7 @@ class KeyValue(db.Model):
     app = db.ReferenceProperty(App)
     value = db.TextProperty()
     ip = db.StringProperty()
-    created = db.DateTimeProperty()
-    modified = db.DateTimeProperty()
+    timestamp = db.DateTimeProperty()
 
     def get_absolute_url(self):
         return '/data/' + self.key().name()
