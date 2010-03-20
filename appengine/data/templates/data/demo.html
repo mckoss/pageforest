@@ -3,19 +3,19 @@
 {% block jquery %}
 <script type="text/javascript">
 function success_callback(message, status, xhr) {
-  $('#status').html(status + message);
+  $('#id_status').val(status);
+  $('#id_value').val(message);
 }
 
 function error_callback(xhr, status, error) {
-  $('#status').html(status);
+  $('#id_status').val(status);
 }
 
 function ajax_put() {
   $.ajax({
     type: "PUT",
-    url: '/data/bla/',
-    data: {test: 123},
-    dataType: 'json',
+    url: '/data/' + $("#id_key").val(),
+    data: $("#id_value").val(),
     success: success_callback,
     error: error_callback,
   });
@@ -24,8 +24,7 @@ function ajax_put() {
 function ajax_get() {
   $.ajax({
     type: "GET",
-    url: '/data/bla/',
-    dataType: 'json',
+    url: '/data/' + $("#id_key").val(),
     success: success_callback,
     error: error_callback,
   });
@@ -33,15 +32,21 @@ function ajax_get() {
 </script>
 {% endblock %}
 
-{% block title %}Data Test{% endblock %}
+{% block title %}Data Demo{% endblock %}
 
 {% block content %}
-<h1>Data Test</h1>
+<h1>Data Demo</h1>
 
-<p>
+<table>
+{{ demo_form }}
+<tr>
+<th></th>
+<td>
 <input type="button" onclick="ajax_put()" value="PUT" />
 <input type="button" onclick="ajax_get()" value="GET" />
-</p>
+</td>
+</tr>
+</table>
 
 <p id="status">Status</p>
 {% endblock %}
