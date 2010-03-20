@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta
 
 from django import forms
-from django.conf import settings
-from django.http import Http404, HttpResponse
-from django.http import HttpResponseNotModified, HttpResponseNotAllowed
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from utils.shortcuts import render_to_response
-from utils.http import HttpResponseCreated
 
 from auth.models import User
 from data.models import KeyValue
@@ -53,11 +50,12 @@ def key_value_put(request, key_name):
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'),
         timestamp=datetime.now())
     entity.put()
-    return HttpResponseCreated(entity.get_absolute_url())
+    return HttpResponse('saved', mimetype='text/plain')
 
 
 def key_value_delete(request, key_name):
     entity = KeyValue.get_by_key_name(key_name)
-    if entity is not None:
-        entity.delete()
+    if entity is None:
+        raise Http404
+    entity.delete()
     return HttpResponse('deleted', mimetype='text/plain')
