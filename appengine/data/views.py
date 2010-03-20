@@ -1,11 +1,10 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django import forms
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from utils.shortcuts import render_to_response
 
-from auth.models import User
 from data.models import KeyValue
 
 
