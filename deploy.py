@@ -60,8 +60,7 @@ def main():
         options.version = args[0]
     else:
         parser.error("Too many command line arguments.")
-    exclude = ['.git', 'common', 'popular.py',
-               'english.py', 'french.py', 'spanish.py', 'german.py']
+    exclude = ['.git', '.hg', '.svn', '.bzr']
     attempt('pep8 --count --repeat --exclude %s %s' %
             (','.join(exclude), PROJECT))
     # attempt('.hg/hooks/pre-commit')
