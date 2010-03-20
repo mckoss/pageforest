@@ -27,6 +27,8 @@ function ajax(method) {
   if (method == "PUT") options.data = $("#id_value").val();
   $.ajax(options);
 }
+
+$(document).ready(function() { $("input.focus:last").focus(); });
 </script>
 {% endblock %}
 

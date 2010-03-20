@@ -9,7 +9,7 @@ from data.models import KeyValue
 
 
 class DemoForm(forms.Form):
-    key = forms.CharField()
+    key = forms.CharField(widget=forms.TextInput(attrs={'class': 'focus'}))
     value = forms.CharField()
 
 
