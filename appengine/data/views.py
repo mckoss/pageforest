@@ -3,9 +3,8 @@ from datetime import datetime, timedelta
 from django import forms
 from django.conf import settings
 from django.http import Http404, HttpResponse
-from django.http import HttpResponseNotModified, HttpResponseForbidden
+from django.http import HttpResponseNotModified, HttpResponseNotAllowed
 
-from utils.decorators import cache_expires
 from utils.shortcuts import render_to_response
 from utils.http import HttpResponseCreated
 
@@ -14,9 +13,8 @@ from data.models import KeyValue
 
 
 class DemoForm(forms.Form):
-    status = forms.CharField()
     key = forms.CharField()
-    value = forms.CharField(widget=forms.Textarea)
+    value = forms.CharField()
 
 
 def index(request):
@@ -31,12 +29,16 @@ def demo(request):
 def key_value(request, key_name):
     if request.method == 'GET':
         return key_value_get(request, key_name)
-    if request.method == 'PUT':
+    elif request.method == 'PUT':
         return key_value_put(request, key_name)
-    return HttpResponseForbidden(['GET', 'PUT'])
+    elif request.method == 'DELETE':
+        return key_value_delete(request, key_name)
+    elif request.method == 'HEAD':
+        return key_value_get(request, key_name)
+    else:
+        return HttpResponseNotAllowed('GET PUT DELETE HEAD'.split())
 
 
-@cache_expires(settings.CACHE_EXPIRES_SECONDS)
 def key_value_get(request, key_name):
     entity = KeyValue.get_by_key_name(key_name)
     if entity is None:
@@ -71,4 +73,11 @@ def key_value_update(request, key_name, entity):
     entity.modified = datetime.now()
     entity.ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
     entity.put()
+    return HttpResponse('OK')
+
+
+def key_value_delete(request, key_name):
+    entity = KeyValue.get_by_key_name(key_name)
+    if entity is not None:
+        entity.delete()
     return HttpResponse('OK')

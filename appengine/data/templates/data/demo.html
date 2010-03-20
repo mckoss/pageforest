@@ -2,32 +2,30 @@
 
 {% block jquery %}
 <script type="text/javascript">
+function format_result(xhr, status, message) {
+  return xhr.status + ' ' + xhr.statusText + ' ' +
+    status + ' ' + message;
+}
+
 function success_callback(message, status, xhr) {
-  $('#id_status').val(status);
-  $('#id_value').val(message);
+  $('#results').prepend('<div style="color:#080">' +
+	format_result(xhr, status, message) + '</div>');
 }
 
 function error_callback(xhr, status, error) {
-  $('#id_status').val(status);
+  $('#results').prepend('<div style="color:#800">' +
+	format_result(xhr, status, error) + '</div>');
 }
 
-function ajax_put() {
-  $.ajax({
-    type: "PUT",
-    url: '/data/' + $("#id_key").val(),
-    data: $("#id_value").val(),
-    success: success_callback,
-    error: error_callback,
-  });
-}
-
-function ajax_get() {
-  $.ajax({
-    type: "GET",
+function ajax(method) {
+  options = {
+    type: method,
     url: '/data/' + $("#id_key").val(),
     success: success_callback,
     error: error_callback,
-  });
+  };
+  if (method == "PUT") options.data = $("#id_value").val();
+  $.ajax(options);
 }
 </script>
 {% endblock %}
@@ -42,11 +40,13 @@ function ajax_get() {
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="ajax_put()" value="PUT" />
-<input type="button" onclick="ajax_get()" value="GET" />
+<input type="button" onclick="ajax('PUT')" value="PUT" />
+<input type="button" onclick="ajax('GET')" value="GET" />
+<input type="button" onclick="ajax('DELETE')" value="DELETE" />
+<input type="button" onclick="ajax('HEAD')" value="HEAD" />
 </td>
 </tr>
 </table>
 
-<p id="status">Status</p>
+<div id="results"></div>
 {% endblock %}
