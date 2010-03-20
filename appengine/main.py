@@ -4,13 +4,13 @@ import logging
 # Google App Engine imports.
 from google.appengine.ext.webapp import util
 
-# Force Django to reload its settings.
-from django.conf import settings
-settings._target = None
-
 # Must set this env var before importing any part of Django
 # 'project' is the name of the project created with django-admin.py
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+
+# Force Django to reload its settings.
+from django.conf import settings
+settings._target = None
 
 import logging
 import django.core.handlers.wsgi
