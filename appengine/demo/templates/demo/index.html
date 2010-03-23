@@ -5,8 +5,8 @@
 {% block content %}
 <h1>Demo</h1>
 
-<p>
-<a href="{% url demo.views.rest %}">Test the REST API</a>
-<a href="{% url demo.views.jsonp %}">Test the JSONP API</a>
-</p>
+<ul>
+<li><a href="{% url demo.views.rest %}">Test the REST API</a></li>
+<li><a href="{% url demo.views.jsonp %}">Test the JSONP API</a></li>
+</ul>
 {% endblock %}
