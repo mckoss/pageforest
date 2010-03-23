@@ -8,13 +8,16 @@ Copy the appengine_django folder somewhere in sys.path, but not in
 this application directory, because we don't want to deploy it to App
 Engine for the production system.
 
-The following files should be removed because they're broken:
+The following files should be removed because they're broken
+or take a long time during every unit test run:
+appengine_django/tests/commands_test.py
 appengine_django/tests/integration_test.py
 appengine_django/tests/serialization_test.py
 """
 
 import os
 import sys
+import logging
 
 try:
     import appengine_django
@@ -38,6 +41,9 @@ django-admin.py, passing it your settings module. (If the file
 settings.py does indeed exist, it's causing an ImportError somehow.)
 """ % __file__)
     sys.exit(1)
+
+# Don't show DEBUG and INFO logs while manage.py is running.
+logging.getLogger().setLevel(logging.WARNING)
 
 if __name__ == "__main__":
     execute_manager(settings)
