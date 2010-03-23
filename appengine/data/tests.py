@@ -1,6 +1,9 @@
+from google.appengine.api import memcache
+
 from django.test import TestCase
 
 from data.models import KeyValue
+from data.views import generate_memcache_key
 
 
 class ClientTest(TestCase):
@@ -72,3 +75,24 @@ class JsonpApiTest(TestCase):
         response = self.client.get('/data/entity?method=DELETE')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(KeyValue.get_by_key_name('entity'), None)
+
+
+class MemcacheTest(TestCase):
+
+    def test_crud(self):
+        """Tests create, read, update, delete with memcache."""
+        memcache_key = generate_memcache_key('entity')
+        # Create.
+        self.assertEqual(memcache.get(memcache_key), None)
+        self.client.put('/data/entity', 'data', content_type='text/plain')
+        self.assertEqual(memcache.get(memcache_key), 'data')
+        # Make sure it reads from memcache if possible.
+        memcache.set(memcache_key, 'cached', 300)
+        response = self.client.get('/data/entity')
+        self.assertEqual(response.content, 'cached')
+        # Update.
+        self.client.put('/data/entity', 'updated', content_type='text/plain')
+        self.assertEqual(memcache.get(memcache_key), 'updated')
+        # Delete.
+        self.client.delete('/data/entity')
+        self.assertEqual(memcache.get(memcache_key), None)
