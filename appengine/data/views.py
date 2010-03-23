@@ -23,13 +23,14 @@ def demo(request):
 
 
 def key_value(request, key_name):
-    if request.method == 'GET':
+    method = request.GET.get('method', request.method).upper()
+    if method == 'GET':
         return key_value_get(request, key_name)
-    elif request.method == 'PUT':
+    elif method == 'PUT':
         return key_value_put(request, key_name)
-    elif request.method == 'DELETE':
+    elif method == 'DELETE':
         return key_value_delete(request, key_name)
-    elif request.method == 'HEAD':
+    elif method == 'HEAD':
         return key_value_get(request, key_name)
     else:
         return HttpResponseNotAllowed('GET PUT DELETE HEAD'.split())
@@ -45,7 +46,7 @@ def key_value_get(request, key_name):
 def key_value_put(request, key_name):
     entity = KeyValue(
         key_name=key_name,
-        value=request.raw_post_data,
+        value=request.GET.get('value', request.raw_post_data),
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'),
         timestamp=datetime.now())
     entity.put()
