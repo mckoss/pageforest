@@ -63,10 +63,10 @@ def key_value_put(request, key_name):
 
 
 def key_value_delete(request, key_name):
+    memcache_key = generate_memcache_key(key_name)
+    memcache.delete(memcache_key)
     entity = KeyValue.get_by_key_name(key_name)
     if entity is None:
         raise Http404
     entity.delete()
-    memcache_key = generate_memcache_key(key_name)
-    memcache.delete(memcache_key)
     return HttpResponse('deleted', mimetype='text/plain')
