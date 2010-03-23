@@ -69,6 +69,8 @@ def main():
             (','.join(exclude), PROJECT))
     # Check that all unit tests pass.
     attempt(os.path.join(PROJECT, 'manage.py') + ' test')
+    # Check doctest for helper modules.
+    attempt('python appengine/utils/json.py')
     # attempt('.hg/hooks/pre-commit')
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
