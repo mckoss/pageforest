@@ -7,7 +7,7 @@ class KeyValue(db.Model):
     """
     The key string is stored in value.key().name().
     """
-    app = db.ReferenceProperty(App)
+    namespace = db.StringProperty(App)
     value = db.TextProperty()
     ip = db.StringProperty()
     timestamp = db.DateTimeProperty()

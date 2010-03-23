@@ -3,7 +3,6 @@ from google.appengine.api import memcache
 from django.test import TestCase
 
 from data.models import KeyValue
-from data.views import generate_memcache_key
 
 
 class ClientTest(TestCase):
@@ -33,12 +32,13 @@ class RestApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with REST API."""
+        key_name = 'test/entity'
+        self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
-        self.assertEqual(KeyValue.get_by_key_name('entity'), None)
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity').value, 'data')
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
         self.assertEqual(response.status_code, 200)
@@ -47,22 +47,23 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity').value, 'updated')
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity'), None)
+        self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
 class JsonpApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with JSONP API."""
+        key_name = 'test/entity'
+        self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
-        self.assertEqual(KeyValue.get_by_key_name('entity'), None)
         response = self.client.get('/data/entity?method=PUT&value=data')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity').value, 'data')
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
         self.assertEqual(response.status_code, 200)
@@ -70,29 +71,29 @@ class JsonpApiTest(TestCase):
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity').value, 'updated')
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(KeyValue.get_by_key_name('entity'), None)
+        self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
 class MemcacheTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        memcache_key = generate_memcache_key('entity')
+        key_name = 'test/entity'
+        self.assertEqual(memcache.get(key_name), None)
         # Create.
-        self.assertEqual(memcache.get(memcache_key), None)
         self.client.put('/data/entity', 'data', content_type='text/plain')
-        self.assertEqual(memcache.get(memcache_key), 'data')
+        self.assertEqual(memcache.get(key_name), 'data')
         # Make sure it reads from memcache if possible.
-        memcache.set(memcache_key, 'cached', 300)
+        memcache.set(key_name, 'cached', 300)
         response = self.client.get('/data/entity')
         self.assertEqual(response.content, 'cached')
         # Update.
         self.client.put('/data/entity', 'updated', content_type='text/plain')
-        self.assertEqual(memcache.get(memcache_key), 'updated')
+        self.assertEqual(memcache.get(key_name), 'updated')
         # Delete.
         self.client.delete('/data/entity')
-        self.assertEqual(memcache.get(memcache_key), None)
+        self.assertEqual(memcache.get(key_name), None)
