@@ -39,6 +39,9 @@ def update_app_yaml(lines, **kwargs):
 
 
 def attempt(command):
+    """
+    Run a shell command and exit with error message if it fails.
+    """
     print command
     returncode = subprocess.call(command.split())
     if returncode:
@@ -61,17 +64,21 @@ def main():
     else:
         parser.error("Too many command line arguments.")
     exclude = ['.git', '.hg', '.svn', '.bzr']
+    # Check coding style.
     attempt('pep8 --count --repeat --exclude %s %s' %
             (','.join(exclude), PROJECT))
+    # Check that all unit tests pass.
+    attempt(os.path.join(PROJECT, 'manage.py') + ' test')
     # attempt('.hg/hooks/pre-commit')
-    # attempt(os.path.join(PROJECT, 'manage.py') + ' test')
     app_yaml = load_app_yaml()
+    # Temporarily adjust application and version in app.yaml.
     update_app_yaml(app_yaml,
                     application=options.application,
                     version=options.version)
     try:
         attempt('appcfg.py update ' + PROJECT)
     finally:
+        # Restore app.yaml to original.
         update_app_yaml(app_yaml)
 
 
