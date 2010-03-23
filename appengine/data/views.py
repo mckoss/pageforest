@@ -2,14 +2,13 @@ from datetime import datetime
 
 from google.appengine.api import memcache
 
+from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from utils.shortcuts import render_to_response
 from utils.decorators import jsonp
 
 from data.models import KeyValue
-
-MEMCACHE_TIMEOUT = 24 * 60 * 60  # 24 hours.
 
 
 def index(request):
@@ -19,8 +18,8 @@ def index(request):
 @jsonp
 def key_value(request, entity_name):
     request.app_name = request.META.get('HTTP_HOST', 'test').lower()
-    if request.app_name.endswith('.foobase.org'):
-        request.app_name = request.appname.split('.')[-2]
+    if request.app_name.endswith(settings.HOST_REMOVABLE):
+        request.app_name = request.appname[:-len(settings.HOST_REMOVABLE)]
     request.key_name = request.app_name + '/' + entity_name
     method = request.GET.get('method', request.method).upper()
     if method == 'GET':
@@ -44,7 +43,7 @@ def key_value_get(request):
         if entity is None:
             raise Http404
         value = entity.value
-        memcache.set(request.key_name, value, MEMCACHE_TIMEOUT)
+        memcache.set(request.key_name, value, settings.MEMCACHE_TIMEOUT)
     return HttpResponse(value, mimetype='text/plain')
 
 
@@ -57,7 +56,7 @@ def key_value_put(request):
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'),
         timestamp=datetime.now())
     entity.put()
-    memcache.set(request.key_name, value, MEMCACHE_TIMEOUT)
+    memcache.set(request.key_name, value, settings.MEMCACHE_TIMEOUT)
     return HttpResponse('saved', mimetype='text/plain')
 
 

@@ -13,7 +13,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-CACHE_EXPIRES_SECONDS = 24 * 60 * 60
+MEMCACHE_TIMEOUT = 24 * 60 * 60  # 24 hours.
+HOST_REMOVABLE = '.foobase.org'
 
 # Use appengine database backend for "manage.py test" etc.
 if os.path.basename(sys.argv[0]) == 'manage.py':
