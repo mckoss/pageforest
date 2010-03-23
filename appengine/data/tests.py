@@ -15,11 +15,6 @@ class ClientTest(TestCase):
         response = self.client.get('/data/')
         self.assertEqual(response.status_code, 200)
 
-    def test_demo(self):
-        """Tests that the data demo page loads."""
-        response = self.client.get('/data/demo/')
-        self.assertEqual(response.status_code, 200)
-
     def test_get_404(self):
         """Tests that non-existent data returns 404 Not Found."""
         response = self.client.get('/data/does_not_exist/')

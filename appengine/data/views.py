@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from django import forms
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from utils.shortcuts import render_to_response
@@ -8,18 +7,8 @@ from utils.shortcuts import render_to_response
 from data.models import KeyValue
 
 
-class DemoForm(forms.Form):
-    key = forms.CharField(widget=forms.TextInput(attrs={'class': 'focus'}))
-    value = forms.CharField()
-
-
 def index(request):
     return render_to_response(request, 'data/index.html', locals())
-
-
-def demo(request):
-    demo_form = DemoForm(request.GET or None)
-    return render_to_response(request, 'data/demo.html', locals())
 
 
 def key_value(request, key_name):

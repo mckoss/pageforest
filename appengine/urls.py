@@ -5,5 +5,6 @@ urlpatterns = patterns('',
     (r'^$', direct_to_template, {'template': 'home.html'}),
     (r'^auth/', include('auth.urls')),
     (r'^data/', include('data.urls')),
+    (r'^demo/', include('demo.urls')),
     (r'^dashboard/', include('dashboard.urls')),
 )
