@@ -19,7 +19,7 @@ def index(request):
 def key_value(request, entity_name):
     request.app_name = request.META.get('HTTP_HOST', 'test').lower()
     if request.app_name.endswith(settings.HOST_REMOVABLE):
-        request.app_name = request.appname[:-len(settings.HOST_REMOVABLE)]
+        request.app_name = request.app_name[:-len(settings.HOST_REMOVABLE)]
     request.key_name = request.app_name + '/' + entity_name
     method = request.GET.get('method', request.method).upper()
     if method == 'GET':
