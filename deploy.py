@@ -7,6 +7,14 @@ from optparse import OptionParser
 
 PROJECT = 'appengine'
 
+"""
+You can use this script as a precommit hook by adding the following
+lines in .hg/hgrc (adjusted to your path):
+
+[hooks]
+precommit.deploycheck = ~/src/pageforest/deploy.py --check
+"""
+
 
 def load_app_yaml():
     """
@@ -53,9 +61,13 @@ def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
     parser.add_option('-a', '--application', metavar='<name>',
-                      default='pageforest', help="(default: pageforest)")
+        default='pageforest',
+        help="override app name in app.yaml (default: pageforest)")
     parser.add_option('-v', '--version', metavar='<string>',
-                      default='dev', help="(default: dev)")
+        default='dev',
+        help="override version in app.yaml (default: dev)")
+    parser.add_option('-c', '--check', action='store_true',
+        help="run tests but don't deploy to Google App Engine")
     (options, args) = parser.parse_args()
     if not args:
         options.version = 'dev'
@@ -72,6 +84,8 @@ def main():
     # Check doctest for helper modules.
     attempt('python appengine/utils/json.py')
     # attempt('.hg/hooks/pre-commit')
+    if options.check:
+        return
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
     update_app_yaml(app_yaml,
@@ -85,4 +99,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
