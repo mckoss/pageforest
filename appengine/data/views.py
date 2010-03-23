@@ -3,6 +3,7 @@ from datetime import datetime
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from utils.shortcuts import render_to_response
+from utils.decorators import jsonp
 
 from data.models import KeyValue
 
@@ -11,6 +12,7 @@ def index(request):
     return render_to_response(request, 'data/index.html', locals())
 
 
+@jsonp
 def key_value(request, key_name):
     method = request.GET.get('method', request.method).upper()
     if method == 'GET':
@@ -20,7 +22,9 @@ def key_value(request, key_name):
     elif method == 'DELETE':
         return key_value_delete(request, key_name)
     elif method == 'HEAD':
-        return key_value_get(request, key_name)
+        response = key_value_get(request, key_name)
+        response.content = ''
+        return response
     else:
         return HttpResponseNotAllowed('GET PUT DELETE HEAD'.split())
 
