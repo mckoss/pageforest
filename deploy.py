@@ -5,6 +5,8 @@ import sys
 import subprocess
 from optparse import OptionParser
 
+from check import attempt
+
 PROJECT = 'appengine'
 
 
@@ -38,17 +40,6 @@ def update_app_yaml(lines, **kwargs):
     output.close()
 
 
-def attempt(command):
-    """
-    Run a shell command and exit with error message if it fails.
-    """
-    print command
-    returncode = subprocess.call(command.split())
-    if returncode:
-        print "failed with return code", returncode
-        sys.exit(returncode)
-
-
 def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
@@ -67,6 +58,8 @@ def main():
         parser.error("Unexpected command line arguments: " + ' '.join(args))
     if not options.version:
         options.version = 'dev'
+    # Check coding style and unit tests.
+    attempt('python check.py')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
