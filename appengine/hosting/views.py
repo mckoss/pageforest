@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
 from hosting.models import Document
 
@@ -14,9 +14,9 @@ def document(request, filename='index.html', mimetype='text/html'):
     elif request.method == 'PUT':
         return document_put(request, filename, mimetype)
     elif request.method == 'DELETE':
-        return key_value_delete(request)
+        return document_delete(request, filename, mimetype)
     elif request.method == 'HEAD':
-        response = key_value_get(request)
+        response = document_get(request, filename, mimetype)
         response.content = ''
         return response
     else:
