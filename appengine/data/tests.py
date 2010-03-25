@@ -38,6 +38,7 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -47,10 +48,12 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -63,6 +66,7 @@ class JsonpApiTest(TestCase):
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -71,10 +75,12 @@ class JsonpApiTest(TestCase):
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
         self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
