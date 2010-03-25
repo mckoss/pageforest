@@ -9,7 +9,7 @@ handlers:
   secure: optional
   login: admin
 
-- url: /stats/.*
+- url: /stats.*
   script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
 
 - url: /static
