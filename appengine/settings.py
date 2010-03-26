@@ -38,6 +38,10 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = False
 
+# We don't let CommonMiddleware create ETag headers because we
+# decorate our view functions with @last_modified instead.
+USE_ETAGS = False
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
