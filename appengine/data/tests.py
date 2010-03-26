@@ -92,14 +92,21 @@ class MemcacheTest(TestCase):
         self.assertEqual(memcache.get(key_name), None)
         # Create.
         self.client.put('/data/entity', 'data', content_type='text/plain')
-        self.assertEqual(memcache.get(key_name), 'data')
+        self.assertEqual(memcache.get(key_name)[26:], 'GMT|data')
         # Make sure it reads from memcache if possible.
-        memcache.set(key_name, 'cached', 300)
+        last_modified = 'Tue, 15 Nov 1994 12:45:26 GMT'
+        memcache.set(key_name, last_modified + '|cached', 300)
         response = self.client.get('/data/entity')
         self.assertEqual(response.content, 'cached')
+        self.assertEqual(response['Last-Modified'], last_modified)
+        # Make sure that GET saves to memcache if necessary.
+        memcache.delete(key_name)
+        self.assertEqual(memcache.get(key_name), None)
+        response = self.client.get('/data/entity')
+        self.assertEqual(memcache.get(key_name)[26:], 'GMT|data')
         # Update.
         self.client.put('/data/entity', 'updated', content_type='text/plain')
-        self.assertEqual(memcache.get(key_name), 'updated')
+        self.assertEqual(memcache.get(key_name)[26:], 'GMT|updated')
         # Delete.
         self.client.delete('/data/entity')
         self.assertEqual(memcache.get(key_name), None)
