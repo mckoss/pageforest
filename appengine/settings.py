@@ -101,5 +101,4 @@ INSTALLED_APPS = (
     'data',
     'demo',
     'dashboard',
-    'hosting',
 )

@@ -1,4 +1,5 @@
 from datetime import datetime
+import mimetypes
 
 from google.appengine.api import memcache
 
@@ -15,15 +16,13 @@ from data.models import KeyValue
 TIMESTAMP_SEPARATOR = '|'
 
 
-def index(request):
-    return render_to_response(request, 'data/index.html', locals())
-
-
 @jsonp
 def key_value(request, entity_name):
     request.app_name = request.META.get('HTTP_HOST', 'test').lower()
     if request.app_name.endswith(settings.HOST_REMOVABLE):
         request.app_name = request.app_name[:-len(settings.HOST_REMOVABLE)]
+    if not entity_name:
+        entity_name = 'index.html'
     request.key_name = request.app_name + '/' + entity_name
     method = request.GET.get('method', request.method).upper()
     if method == 'GET':
@@ -57,7 +56,8 @@ def key_value_get(request):
         value = value[30:]
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
-    response = HttpResponse(value, mimetype='text/plain')
+    mimetype, encoding = mimetypes.guess_type(request.key_name, strict=False)
+    response = HttpResponse(value, mimetype=mimetype or 'text/plain')
     if last_modified:
         response['Last-Modified'] = last_modified
     return response
@@ -76,7 +76,9 @@ def key_value_put(request):
     memcache.set(request.key_name,
                  last_modified + TIMESTAMP_SEPARATOR + value,
                  settings.MEMCACHE_TIMEOUT)
-    return HttpResponse('saved', mimetype='text/plain')
+    response = HttpResponse('saved', mimetype='text/plain')
+    response['Last-Modified'] = last_modified
+    return response
 
 
 def key_value_delete(request):
