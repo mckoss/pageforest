@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.http import Http404, HttpResponse, HttpResponseNotAllowed
 
@@ -33,7 +35,8 @@ def document_get(request, filename, mimetype):
 def document_put(request, filename, mimetype):
     document = Document(
         key_name=request.key_name,
-        content=request.raw_post_data)
+        content=request.raw_post_data,
+        timestamp=datetime.now())
     document.put()
     return HttpResponse('saved', mimetype='text/plain')
 

@@ -8,3 +8,4 @@ class Document(db.Model):
     extension.
     """
     content = db.TextProperty()
+    timestamp = db.DateTimeProperty()
