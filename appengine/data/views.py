@@ -65,6 +65,9 @@ def key_value_get(request):
 
 def key_value_put(request):
     value = request.GET.get('value', request.raw_post_data)
+    if isinstance(value, unicode):
+        # Convert from unicode to str for BlobProperty.
+        value = value.encode('utf-8')
     entity = KeyValue(
         key_name=request.key_name,
         namespace=request.app_name,
