@@ -1,5 +1,6 @@
-from datetime import datetime
+import os
 import mimetypes
+from datetime import datetime
 
 from google.appengine.api import memcache
 
@@ -56,8 +57,8 @@ def key_value_get(request):
         value = value[30:]
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
-    mimetype, encoding = mimetypes.guess_type(request.key_name, strict=False)
-    response = HttpResponse(value, mimetype=mimetype or 'text/plain')
+    mimetype = guess_mimetype(request.key_name)
+    response = HttpResponse(value, mimetype=mimetype)
     if last_modified:
         response['Last-Modified'] = last_modified
     return response
@@ -91,3 +92,14 @@ def key_value_delete(request):
         raise Http404
     entity.delete()
     return HttpResponse('deleted', mimetype='text/plain')
+
+
+def guess_mimetype(filename):
+    name, ext = os.path.splitext(filename.lower())
+    if ext in settings.MIMETYPES:
+        return settings.MIMETYPES[ext]
+    if not mimetypes.inited:
+        mimetypes.init()
+    if ext in mimetypes.types_map:
+        return mimetypes.types_map[ext]
+    return 'text/plain'

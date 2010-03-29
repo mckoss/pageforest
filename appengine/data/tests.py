@@ -104,28 +104,43 @@ class MemcacheTest(TestCase):
 
 class MimeTest(TestCase):
 
+    def put_and_get(self, path):
+        self.client.put(path, 'data', content_type='text/plain')
+        return self.client.get(path)
+
     def test_html(self):
         """Test that the mime type is guessed correctly for HTML."""
-        self.client.put('/index.html', 'text', content_type='text/plain')
-        response = self.client.get('/')
+        response = self.put_and_get('/index.html')
         self.assertEqual(response['Content-Type'], 'text/html')
         response = self.client.get('/index.html')
         self.assertEqual(response['Content-Type'], 'text/html')
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
-        self.client.put('/style.css', 'text', content_type='text/plain')
-        response = self.client.get('/style.css')
+        response = self.put_and_get('/style.css')
         self.assertEqual(response['Content-Type'], 'text/css')
 
     def test_js(self):
         """Test that the mime type is guessed correctly for JS."""
-        self.client.put('/test.js', 'text', content_type='text/plain')
-        response = self.client.get('/test.js')
+        response = self.put_and_get('/test.js')
         self.assertEqual(response['Content-Type'], 'application/javascript')
+
+    def test_jpg(self):
+        """Test that the mime type is guessed correctly for JPG."""
+        response = self.put_and_get('/test.jpg')
+        self.assertEqual(response['Content-Type'], 'image/jpeg')
+
+    def test_png(self):
+        """Test that the mime type is guessed correctly for PNG."""
+        response = self.put_and_get('/test.png')
+        self.assertEqual(response['Content-Type'], 'image/png')
+
+    def test_ico(self):
+        """Test that the mime type is guessed correctly for ICO."""
+        response = self.put_and_get('/test.ico')
+        self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
 
     def test_json(self):
         """Test that the mime type is guessed correctly for JSON."""
-        self.client.put('/data/test.json', 'text', content_type='text/plain')
-        response = self.client.get('/data/test.json')
+        response = self.put_and_get('/data/test.json')
         self.assertEqual(response['Content-Type'], 'application/json')
