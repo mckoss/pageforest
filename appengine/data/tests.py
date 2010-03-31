@@ -28,7 +28,7 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved')
+        self.assertEqual(response.content, 'saved\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -38,12 +38,12 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved')
+        self.assertEqual(response.content, 'saved\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'deleted')
+        self.assertEqual(response.content, 'deleted\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -56,7 +56,7 @@ class JsonpApiTest(TestCase):
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved')
+        self.assertEqual(response.content, 'saved\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -65,12 +65,12 @@ class JsonpApiTest(TestCase):
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved')
+        self.assertEqual(response.content, 'saved\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'deleted')
+        self.assertEqual(response.content, 'deleted\n')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -125,6 +125,11 @@ class MimeTest(TestCase):
         response = self.put_and_get('/test.js')
         self.assertEqual(response['Content-Type'], 'application/javascript')
 
+    def test_json(self):
+        """Test that the mime type is guessed correctly for JSON."""
+        response = self.put_and_get('/data/test.json')
+        self.assertEqual(response['Content-Type'], 'application/json')
+
     def test_jpg(self):
         """Test that the mime type is guessed correctly for JPG."""
         response = self.put_and_get('/test.jpg')
@@ -139,8 +144,3 @@ class MimeTest(TestCase):
         """Test that the mime type is guessed correctly for ICO."""
         response = self.put_and_get('/test.ico')
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
-
-    def test_json(self):
-        """Test that the mime type is guessed correctly for JSON."""
-        response = self.put_and_get('/data/test.json')
-        self.assertEqual(response['Content-Type'], 'application/json')
