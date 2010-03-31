@@ -62,6 +62,7 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 
 # Override and extend the results from Python's mimetypes module.
 MIMETYPES = {
+    '.js': 'application/javascript',
     '.ico': 'image/vnd.microsoft.icon',
 }
 
