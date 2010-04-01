@@ -28,7 +28,7 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved\n')
+        self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -38,12 +38,12 @@ class RestApiTest(TestCase):
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved\n')
+        self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'deleted\n')
+        self.assertContains(response, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -56,21 +56,22 @@ class JsonpApiTest(TestCase):
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved\n')
+        self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
-        response = self.client.get('/data/entity')
+        response = self.client.get('/data/entity?method=GET&callback=func')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'data')
+        self.assertEqual(response.content, 'func("data")')
+        self.assertEqual(response['Content-Type'], 'application/javascript')
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'saved\n')
+        self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'deleted\n')
+        self.assertContains(response, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 

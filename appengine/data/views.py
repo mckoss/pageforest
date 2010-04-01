@@ -80,7 +80,8 @@ def key_value_put(request):
     memcache.set(request.key_name,
                  last_modified + TIMESTAMP_SEPARATOR + value,
                  settings.MEMCACHE_TIMEOUT)
-    response = HttpResponse('saved\n', mimetype='text/plain')
+    response = HttpResponse('{"status": 200, "message": "saved"}\n',
+                            mimetype='application/json')
     response['Last-Modified'] = last_modified
     return response
 
@@ -91,7 +92,8 @@ def key_value_delete(request):
     if entity is None:
         raise Http404
     entity.delete()
-    return HttpResponse('deleted\n', mimetype='text/plain')
+    return HttpResponse('{"status": 200, "message": "deleted"}\n',
+                        mimetype='application/json')
 
 
 def guess_mimetype(filename):
