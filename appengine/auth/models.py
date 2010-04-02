@@ -4,14 +4,14 @@ from django.contrib.auth import get_hexdigest, check_password
 
 from google.appengine.ext import db
 
-# from utils.mixins import Migratable
+from utils.mixins import Migratable
 
 """
 Simplified port of django.contrib.auth.models.User to App Engine.
 """
 
 
-class User(db.Expando):
+class User(db.Expando, Migratable):
     """
     The username is stored in the entity key name.
     """
