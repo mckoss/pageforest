@@ -64,6 +64,7 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 MIMETYPES = {
     '.js': 'application/javascript',
     '.ico': 'image/vnd.microsoft.icon',
+    '.json': 'application/json',
 }
 
 # List of callables that know how to import templates from various sources.
