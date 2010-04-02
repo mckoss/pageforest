@@ -1,5 +1,5 @@
 import logging
-b
+
 from google.appengine.ext import db
 
 
