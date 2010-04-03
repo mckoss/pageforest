@@ -9,19 +9,34 @@ class UserTest(TestCase):
 
     def setUp(self):
         self.start_time = datetime.now()
-        self.max = User(key_name='max')
-        self.max.put()
-        self.moe = User(key_name='moe')
-        self.moe.put()
+        self.peter = User(key_name='peter')
+        self.peter.put()
+        self.paul = User(key_name='paul')
+        self.paul.put()
 
     def test_random_salt(self):
         """Test that the same password generates different hashes."""
-        self.max.set_password('secret')
-        self.moe.set_password('secret')
-        self.assertNotEqual(self.max.password, self.moe.password)
+        self.peter.set_password('secret')
+        self.paul.set_password('secret')
+        self.assertNotEqual(self.peter.password, self.paul.password)
 
     def test_timestamps(self):
         """Test that the timestamps are properly set."""
-        self.assertTrue(self.max.date_joined > self.start_time)
-        self.assertTrue(self.max.last_login > self.start_time)
-        self.assertTrue(self.moe.date_joined > self.max.date_joined)
+        self.assertTrue(self.peter.date_joined > self.start_time)
+        self.assertTrue(self.peter.last_login > self.start_time)
+        self.assertTrue(self.paul.date_joined > self.peter.date_joined)
+
+    def test_migratable(self):
+        """Test schema migration for User model."""
+
+        def dummy_migrate(self, schema):
+            self.migrated = True
+
+        # TODO: The following monkey patch might break other tests.
+        User.migrate = dummy_migrate
+        User.schema_current = 2
+        self.peter.migrated = False
+        self.assertEqual(self.peter.schema, 1)
+        self.peter.update_schema()
+        self.assertTrue(self.peter.migrated)
+        self.assertEqual(self.peter.schema, 2)

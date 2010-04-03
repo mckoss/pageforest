@@ -30,7 +30,6 @@ class Migratable(db.Model):
         model = super(Migratable, cls).get_by_key_name(key_name, parent)
         if model is not None:
             model.update_schema()
-
         return model
 
     @classmethod
@@ -39,7 +38,6 @@ class Migratable(db.Model):
         model = super(Migratable, cls).get_or_insert(key_name, **kwargs)
         if model is not None:
             model.update_schema()
-
         return model
 
     def update_schema(self):
@@ -47,7 +45,7 @@ class Migratable(db.Model):
         if schema_old == self.schema_current:
             return
 
-        while db.schema < self.schema_current:
+        while self.schema < self.schema_current:
             self.migrate(self.schema + 1)
             self.schema += 1
 

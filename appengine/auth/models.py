@@ -1,6 +1,6 @@
 from google.appengine.ext import db
 
-from utils.mixins import Migratable
+from utils.migratable import Migratable
 
 
 # This function was adapted from django.contrib.auth.models
