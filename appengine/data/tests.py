@@ -47,7 +47,6 @@ class RestApiTest(TestCase):
         # Create.
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
@@ -57,12 +56,10 @@ class RestApiTest(TestCase):
         # Update.
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
@@ -75,7 +72,6 @@ class JsonpApiTest(TestCase):
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
@@ -85,12 +81,10 @@ class JsonpApiTest(TestCase):
         self.assertEqual(response['Content-Type'], 'application/javascript')
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'saved')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'deleted')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
@@ -102,7 +96,6 @@ class HostTest(TestCase):
         host_client = Client(HTTP_HOST='test.pageforest.com')
         response = host_client.put('/data/entity', 'data',
                                    content_type='text/html')
-        self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'saved')
         key_name = 'http://test.pageforest.com/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
