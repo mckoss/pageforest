@@ -8,7 +8,6 @@ from django.conf import settings
 from django.http import \
     Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
 
-from utils.shortcuts import render_to_response
 from utils.decorators import jsonp
 from utils.http import http_datetime
 
@@ -19,12 +18,10 @@ TIMESTAMP_SEPARATOR = '|'
 
 @jsonp
 def key_value(request, entity_name):
-    request.app_name = request.META.get('HTTP_HOST', 'test').lower()
-    if request.app_name.endswith(settings.HOST_REMOVABLE):
-        request.app_name = request.app_name[:-len(settings.HOST_REMOVABLE)]
+    request.domain = request.META.get('HTTP_HOST', 'testserver').lower()
     if not entity_name:
         entity_name = 'index.html'
-    request.key_name = request.app_name + '/' + entity_name
+    request.key_name = 'http://%s/%s' % (request.domain, entity_name)
     method = request.GET.get('method', request.method).upper()
     if method == 'GET':
         return key_value_get(request)
@@ -71,7 +68,7 @@ def key_value_put(request):
         value = value.encode('utf-8')
     entity = KeyValue(
         key_name=request.key_name,
-        namespace=request.app_name,
+        namespace=request.domain,
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'),
         timestamp=datetime.now())

@@ -1,11 +1,31 @@
 from google.appengine.api import memcache
 
-from django.test import TestCase
+from django.test import TestCase, Client
 
 from data.models import KeyValue
 
 
-class ClientTest(TestCase):
+class KeyValueTest(TestCase):
+
+    def setUp(self):
+        self.key = 'http://test.pageforest.com/data/key'
+        self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
+        self.data = KeyValue(key_name=self.key, value=self.value)
+        self.data.put()
+
+    def test_get_by_key_name(self):
+        """Test that get_by_key_name correctly retrieves entity."""
+        data = KeyValue.get_by_key_name(self.key)
+        self.assertEqual(data.key().name(), self.key)
+        self.assertEqual(data.value, self.value)
+
+    def test_get_absolute_url(self):
+        """Test the get_absolute_url method."""
+        self.assertEqual(self.data.get_absolute_url(),
+                         'http://test.pageforest.com/data/key')
+
+
+class ClientErrorTest(TestCase):
 
     def test_get_404(self):
         """Tests that non-existent data returns 404 Not Found."""
@@ -22,7 +42,7 @@ class RestApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with REST API."""
-        key_name = 'test/data/entity'
+        key_name = 'http://testserver/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.put('/data/entity', 'data',
@@ -51,7 +71,7 @@ class JsonpApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with JSONP API."""
-        key_name = 'test/data/entity'
+        key_name = 'http://testserver/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
@@ -75,11 +95,31 @@ class JsonpApiTest(TestCase):
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
+class HostTest(TestCase):
+
+    def test_host(self):
+        """Test namespaces by Host header."""
+        host_client = Client(HTTP_HOST='test.pageforest.com')
+        response = host_client.put('/data/entity', 'data',
+                                   content_type='text/html')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'saved')
+        key_name = 'http://test.pageforest.com/data/entity'
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
+        # GET with the same host header should work.
+        response = host_client.get('/data/entity')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, 'data')
+        # GET without host header should fail with 404 Not Found.
+        response = self.client.get('/data/entity')
+        self.assertEqual(response.status_code, 404)
+
+
 class MemcacheTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        key_name = 'test/data/entity'
+        key_name = 'http://testserver/data/entity'
         self.assertEqual(memcache.get(key_name), None)
         # Create.
         self.client.put('/data/entity', 'data', content_type='text/plain')
@@ -106,6 +146,7 @@ class MemcacheTest(TestCase):
 class MimeTest(TestCase):
 
     def put_and_get(self, path):
+        """Helper function for MIME tests."""
         self.client.put(path, 'data', content_type='text/plain')
         return self.client.get(path)
 
