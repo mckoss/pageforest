@@ -18,6 +18,7 @@ def attempt(command):
 def main():
     path = os.path.dirname(__file__) or '.'
     attempt('pep8 --count --repeat --exclude .hg %s' % path)
+    attempt('python %s/pylint.py -e' % path)
     attempt('python %s/whitespace.py' % path)
     attempt('python %s/appengine/manage.py test -v0' % path)
 
