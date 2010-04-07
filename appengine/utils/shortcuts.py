@@ -14,6 +14,8 @@ def get_int(dictionary, key, default=None, min=None, max=None):
 
     >>> get_int({'a': '123'}, 'a')
     123
+    >>> get_int({'a': '-123'}, 'a')
+    -123
     >>> get_int({'a': '123'}, 'a', min=25)
     123
     >>> get_int({'a': '123'}, 'a', max=999)
@@ -42,7 +44,8 @@ def get_int(dictionary, key, default=None, min=None, max=None):
         return default
     value = dictionary[key]
     if not value.isdigit():
-        return default
+        if not (value.startswith('-') and value[1:].isdigit()):
+            return default
     value = int(value)
     if min is not None and value < min:
         value = min
