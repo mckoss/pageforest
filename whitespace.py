@@ -27,6 +27,10 @@ def check(path):
             print '%s:%d:%d: Please replace CRLF with LF.' % (
                 short_path(path), lineno + 1, len(line) - 2)
         stripped = line.rstrip()
+        if stripped == line:
+            errors += 1
+            print '%s:%d:%d: Please add a newline at the end of file.' % (
+                short_path(path), lineno + 1, len(line) + 1)
         if len(stripped) < len(line) - 1:
             errors += 1
             print '%s:%d:%d: Please remove trailing whitespace.' % (
