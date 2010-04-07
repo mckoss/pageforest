@@ -98,6 +98,7 @@ INSTALLED_APPS = (
     'auth',
     'apps',
     'data',
+    'documents',
     'demo',
     'dashboard',
     'utils',
