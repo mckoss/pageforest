@@ -26,7 +26,7 @@ def key_value(request, entity_name):
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():
         allow = [name[10:].upper() for name in globals()
-                           if name.startswith('key_value_')]
+                 if name.startswith('key_value_')]
         allow.sort()
         return HttpResponseNotAllowed(allow)
     return globals()[function_name](request)
