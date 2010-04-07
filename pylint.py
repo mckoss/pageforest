@@ -15,6 +15,7 @@ W0232 Class has no __init__ method
 """.strip().splitlines()
 
 IGNORE_MESSAGES = """
+No config file found
 Invalid name ""
 Invalid name "urlpatterns"
 Invalid name "setUp"
@@ -40,6 +41,9 @@ def ignore(line):
 
 def main():
     options = sys.argv[1:]
+    options.append('--output-format=parseable')
+    options.append('--include-ids=yes')
+    options.append('--reports=no')
     options.append('--disable-msg=' + disable_msg())
     path = os.path.dirname(__file__) or '.'
     command = 'pylint %s %s/appengine' % (' '.join(options), path)
