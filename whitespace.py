@@ -16,6 +16,7 @@ def short_path(path):
 
 def check(path):
     errors = 0
+    stripped = None
     for lineno, line in enumerate(file(path)):
         tab = line.find('\t')
         if tab >= 0:
@@ -35,6 +36,10 @@ def check(path):
             errors += 1
             print '%s:%d:%d: Please remove trailing whitespace.' % (
                 short_path(path), lineno + 1, len(stripped) + 1)
+    if stripped == '':
+        errors += 1
+        print '%s:%d:%d: Please remove blank lines at the end of file.' % (
+            short_path(path), lineno + 1, 1)
     return errors
 
 
