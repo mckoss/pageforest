@@ -9,12 +9,12 @@ function format_result(xhr, status, message) {
 
 function success_callback(message, status, xhr) {
   $('#results').prepend('<div style="color:#080">' +
-	format_result(xhr, status, message) + '</div>');
+    format_result(xhr, status, message) + '</div>');
 }
 
 function error_callback(xhr, status, error) {
   $('#results').prepend('<div style="color:#800">' +
-	format_result(xhr, status, error) + '</div>');
+    format_result(xhr, status, error) + '</div>');
 }
 
 function ajax(method) {
