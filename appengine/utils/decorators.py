@@ -1,9 +1,23 @@
 import time
 import email
 
+from django.http import HttpResponse
+
+from google.appengine.ext import db
+
 from utils.json import probably_valid_json
 
-from django.http import HttpResponse
+
+def run_in_transaction(func):
+    """
+    Run the function in a datastore transaction. If the transaction
+    cannot be committed, the function will be retried up to 3 times by
+    the transaction handler. Avoid side effects!
+    http://code.google.com/appengine/docs/python/datastore/functions.html
+    """
+    def wrapper(*args, **kwargs):
+        return db.run_in_transaction(func, *args, **kwargs)
+    return wrapper
 
 
 def cache_expires(seconds):
