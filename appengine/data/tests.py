@@ -53,7 +53,7 @@ class RestApiTest(TestCase):
         # Create.
         response = self.client.put('/data/entity', 'data',
                                    content_type='text/plain')
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity')
@@ -62,11 +62,11 @@ class RestApiTest(TestCase):
         # Update.
         response = self.client.put('/data/entity', 'updated',
                                    content_type='text/plain')
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.delete('/data/entity')
-        self.assertContains(response, 'deleted')
+        self.assertContains(response, '"statusText": "Deleted"')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -78,7 +78,7 @@ class JsonpApiTest(TestCase):
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # Read.
         response = self.client.get('/data/entity?method=GET&callback=func')
@@ -87,11 +87,11 @@ class JsonpApiTest(TestCase):
         self.assertEqual(response['Content-Type'], 'application/javascript')
         # Update.
         response = self.client.get('/data/entity?method=PUT&value=updated')
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'updated')
         # Delete.
         response = self.client.get('/data/entity?method=DELETE')
-        self.assertContains(response, 'deleted')
+        self.assertContains(response, '"statusText": "Deleted"')
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
@@ -102,7 +102,7 @@ class HostTest(TestCase):
         host_client = Client(HTTP_HOST='test.pageforest.com')
         response = host_client.put('/data/entity', 'data',
                                    content_type='text/html')
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Saved"')
         key_name = 'http://test.pageforest.com/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # GET with the same host header should work.
@@ -219,7 +219,8 @@ class JsonArrayTest(TestCase):
         started = datetime.now()
         response = self.client.post('/chat?method=PUSH', data='bye',
                                     content_type="text/plain")
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 4')
         self.assertContent('/chat?method=SLICE&start=-2', '["howdy", "bye"]')
         chat = KeyValue.get_by_key_name('http://testserver/chat')
         self.assertTrue(chat.created <= started)
@@ -230,7 +231,8 @@ class JsonArrayTest(TestCase):
         started = datetime.now()
         response = self.client.post('/newchat?method=PUSH', data='hi',
                                     content_type="text/plain")
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 1')
         self.assertContent('/newchat', '["hi"]')
         newchat = KeyValue.get_by_key_name('http://testserver/newchat')
         self.assertTrue(newchat.created >= started)
@@ -240,5 +242,6 @@ class JsonArrayTest(TestCase):
         """Test that push appends to the end af the array."""
         response = self.client.post('/chat?method=PUSH&max=3', data='bye',
                                     content_type="text/plain")
-        self.assertContains(response, 'saved')
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 3')
         self.assertContent('/chat', '["hi", "howdy", "bye"]')

@@ -77,7 +77,7 @@ def key_value_put(request):
     memcache.set(request.key_name,
                  last_modified + TIMESTAMP_SEPARATOR + value,
                  settings.MEMCACHE_TIMEOUT)
-    response = HttpResponse('{"status": 200, "message": "saved"}\n',
+    response = HttpResponse('{"status": 200, "statusText": "Saved"}\n',
                             mimetype='application/json')
     response['Last-Modified'] = last_modified
     return response
@@ -89,7 +89,7 @@ def key_value_delete(request):
     if entity is None:
         raise Http404
     entity.delete()
-    return HttpResponse('{"status": 200, "message": "deleted"}\n',
+    return HttpResponse('{"status": 200, "statusText": "Deleted"}\n',
                         mimetype='application/json')
 
 
@@ -103,6 +103,7 @@ def push_transaction(request, value, max_length):
     array = array[-max_length:]
     entity.value = json.dumps(array)
     entity.put()
+    return len(array)
 
 
 def key_value_push(request):
@@ -111,9 +112,10 @@ def key_value_push(request):
         value = json.loads(request.raw_post_data)
     except ValueError:  # Treat it as a simple string.
         value = request.raw_post_data
-    push_transaction(request, value, max_length)
-    return HttpResponse('{"status": 200, "message": "saved"}\n',
-                        mimetype=JSON_MIME_TYPE)
+    length = push_transaction(request, value, max_length)
+    return HttpResponse(
+        '{"status": 200, "statusText": "Pushed", "newLength": %d}\n' % length,
+        mimetype=JSON_MIME_TYPE)
 
 
 def key_value_slice(request):
