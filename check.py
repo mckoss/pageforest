@@ -31,9 +31,9 @@ def main():
         global LOGFILENAME
         LOGFILENAME = os.path.join(path, LOGFILENAME)
     attempt('pep8 --count --repeat --exclude .hg %s' % path)
-    attempt('python %s/pylint.py -e' % path)
     attempt('python %s/whitespace.py' % path)
     attempt('python %s/appengine/manage.py test -v0' % path)
+    attempt('python %s/pylint.py -e' % path)
 
 
 if __name__ == '__main__':
