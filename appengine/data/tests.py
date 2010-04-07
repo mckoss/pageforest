@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from google.appengine.api import memcache
 
 from django.test import TestCase, Client
@@ -32,9 +34,13 @@ class ClientErrorTest(TestCase):
         response = self.client.get('/data/does_not_exist/')
         self.assertEqual(response.status_code, 404)
 
-    def test_post_not_allowed(self):
-        """Tests that POST request returns 405 Method Not Allowed."""
-        response = self.client.post('/data/key')
+    def test_not_allowed(self):
+        """Tests that unknown methods return 405 Method Not Allowed."""
+        response = self.client.options('/data/key')
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'],
+                         'DELETE, GET, HEAD, PUSH, PUT, SLICE')
+        response = self.client.get('/data/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
 
 
@@ -179,3 +185,60 @@ class MimeTest(TestCase):
         """Test that the mime type is guessed correctly for ICO."""
         response = self.put_and_get('/test.ico')
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
+
+
+class JsonArrayTest(TestCase):
+
+    def setUp(self):
+        """Prepare a simple chat array."""
+        self.chat = KeyValue(key_name='http://testserver/chat',
+                             value='["hello", "hi", "howdy"]')
+        self.chat.put()
+
+    def assertContent(self, url, content):
+        """Get array content and compare with expected value."""
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.content, content)
+
+    def test_last(self):
+        """Test that the end of the array can be retrieved."""
+        self.assertContent('/chat?method=SLICE&start=-1', '["howdy"]')
+        self.assertContent('/chat?method=SLICE&start=-2', '["hi", "howdy"]')
+        self.assertContent('/chat?method=SLICE&start=-3',
+                           '["hello", "hi", "howdy"]')
+        self.assertContent('/chat?method=SLICE&start=-4',
+                           '["hello", "hi", "howdy"]')
+        self.assertContent('/chat?method=SLICE&start=-999999999999999999',
+                           '["hello", "hi", "howdy"]')
+        self.assertContent('/chat?method=SLICE',
+                           '["hello", "hi", "howdy"]')
+
+    def test_push(self):
+        """Test that push appends to the end af the array."""
+        started = datetime.now()
+        response = self.client.post('/chat?method=PUSH', data='bye',
+                                    content_type="text/plain")
+        self.assertContains(response, 'saved')
+        self.assertContent('/chat?method=SLICE&start=-2', '["howdy", "bye"]')
+        chat = KeyValue.get_by_key_name('http://testserver/chat')
+        self.assertTrue(chat.created <= started)
+        self.assertTrue(chat.modified >= started)
+
+    def test_push_empty(self):
+        """Test that push creates the array if it didn't exist."""
+        started = datetime.now()
+        response = self.client.post('/newchat?method=PUSH', data='hi',
+                                    content_type="text/plain")
+        self.assertContains(response, 'saved')
+        self.assertContent('/newchat', '["hi"]')
+        newchat = KeyValue.get_by_key_name('http://testserver/newchat')
+        self.assertTrue(newchat.created >= started)
+        self.assertTrue(newchat.modified >= started)
+
+    def test_push_max(self):
+        """Test that push appends to the end af the array."""
+        response = self.client.post('/chat?method=PUSH&max=3', data='bye',
+                                    content_type="text/plain")
+        self.assertContains(response, 'saved')
+        self.assertContent('/chat', '["hi", "howdy", "bye"]')
