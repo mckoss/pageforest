@@ -3,11 +3,20 @@
 import os
 import sys
 
-DEBUG = True
+ENVIRONMENT = "unknown"
+try:
+    if os.environ["SERVER_SOFTWARE"].lower().startswith("dev"):
+        ENVIRONMENT = "local"
+    elif os.environ["SERVER_SOFTWARE"].lower().startswith("google apphosting"):
+        ENVIRONMENT = "hosted"
+except:
+    pass
+
+DEBUG = (ENVIRONMENT == "local")
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Mike Koss', 'mike@mckoss.com'),
+    ('Mike Koss', 'mckoss@startpad.org'),
     ('Johann C. Rocholl', 'johann@rocholl.net'),
 )
 
@@ -52,7 +61,7 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '/media/'
+MEDIA_URL = '/static/'
 MEDIA_VERSION = 1
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
@@ -76,6 +85,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
     'utils.context_processors.settings',
+    'utils.context_processors.combined_files',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -107,3 +117,16 @@ INSTALLED_APPS = (
     'dashboard',
     'utils',
 )
+
+# Combined JavaScript and CSS files
+COMBINE_FILES = not DEBUG
+#COMBINE_FILES = True
+JS_FILES = {
+    'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
+    'widget': ['namespace', 'data', 'widget-ui'],
+    }
+
+CSS_FILES = {
+    'default': ['main', 'home'],
+    }
+
