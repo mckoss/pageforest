@@ -59,13 +59,6 @@ ADMIN_MEDIA_PREFIX = '/media/'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 
-# Override and extend the results from Python's mimetypes module.
-MIMETYPES = {
-    '.js': 'application/javascript',
-    '.ico': 'image/vnd.microsoft.icon',
-    '.json': 'application/json',
-}
-
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
