@@ -8,8 +8,9 @@ class KeyValue(db.Model):
     """
     value = db.BlobProperty()
     namespace = db.StringProperty()
-    ip = db.StringProperty()
-    timestamp = db.DateTimeProperty()
+    created = db.DateTimeProperty(auto_now_add=True)
+    modified = db.DateTimeProperty(auto_now=True)
+    ip = db.StringProperty()  # Last modified from this IPv4 address.
 
     def get_absolute_url(self):
         return self.key().name()
