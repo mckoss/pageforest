@@ -3,7 +3,7 @@
 import os
 import sys
 
-IGNORE_DIR = '.hg'.split()
+IGNORE_DIR = '.hg .git .bzr .svn'.split()
 IGNORE_EXT = '.png .pyc'.split()
 
 
