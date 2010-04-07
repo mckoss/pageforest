@@ -10,7 +10,7 @@ from data.models import KeyValue
 class KeyValueTest(TestCase):
 
     def setUp(self):
-        self.key = 'http://test.pageforest.com/data/key'
+        self.key = 'test/data/key'
         self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
         self.data = KeyValue(key_name=self.key, value=self.value)
         self.data.put()
@@ -48,7 +48,7 @@ class RestApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with REST API."""
-        key_name = 'http://testserver/data/entity'
+        key_name = 'test/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.put('/data/entity', 'data',
@@ -74,7 +74,7 @@ class JsonpApiTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with JSONP API."""
-        key_name = 'http://testserver/data/entity'
+        key_name = 'test/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
         response = self.client.get('/data/entity?method=PUT&value=data')
@@ -99,11 +99,11 @@ class HostTest(TestCase):
 
     def test_host(self):
         """Test namespaces by Host header."""
-        host_client = Client(HTTP_HOST='test.pageforest.com')
+        host_client = Client(HTTP_HOST='myapp.pageforest.com')
         response = host_client.put('/data/entity', 'data',
                                    content_type='text/html')
         self.assertContains(response, '"statusText": "Saved"')
-        key_name = 'http://test.pageforest.com/data/entity'
+        key_name = 'myapp/data/entity'
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
         # GET with the same host header should work.
         response = host_client.get('/data/entity')
@@ -118,7 +118,7 @@ class MemcacheTest(TestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        key_name = 'http://testserver/data/entity'
+        key_name = 'test/data/entity'
         self.assertEqual(memcache.get(key_name), None)
         # Create.
         self.client.put('/data/entity', 'data', content_type='text/plain')
@@ -191,7 +191,7 @@ class JsonArrayTest(TestCase):
 
     def setUp(self):
         """Prepare a simple chat array."""
-        self.chat = KeyValue(key_name='http://testserver/chat',
+        self.chat = KeyValue(key_name='test/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
 
@@ -222,7 +222,7 @@ class JsonArrayTest(TestCase):
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 4')
         self.assertContent('/chat?method=SLICE&start=-2', '["howdy", "bye"]')
-        chat = KeyValue.get_by_key_name('http://testserver/chat')
+        chat = KeyValue.get_by_key_name('test/chat')
         self.assertTrue(chat.created <= started)
         self.assertTrue(chat.modified >= started)
 
@@ -234,7 +234,7 @@ class JsonArrayTest(TestCase):
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 1')
         self.assertContent('/newchat', '["hi"]')
-        newchat = KeyValue.get_by_key_name('http://testserver/newchat')
+        newchat = KeyValue.get_by_key_name('test/newchat')
         self.assertTrue(newchat.created >= started)
         self.assertTrue(newchat.modified >= started)
 

@@ -1,9 +1,12 @@
 from google.appengine.ext import db
 
+from django.conf import settings
+
 
 class Document(db.Model):
     """
-    The entity key name is the absolute URL of the document.
+    Metadata for each PageForest document.
+    Entity key name format: app_id/doc_id
     """
     title = db.StringProperty()
     json = db.TextProperty()
@@ -15,4 +18,5 @@ class Document(db.Model):
     modified = db.DateTimeProperty()
 
     def get_absolute_url(self):
-        return self.key().name()
+        app_id, doc_id = self.key().name().split('/')
+        return 'http://%s.%s/%s' % (app_id, settings.DEFAULT_DOMAIN, doc_id)

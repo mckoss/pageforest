@@ -16,12 +16,21 @@ JSON_MIME_TYPE = 'application/json'
 TIMESTAMP_SEPARATOR = '|'
 
 
+def hostname_to_app_id(hostname):
+    app_id = hostname.lower()
+    for domain in settings.DOMAINS:
+        if app_id.endswith('.' + domain):
+            return app_id[:-len(domain) - 1]
+    return app_id
+
+
 @jsonp
 def key_value(request, entity_name):
-    request.domain = request.META.get('HTTP_HOST', 'testserver').lower()
+    hostname = request.META.get('HTTP_HOST', 'test')
+    request.app_id = hostname_to_app_id(hostname)
     if not entity_name:
         entity_name = 'index.html'
-    request.key_name = 'http://%s/%s' % (request.domain, entity_name)
+    request.key_name = '%s/%s' % (request.app_id, entity_name)
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():
@@ -69,7 +78,8 @@ def key_value_put(request):
         value = value.encode('utf-8')
     entity = KeyValue(
         key_name=request.key_name,
-        namespace=request.domain,
+        app_id=request.app_id,
+        # TODO: doc_id=request.doc_id,
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
     entity.put()
