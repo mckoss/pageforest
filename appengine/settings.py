@@ -41,6 +41,10 @@ USE_I18N = False
 # decorate our view functions with @last_modified instead.
 USE_ETAGS = False
 
+# Canonical second-level domain name.
+DEFAULT_DOMAIN = 'pageforest.com'
+DOMAINS = 'pageforest.com pgfrst.com'.split()
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
