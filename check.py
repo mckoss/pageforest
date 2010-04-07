@@ -16,8 +16,11 @@ def attempt(command):
     returncode = subprocess.call(command.split(), stderr=logfile)
     logfile.close()
     if returncode:
-        sys.exit("failed with return code %d, see %s" %
-                 (returncode, LOGFILENAME))
+        message = "Failed with return code %d" % returncode
+        size = os.path.getsize(LOGFILENAME)
+        if size:
+            message += ' and %d bytes in %s' % (size, LOGFILENAME)
+        sys.exit(message)
     else:
         os.unlink(LOGFILENAME)
 
