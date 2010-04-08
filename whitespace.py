@@ -2,9 +2,11 @@
 
 import os
 import sys
+from fnmatch import fnmatch
 
 IGNORE_DIR = '.hg .git .bzr .svn'.split()
 IGNORE_EXT = '.png .pyc'.split()
+IGNORE_FILES = 'jquery-*.js'.split()
 
 
 def short_path(path):
@@ -43,6 +45,15 @@ def check(path):
     return errors
 
 
+def file_ignored(filename):
+    base, ext = os.path.splitext(filename)
+    if ext in IGNORE_EXT:
+        return True
+    for pattern in IGNORE_FILES:
+        if fnmatch(filename, pattern):
+            return True
+
+
 def main():
     errors = 0
     top = os.path.dirname(__file__) or '.'
@@ -51,8 +62,7 @@ def main():
             if ignored in dirnames:
                 dirnames.remove(ignored)
         for filename in filenames:
-            base, ext = os.path.splitext(filename)
-            if ext in IGNORE_EXT:
+            if file_ignored(filename):
                 continue
             path = os.path.join(dirpath, filename)
             errors += check(path)
