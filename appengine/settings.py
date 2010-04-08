@@ -121,12 +121,13 @@ INSTALLED_APPS = (
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
 #COMBINE_FILES = True
-JS_FILES = {
-    'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
-    'widget': ['namespace', 'data', 'widget-ui'],
-    }
+FILE_GROUPS = {
+    'js': {
+        'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
+        'widget': ['namespace', 'data', 'widget-ui'],
+        },
 
-CSS_FILES = {
-    'default': ['main', 'home'],
+    'css': {
+        'default': ['main', 'home'],
+        },
     }
-
