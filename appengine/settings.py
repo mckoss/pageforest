@@ -3,7 +3,13 @@
 import os
 import sys
 
-DEV_APPSERVER = os.environ.get('SERVER_SOFTWARE', '').startswith("Dev")
+# App Engine specific environment variables.
+APPLICATION_ID = os.environ.get('APPLICATION_ID', '')
+CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID', '')
+SERVER_SOFTWARE = os.environ.get('SERVER_SOFTWARE', '')
+AUTH_DOMAIN = os.environ.get('AUTH_DOMAIN', '')
+
+DEV_APPSERVER = SERVER_SOFTWARE.startswith("Development")
 DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
 
@@ -55,11 +61,6 @@ MEDIA_ROOT = ''
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/static/'
 MEDIA_VERSION = 1
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
-ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
