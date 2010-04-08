@@ -1,5 +1,3 @@
-from google.appengine.api import memcache
-
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
@@ -13,7 +11,6 @@ from utils.shortcuts import get_int
 from data.models import KeyValue
 
 JSON_MIME_TYPE = 'application/json'
-TIMESTAMP_SEPARATOR = '|'
 
 
 def hostname_to_app_id(hostname):
@@ -48,24 +45,14 @@ def key_value_head(request):
 
 
 def key_value_get(request):
-    last_modified = None
-    value = memcache.get(request.key_name)
-    if value is None:
-        entity = KeyValue.get_by_key_name(request.key_name)
-        if entity is None:
-            raise Http404
-        last_modified = http_datetime(entity.modified)
-        value = entity.value
-        memcache.set(request.key_name,
-                     last_modified + TIMESTAMP_SEPARATOR + value,
-                     settings.MEMCACHE_TIMEOUT)
-    elif len(value) > 29 and value[29] == TIMESTAMP_SEPARATOR:
-        last_modified = value[:29]
-        value = value[30:]
+    entity = KeyValue.get_by_key_name(request.key_name)
+    if entity is None:
+        raise Http404
+    last_modified = http_datetime(entity.modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     mimetype = guess_mimetype(request.key_name)
-    response = HttpResponse(value, mimetype=mimetype)
+    response = HttpResponse(entity.value, mimetype=mimetype)
     if last_modified:
         response['Last-Modified'] = last_modified
     return response
@@ -83,18 +70,13 @@ def key_value_put(request):
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
     entity.put()
-    last_modified = http_datetime(entity.modified)
-    memcache.set(request.key_name,
-                 last_modified + TIMESTAMP_SEPARATOR + value,
-                 settings.MEMCACHE_TIMEOUT)
     response = HttpResponse('{"status": 200, "statusText": "Saved"}\n',
                             mimetype='application/json')
-    response['Last-Modified'] = last_modified
+    response['Last-Modified'] = http_datetime(entity.modified)
     return response
 
 
 def key_value_delete(request):
-    memcache.delete(request.key_name)
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404
