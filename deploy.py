@@ -5,8 +5,6 @@ import sys
 import subprocess
 from optparse import OptionParser
 
-from check import attempt
-
 PROJECT = 'appengine'
 
 
@@ -59,7 +57,8 @@ def main():
     if not options.version:
         options.version = 'dev'
     # Check coding style and unit tests.
-    attempt('python check.py')
+    if os.system('python check.py'):
+        sys.exit('failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
@@ -68,7 +67,8 @@ def main():
                     version=options.version)
     try:
         # Deploy source code to Google App Engine.
-        attempt('appcfg.py update ' + PROJECT)
+        if os.system('appcfg.py update ' + PROJECT):
+            sys.exit('failed')
     finally:
         # Restore app.yaml to original.
         update_app_yaml(app_yaml)
