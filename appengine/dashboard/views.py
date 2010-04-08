@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
-from django.shortcuts import render_to_response
-from django.template import RequestContext
+from utils.shortcuts import render_to_response
 
 from auth.models import User
 from data.models import KeyValue
@@ -20,5 +19,4 @@ def index(request):
         KeyValue.all().filter('timestamp >', day_ago).count(),
         KeyValue.all().filter('timestamp >', week_ago).count(),
         KeyValue.all().filter('timestamp >', month_ago).count())
-    return render_to_response('dashboard/index.html', locals(),
-                              context_instance=RequestContext(request))
+    return render_to_response(request, 'dashboard/index.html', locals())
