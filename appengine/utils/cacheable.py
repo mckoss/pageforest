@@ -169,41 +169,5 @@ class Cacheable(db.Model, object):
         return local.cache_storage
 
 
-class CacheFilter(object):
-    def process_response(self, req, resp):
-        write_deferred_cache()
-        return resp
-
-
-def write_deferred_cache():
-    for key, model in local.cache_storage.items():
-        model.deferred_put()
-
 local = threading.local()
 local.cache_storage = {}
-
-
-def unique_models(models):
-    """
-    de-dup the list of models by comparing their keys to remove duplicates.
-
-    Assumes all models are of the same type.
-    """
-    keys = set()
-    unique_models = []
-
-    for model in models:
-        key = model.key().id_or_name()
-        if key in keys:
-            continue
-        keys.add(key)
-        unique_models.append(model)
-
-    return unique_models
-
-
-def exclude_models(models, models_exclude):
-    keys_exclude = set((model.key().id_or_name() for model in models_exclude))
-    results = [model for model in models
-               if model.key().id_or_name() not in keys_exclude]
-    return results
