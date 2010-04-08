@@ -40,13 +40,16 @@ def ignore(line):
 
 
 def main():
-    options = sys.argv[1:]
-    options.append('--output-format=parseable')
-    options.append('--include-ids=yes')
-    options.append('--reports=no')
-    options.append('--disable-msg=' + disable_msg())
-    path = os.path.dirname(__file__) or '.'
-    command = 'pylint %s %s/appengine' % (' '.join(options), path)
+    command = ['pylint']
+    command.append('--output-format=parseable')
+    command.append('--include-ids=yes')
+    command.append('--reports=no')
+    command.append('--disable-msg=' + disable_msg())
+    command.extend(sys.argv[1:])
+    if command[-1].startswith('-'):
+        path = os.path.dirname(__file__) or '.'
+        command.append(os.path.join(path, 'appengine'))
+    command = ' '.join(command)
     # print "command: %s" % command
     pylint = subprocess.Popen(command, shell=True,
                               stdout=subprocess.PIPE,
