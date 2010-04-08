@@ -14,27 +14,22 @@ class Cacheable(db.Model, object):
     Usage: class MyModel(Cacheable): ...
 
     This overrides the following Model methods:
+    * get_by_key_name(key_name, parent)
+    * get_or_insert(key_name, **kwds)
+    * put()
 
-        get_by_key_name(key_name, parent)
-        get_or_insert(key_name, **kwds)
-        put()
-
-    these are additional methods:
-
-        set_dirty() - set instance to dirty
-        deferred_put() - writes the instance to store if dirty
-        ensure_cached() - return a cached instance of the current model
-        flush_cache() - put the model, and remove all cached copies
+    These are additional methods:
+    * ensure_cached() - return a cached instance of the current instance
+    * flush_cache() - put the instance, and remove all cached copies
 
     Deriving from this class provides:
-
-    - Saving models to local storage and memcache.
-    - Throttled write-through to storage for high-volume writes.
+    * Saving instances to local storage and memcache.
+    * Throttled write-through to storage for high-volume writes.
 
     Cacheable looks for Model instances in:
-    - in request-local storage (for fast local access during same request)
-        - in memcache (keyed on app instance version, model and key name)
-        - in the App Engine data store
+    * request-local storage (for fast local access during same request)
+    * memcache (keyed on app instance version, model and key name)
+    * App Engine datastore
 
     Datastore queries of this model class will NOT return the cached
     instances. You should call ensure_cached() to read from the cache.
@@ -42,7 +37,6 @@ class Cacheable(db.Model, object):
 
     def __init__(self, *args, **kwargs):
         super(Cacheable, self).__init__(*args, **kwargs)
-        self._dirty = False
         self._writes_per_second = 0.0
 
     @classmethod
@@ -62,7 +56,7 @@ class Cacheable(db.Model, object):
         model = super(Cacheable, cls).get_by_key_name(key_name, parent)
         if model is not None:
             if settings.DEBUG:
-                logging.info("get_by_key_name hit the datastore: %s" %
+                logging.info("datastore get_by_key_name: " +
                              cls._cache_key(key_name))
             model.ensure_cached()
         return model
@@ -81,57 +75,24 @@ class Cacheable(db.Model, object):
         model = super(Cacheable, cls).get_or_insert(key_name, **kwargs)
         if model is not None:
             if settings.DEBUG:
-                logging.info("get_or_insert hit the datastore: %s" %
+                logging.info("datastore get_or_insert: " +
                              cls._cache_key(key_name))
             model.ensure_cached()
         return model
 
     def put(self):
+        """
+        Write to datastore and memcache and local.
+        """
         key = super(Cacheable, self).put()
-
         if settings.DEBUG:
-            logging.info("Writing to storage: %s" % self._model_cache_key())
-
-        self._cache_state = self.cache_state.clean
+            logging.info("datastore put: " + self._model_cache_key())
         self.ensure_cached()
         return key
 
-    # TODO: Reconsider cache_state.
-    def set_dirty(self, state='dirty'):
-        """
-        Mark the model as having changes to write to the store before
-        the request is over.
-        """
-        self._is_memcached = False
-        if state > self._cache_state:
-            self._cache_state = state
-        self.ensure_cached()
-
-    def deferred_put(self):
-        """
-        If the model has been marked as dirty, try to write it out.
-        """
-        if self._cache_state == self.cache_state.clean:
-            return
-
-        self.ensure_cached()
-
-        try:
-            # Write to storage if critical or dirty AND old
-            # TODO: Re-implement this condition without reqfilter.
-            # if self._cache_state == self.cache_state.critical or \
-            #     not self._write_rate.is_exceeded(
-            #     reqfilter.get_request().secsNow):
-            self.put()
-        except Exception, e:
-            logging.info("Failed to write deferred-write cache: %s (%s)" % (
-                         self._model_cache_key(),
-                         e.message))
-            pass
-
     def ensure_cached(self):
         """
-        ensures that this instance is in the cache. If not, it will
+        Ensures that this instance is in the cache. If not, it will
         replace any existing instance from the cache - so any local
         modifications will be written to the cache (but not storage).
 
