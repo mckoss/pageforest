@@ -11,26 +11,21 @@ from google.appengine.datastore import entity_pb
 
 class Cacheable(db.Model, object):
     """
-    Model caching helper class.
-    Usage: class MyModel(Cacheable): ...
+    Memcache mixin for App Engine datastore models.
+    Usage: class MyModel(Cacheable)
 
     This overrides the following Model methods:
     * get_by_key_name(key_name, parent)
-    * get_or_insert(key_name, **kwds)
+    * get_or_insert(key_name, **kwargs)
     * put()
 
     These are additional methods:
-    * ensure_cached() - return a cached instance of the current instance
-    * flush_cache() - put the instance, and remove all cached copies
+    * cache_get_by_key_name()
+    * cache_put()
 
     Deriving from this class provides:
-    * Saving instances to local storage and memcache.
-    * Throttled write-through to storage for high-volume writes.
-
-    Cacheable looks for Model instances in:
-    * request-local storage (for fast local access during same request)
-    * memcache (keyed on app instance version, model and key name)
-    * App Engine datastore
+    * Saving instances to memcache.
+    * TODO: Throttled write-through to storage for high-volume writes.
 
     Datastore queries of this model class will NOT return the cached
     instances. You should call ensure_cached() to read from the cache.
@@ -66,7 +61,7 @@ class Cacheable(db.Model, object):
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):
         """
-        Look in local or memcache before datastore.
+        Look in memcache before datastore.
         The key_name must be str or unicode, not a list.
 
         TODO: Support list of key names - will need to fetch partial
@@ -88,7 +83,7 @@ class Cacheable(db.Model, object):
     @classmethod
     def get_or_insert(cls, key_name, **kwargs):
         """
-        Look in local or memcache before datastore.
+        Look in memcache before datastore.
         The key_name must be str or unicode.
         """
         assert isinstance(key_name, basestring)
