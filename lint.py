@@ -47,6 +47,7 @@ def main():
     options.append('--disable-msg=' + disable_msg())
     path = os.path.dirname(__file__) or '.'
     command = 'pylint %s %s/appengine' % (' '.join(options), path)
+    print "command: %s" % command
     output = commands.getoutput(command)
     # Filter error messages and count errors.
     errors = 0

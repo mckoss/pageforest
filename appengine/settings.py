@@ -78,7 +78,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
     'utils.context_processors.settings',
-    # 'utils.context_processors.combined_files',
+    'utils.context_processors.combined_files',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -114,11 +114,13 @@ INSTALLED_APPS = (
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
 #COMBINE_FILES = True
-JS_FILES = {
-    'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
-    'widget': ['namespace', 'data', 'widget-ui'],
-    }
+FILE_GROUPS = {
+    'js': {
+        'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
+        'widget': ['namespace', 'data', 'widget-ui'],
+        },
 
-CSS_FILES = {
-    'default': ['main', 'home'],
+    'css': {
+        'default': ['main', 'home'],
+        },
     }
