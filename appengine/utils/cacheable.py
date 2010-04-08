@@ -91,7 +91,7 @@ class Cacheable(db.Model, object):
             if settings.DEBUG:
                 logging.info("get_by_key_name used datastore: " +
                              cls._cache_key(key_name))
-            instance.ensure_cached()
+            instance.cache_put()
         return instance
 
     @classmethod
