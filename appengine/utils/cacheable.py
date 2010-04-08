@@ -41,49 +41,49 @@ class Cacheable(db.Model, object):
     """
 
     def __init__(self, *args, **kwargs):
-        self._cache_state = self.cache_state.clean
-        self._is_memcached = False
-        self._secs_put_last = 0
-        self._write_rate = 0.5  # TODO: timescore.RateLimit(30)
         super(Cacheable, self).__init__(*args, **kwargs)
+        self._dirty = False
+        self._writes_per_second = 0.0
 
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):
         """
-        override the Model.get_by_key_name method, to look in local or memcache
-        storage first.
+        Look in local or memcache before datastore.
+        The key_name must be str or unicode, not a list.
 
-        All key_name(s) must be strings.
-
-        TODO: Support list of key_names - will need to call super are
-        partial list of those keys that are not yet cached!
+        TODO: Support list of key names - will need to fetch partial
+        list from datastore for those keys that are not yet cached!
         """
+        assert isinstance(key_name, basestring)
         model = cls._model_from_cache(key_name)
         if model is not None:
             return model
-
-        # Go to storage
+        # Fetch from datastore.
         model = super(Cacheable, cls).get_by_key_name(key_name, parent)
         if model is not None:
             if settings.DEBUG:
-                logging.info("Reading from storage: %s" %
+                logging.info("get_by_key_name hit the datastore: %s" %
                              cls._cache_key(key_name))
             model.ensure_cached()
-
         return model
 
     @classmethod
     def get_or_insert(cls, key_name, **kwargs):
-        # Look in cache first
+        """
+        Look in local or memcache before datastore.
+        The key_name must be str or unicode.
+        """
+        assert isinstance(key_name, basestring)
         model = cls._model_from_cache(key_name)
         if model is not None:
             return model
-
-        # Go to storage
+        # Fetch from datastore.
         model = super(Cacheable, cls).get_or_insert(key_name, **kwargs)
         if model is not None:
+            if settings.DEBUG:
+                logging.info("get_or_insert hit the datastore: %s" %
+                             cls._cache_key(key_name))
             model.ensure_cached()
-
         return model
 
     def put(self):
