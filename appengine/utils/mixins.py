@@ -1,5 +1,8 @@
 from google.appengine.ext import db
 
+from utils.cacheable import Cacheable
+from utils.migratable import Migratable
+
 
 class Dated(db.Model):
     """

@@ -1,6 +1,6 @@
 from google.appengine.ext import db
 
-from utils.migratable import Migratable
+from utils.mixins import Migratable, Cacheable
 
 
 # This function was adapted from django.contrib.auth.models
@@ -30,7 +30,7 @@ def check_password(raw_password, enc_password):
     return hsh == get_hexdigest(algo, salt, raw_password)
 
 
-class User(db.Expando, Migratable):
+class User(db.Expando, Migratable, Cacheable):
     email = db.EmailProperty()
     password = db.StringProperty()  # algo$salt$hexdigest
     last_login = db.DateTimeProperty(auto_now_add=True)
