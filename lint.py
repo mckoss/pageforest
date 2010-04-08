@@ -2,7 +2,7 @@
 
 import os
 import sys
-import commands
+import subprocess
 
 DISABLE_MESSAGES = """
 C0121 Missing required attribute "__revision__"
@@ -47,11 +47,14 @@ def main():
     options.append('--disable-msg=' + disable_msg())
     path = os.path.dirname(__file__) or '.'
     command = 'pylint %s %s/appengine' % (' '.join(options), path)
-    print "command: %s" % command
-    output = commands.getoutput(command)
+    # print "command: %s" % command
+    pylint = subprocess.Popen(command, shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
+    stdout, stderr = pylint.communicate()
     # Filter error messages and count errors.
     errors = 0
-    for line in output.splitlines():
+    for line in stdout.splitlines():
         line = line.rstrip()
         if ignore(line) or not line:
             continue
