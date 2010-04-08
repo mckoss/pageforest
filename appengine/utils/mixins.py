@@ -1,7 +1,7 @@
 from google.appengine.ext import db
 
 
-class Timestamps(db.Model):
+class Dated(db.Model):
     """
     Standardized timestamp information for models.
     """

@@ -41,7 +41,7 @@ class Cacheable(db.Model, object):
         return memcache.set(cache_key, binary)
 
     def put(self):
-        """Save this entitiy to datastore and memcache."""
+        """Save this entity to datastore and memcache."""
         key = super(Cacheable, self).put()
         self.cache_put()
         return key
@@ -52,10 +52,9 @@ class Cacheable(db.Model, object):
         return memcache.delete(cache_key)
 
     def delete(self):
-        """Remove this entitiy from datastore and memcache."""
-        key = super(Cacheable, self).delete()
-        self.cache_delete()
-        return key
+        """Remove this entity from datastore and memcache."""
+        self.cache_delete()  # First because it needs self.key().name().
+        super(Cacheable, self).delete()
 
     @classmethod
     def cache_get_by_key_name(cls, key_name):
