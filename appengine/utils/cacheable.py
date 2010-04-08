@@ -12,46 +12,50 @@ class Cacheable(db.Model, object):
     Memcache mixin for App Engine datastore models.
     Usage: class MyModel(Cacheable)
 
-    Deriving from Cacheable class provides:
-    * Automatic memcache writes in instance.put().
-    * Automatic memcache reads in get_by_key_name() or get_or_insert().
+    Inheriting from the Cacheable class provides:
+    * Use memcache for put, delete, get_by_key_name, get_or_insert.
     * TODO: Throttled write-through to storage for high-volume writes.
 
     Cacheable overrides the following methods from db.Model:
-    * get_by_key_name(key_name, parent) @classmethod
-    * get_or_insert(key_name, **kwargs) @classmethod
     * put()
+    * delete()
+    * @classmethod get_by_key_name(key_name, parent)
+    * @classmethod get_or_insert(key_name, **kwargs)
 
     Cacheable introduces the following new methods:
-    * class_get_cache_key(key_name) @classmethod
-    * get_cache_key()
-    * cache_get_by_key_name()
     * cache_put()
+    * cache_delete()
+    * @classmethod cache_get_by_key_name()
+    * @classmethod class_get_cache_key(key_name)
+    * get_cache_key()
     """
 
     def __init__(self, *args, **kwargs):
         super(Cacheable, self).__init__(*args, **kwargs)
 
-    @classmethod
-    def class_get_cache_key(cls, key_name):
-        """
-        Generate a cache key for this key_name.
+    def cache_put(self):
+        """Save this entity to memcache, using protocol buffers."""
+        cache_key = self.get_cache_key()
+        protobuf = db.model_to_protobuf(self)
+        binary = protobuf.Encode()
+        return memcache.set(cache_key, binary)
 
-        C1 is a supposedly unique prefix with a version number.
-        Increase it to reset the cache if the serializer is changed.
+    def put(self):
+        """Save this entitiy to datastore and memcache."""
+        key = super(Cacheable, self).put()
+        self.cache_put()
+        return key
 
-        The datastore kind of the class is included to create a
-        separate namespace for each model.
+    def cache_delete(self):
+        """Remove this entity from memcache."""
+        cache_key = self.get_cache_key()
+        return memcache.delete(cache_key)
 
-        TODO: Include settings.CURRENT_VERSION_ID if required.
-        """
-        return '~'.join(('C1', cls.kind(), key_name))
-
-    def get_cache_key(self):
-        """
-        Generate a cache key for this model instance.
-        """
-        return self.class_get_cache_key(self.key().name())
+    def delete(self):
+        """Remove this entitiy from datastore and memcache."""
+        key = super(Cacheable, self).delete()
+        self.cache_delete()
+        return key
 
     @classmethod
     def cache_get_by_key_name(cls, key_name):
@@ -110,21 +114,21 @@ class Cacheable(db.Model, object):
             instance.ensure_cached()
         return instance
 
-    def cache_put(self):
+    @classmethod
+    def class_get_cache_key(cls, key_name):
         """
-        Save this entity to memcache, using protocol buffers.
-        """
-        cache_key = self.get_cache_key()
-        protobuf = db.model_to_protobuf(self)
-        binary = protobuf.Encode()
-        memcache.set(cache_key, binary)
+        Generate a cache key for this key_name.
 
-    def put(self):
+        C1 is a supposedly unique prefix with a version number.
+        Increase it to reset the cache if the serializer is changed.
+
+        The datastore kind of the class is included to create a
+        separate namespace for each model.
+
+        TODO: Include settings.CURRENT_VERSION_ID if required.
         """
-        Save this entitiy to datastore and memcache.
-        """
-        key = super(Cacheable, self).put()
-        if settings.DEBUG:
-            logging.info("put used datastore: " + self.get_cache_key())
-        self.cache_put()
-        return key
+        return '~'.join(('C1', cls.kind(), key_name))
+
+    def get_cache_key(self):
+        """Generate a cache key for this model instance."""
+        return self.class_get_cache_key(self.key().name())
