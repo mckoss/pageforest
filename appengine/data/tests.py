@@ -116,30 +116,44 @@ class HostTest(TestCase):
 
 class MemcacheTest(TestCase):
 
+    def assertProtoBuf(self, binary, data=None):
+        self.assertTrue(binary is not None)
+        self.assertEqual(binary.count('pageforest'), 1)
+        self.assertEqual(binary.count('KeyValue'), 2)
+        self.assertEqual(binary.count('test/doc/key/with/slashes'), 2)
+        self.assertEqual(binary.count('created'), 1)
+        self.assertEqual(binary.count('modified'), 1)
+        self.assertEqual(binary.count('127.0.0.1'), 1)
+        if data:
+            self.assertEqual(binary.count(data), 1)
+
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        key_name = 'test/data/entity'
-        self.assertEqual(memcache.get(key_name), None)
+        url = '/doc/key/with/slashes'
+        key_name = 'test' + url
+        cache_key = 'C1~KeyValue~' + key_name
+        self.assertEqual(memcache.get(cache_key), None)
         # Create.
-        self.client.put('/data/entity', 'data', content_type='text/plain')
-        self.assertEqual(memcache.get(key_name)[26:], 'GMT|data')
+        self.client.put(url, 'data', content_type='text/plain')
+        self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
+        binary = memcache.get(cache_key)
+        self.assertProtoBuf(binary, 'data')
         # Make sure it reads from memcache if possible.
-        last_modified = 'Tue, 15 Nov 1994 12:45:26 GMT'
-        memcache.set(key_name, last_modified + '|cached', 300)
-        response = self.client.get('/data/entity')
-        self.assertEqual(response.content, 'cached')
-        self.assertEqual(response['Last-Modified'], last_modified)
+        binary = binary.replace('data', 'ofop')
+        memcache.set(cache_key, binary, 300)
+        response = self.client.get(url)
+        self.assertEqual(response.content, 'ofop')
         # Make sure that GET saves to memcache if necessary.
-        memcache.delete(key_name)
-        self.assertEqual(memcache.get(key_name), None)
-        response = self.client.get('/data/entity')
-        self.assertEqual(memcache.get(key_name)[26:], 'GMT|data')
+        memcache.delete(cache_key)
+        self.assertEqual(memcache.get(cache_key), None)
+        response = self.client.get(url)
+        self.assertProtoBuf(memcache.get(cache_key))
         # Update.
-        self.client.put('/data/entity', 'updated', content_type='text/plain')
-        self.assertEqual(memcache.get(key_name)[26:], 'GMT|updated')
+        self.client.put(url, 'updated', content_type='text/plain')
+        self.assertProtoBuf(memcache.get(cache_key), 'updated')
         # Delete.
-        self.client.delete('/data/entity')
-        self.assertEqual(memcache.get(key_name), None)
+        self.client.delete(url)
+        self.assertEqual(memcache.get(cache_key), None)
 
 
 class MimeTest(TestCase):
