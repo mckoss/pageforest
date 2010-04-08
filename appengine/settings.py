@@ -3,16 +3,8 @@
 import os
 import sys
 
-ENVIRONMENT = "unknown"
-try:
-    if os.environ["SERVER_SOFTWARE"].lower().startswith("dev"):
-        ENVIRONMENT = "local"
-    elif os.environ["SERVER_SOFTWARE"].lower().startswith("google apphosting"):
-        ENVIRONMENT = "hosted"
-except:
-    pass
-
-DEBUG = (ENVIRONMENT == "local")
+DEV_APPSERVER = os.environ.get('SERVER_SOFTWARE', '').startswith("Dev")
+DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -85,7 +77,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
     'utils.context_processors.settings',
-    'utils.context_processors.combined_files',
+    # 'utils.context_processors.combined_files',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -129,4 +121,3 @@ JS_FILES = {
 CSS_FILES = {
     'default': ['main', 'home'],
     }
-
