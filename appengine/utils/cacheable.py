@@ -2,66 +2,49 @@ import logging
 import os
 import threading
 
+from django.conf import settings
+
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
 
-class Cacheable(db.Model):
+class Cacheable(db.Model, object):
     """
-    Model caching helper (sub)class
+    Model caching helper class.
+    Usage: class MyModel(Cacheable): ...
 
-    Usage:
-
-        class MyModel(Cacheable):
-            ...
-
-    these are over-ridden methods of Model:
+    This overrides the following Model methods:
 
         get_by_key_name(key_name, parent)
-            retreives model from cache if possible
-        put()
-            write-through cache and put to store
         get_or_insert(key_name, **kwds)
+        put()
 
     these are additional methods:
 
-        set_dirty() - marks model as dirty or critical - the later forces
-            a write to store on exit, the later throttles to one write per
-            second for this model
-        deferred_put() - writes the model to store if dirty
+        set_dirty() - set instance to dirty
+        deferred_put() - writes the instance to store if dirty
         ensure_cached() - return a cached instance of the current model
         flush_cache() - put the model, and remove all cached copies
 
     Deriving from this class provides:
 
-    - Saving models to local storage and memcache where they can be
-      retrieved quickly.
-    - Throttled write-through to storage for high-volume, but delay-able
-      writes.
-
-    Issues:
+    - Saving models to local storage and memcache.
+    - Throttled write-through to storage for high-volume writes.
 
     Cacheable looks for Model instances in:
-        - in request-local storage (for fast local access for same-request
-          accesses)
-        - in memcache (key'ed on app instance version, model name, and key name
+    - in request-local storage (for fast local access during same request)
+        - in memcache (keyed on app instance version, model and key name)
         - in the App Engine data store
 
-    All Cacheable Models must use unique key names (not id's) for their
-    instances.
-
-    Queries of this model class will NOT return the cached instance of
-    this model. You should call ensure_cached() to get the cached
-    version.
+    Datastore queries of this model class will NOT return the cached
+    instances. You should call ensure_cached() to read from the cache.
     """
-    cache_state = util.enum('clean', 'dirty', 'critical')
 
     def __init__(self, *args, **kwargs):
         self._cache_state = self.cache_state.clean
         self._is_memcached = False
         self._secs_put_last = 0
-        # Peak writes to store - once each 2 seconds
-        self._write_rate = timescore.RateLimit(30)
+        self._write_rate = 0.5  # TODO: timescore.RateLimit(30)
         super(Cacheable, self).__init__(*args, **kwargs)
 
     @classmethod
@@ -82,7 +65,7 @@ class Cacheable(db.Model):
         # Go to storage
         model = super(Cacheable, cls).get_by_key_name(key_name, parent)
         if model is not None:
-            if DEBUG:
+            if settings.DEBUG:
                 logging.info("Reading from storage: %s" %
                              cls._cache_key(key_name))
             model.ensure_cached()
@@ -106,14 +89,15 @@ class Cacheable(db.Model):
     def put(self):
         key = super(Cacheable, self).put()
 
-        if DEBUG:
+        if settings.DEBUG:
             logging.info("Writing to storage: %s" % self._model_cache_key())
 
         self._cache_state = self.cache_state.clean
         self.ensure_cached()
         return key
 
-    def set_dirty(self, state=cache_state.dirty):
+    # TODO: Reconsider cache_state.
+    def set_dirty(self, state='dirty'):
         """
         Mark the model as having changes to write to the store before
         the request is over.
@@ -134,10 +118,11 @@ class Cacheable(db.Model):
 
         try:
             # Write to storage if critical or dirty AND old
-            if self._cache_state == self.cache_state.critical or \
-                not self._write_rate.is_exceeded(
-                reqfilter.get_request().secsNow):
-                self.put()
+            # TODO: Re-implement this condition without reqfilter.
+            # if self._cache_state == self.cache_state.critical or \
+            #     not self._write_rate.is_exceeded(
+            #     reqfilter.get_request().secsNow):
+            self.put()
         except Exception, e:
             logging.info("Failed to write deferred-write cache: %s (%s)" % (
                          self._model_cache_key(),
@@ -160,8 +145,8 @@ class Cacheable(db.Model):
             return
 
         if model is not None and model._cache_state != self.cache_state.clean:
-            raise reqfilter.Error("Replacing modified model from cache: %s" %
-                                  self._model_cache_key())
+            logging.error("Replacing modified model from cache: %s" %
+                          self._model_cache_key())
 
         self._write_to_cache(self)
 
@@ -181,7 +166,7 @@ class Cacheable(db.Model):
         # Check if in memcache - and update local store
         model = memcache.get(sKey)
         if model is not None:
-            if DEBUG:
+            if settings.DEBUG:
                 logging.info("Reading from global cache: %s" % sKey)
             local_store[sKey] = model
 
@@ -199,7 +184,7 @@ class Cacheable(db.Model):
         """
         sKey = model._model_cache_key()
 
-        if DEBUG:
+        if settings.DEBUG:
             logging.info("Writing to cache: %s" % sKey)
 
         model._local_store()[sKey] = model
