@@ -37,38 +37,39 @@ class CacheableTest(TestCase):
 
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
-        timestamp = time.time()
-        self.entity.put()  # One.
+        self.entity.put(fake_time=1270833107.0)
         history = CacheHistory(self.entity)
-        self.assertEqual(len(history.memcache_puts), 1)
-        self.assertAlmostEqual(history.datastore_put, timestamp, 2)
-        self.assertAlmostEqual(history.memcache_puts[0], timestamp, 2)
-        self.entity.put()  # Two.
-        self.entity.put()  # Three.
-        self.entity.put()  # Four.
-        self.entity.put()  # Five.
+        self.assertEqual(history.datastore_put, 1270833107.0)
+        self.assertEqual(history.memcache_puts, [1270833107.0])
+        self.entity.put(fake_time=1270833107.1)
+        self.entity.put(fake_time=1270833107.2)
+        self.entity.put(fake_time=1270833107.3)
+        self.entity.put(fake_time=1270833107.4)
+        self.entity.put(fake_time=1270833107.5)
+        self.entity.put(fake_time=1270833107.6)
         history = CacheHistory(self.entity)
-        self.assertEqual(len(history.memcache_puts), 5)
-        self.assertTrue(history.memcache_puts[0] < history.datastore_put)
-        self.assertTrue(history.memcache_puts[1] < history.datastore_put)
-        self.assertEqual(history.memcache_puts[2], history.datastore_put)
-        self.assertTrue(history.memcache_puts[3] > history.datastore_put)
-        self.assertTrue(history.memcache_puts[4] > history.datastore_put)
-        history.datastore_put -= 1.0    # One second earlier.
-        self.entity.cache_put(history)  # Overwrite with fake history.
-        self.entity.put()  # Six, expecting datastore put because outdated.
+        self.assertEqual(len(history.memcache_puts), 7)
+        self.assertEqual(history.memcache_puts, [
+                1270833107.0, 1270833107.1, 1270833107.2, 1270833107.3,
+                1270833107.4, 1270833107.5, 1270833107.6])
+        self.assertEqual(history.datastore_put, 1270833107.4)
+        # Fake datastore put, two seconds earlier.
+        history.save_datastore_put(history.datastore_put - 2.0)
+        # The next put should go to the datastore.
+        self.entity.put(fake_time=1270833107.7)
         history = CacheHistory(self.entity)
-        self.assertEqual(len(history.memcache_puts), 6)
-        self.assertEqual(history.memcache_puts[5], history.datastore_put)
-        self.entity.put()  # Seven.
-        self.entity.put()  # Eight.
-        self.entity.put()  # Nine.
-        self.entity.put()  # Ten.
+        self.assertEqual(len(history.memcache_puts), 8)
+        self.assertEqual(history.memcache_puts[-1], history.datastore_put)
+        self.entity.put(fake_time=1270833107.8)
+        self.entity.put(fake_time=1270833107.9)
         history = CacheHistory(self.entity)
         self.assertEqual(len(history.memcache_puts), 10)
-        self.entity.put()  # Eleven.
+        self.entity.put(fake_time=1270833108.0)
         history = CacheHistory(self.entity)
-        self.assertEqual(len(history.memcache_puts), 10)
+        self.assertEqual(history.memcache_puts, [
+                1270833107.1, 1270833107.2, 1270833107.3, 1270833107.4,
+                1270833107.5, 1270833107.6, 1270833107.7, 1270833107.8,
+                1270833107.9, 1270833108.0])
 
 
 class DocTest(TestCase):
