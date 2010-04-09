@@ -24,8 +24,8 @@ class CacheableTest(TestCase):
         self.started = datetime.now()
         self.entity = CachedModel(key_name='e', text='e', blob='e')
 
-    def test_get_by_key_name(self):
-        """Test that get_by_key_name writes the result to memcache."""
+    def test_put_and_delete(self):
+        """Test that put and delete will update memcache."""
         e1 = CachedModel.cache_get_by_key_name('e')
         self.assertEqual(e1, None)
         self.entity.put()
