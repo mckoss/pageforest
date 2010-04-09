@@ -39,7 +39,7 @@ def combined_files(request):
     """
     from django.conf import settings
     result = {}
-    for file_type in ['js', 'css']:
+    for file_type in settings.FILE_GROUPS.keys():
         template_key = "%s_files" % file_type
         result[template_key] = {}
         for alias, file_list in settings.FILE_GROUPS[file_type].items():

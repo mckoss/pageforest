@@ -3,6 +3,8 @@
 import os
 import sys
 
+from settingsauto import *
+
 # App Engine specific environment variables.
 APPLICATION_ID = os.environ.get('APPLICATION_ID', '')
 CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID', '')
@@ -59,8 +61,8 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
+# See settingsauto.py for MEDIA_VERSION
 MEDIA_URL = '/static/'
-MEDIA_VERSION = 1
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
