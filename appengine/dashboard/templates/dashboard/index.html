@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<table>
+<tr><th>In the last</th><th>24h</th><th>7d</th><th>30d</th></tr>
+<tr><td>New users</td>{% for n in new_users %}<td>{{ n }}</td>{%endfor%}</tr>
+<tr><td>New data</td>{% for n in new_data %}<td>{{ n }}</td>{%endfor%}</tr>
+</table>
+
+<table>
+<tr><th>Environment variable</th><th>Value</th></tr>
+<tr><td>APPLICATION_ID</td><td>{{ APPLICATION_ID }}</td></tr>
+<tr><td>CURRENT_VERSION_ID</td><td>{{ CURRENT_VERSION_ID }}</td></tr>
+<tr><td>SERVER_SOFTWARE</td><td>{{ SERVER_SOFTWARE }}</td></tr>
+<tr><td>AUTH_DOMAIN</td><td>{{ AUTH_DOMAIN }}</td></tr>
+<tr><td></td><td></td></tr>
+</table>
+{% endblock %}
