@@ -1,3 +1,5 @@
+import time
+import random
 import logging
 
 from django.conf import settings
@@ -7,14 +9,40 @@ from google.appengine.api import memcache
 from google.appengine.datastore import entity_pb
 
 
-class Cacheable(db.Model, object):
+class CacheHistory(object):
+
+    def __init__(self, cacheable):
+        cache_key = cacheable.get_cache_key()
+        self.cache_keys = ['CHD~' + cache_key, 'CHM~' + cache_key]
+        data = memcache.get_multi(self.cache_keys)
+        self.datastore_put = float(data.get(self.cache_keys[0], '0'))
+        timestamps = data.get(self.cache_keys[1], '').split()
+        self.memcache_puts = [float(t) for t in timestamps]
+
+    def average_put_interval(self):
+        count = len(self.memcache_puts) - 1
+        if count < 5:  # Not enough confidence to predict the next put.
+            return 24 * 60 * 60.0  # One day.
+        seconds = max(self.memcache_puts) - min(self.memcache_puts)
+        return seconds / count
+
+    def save_datastore_put(self, fake_time=None):
+        self.datastore_put = fake_time or time.time()
+        memcache.set(self.cache_keys[0], self.datastore_put)
+
+    def serialize_memcache_puts(self):
+        timestamps = ['%.3f' % t for t in self.memcache_puts[-10:]]
+        return {self.cache_keys[1]: ' '.join(timestamps)}
+
+
+class Cacheable(db.Model):
     """
     Memcache mixin for App Engine datastore models.
     Usage: class MyModel(Cacheable)
 
     Inheriting from the Cacheable class provides:
     * Use memcache for put, delete, get_by_key_name, get_or_insert.
-    * TODO: Throttled write-through to storage for high-volume writes.
+    * Limit datastore puts if the write rate is consistently high.
 
     Cacheable overrides the following methods from db.Model:
     * put()
@@ -33,17 +61,51 @@ class Cacheable(db.Model, object):
     def __init__(self, *args, **kwargs):
         super(Cacheable, self).__init__(*args, **kwargs)
 
-    def cache_put(self):
-        """Save this entity to memcache, using protocol buffers."""
+    def cache_put(self, extra=None):
+        """
+        Save this entity to memcache, using protocol buffers.
+
+        If a dictionary is passed as extra argument, its content will
+        also be saved to memcache, without extra network latency.
+        """
         cache_key = self.get_cache_key()
         protobuf = db.model_to_protobuf(self)
         binary = protobuf.Encode()
-        return memcache.set(cache_key, binary)
+        mapping = extra or {}
+        mapping[cache_key] = binary
+        return memcache.set_multi(mapping)
 
-    def put(self):
-        """Save this entity to datastore and memcache."""
-        key = super(Cacheable, self).put()
-        self.cache_put()
+    def put(self, commit_interval=2.0, fake_time=None):
+        """
+        Save this entity to datastore and memcache.
+
+        If the interval between puts for this entity (in seconds) is
+        consistently smaller than commit_interval, the datastore put
+        will be called only once every commit_interval seconds. If the
+        datastore put is not called, the return value of this method
+        is None instead of the entity key.
+
+        The random jiggle of 500ms prevents a scenario where many
+        machines attempt to put to the datastore at once because the
+        time since history.datastore_put reaches commit_interval.
+        """
+        key = None
+        now = fake_time
+        jiggle = 0.0
+        if fake_time is None:
+            now = time.time()
+            jiggle = 0.5 * random.random()
+        # Read history for this entity from memcache.
+        history = CacheHistory(self)
+        history.memcache_puts.append(now)
+        if (now - history.datastore_put + jiggle > commit_interval
+            or history.average_put_interval() > commit_interval):
+            # Save datastore timestamp to memcache.
+            history.save_datastore_put(now)
+            # Save entity to datastore.
+            key = super(Cacheable, self).put()
+        # Save entity and history to memcache.
+        self.cache_put(history.serialize_memcache_puts())
         return key
 
     def cache_delete(self):
@@ -118,15 +180,13 @@ class Cacheable(db.Model, object):
         """
         Generate a cache key for this key_name.
 
-        C1 is a supposedly unique prefix with a version number.
-        Increase it to reset the cache if the serializer is changed.
+        Change settings.CACHEABLE_PREFIX before deploying incompatible
+        changes like replacing the entity serializer.
 
         The datastore kind of the class is included to create a
         separate namespace for each model.
-
-        TODO: Include settings.CURRENT_VERSION_ID if required.
         """
-        return '~'.join(('C1', cls.kind(), key_name))
+        return '~'.join((settings.CACHEABLE_PREFIX, cls.kind(), key_name))
 
     def get_cache_key(self):
         """Generate a cache key for this model instance."""
