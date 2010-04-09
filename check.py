@@ -27,6 +27,7 @@ def attempt(command):
 
 def main():
     path = os.path.dirname(__file__) or '.'
+    os.chdir(path)
     if path != '.':
         global LOGFILENAME
         LOGFILENAME = os.path.join(path, LOGFILENAME)
