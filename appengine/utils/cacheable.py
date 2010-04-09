@@ -35,7 +35,7 @@ class CacheHistory(object):
         return {self.cache_keys[1]: ' '.join(timestamps)}
 
 
-class Cacheable(db.Model, object):
+class Cacheable(db.Model):
     """
     Memcache mixin for App Engine datastore models.
     Usage: class MyModel(Cacheable)
