@@ -5,7 +5,7 @@ import sys
 from fnmatch import fnmatch
 
 IGNORE_DIR = '.hg .git .bzr .svn'.split()
-IGNORE_EXT = '.png .pyc'.split()
+IGNORE_EXT = '~ .png .pyc'.split()
 IGNORE_FILES = 'jquery-*.js'.split()
 
 
@@ -46,9 +46,9 @@ def check(path):
 
 
 def file_ignored(filename):
-    base, ext = os.path.splitext(filename)
-    if ext in IGNORE_EXT:
-        return True
+    for ext in IGNORE_EXT:
+        if filename.endswith(ext):
+            return True
     for pattern in IGNORE_FILES:
         if fnmatch(filename, pattern):
             return True
