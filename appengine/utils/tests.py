@@ -1,6 +1,7 @@
 import os
 import imp
 import doctest
+import time
 from datetime import datetime
 
 from django.test import TestCase
@@ -8,7 +9,7 @@ from django.test import TestCase
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from utils.cacheable import Cacheable
+from utils.cacheable import Cacheable, CacheHistory
 from utils.mixins import Dated
 
 
@@ -34,6 +35,42 @@ class CacheableTest(TestCase):
         e3 = CachedModel.cache_get_by_key_name('e')
         self.assertEqual(e3, None)
 
+    def test_write_rate_limit(self):
+        """Test that the datastore put rate is limited."""
+        self.entity.put(fake_time=1270833107.0)
+        history = CacheHistory(self.entity)
+        self.assertEqual(history.datastore_put, 1270833107.0)
+        self.assertEqual(history.memcache_puts, [1270833107.0])
+        self.entity.put(fake_time=1270833107.1)
+        self.entity.put(fake_time=1270833107.2)
+        self.entity.put(fake_time=1270833107.3)
+        self.entity.put(fake_time=1270833107.4)
+        self.entity.put(fake_time=1270833107.5)
+        self.entity.put(fake_time=1270833107.6)
+        history = CacheHistory(self.entity)
+        self.assertEqual(len(history.memcache_puts), 7)
+        self.assertEqual(history.memcache_puts, [
+                1270833107.0, 1270833107.1, 1270833107.2, 1270833107.3,
+                1270833107.4, 1270833107.5, 1270833107.6])
+        self.assertEqual(history.datastore_put, 1270833107.4)
+        # Fake datastore put, two seconds earlier.
+        history.save_datastore_put(history.datastore_put - 2.0)
+        # The next put should go to the datastore.
+        self.entity.put(fake_time=1270833107.7)
+        history = CacheHistory(self.entity)
+        self.assertEqual(len(history.memcache_puts), 8)
+        self.assertEqual(history.memcache_puts[-1], history.datastore_put)
+        self.entity.put(fake_time=1270833107.8)
+        self.entity.put(fake_time=1270833107.9)
+        history = CacheHistory(self.entity)
+        self.assertEqual(len(history.memcache_puts), 10)
+        self.entity.put(fake_time=1270833108.0)
+        history = CacheHistory(self.entity)
+        self.assertEqual(history.memcache_puts, [
+                1270833107.1, 1270833107.2, 1270833107.3, 1270833107.4,
+                1270833107.5, 1270833107.6, 1270833107.7, 1270833107.8,
+                1270833107.9, 1270833108.0])
+
 
 class DocTest(TestCase):
 
@@ -43,6 +80,7 @@ class DocTest(TestCase):
                 return True
 
     def test_utils(self):
+        """Run doctest on utils modules that support it."""
         dir = os.path.dirname(__file__)
         for filename in os.listdir(dir):
             if not filename.endswith('.py'):
