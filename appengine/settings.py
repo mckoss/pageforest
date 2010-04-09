@@ -22,7 +22,9 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-MEMCACHE_TIMEOUT = 24 * 60 * 60  # 24 hours.
+# Memcache key prefix for Cacheable mixin class.
+# Change this before deploying incompatible changes.
+CACHEABLE_PREFIX = 'C1'
 
 # Use appengine database backend for "manage.py test" etc.
 if os.path.basename(sys.argv[0]) == 'manage.py':

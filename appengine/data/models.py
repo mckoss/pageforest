@@ -11,7 +11,6 @@ class KeyValue(Cacheable, Dated):
     Entity key name format: app_id/doc_id/key/with/slashes
     """
     value = db.BlobProperty()
-    app_id = db.StringProperty()
     ip = db.StringProperty()  # Last modified from this IPv4 address.
 
     def get_absolute_url(self):

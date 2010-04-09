@@ -22,6 +22,7 @@ Invalid name "setUp"
 Invalid name "assertContent"
 manage.py:35: [W0403] Relative import 'settings'
 [E0611] No name 'Utils' in module 'email'
+Use super on an old style class
 """.strip().splitlines()
 
 
