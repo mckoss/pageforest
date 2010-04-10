@@ -30,6 +30,7 @@ class UserTest(TestCase):
         """Test schema migration for User model."""
 
         def dummy_migrate(self, schema):
+            """Set the migrated flag for this test."""
             self.migrated = True
 
         # TODO: The following monkey patch might break other tests.

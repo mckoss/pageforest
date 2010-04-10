@@ -1,4 +1,6 @@
-# Django settings for appengine project.
+"""
+Django settings for appengine project.
+"""
 
 import os
 import sys

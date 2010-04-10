@@ -13,10 +13,11 @@ class CacheHistory(object):
 
     def __init__(self, cacheable):
         cache_key = cacheable.get_cache_key()
-        self.cache_keys = ['CHD~' + cache_key, 'CHM~' + cache_key]
-        data = memcache.get_multi(self.cache_keys)
-        self.datastore_put = float(data.get(self.cache_keys[0], '0'))
-        timestamps = data.get(self.cache_keys[1], '').split()
+        self.chd_key = 'CHD~' + cache_key
+        self.chm_key = 'CHM~' + cache_key
+        data = memcache.get_multi([self.chd_key, self.chm_key])
+        self.datastore_put = float(data.get(self.chd_key, '0'))
+        timestamps = data.get(self.chm_key, '').split()
         self.memcache_puts = [float(t) for t in timestamps]
 
     def average_put_interval(self):
@@ -26,13 +27,12 @@ class CacheHistory(object):
         seconds = max(self.memcache_puts) - min(self.memcache_puts)
         return seconds / count
 
-    def save_datastore_put(self, fake_time=None):
-        self.datastore_put = fake_time or time.time()
-        memcache.set(self.cache_keys[0], self.datastore_put)
+    def serialize_datastore_put(self):
+        return {self.chd_key: '%.3f' % self.datastore_put}
 
     def serialize_memcache_puts(self):
         timestamps = ['%.3f' % t for t in self.memcache_puts[-10:]]
-        return {self.cache_keys[1]: ' '.join(timestamps)}
+        return {self.chm_key: ' '.join(timestamps)}
 
 
 class Cacheable(db.Model):
@@ -51,6 +51,7 @@ class Cacheable(db.Model):
     * @classmethod get_or_insert(key_name, **kwargs)
 
     Cacheable introduces the following new methods:
+    * serialize()
     * cache_put()
     * cache_delete()
     * @classmethod cache_get_by_key_name()
@@ -61,19 +62,20 @@ class Cacheable(db.Model):
     def __init__(self, *args, **kwargs):
         super(Cacheable, self).__init__(*args, **kwargs)
 
-    def cache_put(self, extra=None):
+    def serialize(self):
         """
-        Save this entity to memcache, using protocol buffers.
-
-        If a dictionary is passed as extra argument, its content will
-        also be saved to memcache, without extra network latency.
+        Return a mapping for memcache.set_multi, containing the cache
+        key and protocol buffer for this entity.
         """
         cache_key = self.get_cache_key()
         protobuf = db.model_to_protobuf(self)
         binary = protobuf.Encode()
-        mapping = extra or {}
-        mapping[cache_key] = binary
-        return memcache.set_multi(mapping)
+        return {cache_key: binary}
+
+    def cache_put(self):
+        """Save this entity to memcache, using protocol buffers."""
+        key, value = self.serialize().items()[0]
+        return memcache.set(key, value)
 
     def put(self, commit_interval=2.0, fake_time=None):
         """
@@ -89,24 +91,31 @@ class Cacheable(db.Model):
         machines attempt to put to the datastore at once because the
         time since history.datastore_put reaches commit_interval.
         """
-        key = None
         now = fake_time
         jiggle = 0.0
+        # Use current time and jiggle, unless fake_time was specified.
         if fake_time is None:
             now = time.time()
             jiggle = 0.5 * random.random()
-        # Read history for this entity from memcache.
+        # Read commit history for this entity from memcache.
         history = CacheHistory(self)
         history.memcache_puts.append(now)
-        if (now - history.datastore_put + jiggle > commit_interval
-            or history.average_put_interval() > commit_interval):
-            # Save datastore timestamp to memcache.
-            history.save_datastore_put(now)
-            # Save entity to datastore.
-            key = super(Cacheable, self).put()
+        # Check if we should write to the datastore.
+        commit = False
+        if now - history.datastore_put + jiggle > commit_interval:
+            commit = True  # The last datastore put was too long ago.
+        elif history.average_put_interval() > commit_interval:
+            commit = True  # Infrequent updates or not enough confidence.
         # Save entity and history to memcache.
-        self.cache_put(history.serialize_memcache_puts())
-        return key
+        mapping = self.serialize()
+        mapping.update(history.serialize_memcache_puts())
+        if commit:
+            history.datastore_put = now
+            mapping.update(history.serialize_datastore_put())
+        memcache.set_multi(mapping)
+        # Save entity to datastore, if necessary.
+        if commit:
+            return super(Cacheable, self).put()
 
     def cache_delete(self):
         """Remove this entity from memcache."""
