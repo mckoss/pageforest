@@ -64,8 +64,10 @@ def main():
 
         for file_type in settings.FILE_GROUPS.keys():
             for alias in settings.FILE_GROUPS[file_type].keys():
-                source_name = "%s/%s/%s.%s" %
-                              (STATIC_DIR, file_type, alias, file_type)
+                source_name = "%s/%s/%s.%s" % (STATIC_DIR,
+                                               file_type,
+                                               alias,
+                                               file_type)
                 dest_name = "%s/%s/%s-%s.%s" % (STATIC_DIR, file_type, alias,
                                                 settings_dict['MEDIA_VERSION'],
                                                 file_type)
