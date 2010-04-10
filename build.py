@@ -4,7 +4,7 @@ import os
 import sys
 import subprocess
 import shutil
-from hashlib import sha1
+from hashlib import md5
 
 import tools.jsmin as jsmin
 import tools.settingsparser as settingsparser
@@ -15,23 +15,16 @@ STATIC_DIR = "appengine/static"
 SETTINGS_AUTO = "appengine/settingsauto.py"
 
 
-def main():
+def combine_files(settings_dict):
     """
     Combine and minify static files.
 
     MEDIA_VERSION is updated if files have changed since the previous build.
     """
-    path = os.path.dirname(__file__) or '.'
-    os.chdir(path)
-
-    settings_auto = open(SETTINGS_AUTO, 'r')
-    settings_dict = settingsparser.load(settings_auto.read())
-    settings_auto.close()
-
     # The initial condition is MEDIA_VERSION zero with no content
     if 'MEDIA_VERSION' not in settings_dict:
         settings_dict['MEDIA_VERSION'] = 0
-        settings_dict['MEDIA_DIGEST_0'] = sha1("").hexdigest()
+        settings_dict['MEDIA_DIGEST_0'] = md5("").hexdigest()
 
     all_content = ""
     for file_type in settings.FILE_GROUPS.keys():
@@ -54,7 +47,7 @@ def main():
                 all_content += content
             output_file.close()
 
-    digest = sha1(all_content).hexdigest()
+    digest = md5(all_content).hexdigest()
 
     if digest != settings_dict['MEDIA_DIGEST_%s' %
                  settings_dict['MEDIA_VERSION']]:
@@ -74,9 +67,21 @@ def main():
                 shutil.copyfile(source_name, dest_name)
 
         print "Updating to MEDIA_VERSION = %s" % settings_dict['MEDIA_VERSION']
-        settings_auto = open(SETTINGS_AUTO, 'w')
-        settings_auto.write(settingsparser.save(settings_dict))
-        settings_auto.close()
+
+
+def main():
+    path = os.path.dirname(__file__) or '.'
+    os.chdir(path)
+
+    settings_auto = open(SETTINGS_AUTO, 'r')
+    settings_dict = settingsparser.load(settings_auto.read())
+    settings_auto.close()
+
+    combine_files(settings_dict)
+
+    settings_auto = open(SETTINGS_AUTO, 'w')
+    settings_auto.write(settingsparser.save(settings_dict))
+    settings_auto.close()
 
 if __name__ == '__main__':
     main()
