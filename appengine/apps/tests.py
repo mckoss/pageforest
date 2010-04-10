@@ -1,7 +1,5 @@
 from django.test import TestCase
 
-from google.appengine.ext import db
-
 from apps.models import App
 
 
