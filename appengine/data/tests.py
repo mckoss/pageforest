@@ -4,12 +4,15 @@ from google.appengine.api import memcache
 
 from django.test import TestCase, Client
 
+from apps.models import App
 from data.models import KeyValue
 
 
 class KeyValueTest(TestCase):
 
     def setUp(self):
+        self.app = App(key_name='test', default_domain='test.pageforest.com')
+        self.app.put()
         self.key = 'test/data/key'
         self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
         self.data = KeyValue(key_name=self.key, value=self.value)

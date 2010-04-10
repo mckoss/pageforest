@@ -65,8 +65,6 @@ def key_value_put(request):
         value = value.encode('utf-8')
     entity = KeyValue(
         key_name=request.key_name,
-        app_id=request.app_id,
-        # TODO: doc_id=request.doc_id,
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
     entity.put()

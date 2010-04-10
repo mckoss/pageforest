@@ -17,11 +17,13 @@ from django.conf import settings
 settings._target = None
 
 
-def log_exception(*args, **kwds):
+def log_exception(*args, **kwargs):
+    """Save exceptions to the server log."""
     logging.exception('Exception in request:')
 
 
 def main():
+    """Run Django as a WSGI application."""
     signals.got_request_exception.connect(log_exception)
     signals.got_request_exception.disconnect(db._rollback_on_exception)
     application = wsgi.WSGIHandler()
