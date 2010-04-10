@@ -3,6 +3,7 @@ from google.appengine.ext import db
 from django.conf import settings
 
 from utils.mixins import Cacheable, Dated
+from apps.models import App
 
 
 class KeyValue(Cacheable, Dated):
@@ -14,5 +15,8 @@ class KeyValue(Cacheable, Dated):
     ip = db.StringProperty()  # Last modified from this IPv4 address.
 
     def get_absolute_url(self):
+        """The URL includes the default domain name for this app."""
         app_id, key = self.key().name().split('/', 1)
-        return 'http://%s.%s/%s' % (app_id, settings.DEFAULT_DOMAIN, key)
+        app = App.get_by_key_name(app_id)
+        domain = app.default_domain
+        return '/'.join(('http:/', domain, key))
