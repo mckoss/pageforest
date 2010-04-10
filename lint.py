@@ -19,9 +19,13 @@ No config file found
 Invalid name ""
 Invalid name "urlpatterns"
 Invalid name "setUp"
-Invalid name "assertContent"
+Invalid name "assert
 manage.py:35: [W0403] Relative import 'settings'
 [E0611] No name 'Utils' in module 'email'
+:1: [C0111] Missing docstring
+.setUp] Missing docstring
+Unused import handler404
+Unused import handler500
 Use super on an old style class
 """.strip().splitlines()
 
