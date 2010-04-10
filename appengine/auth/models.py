@@ -40,6 +40,9 @@ class User(db.Expando, Migratable, Cacheable):
         return self.username
 
     def set_password(self, raw_password):
+        """
+        Hash the password with SHA-1 and random salt.
+        """
         import random
         algo = 'sha1'
         salt = get_hexdigest(
