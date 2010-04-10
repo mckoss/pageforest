@@ -54,7 +54,8 @@ class CacheableTest(TestCase):
                 1270833107.4, 1270833107.5, 1270833107.6])
         self.assertEqual(history.datastore_put, 1270833107.4)
         # Fake datastore put, two seconds earlier.
-        history.save_datastore_put(history.datastore_put - 2.0)
+        history.datastore_put -= 2.0
+        memcache.set_multi(history.serialize_datastore_put())
         # The next put should go to the datastore.
         self.entity.put(fake_time=1270833107.7)
         history = CacheHistory(self.entity)
