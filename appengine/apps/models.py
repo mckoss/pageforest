@@ -7,9 +7,9 @@ class App(Cacheable, Dated):
     """
     The entity key name contains the app_id string.
     """
-    default_domain = db.StringProperty()  # FQDN.
-    domains = db.StringListProperty()     # FQDN.
-    developers = db.StringListProperty()  # List of usernames.
+    default_domain = db.StringProperty()   # Fully qualified domain name.
+    alt_domains = db.StringListProperty()  # Zero or more FQDN.
+    developers = db.StringListProperty()   # One or more usernames.
 
     @classmethod
     def get_by_key_name(cls, app_id):
