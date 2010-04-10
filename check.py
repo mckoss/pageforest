@@ -26,6 +26,10 @@ def attempt(command):
 
 
 def main():
+    if '--prompt' in sys.argv:
+        yesno = raw_input("Do you want to run check.py? [Y/n] ")
+        if yesno.lower().startswith('n'):
+            return
     path = os.path.dirname(__file__) or '.'
     os.chdir(path)
     if path != '.':
