@@ -30,9 +30,10 @@ class CacheHistory(object):
         self.datastore_put = fake_time or time.time()
         memcache.set(self.cache_keys[0], self.datastore_put)
 
-    def serialize_memcache_puts(self):
+    def serialize(self):
         timestamps = ['%.3f' % t for t in self.memcache_puts[-10:]]
-        return {self.cache_keys[1]: ' '.join(timestamps)}
+        return {self.cache_keys[0]: '%.3f' % self.datastore_put,
+                self.cache_keys[1]: ' '.join(timestamps)}
 
 
 class Cacheable(db.Model):
@@ -89,24 +90,27 @@ class Cacheable(db.Model):
         machines attempt to put to the datastore at once because the
         time since history.datastore_put reaches commit_interval.
         """
-        key = None
         now = fake_time
         jiggle = 0.0
         if fake_time is None:
             now = time.time()
             jiggle = 0.5 * random.random()
-        # Read history for this entity from memcache.
+        # Read commit history for this entity from memcache.
         history = CacheHistory(self)
         history.memcache_puts.append(now)
-        if (now - history.datastore_put + jiggle > commit_interval
-            or history.average_put_interval() > commit_interval):
-            # Save datastore timestamp to memcache.
-            history.save_datastore_put(now)
-            # Save entity to datastore.
-            key = super(Cacheable, self).put()
+        # Check if we should write to the datastore.
+        commit = False
+        if now - history.datastore_put + jiggle > commit_interval:
+            commit = True  # The last datastore put was too long ago.
+        elif history.average_put_interval() > commit_interval:
+            commit = True  # Infrequent updates or not enough confidence.
         # Save entity and history to memcache.
-        self.cache_put(history.serialize_memcache_puts())
-        return key
+        if commit:
+            history.datastore_put = now
+        self.cache_put(extra=history.serialize())
+        # Save entity to datastore, if necessary.
+        if commit:
+            return super(Cacheable, self).put()
 
     def cache_delete(self):
         """Remove this entity from memcache."""
