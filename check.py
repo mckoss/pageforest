@@ -31,8 +31,10 @@ def main():
     if path != '.':
         global LOGFILENAME
         LOGFILENAME = os.path.join(path, LOGFILENAME)
-    attempt('pep8 --count --repeat --exclude jsmin.py,.hg %s' % path)
+    attempt('pep8 --count --repeat --exclude jsmin.py,.hg --ignore=E11 %s' %
+            path)
     attempt('python %s/whitespace.py' % path)
+    attempt('python %s/tools/settingsparser.py' % path)
     attempt('python %s/appengine/manage.py test -v0' % path)
     attempt('python %s/lint.py -e' % path)
 
