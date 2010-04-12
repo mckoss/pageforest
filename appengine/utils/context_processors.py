@@ -1,7 +1,7 @@
 import os
 import logging
 
-EXPORT_SETTINGS = """
+SAFE_SETTINGS = """
 APPLICATION_ID
 CURRENT_VERSION_ID
 SERVER_SOFTWARE
@@ -22,13 +22,13 @@ COMBINE_FILES
 """.split()
 
 
-def settings(request):
+def safe_settings(request):
     """
     Make some of the application settings available as template variables.
     """
     from django.conf import settings
     result = {}
-    for name in EXPORT_SETTINGS:
+    for name in SAFE_SETTINGS:
         result[name] = getattr(settings, name)
     return result
 

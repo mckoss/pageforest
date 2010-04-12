@@ -83,7 +83,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     # 'django.core.context_processors.media',
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
-    'utils.context_processors.settings',
+    'utils.context_processors.safe_settings',
     'utils.context_processors.combined_files',
 )
 
