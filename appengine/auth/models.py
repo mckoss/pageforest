@@ -56,3 +56,9 @@ class User(db.Expando, Migratable, Cacheable):
         Handles encryption formats behind the scenes.
         """
         return check_password(raw_password, self.password)
+
+    def migrate(self, next_schema):
+        """
+        Migrate from one model schema to the next.
+        """
+        pass
