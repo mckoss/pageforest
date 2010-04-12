@@ -53,7 +53,19 @@ class RegistrationTest(TestCase):
         self.peter.set_password('password')
         self.peter.put()
 
-    def test_reserved_usernames(self):
+    def test_username_invalid(self):
+        """Test that invalid usernames are rejected."""
+        for name in '_name a-b 0.5'.split():
+            response = self.client.post('/auth/register/', {'username': name})
+            self.assertContains(response, 'Username must be alphanumeric.')
+
+    def test_username_too_long(self):
+        """Test that excessively long usernames are rejected."""
+        response = self.client.post('/auth/register/', {'username': 'a' * 31})
+        self.assertContains(response,
+            'Ensure this value has at most 30 characters (it has 31).')
+
+    def test_username_reserved(self):
         """Test that reserved usernames are enforced."""
         for name in 'root admin test'.split():
             response = self.client.post('/auth/register/', {'username': name})
