@@ -23,6 +23,8 @@ class CacheableTest(TestCase):
     def setUp(self):
         self.started = datetime.now()
         self.entity = CachedModel(key_name='e', text='e', blob='e')
+        self.saved = CachedModel(key_name='s', text='s', blob='s')
+        self.saved.put()
 
     def test_put_and_delete(self):
         """Test that put and delete will update memcache."""
@@ -34,6 +36,15 @@ class CacheableTest(TestCase):
         self.entity.delete()
         e3 = CachedModel.cache_get_by_key_name('e')
         self.assertEqual(e3, None)
+
+    def test_get_by_key_name(self):
+        """Test the overriden get_by_key_name method."""
+        e1 = CachedModel.get_by_key_name('s')
+        self.assertEqual(e1.key().name(), 's')
+        # Expire memcache and try again.
+        memcache.delete(e1.get_cache_key())
+        e1 = CachedModel.get_by_key_name('s')
+        self.assertEqual(e1.key().name(), 's')
 
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
