@@ -68,7 +68,7 @@ class Migratable(db.Model):
             model.update_schema()
         return len(models)
 
-    def migrate(self, schemaNext):
+    def migrate(self, next_schema):
         raise NotImplementedError(
             "Application error - missing migration for %s to version %d" %
-            type(self).__name__, schemaNext)
+            type(self).__name__, next_schema)
