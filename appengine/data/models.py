@@ -1,7 +1,5 @@
 from google.appengine.ext import db
 
-from django.conf import settings
-
 from utils.mixins import Cacheable, Dated
 from apps.models import App
 

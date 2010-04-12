@@ -12,7 +12,7 @@ class App(Cacheable, Dated):
     developers = db.StringListProperty()   # One or more usernames.
 
     @classmethod
-    def get_by_key_name(cls, app_id):
+    def get_by_key_name(cls, app_id, parent=None):
         """
         Get app instance from one of these sources:
         * App.cache (dict in the current process)
@@ -23,6 +23,6 @@ class App(Cacheable, Dated):
             App.cache = {}
         if app_id in App.cache:
             return App.cache[app_id]
-        app = super(App, cls).get_by_key_name(app_id)
+        app = super(App, cls).get_by_key_name(app_id, parent)
         App.cache[app_id] = app
         return app
