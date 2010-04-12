@@ -3,6 +3,15 @@ from django.conf import settings
 
 from auth.models import User
 
+KEYBOARD_ROWS = """
+`1234567890-=
+qwertyuiop[]\
+qwertzuiop
+asdfghjkl;'
+zxcvbnm,./
+yxcvbnm,.-
+""".split()
+
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
@@ -35,7 +44,12 @@ class RegistrationForm(forms.Form):
         """
         password = self.cleaned_data['password']
         if password.isdigit() or password == len(password) * password[0]:
-            raise forms.ValidationError("The password is too simple.")
+            raise forms.ValidationError("This password is too simple.")
+        lower = password.lower()
+        backwards = lower[::-1]
+        for row in KEYBOARD_ROWS:
+            if lower in row or backwards in row:
+                raise forms.ValidationError("This password is too simple.")
         return password
 
     def clean(self):
