@@ -31,6 +31,10 @@ def check_password(raw_password, enc_password):
 
 
 class User(db.Expando, Migratable, Cacheable):
+    """
+    The entity key name is username.lower() for case-insensitive matching.
+    """
+    username = db.StringProperty()  # May include capital letters.
     email = db.EmailProperty()
     password = db.StringProperty()  # algo$salt$hexdigest
     last_login = db.DateTimeProperty(auto_now_add=True)
