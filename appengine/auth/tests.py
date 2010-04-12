@@ -45,8 +45,27 @@ class UserTest(TestCase):
 
 class RegistrationTest(TestCase):
 
+    def setUp(self):
+        self.start_time = datetime.now()
+        self.peter = User(key_name='peter',
+                          username='Peter',
+                          email='peter@example.com')
+        self.peter.set_password('password')
+        self.peter.put()
+
     def test_reserved_usernames(self):
         """Test that reserved usernames are enforced."""
         for name in 'root admin test'.split():
             response = self.client.post('/auth/register/', {'username': name})
-            self.assertContains(response, 'reserved')
+            self.assertContains(response, 'This username is reserved.')
+
+    def test_password_silly(self):
+        """Test that silly passwords are rejected."""
+        for pw in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
+            response = self.client.post('/auth/register/', {'password': pw})
+            self.assertContains(response, 'This password is too simple.')
+
+    def test_username_taken(self):
+        """Test that existing usernames are reserved."""
+        response = self.client.post('/auth/register/', {'username': 'peter'})
+        self.assertContains(response, 'This username is already taken.')
