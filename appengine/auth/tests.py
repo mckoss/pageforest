@@ -41,3 +41,12 @@ class UserTest(TestCase):
         self.peter.update_schema()
         self.assertTrue(self.peter.migrated)
         self.assertEqual(self.peter.schema, 2)
+
+
+class RegistrationTest(TestCase):
+
+    def test_reserved_usernames(self):
+        """Test that reserved usernames are enforced."""
+        for name in 'root admin test'.split():
+            response = self.client.post('/auth/register/', {'username': name})
+            self.assertContains(response, 'reserved')
