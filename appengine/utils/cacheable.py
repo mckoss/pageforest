@@ -23,14 +23,16 @@ class CacheHistory(object):
     def average_put_interval(self):
         count = len(self.memcache_puts) - 1
         if count < 5:  # Not enough confidence to predict the next put.
-            return 24 * 60 * 60.0  # One day.
-        seconds = max(self.memcache_puts) - min(self.memcache_puts)
+            return 3600.0  # One hour.
+        self.memcache_puts.sort()
+        seconds = self.memcache_puts[-1] - self.memcache_puts[0]
         return seconds / count
 
     def serialize_datastore_put(self):
         return {self.chd_key: '%.3f' % self.datastore_put}
 
     def serialize_memcache_puts(self):
+        self.memcache_puts.sort()
         timestamps = ['%.3f' % t for t in self.memcache_puts[-10:]]
         return {self.chm_key: ' '.join(timestamps)}
 
