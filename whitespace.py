@@ -6,7 +6,7 @@ from fnmatch import fnmatch
 
 IGNORE_DIR = '.hg .git .bzr .svn'.split()
 IGNORE_EXT = '~ .png .pyc .gif .png'.split()
-IGNORE_FILES = 'jquery-*.js'.split()
+IGNORE_FILES = 'jquery-*.js .#*'.split()
 
 
 def short_path(path):

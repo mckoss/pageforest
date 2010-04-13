@@ -40,8 +40,9 @@ def main():
             (','.join(PEP8_EXCLUDE), path))
     attempt('python %s/whitespace.py' % path)
     attempt('python %s/tools/settingsparser.py' % path)
-    attempt('python %s/appengine/manage.py test -v0' % path)
+    attempt('python %s/jslint.py' % path)
     attempt('python %s/lint.py -e' % path)
+    attempt('python %s/appengine/manage.py test -v0' % path)
 
 
 if __name__ == '__main__':
