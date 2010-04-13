@@ -31,6 +31,7 @@ function validate_if_changed() {
     tos: true};
   var oneline = [data.username, data.email, data.password, data.repeat];
   oneline = oneline.join('~');
+  // TODO: Use namespace instead of $.
   if (oneline == $.previous) return;
   $.previous = oneline;
   console.log(oneline);
@@ -45,11 +46,13 @@ function validate_if_changed() {
 
 $(document).ready(function() {
   $.previous = '~~~';
-  setInterval(validate_if_changed, 1000);
+  setInterval(validate_if_changed, 1000);  // Once per second.
   $("input.focus:last").focus();
 });
 </script>
 {% endblock %}
+
+{% block title %}Registration{% endblock %}
 
 {% block content %}
 <form method="post">
