@@ -1,5 +1,8 @@
+import logging
+
 from django import forms
 from django.conf import settings
+from django.utils import simplejson as json
 
 from auth.models import User
 
@@ -75,3 +78,24 @@ class RegistrationForm(forms.Form):
         user.set_password(self.cleaned_data['password'])
         user.put()
         return user
+
+    def errors_json(self):
+        """
+        Validate and return form error messages as JSON.
+        """
+        if self.is_valid():
+            return '{}'
+        errors = {}
+        fields = {}
+        for fieldname in self.fields:
+            fields[fieldname] = self[fieldname]
+        for key, val in self.errors.iteritems():
+            if key == '__all__':
+                errors[key] == unicode(val[0])
+            elif not isinstance(fields[key].field, forms.FileField):
+                html_id = fields[key].field.widget.attrs.get('id')
+                html_id = html_id or fields[key].auto_id
+                html_id = fields[key].field.widget.id_for_label(html_id)
+                errors[html_id] = unicode(val[0])
+        logging.info(errors)
+        return json.dumps(errors)
