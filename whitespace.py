@@ -5,7 +5,7 @@ import sys
 from fnmatch import fnmatch
 
 IGNORE_DIR = '.hg .git .bzr .svn'.split()
-IGNORE_EXT = '~ .png .pyc'.split()
+IGNORE_EXT = '~ .png .pyc .gif .png'.split()
 IGNORE_FILES = 'jquery-*.js'.split()
 
 
