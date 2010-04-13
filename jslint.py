@@ -6,6 +6,7 @@ import sys
 import subprocess
 
 CHECK_FILES = """
+tools/rhino.js
 appengine/static/js/namespace.js
 """.split()
 
@@ -28,10 +29,13 @@ def ignore(line):
             return True
 
 
-def check_file(path, filename):
+def main():
+    path = os.path.dirname(__file__) or '.'
+    combine_jslint(path)
     command = ['java', 'org.mozilla.javascript.tools.shell.Main']
     command.append(os.path.join(path, 'tools/jslint.js'))
-    command.append(os.path.join(path, filename))
+    for filename in CHECK_FILES:
+        command.append(os.path.join(path, filename))
     jslint = subprocess.Popen(' '.join(command), shell=True,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT)
@@ -46,13 +50,6 @@ def check_file(path, filename):
         errors += 1
     if errors:
         sys.exit('found %d errors' % errors)
-
-
-def main():
-    path = os.path.dirname(__file__) or '.'
-    combine_jslint(path)
-    for filename in CHECK_FILES:
-        check_file(path, filename)
 
 
 if __name__ == '__main__':
