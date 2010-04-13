@@ -1,5 +1,46 @@
 {% extends "base.html" %}
 
+{% block jquery %}
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript">
+function validate_success(message, status, xhr) {
+  console.log(message);
+}
+
+function validate_error(xhr, status, message) {
+  console.error(xhr);
+}
+
+function validate_if_changed() {
+  var data = {
+    username: $("#id_username").val(),
+    email: $("#id_email").val(),
+    password: $("#id_password").val(),
+    repeat: $("#id_repeat").val(),
+  };
+  var oneline = [data.username, data.email, data.password, data.repeat];
+  oneline = oneline.join('~');
+  if (oneline == $.previous) return;
+  $.previous = oneline;
+  console.log(oneline);
+  $.ajax({
+    type: "POST",
+    url: "/auth/register/validate/",
+    data: data,
+    dataType: "text",
+    success: validate_success,
+    error: validate_error});
+}
+
+$(document).ready(function() {
+  $.previous = '~~~';
+  setInterval(validate_if_changed, 500);
+  $("input.focus:last").focus();
+});
+</script>
+{% endblock %}
+
 {% block content %}
 <form method="post">
 <table>
