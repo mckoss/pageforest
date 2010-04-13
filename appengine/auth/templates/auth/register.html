@@ -18,7 +18,7 @@ function validate_if_changed() {
     email: $("#id_email").val(),
     password: $("#id_password").val(),
     repeat: $("#id_repeat").val(),
-  };
+    tos: true};
   var oneline = [data.username, data.email, data.password, data.repeat];
   oneline = oneline.join('~');
   if (oneline == $.previous) return;
