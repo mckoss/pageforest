@@ -27,7 +27,7 @@ class Migratable(db.Model):
         Override the Model.get_by_key_name method, to ensure the
         schema version is current after a read.
         """
-        model = db.Model.get_by_key_name(key_name, parent)
+        model = super(Migratable, cls).get_by_key_name(key_name, parent)
         if model is not None:
             model.update_schema()
         return model
@@ -35,7 +35,7 @@ class Migratable(db.Model):
     @classmethod
     def get_or_insert(cls, key_name, **kwargs):
         # Look in cache first
-        model = db.Model.get_or_insert(key_name, **kwargs)
+        model = super(Migratable, cls).get_or_insert(key_name, **kwargs)
         if model is not None:
             model.update_schema()
         return model
@@ -68,7 +68,7 @@ class Migratable(db.Model):
             model.update_schema()
         return len(models)
 
-    def migrate(self, schemaNext):
+    def migrate(self, next_schema):
         raise NotImplementedError(
             "Application error - missing migration for %s to version %d" %
-            type(self).__name__, schemaNext)
+            type(self).__name__, next_schema)

@@ -72,6 +72,13 @@ MEDIA_URL = '/static/'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 
+# Prevent account registration with some well-known usernames.
+# This must be all lowercase, because it is matched against username.lower().
+RESERVED_USERNAMES = """
+admin administrator root webmaster www-data postmaster
+test tester testuser testclient staff
+""".split()
+
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
@@ -84,7 +91,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     # 'django.core.context_processors.media',
     'django.core.context_processors.request',
     # 'django.contrib.messages.context_processors.messages',
-    'utils.context_processors.settings',
+    'utils.context_processors.safe_settings',
     'utils.context_processors.combined_files',
 )
 

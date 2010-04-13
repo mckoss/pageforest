@@ -23,6 +23,8 @@ class CacheableTest(TestCase):
     def setUp(self):
         self.started = datetime.now()
         self.entity = CachedModel(key_name='e', text='e', blob='e')
+        self.saved = CachedModel(key_name='s', text='s', blob='s')
+        self.saved.put()
 
     def test_put_and_delete(self):
         """Test that put and delete will update memcache."""
@@ -35,24 +37,35 @@ class CacheableTest(TestCase):
         e3 = CachedModel.cache_get_by_key_name('e')
         self.assertEqual(e3, None)
 
+    def test_get_by_key_name(self):
+        """Test the overriden get_by_key_name method."""
+        e1 = CachedModel.get_by_key_name('s')
+        self.assertEqual(e1.key().name(), 's')
+        # Expire memcache and try again.
+        memcache.delete(e1.get_cache_key())
+        e1 = CachedModel.get_by_key_name('s')
+        self.assertEqual(e1.key().name(), 's')
+
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
         self.entity.put(fake_time=1270833107.0)
         history = CacheHistory(self.entity)
         self.assertEqual(history.datastore_put, 1270833107.0)
         self.assertEqual(history.memcache_puts, [1270833107.0])
+        self.assertEqual(history.average_put_interval(), 3600.0)
         self.entity.put(fake_time=1270833107.1)
-        self.entity.put(fake_time=1270833107.2)
         self.entity.put(fake_time=1270833107.3)
         self.entity.put(fake_time=1270833107.4)
         self.entity.put(fake_time=1270833107.5)
+        self.entity.put(fake_time=1270833107.2)
         self.entity.put(fake_time=1270833107.6)
         history = CacheHistory(self.entity)
         self.assertEqual(len(history.memcache_puts), 7)
         self.assertEqual(history.memcache_puts, [
                 1270833107.0, 1270833107.1, 1270833107.2, 1270833107.3,
                 1270833107.4, 1270833107.5, 1270833107.6])
-        self.assertEqual(history.datastore_put, 1270833107.4)
+        self.assertEqual(history.datastore_put, 1270833107.5)
+        self.assertAlmostEqual(history.average_put_interval(), 0.1)
         # Fake datastore put, two seconds earlier.
         history.datastore_put -= 2.0
         memcache.set_multi(history.serialize_datastore_put())
@@ -65,12 +78,13 @@ class CacheableTest(TestCase):
         self.entity.put(fake_time=1270833107.9)
         history = CacheHistory(self.entity)
         self.assertEqual(len(history.memcache_puts), 10)
-        self.entity.put(fake_time=1270833108.0)
+        self.entity.put(fake_time=1270833108.9)
         history = CacheHistory(self.entity)
         self.assertEqual(history.memcache_puts, [
                 1270833107.1, 1270833107.2, 1270833107.3, 1270833107.4,
                 1270833107.5, 1270833107.6, 1270833107.7, 1270833107.8,
-                1270833107.9, 1270833108.0])
+                1270833107.9, 1270833108.9])
+        self.assertAlmostEqual(history.average_put_interval(), 0.2)
 
 
 class DocTest(TestCase):

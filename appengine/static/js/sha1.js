@@ -6,7 +6,7 @@
  * Distributed under the BSD License
  * See http://pajhome.org.uk/crypt/md5 for details.
  */
- 
+
  // BUG: Uses global namespace - embed in PF.
 
 /*
@@ -152,7 +152,7 @@ function str2binb(str)
   var mask = (1 << chrsz) - 1;
   // Intialize buffer - to avoid strict javascript warnings
   for (var j = 0; j <= (str.length*chrsz)>>5; j++)
-  	bin[j] = 0;
+        bin[j] = 0;
   for(var i = 0; i < str.length * chrsz; i += chrsz)
     bin[i>>5] |= (str.charCodeAt(i / chrsz) & mask) << (32 - chrsz - i%32);
   return bin;

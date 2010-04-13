@@ -5,6 +5,7 @@ import sys
 import subprocess
 
 LOGFILENAME = 'check.log'
+PEP8_EXCLUDE = '.hg jsmin.py'.split()
 
 
 def attempt(command):
@@ -35,8 +36,8 @@ def main():
     if path != '.':
         global LOGFILENAME
         LOGFILENAME = os.path.join(path, LOGFILENAME)
-    attempt('pep8 --count --repeat --exclude jsmin.py,.hg --ignore=E11 %s' %
-            path)
+    attempt('pep8 --count --repeat --exclude %s %s' %
+            (','.join(PEP8_EXCLUDE), path))
     attempt('python %s/whitespace.py' % path)
     attempt('python %s/tools/settingsparser.py' % path)
     attempt('python %s/appengine/manage.py test -v0' % path)
