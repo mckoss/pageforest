@@ -4,8 +4,18 @@
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript">
+function html_message(name, message) {
+  if ($("#id_" + name).val() === '') { return ''; }
+  if (message) { return '<span class="error">' + message + '</span>'; }
+  return '<span class="success">OK</span>';
+}
+
 function validate_success(message, status, xhr) {
-  console.log(message);
+  var fields = {"username": "username", "email": "email",
+                "password": "password", "repeat": "__all__"};
+  for (var name in fields) {
+    $("#validate_" + name).html(html_message(name, message[fields[name]]));
+  }
 }
 
 function validate_error(xhr, status, message) {
@@ -28,14 +38,14 @@ function validate_if_changed() {
     type: "POST",
     url: "/auth/register/validate/",
     data: data,
-    dataType: "text",
+    dataType: "json",
     success: validate_success,
     error: validate_error});
 }
 
 $(document).ready(function() {
   $.previous = '~~~';
-  setInterval(validate_if_changed, 500);
+  setInterval(validate_if_changed, 1000);
   $("input.focus:last").focus();
 });
 </script>
@@ -44,7 +54,13 @@ $(document).ready(function() {
 {% block content %}
 <form method="post">
 <table>
-{{ form }}
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td id="validate_{{ field.html_name }}">{{ field.errors.0 }}</td>
+</tr>
+{% endfor %}
 <tr><td></td><td><input type="submit" /></td></tr>
 </table>
 </form>
