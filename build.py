@@ -2,6 +2,7 @@
 
 import os
 import sys
+from optparse import OptionParser
 import subprocess
 import shutil
 from hashlib import md5
@@ -11,23 +12,26 @@ import tools.settingsparser as settingsparser
 
 import appengine.settings as settings
 
-STATIC_DIR = "appengine/static/"
-SETTINGS_AUTO = "appengine/settingsauto.py"
+STATIC_DIR = os.path.join("appengine", "static")
+SETTINGS_AUTO = os.path.join("appengine", "settingsauto.py")
 
 
-def combine_files(settings_dict):
+def combine_files(settings_dict, overwrite=False, verbose=False):
     """
     Combine and minify static files.
 
     """
     for file_type in settings.FILE_GROUPS.keys():
-        type_dir = STATIC_DIR + file_type + "/"
+        type_dir = os.path.join(STATIC_DIR, file_type)
 
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
             output_name = "%s.%s" % (alias, file_type)
             alias_key = "%s_%s" % (alias.upper(), file_type.upper())
             digest_key = "%s_DIGEST" % alias_key
             version_key = "%s_VERSION" % alias_key
+            
+            if verbose:
+                print "Processing %s." % output_name
 
             if version_key not in settings_dict:
                 settings_dict[version_key] = 0
@@ -36,7 +40,7 @@ def combine_files(settings_dict):
             output_file = open(type_dir + output_name, 'w')
             digest = md5()
             for filename in file_list:
-                input_file = open("%s%s.%s" % (type_dir, filename, file_type),
+                input_file = open(os.path.join(type_dir, "%s.%s" % (filename, file_type)),
                                   'r')
                 comment = "/* Begin file: %s.%s */\n" % (filename, file_type)
                 content = input_file.read()
@@ -50,7 +54,8 @@ def combine_files(settings_dict):
             digest = digest.hexdigest()
             if digest != settings_dict[digest_key]:
                 settings_dict[digest_key] = digest
-                settings_dict[version_key] += 1
+                if not overwrite:
+                    settings_dict[version_key] += 1
                 versioned_name = "%s-%s.%s" % (alias,
                                                settings_dict[version_key],
                                                file_type)
@@ -61,7 +66,13 @@ def combine_files(settings_dict):
 
 def main():
     """ Build deployable version of pageforest. """
-
+    
+    parser = OptionParser()
+    parser.add_option('-o', '--overwrite', action='store_true',
+        help="overwrite the current file version regardless of digest hash")
+    parser.add_option('-v', '--verbose', action='store_true')
+    (options, args) = parser.parse_args()
+    
     path = os.path.dirname(__file__) or '.'
     os.chdir(path)
 
@@ -69,11 +80,18 @@ def main():
     settings_dict = settingsparser.load(settings_auto.read())
     settings_auto.close()
 
-    combine_files(settings_dict)
+    combine_files(settings_dict, overwrite=options.overwrite, verbose=options.verbose)
 
     settings_auto = open(SETTINGS_AUTO, 'w')
-    settings_auto.write(settingsparser.save(settings_dict))
+    content = settingsparser.save(settings_dict)
+    settings_auto.write(content)
     settings_auto.close()
+    
+    if options.verbose:
+        print "=== begine %s ===" % SETTINGS_AUTO
+        print content
+        print "=== end %s ===" % SETTINGS_AUTO
+
 
 if __name__ == '__main__':
     main()
