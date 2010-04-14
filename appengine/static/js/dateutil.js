@@ -1,6 +1,6 @@
-global_namespace.Define('startpad.date-util', function(NS) {
-    var Base = NS.Import('startpad.base');
-    var Format = NS.Import('startpad.format-util');
+global_namespace.define('startpad.date-util', function(NS) {
+    var Base = NS.import('startpad.base');
+    var Format = NS.import('startpad.format-util');
 
 //--------------------------------------------------------------------------
 // ISO 8601 Date Formatting
