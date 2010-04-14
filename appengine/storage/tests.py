@@ -5,7 +5,7 @@ from google.appengine.api import memcache
 from django.test import TestCase, Client
 
 from apps.models import App
-from data.models import KeyValue
+from storage.models import KeyValue
 
 
 class AppTestCase(TestCase):
