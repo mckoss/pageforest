@@ -1,6 +1,6 @@
-global_namespace.Define('startpad.format-util', function(NS) {
+global_namespace.define('startpad.format-util', function(NS) {
 
-NS.Extend(NS, {
+NS.extend(NS, {
 // Convert and digits in d to thousand-separated digits
 Thousands: function(d)
     {

@@ -16,7 +16,7 @@
 
    Methods:
 
-   ns.Define(sPath, fnCallback(ns)) - Define a new Namespace object and call
+   ns.define(sPath, fnCallback(ns)) - Define a new Namespace object and call
    the provided function with the new namespace as a parameter.
 
        sPath - Path of the form ('unique.module.sub_module').  Pat
@@ -32,28 +32,25 @@
 
    Usage example:
 
-   global_namespace.Define('startpad.base', function(ns) {
+   global_namespace.define('startpad.base', function(ns) {
        var Other = ns.Import('startpad.other');
 
        ns.extend(ns, {
            var1: value1,
            var2: value2,
-           myFunc: function(args)
-               {
+           myFunc: function(args) {
                ....Other.AFunction(args)...
-               }
+           }
        });
 
-       ns.ClassName = function(args)
-       {
+       ns.ClassName = function(args) {
        };
 
        ns.ClassName.prototype = {
            constructor: ns.ClassName,
            var1: value1,
 
-       method1: function(args)
-           {
+           method1: function(args) {
            }
        };
    });

@@ -1,12 +1,12 @@
-global_namespace.Define('startpad.data', function(NS) {
-    var DateUtil = NS.Import('startpad.date-util');
-    var Timer = NS.Import('startpad.timer');
-    var JSON = NS.Import('JSON');
-    var Base = NS.Import('startpad.base');
-    var Event = NS.Import('startpad.events');
-    var Format = NS.Import('startpad.format-util');
+global_namespace.define('startpad.data', function(NS) {
+    var DateUtil = NS.import('startpad.date-util');
+    var Timer = NS.import('startpad.timer');
+    var JSON = NS.import('JSON');
+    var Base = NS.import('startpad.base');
+    var Event = NS.import('startpad.events');
+    var Format = NS.import('startpad.format-util');
 
-NS.Extend(NS, {
+NS.extend(NS, {
     sSiteName: "web",
     apikey: undefined,
     sid: undefined,
