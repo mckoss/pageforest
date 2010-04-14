@@ -16,19 +16,17 @@
 
    Methods:
 
-   ns.define(sPath, fnCallback(ns)) - Define a new Namespace object and call
-   the provided function with the new namespace as a parameter.
+   ns.define(sPath, fnCallback(ns)) - Define a new Namespace object
+   and call the provided function with the new namespace as a
+   parameter. Returns the newly defined namespace. sPath has the form
+   ('unique.module.sub_module').
 
-       sPath - Path of the form ('unique.module.sub_module').  Pat
-
-   Returns the newly defined namespace.
-
-   ns.Extend(oDest, oSource) - Copy the (own) properties of the source
+   ns.extend(oDest, oSource) - Copy the (own) properties of the source
    object into the destination object. Returns oDest. Note: This
    method is a convenience function - it has no effect on the
    Namespace object itself.
 
-   ns.Import(sPath) - Return the namespace object with the given path.
+   ns.import(sPath) - Return the namespace object with the given path.
 
    Usage example:
 
@@ -39,7 +37,7 @@
            var1: value1,
            var2: value2,
            myFunc: function(args) {
-               ....Other.AFunction(args)...
+               ...Other.AFunction(args)...
            }
        });
 
@@ -60,11 +58,11 @@
 // This is here because this will often be the first javascript file loaded.
 if (!window.console) {
     (function () {
+        var noop = function () {};
         var names = ["log", "debug", "info", "warn", "error", "assert",
                      "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
                      "count", "trace", "profile", "profileEnd"];
         window.console = {};
-        var noop = function () {};
         for (var i = 0; i < names.length; ++i) {
             window.console[names[i]] = noop;
         }
