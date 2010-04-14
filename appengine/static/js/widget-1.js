@@ -1,37 +1,17 @@
 /* Begin file: namespace.js */
-if(!window.console)
-{(function()
-{var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)
-{window.console[names[i]]=function(){};}})();}
-(function()
-{var sGlobal='global_namespace';if(window[sGlobal])
-return;function Namespace(nsParent,sName)
-{if(sName)
-sName=sName.replace(/-/g,'_');this._nsParent=nsParent;if(this._nsParent)
-{this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!='')
-this._sPath+='.';this._sPath+=sName;}
-else
-this._sPath='';};Namespace.prototype['Extend']=function(oDest,var_args)
-{if(oDest==undefined)
-oDest={};for(var i=1;i<arguments.length;i++)
-{var oSource=arguments[i];for(var prop in oSource)
-{if(oSource.hasOwnProperty(prop))
-oDest[prop]=oSource[prop];}}
-return oDest;};var ns=window[sGlobal]=new Namespace(null);ns['Extend'](Namespace.prototype,{'Define':function(sPath,fnCallback)
-{sPath=sPath.replace(/-/g,'_');var aPath=sPath.split('.');var nsCur=this;for(var i=0;i<aPath.length;i++)
-{var sName=aPath[i];if(nsCur[sName]==undefined)
-new Namespace(nsCur,sName);nsCur=nsCur[sName];}
-if(fnCallback)
-{if(!nsCur._fDefined)
-{nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}
-else
-console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}
-else if(!nsCur._fDefined)
-console.warn("Namespace '"+nsCur._sPath+"' forward reference.");return nsCur;},'Import':function(sPath)
-{return window[sGlobal]['Define'](sPath);},'SGlobalName':function(sInNamespace)
-{sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});})();
+if(!window.console){(function(){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};var noop=function(){};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
+(function(){var sGlobal='global_namespace';if(window[sGlobal]){return;}
+function Namespace(nsParent,sName){if(sName){sName=sName.replace(/-/g,'_');}
+this._nsParent=nsParent;if(this._nsParent){this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!==''){this._sPath+='.';}
+this._sPath+=sName;}else{this._sPath='';}}
+Namespace.prototype.extend=function(oDest,var_args){if(oDest===undefined){oDest={};}
+for(var i=1;i<arguments.length;i++){var oSource=arguments[i];for(var prop in oSource){if(oSource.hasOwnProperty(prop)){oDest[prop]=oSource[prop];}}}
+return oDest;};var ns=window[sGlobal]=new Namespace(null);ns.extend(Namespace.prototype,{'define':function(sPath,fnCallback){sPath=sPath.replace(/-/g,'_');var aPath=sPath.split('.');var nsCur=this;for(var i=0;i<aPath.length;i++){var sName=aPath[i];if(nsCur[sName]===undefined){var nsNew=new Namespace(nsCur,sName);}
+nsCur=nsCur[sName];}
+if(fnCallback){if(!nsCur._fDefined){nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}else{console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}}else if(!nsCur._fDefined){console.warn("Namespace '"+nsCur._sPath+"' forward reference.");}
+return nsCur;},'import':function(sPath){return window[sGlobal].define(sPath);},'SGlobalName':function(sInNamespace){sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});}());
 /* Begin file: data.js */
-global_namespace.Define('startpad.data',function(NS){var DateUtil=NS.Import('startpad.date-util');var Timer=NS.Import('startpad.timer');var JSON=NS.Import('JSON');var Base=NS.Import('startpad.base');var Event=NS.Import('startpad.events');var Format=NS.Import('startpad.format-util');NS.Extend(NS,{sSiteName:"web",apikey:undefined,sid:undefined,afn:[],ifn:1,mMessages:{errBusy:"Call made while another call is in progress.",},SetSiteName:function(sName)
+global_namespace.define('startpad.data',function(NS){var DateUtil=NS.import('startpad.date-util');var Timer=NS.import('startpad.timer');var JSON=NS.import('JSON');var Base=NS.import('startpad.base');var Event=NS.import('startpad.events');var Format=NS.import('startpad.format-util');NS.extend(NS,{sSiteName:"web",apikey:undefined,sid:undefined,afn:[],ifn:1,mMessages:{errBusy:"Call made while another call is in progress.",},SetSiteName:function(sName)
 {NS.sSiteName=sName;},GetAPIKey:function(sDomain,fnNext)
 {if(NS.apikey!=undefined)
 return fnNext();new NS.ScriptData("http://"+sDomain+"/init.json").Call({},function(obj)

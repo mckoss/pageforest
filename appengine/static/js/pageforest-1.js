@@ -1,37 +1,17 @@
 /* Begin file: namespace.js */
-if(!window.console)
-{(function()
-{var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i)
-{window.console[names[i]]=function(){};}})();}
-(function()
-{var sGlobal='global_namespace';if(window[sGlobal])
-return;function Namespace(nsParent,sName)
-{if(sName)
-sName=sName.replace(/-/g,'_');this._nsParent=nsParent;if(this._nsParent)
-{this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!='')
-this._sPath+='.';this._sPath+=sName;}
-else
-this._sPath='';};Namespace.prototype['Extend']=function(oDest,var_args)
-{if(oDest==undefined)
-oDest={};for(var i=1;i<arguments.length;i++)
-{var oSource=arguments[i];for(var prop in oSource)
-{if(oSource.hasOwnProperty(prop))
-oDest[prop]=oSource[prop];}}
-return oDest;};var ns=window[sGlobal]=new Namespace(null);ns['Extend'](Namespace.prototype,{'Define':function(sPath,fnCallback)
-{sPath=sPath.replace(/-/g,'_');var aPath=sPath.split('.');var nsCur=this;for(var i=0;i<aPath.length;i++)
-{var sName=aPath[i];if(nsCur[sName]==undefined)
-new Namespace(nsCur,sName);nsCur=nsCur[sName];}
-if(fnCallback)
-{if(!nsCur._fDefined)
-{nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}
-else
-console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}
-else if(!nsCur._fDefined)
-console.warn("Namespace '"+nsCur._sPath+"' forward reference.");return nsCur;},'Import':function(sPath)
-{return window[sGlobal]['Define'](sPath);},'SGlobalName':function(sInNamespace)
-{sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});})();
+if(!window.console){(function(){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};var noop=function(){};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
+(function(){var sGlobal='global_namespace';if(window[sGlobal]){return;}
+function Namespace(nsParent,sName){if(sName){sName=sName.replace(/-/g,'_');}
+this._nsParent=nsParent;if(this._nsParent){this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!==''){this._sPath+='.';}
+this._sPath+=sName;}else{this._sPath='';}}
+Namespace.prototype.extend=function(oDest,var_args){if(oDest===undefined){oDest={};}
+for(var i=1;i<arguments.length;i++){var oSource=arguments[i];for(var prop in oSource){if(oSource.hasOwnProperty(prop)){oDest[prop]=oSource[prop];}}}
+return oDest;};var ns=window[sGlobal]=new Namespace(null);ns.extend(Namespace.prototype,{'define':function(sPath,fnCallback){sPath=sPath.replace(/-/g,'_');var aPath=sPath.split('.');var nsCur=this;for(var i=0;i<aPath.length;i++){var sName=aPath[i];if(nsCur[sName]===undefined){var nsNew=new Namespace(nsCur,sName);}
+nsCur=nsCur[sName];}
+if(fnCallback){if(!nsCur._fDefined){nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}else{console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}}else if(!nsCur._fDefined){console.warn("Namespace '"+nsCur._sPath+"' forward reference.");}
+return nsCur;},'import':function(sPath){return window[sGlobal].define(sPath);},'SGlobalName':function(sInNamespace){sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});}());
 /* Begin file: json2.js */
-global_namespace.Define('JSON',function(JSON){function f(n){return n<10?'0'+n:n;}
+global_namespace.define('JSON',function(JSON){function f(n){return n<10?'0'+n:n;}
 if(typeof Date.prototype.toJSON!=='function'){Date.prototype.toJSON=function(key){return this.valueOf()?this.getUTCFullYear()+'-'+
 f(this.getUTCMonth()+1)+'-'+
 f(this.getUTCDate())+'T'+
@@ -59,7 +39,7 @@ cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return'\\u'+
 if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,'@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,']').replace(/(?:^|:|,)(?:\s*\[)+/g,''))){j=eval('('+text+')');return typeof reviver==='function'?walk({'':j},''):j;}
 throw new SyntaxError('JSON.parse');};}});
 /* Begin file: formatutil.js */
-global_namespace.Define('startpad.format-util',function(NS){NS.Extend(NS,{Thousands:function(d)
+global_namespace.define('startpad.format-util',function(NS){NS.extend(NS,{Thousands:function(d)
 {var s=d.toString();var sLast="";while(s!=sLast)
 {sLast=s;s=s.replace(/(\d+)(\d{3})/,"$1,$2");}
 return s;},Slugify:function(s)
@@ -87,7 +67,7 @@ stRep=stRep.toString();var ich=0;var ichFind=this.indexOf(stPat,0);while(ichFind
 {st+=this.substring(ich,ichFind)+stRep;ich=ichFind+stPat.length;ichFind=this.indexOf(stPat,ich);}
 st+=this.substring(ich);return st;};});
 /* Begin file: dateutil.js */
-global_namespace.Define('startpad.date-util',function(NS){var Base=NS.Import('startpad.base');var Format=NS.Import('startpad.format-util');NS.ISO={tz:-(new Date().getTimezoneOffset())/60,enumMatch:new Base.Enum([1,"YYYY","MM","DD",5,"hh","mm",8,"ss",10,"sss","tz"]),FromDate:function(dt,fTime)
+global_namespace.define('startpad.date-util',function(NS){var Base=NS.import('startpad.base');var Format=NS.import('startpad.format-util');NS.ISO={tz:-(new Date().getTimezoneOffset())/60,enumMatch:new Base.Enum([1,"YYYY","MM","DD",5,"hh","mm",8,"ss",10,"sss","tz"]),FromDate:function(dt,fTime)
 {var dtT=new Date();dtT.setTime(dt.getTime());var tz=dt.__tz;if(tz==undefined)
 tz=NS.ISO.tz;if(tz)
 dtT.setTime(dtT.getTime()+60*60*1000*tz);var s=dtT.getUTCFullYear()+"-"+Format.SDigits(dtT.getUTCMonth()+1,2)+"-"+Format.SDigits(dtT.getUTCDate(),2);var ms=dtT%(24*60*60*1000);if(ms||fTime||tz!=0)
@@ -108,7 +88,7 @@ dt.setUTCHours(0,0,0,0);dt.__tz=aParts[e.tz];if(aParts[e.tz])
 dt.setTime(dt.getTime()-dt.__tz*(60*60*1000));if(objExtra)
 NS.Extend(dt,objExtra);return dt;}};});
 /* Begin file: data.js */
-global_namespace.Define('startpad.data',function(NS){var DateUtil=NS.Import('startpad.date-util');var Timer=NS.Import('startpad.timer');var JSON=NS.Import('JSON');var Base=NS.Import('startpad.base');var Event=NS.Import('startpad.events');var Format=NS.Import('startpad.format-util');NS.Extend(NS,{sSiteName:"web",apikey:undefined,sid:undefined,afn:[],ifn:1,mMessages:{errBusy:"Call made while another call is in progress.",},SetSiteName:function(sName)
+global_namespace.define('startpad.data',function(NS){var DateUtil=NS.import('startpad.date-util');var Timer=NS.import('startpad.timer');var JSON=NS.import('JSON');var Base=NS.import('startpad.base');var Event=NS.import('startpad.events');var Format=NS.import('startpad.format-util');NS.extend(NS,{sSiteName:"web",apikey:undefined,sid:undefined,afn:[],ifn:1,mMessages:{errBusy:"Call made while another call is in progress.",},SetSiteName:function(sName)
 {NS.sSiteName=sName;},GetAPIKey:function(sDomain,fnNext)
 {if(NS.apikey!=undefined)
 return fnNext();new NS.ScriptData("http://"+sDomain+"/init.json").Call({},function(obj)
