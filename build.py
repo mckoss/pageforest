@@ -29,7 +29,7 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
             alias_key = "%s_%s" % (alias.upper(), file_type.upper())
             digest_key = "%s_DIGEST" % alias_key
             version_key = "%s_VERSION" % alias_key
-            
+
             if verbose:
                 print "Processing %s." % output_name
 
@@ -40,8 +40,9 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
             output_file = open(os.path.join(type_dir, output_name), 'w')
             digest = md5()
             for filename in file_list:
-                input_file = open(os.path.join(type_dir, "%s.%s" % (filename, file_type)),
-                                  'r')
+                input_file = open(
+                    os.path.join(type_dir, "%s.%s" % (filename, file_type)),
+                    'r')
                 comment = "/* Begin file: %s.%s */\n" % (filename, file_type)
                 content = input_file.read()
                 if file_type == 'js':
@@ -62,6 +63,7 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                 print "Building file: %s" % versioned_name
                 shutil.copyfile(os.path.join(type_dir, output_name),
                                 os.path.join(type_dir, versioned_name))
+
 
 def trim(docstring):
     """ Code http://www.python.org/dev/peps/pep-0257/ """
@@ -89,14 +91,15 @@ def trim(docstring):
     # Return a single string:
     return '\n'.join(trimmed)
 
+
 def main():
     """
     Builds deployment files for pageforest.com.
-        
+
     Files are combined from settings.FILE_GROUPS.  The current version numbers
     and md5 digests for each file are updated in settingsauto.py.
     """
-    
+
     parser = OptionParser(
         usage="%prog [options]",
         description=trim(main.__doc__))
@@ -104,7 +107,7 @@ def main():
         help="overwrite the current file version regardless of digest hash")
     parser.add_option('-v', '--verbose', action='store_true')
     (options, args) = parser.parse_args()
-    
+
     path = os.path.dirname(__file__) or '.'
     os.chdir(path)
 
@@ -112,13 +115,15 @@ def main():
     settings_dict = settingsparser.load(settings_auto.read())
     settings_auto.close()
 
-    combine_files(settings_dict, overwrite=options.overwrite, verbose=options.verbose)
+    combine_files(settings_dict,
+                  overwrite=options.overwrite,
+                  verbose=options.verbose)
 
     settings_auto = open(SETTINGS_AUTO, 'w')
     content = settingsparser.save(settings_dict)
     settings_auto.write(content)
     settings_auto.close()
-    
+
     if options.verbose:
         print "=== begin %s ===" % SETTINGS_AUTO
         print content
