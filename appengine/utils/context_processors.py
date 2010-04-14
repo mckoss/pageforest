@@ -45,7 +45,7 @@ def combined_files(request):
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
             result[template_key][alias] = []
             if settings.COMBINE_FILES:
-                result[template_key][alias].append("/static/%s/%s_%s.%s" %
+                result[template_key][alias].append("/static/%s/%s-%s.%s" %
                    (file_type, alias, settings.MEDIA_VERSION, file_type))
             else:
                 for filename in file_list:
