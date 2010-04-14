@@ -8,11 +8,18 @@ from apps.models import App
 from data.models import KeyValue
 
 
-class KeyValueTest(TestCase):
+class AppTestCase(TestCase):
 
     def setUp(self):
-        self.app = App(key_name='test', default_domain='test.pageforest.com')
+        self.app = App(key_name='test', default_domain='test.pageforest.com',
+                       alt_domains=['testserver'])
         self.app.put()
+
+
+class KeyValueTest(AppTestCase):
+
+    def setUp(self):
+        super(TestCase, self).setUp()
         self.key = 'test/data/key'
         self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
         self.data = KeyValue(key_name=self.key, value=self.value)
@@ -30,7 +37,7 @@ class KeyValueTest(TestCase):
                          'http://test.pageforest.com/data/key')
 
 
-class ClientErrorTest(TestCase):
+class ClientErrorTest(AppTestCase):
 
     def test_get_404(self):
         """Tests that non-existent data returns 404 Not Found."""
@@ -47,7 +54,7 @@ class ClientErrorTest(TestCase):
         self.assertEqual(response.status_code, 405)
 
 
-class RestApiTest(TestCase):
+class RestApiTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with REST API."""
@@ -73,7 +80,7 @@ class RestApiTest(TestCase):
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
-class JsonpApiTest(TestCase):
+class JsonpApiTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with JSONP API."""
@@ -98,7 +105,7 @@ class JsonpApiTest(TestCase):
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
 
 
-class HostTest(TestCase):
+class HostTest(AppTestCase):
 
     def test_host(self):
         """Test namespaces by Host header."""
@@ -117,7 +124,7 @@ class HostTest(TestCase):
         self.assertEqual(response.status_code, 404)
 
 
-class MemcacheTest(TestCase):
+class MemcacheTest(AppTestCase):
 
     def assertProtoBuf(self, binary, data=None):
         self.assertTrue(binary is not None)
@@ -159,7 +166,7 @@ class MemcacheTest(TestCase):
         self.assertEqual(memcache.get(cache_key), None)
 
 
-class MimeTest(TestCase):
+class MimeTest(AppTestCase):
 
     def put_and_get(self, path):
         """Helper function for MIME tests."""
@@ -168,19 +175,19 @@ class MimeTest(TestCase):
 
     def test_html(self):
         """Test that the mime type is guessed correctly for HTML."""
-        response = self.put_and_get('/index.html')
+        response = self.put_and_get('/global/index.html')
         self.assertEqual(response['Content-Type'], 'text/html')
-        response = self.client.get('/index.html')
+        response = self.client.get('/')
         self.assertEqual(response['Content-Type'], 'text/html')
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
-        response = self.put_and_get('/style.css')
+        response = self.put_and_get('/global/css/style.css')
         self.assertEqual(response['Content-Type'], 'text/css')
 
     def test_js(self):
         """Test that the mime type is guessed correctly for JS."""
-        response = self.put_and_get('/test.js')
+        response = self.put_and_get('/global/js/test.js')
         self.assertEqual(response['Content-Type'], 'application/javascript')
 
     def test_json(self):
@@ -190,24 +197,25 @@ class MimeTest(TestCase):
 
     def test_jpg(self):
         """Test that the mime type is guessed correctly for JPG."""
-        response = self.put_and_get('/test.jpg')
+        response = self.put_and_get('/global/images/test.jpg')
         self.assertEqual(response['Content-Type'], 'image/jpeg')
 
     def test_png(self):
         """Test that the mime type is guessed correctly for PNG."""
-        response = self.put_and_get('/test.png')
+        response = self.put_and_get('/global/images/test.png')
         self.assertEqual(response['Content-Type'], 'image/png')
 
     def test_ico(self):
         """Test that the mime type is guessed correctly for ICO."""
-        response = self.put_and_get('/test.ico')
+        response = self.put_and_get('/global/favicon.ico')
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
 
 
-class JsonArrayTest(TestCase):
+class JsonArrayTest(AppTestCase):
 
     def setUp(self):
         """Prepare a simple chat array."""
+        super(TestCase, self).setUp()
         self.chat = KeyValue(key_name='test/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()

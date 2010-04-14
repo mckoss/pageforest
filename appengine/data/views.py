@@ -8,26 +8,17 @@ from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.shortcuts import get_int
 
+from apps.models import App
 from data.models import KeyValue
 
 JSON_MIME_TYPE = 'application/json'
 
 
-def hostname_to_app_id(hostname):
-    app_id = hostname.lower()
-    for domain in settings.DOMAINS:
-        if app_id.endswith('.' + domain):
-            return app_id[:-len(domain) - 1]
-    return app_id
-
-
 @jsonp
-def key_value(request, entity_name):
-    hostname = request.META.get('HTTP_HOST', 'test')
-    request.app_id = hostname_to_app_id(hostname)
-    if not entity_name:
-        entity_name = 'index.html'
-    request.key_name = '%s/%s' % (request.app_id, entity_name)
+def key_value(request, doc_id, key):
+    request.app = App.get_by_hostname(request.META.get('HTTP_HOST', 'test'))
+    key = key or 'index.html'
+    request.key_name = '%s/%s' % (request.app.key().name(), key)
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():
