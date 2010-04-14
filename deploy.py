@@ -41,23 +41,24 @@ def update_app_yaml(lines, **kwargs):
 def main():
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
-    parser.add_option('-a', '--application', metavar='<name>',
-        default='pageforest',
+    parser.add_option('-a', '--application',
+        default='pageforest', metavar='<name>',
         help="override app name in app.yaml (default: pageforest)")
-    parser.add_option('-v', '--version', metavar='<string>',
+    parser.add_option('-v', '--version',
+        default='dev', metavar='<string>',
         help="override version in app.yaml (default: dev)")
     parser.add_option('-c', '--check', action='store_true',
         help="run tests but don't deploy to Google App Engine")
+    parser.add_option('-i', '--ignore', action='store_true',
+        help="ignore errors from check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
     # Accept version as command line argument without -v or --version.
     if len(args) == 1 and not options.version:
         options.version = args[0]
     elif args:
         parser.error("Unexpected command line arguments: " + ' '.join(args))
-    if not options.version:
-        options.version = 'dev'
     # Check coding style and unit tests.
-    if os.system('python check.py'):
+    if not options.ignore and os.system('python check.py'):
         sys.exit('failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
