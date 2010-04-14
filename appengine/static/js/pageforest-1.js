@@ -1,5 +1,5 @@
 /* Begin file: namespace.js */
-if(!window.console){(function(){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};var noop=function(){};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
+if(!window.console){(function(){var noop=function(){};var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
 (function(){var sGlobal='global_namespace';if(window[sGlobal]){return;}
 function Namespace(nsParent,sName){if(sName){sName=sName.replace(/-/g,'_');}
 this._nsParent=nsParent;if(this._nsParent){this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!==''){this._sPath+='.';}
@@ -11,8 +11,8 @@ nsCur=nsCur[sName];}
 if(fnCallback){if(!nsCur._fDefined){nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}else{console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}}else if(!nsCur._fDefined){console.warn("Namespace '"+nsCur._sPath+"' forward reference.");}
 return nsCur;},'import':function(sPath){return window[sGlobal].define(sPath);},'SGlobalName':function(sInNamespace){sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});}());
 /* Begin file: json2.js */
-global_namespace.define('JSON',function(JSON){function f(n){return n<10?'0'+n:n;}
-if(typeof Date.prototype.toJSON!=='function'){Date.prototype.toJSON=function(key){return this.valueOf()?this.getUTCFullYear()+'-'+
+global_namespace.define('org.json.json2',function(JSON){function f(n){return n<10?'0'+n:n;}
+if(typeof Date.prototype.toJSON!=='function'){Date.prototype.toJSON=function(key){return isFinite(this.valueOf())?this.getUTCFullYear()+'-'+
 f(this.getUTCMonth()+1)+'-'+
 f(this.getUTCDate())+'T'+
 f(this.getUTCHours())+':'+
@@ -34,7 +34,7 @@ rep=replacer;if(replacer&&typeof replacer!=='function'&&(typeof replacer!=='obje
 return str('',{'':value});};}
 if(typeof JSON.parse!=='function'){JSON.parse=function(text,reviver){var j;function walk(holder,key){var k,v,value=holder[key];if(value&&typeof value==='object'){for(k in value){if(Object.hasOwnProperty.call(value,k)){v=walk(value,k);if(v!==undefined){value[k]=v;}else{delete value[k];}}}}
 return reviver.call(holder,key,value);}
-cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return'\\u'+
+text=String(text);cx.lastIndex=0;if(cx.test(text)){text=text.replace(cx,function(a){return'\\u'+
 ('0000'+a.charCodeAt(0).toString(16)).slice(-4);});}
 if(/^[\],:{}\s]*$/.test(text.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g,'@').replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g,']').replace(/(?:^|:|,)(?:\s*\[)+/g,''))){j=eval('('+text+')');return typeof reviver==='function'?walk({'':j},''):j;}
 throw new SyntaxError('JSON.parse');};}});
