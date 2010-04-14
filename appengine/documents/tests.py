@@ -31,7 +31,6 @@ class DocumentTest(TestCase):
 
     def test_doc(self):
         response = self.client.get('/doc')
-        print response.content
         self.assertContains(response, '"app_id": "test"')
         self.assertContains(response, '"doc_id": "Doc"')
         self.assertContains(response, '"title": "My Document"')
