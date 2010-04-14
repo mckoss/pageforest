@@ -10,4 +10,4 @@ def document(request, doc_id):
     document = Document.get_by_key_name(request.key_name)
     if document is None:
         raise Http404
-    return HttpResponse(document.as_json(), mimetype='application/javascript')
+    return HttpResponse(unicode(document), mimetype='application/javascript')
