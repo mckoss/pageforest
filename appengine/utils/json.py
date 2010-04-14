@@ -1,4 +1,25 @@
-from django.utils import simplejson
+from datetime import datetime
+
+from django.utils import simplejson as json
+
+
+def model_to_json(entity, extra=None, include=None, exclude=None):
+    """
+    Serialize a datastore entity to JSON.
+    """
+    mapping = {}
+    for property in entity.properties():
+        if include and property not in include:
+            continue
+        if exclude and property in exclude:
+            continue
+        value = getattr(entity, property)
+        if isinstance(value, datetime):
+            value = value.isoformat() + 'Z'
+        mapping[property] = value
+    if extra:
+        mapping.update(extra)
+    return json.dumps(mapping)
 
 
 def probably_valid_json(text):
