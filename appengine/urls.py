@@ -7,5 +7,6 @@ urlpatterns = patterns('',
     (r'^auth/', include('auth.urls')),
     (r'^demo/', include('demo.urls')),
     (r'^dashboard/', include('dashboard.urls')),
-    (r'^([a-z0-9/\._-]*)$', 'data.views.key_value'),
+    (r'^([A-Za-z0-9\._-]+)/?$', 'documents.views.document'),
+    (r'^([A-Za-z0-9\._-]+)/(.+)$', 'data.views.key_value'),
 )
