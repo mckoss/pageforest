@@ -37,7 +37,7 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                 settings_dict[version_key] = 0
                 settings_dict[digest_key] = None
 
-            output_file = open(type_dir + output_name, 'w')
+            output_file = open(os.path.join(type_dir, output_name), 'w')
             digest = md5()
             for filename in file_list:
                 input_file = open(os.path.join(type_dir, "%s.%s" % (filename, file_type)),
@@ -52,7 +52,7 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                 output_file.write(content)
             output_file.close()
             digest = digest.hexdigest()
-            if digest != settings_dict[digest_key]:
+            if overwrite or digest != settings_dict[digest_key]:
                 settings_dict[digest_key] = digest
                 if not overwrite:
                     settings_dict[version_key] += 1
@@ -60,14 +60,46 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                                                settings_dict[version_key],
                                                file_type)
                 print "Building file: %s" % versioned_name
-                shutil.copyfile(type_dir + output_name,
-                                type_dir + versioned_name)
+                shutil.copyfile(os.path.join(type_dir, output_name),
+                                os.path.join(type_dir, versioned_name))
 
+def trim(docstring):
+    """ Code http://www.python.org/dev/peps/pep-0257/ """
+    if not docstring:
+        return ''
+    # Convert tabs to spaces (following the normal Python rules)
+    # and split into a list of lines:
+    lines = docstring.expandtabs().splitlines()
+    # Determine minimum indentation (first line doesn't count):
+    indent = sys.maxint
+    for line in lines[1:]:
+        stripped = line.lstrip()
+        if stripped:
+            indent = min(indent, len(line) - len(stripped))
+    # Remove indentation (first line is special):
+    trimmed = [lines[0].strip()]
+    if indent < sys.maxint:
+        for line in lines[1:]:
+            trimmed.append(line[indent:].rstrip())
+    # Strip off trailing and leading blank lines:
+    while trimmed and not trimmed[-1]:
+        trimmed.pop()
+    while trimmed and not trimmed[0]:
+        trimmed.pop(0)
+    # Return a single string:
+    return '\n'.join(trimmed)
 
 def main():
-    """ Build deployable version of pageforest. """
+    """
+    Builds deployment files for pageforest.com.
+        
+    Files are combined from settings.FILE_GROUPS.  The current version numbers
+    and md5 digests for each file are updated in settingsauto.py.
+    """
     
-    parser = OptionParser()
+    parser = OptionParser(
+        usage="%prog [options]",
+        description=trim(main.__doc__))
     parser.add_option('-o', '--overwrite', action='store_true',
         help="overwrite the current file version regardless of digest hash")
     parser.add_option('-v', '--verbose', action='store_true')
@@ -88,7 +120,7 @@ def main():
     settings_auto.close()
     
     if options.verbose:
-        print "=== begine %s ===" % SETTINGS_AUTO
+        print "=== begin %s ===" % SETTINGS_AUTO
         print content
         print "=== end %s ===" % SETTINGS_AUTO
 
