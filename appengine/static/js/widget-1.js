@@ -1,5 +1,5 @@
 /* Begin file: namespace.js */
-if(!window.console){(function(){var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};var noop=function(){};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
+if(!window.console){(function(){var noop=function(){};var names=["log","debug","info","warn","error","assert","dir","dirxml","group","groupEnd","time","timeEnd","count","trace","profile","profileEnd"];window.console={};for(var i=0;i<names.length;++i){window.console[names[i]]=noop;}}());}
 (function(){var sGlobal='global_namespace';if(window[sGlobal]){return;}
 function Namespace(nsParent,sName){if(sName){sName=sName.replace(/-/g,'_');}
 this._nsParent=nsParent;if(this._nsParent){this._nsParent[sName]=this;this._sPath=this._nsParent._sPath;if(this._sPath!==''){this._sPath+='.';}
