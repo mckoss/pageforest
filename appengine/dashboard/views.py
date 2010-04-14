@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from utils.shortcuts import render_to_response
 
 from auth.models import User
-from data.models import KeyValue
+from storage.models import KeyValue
 
 
 def index(request):

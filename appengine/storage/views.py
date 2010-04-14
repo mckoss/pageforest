@@ -9,7 +9,7 @@ from utils.mime import guess_mimetype
 from utils.shortcuts import get_int
 
 from apps.models import App
-from data.models import KeyValue
+from storage.models import KeyValue
 
 JSON_MIME_TYPE = 'application/json'
 
