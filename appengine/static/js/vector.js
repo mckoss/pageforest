@@ -1,9 +1,9 @@
 // --------------------------------------------------------------------------
 // Vector Functions
 // --------------------------------------------------------------------------
-global_namespace.Define('startpad.vector', function(NS) {
+global_namespace.define('org.startpad.vector', function(NS) {
 
-NS.Extend(NS, {
+NS.extend(NS, {
         x:0, y:1,
         x2:2, y2:3,
 
