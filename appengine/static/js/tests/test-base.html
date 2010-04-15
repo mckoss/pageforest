@@ -1,0 +1,556 @@
+<HTML>
+<head>
+<title>base.js Unit Tests</title>
+<script>var pfroot = "/";</script>
+<script src="/scripts/pfclient.js"></script>
+<script SRC="unit.js"></script>
+</head>
+
+<body>
+<h1><script>document.write(document.title);</script></h1>
+<i style="color:red;">The event handler test requires you move the mouse to complete this test.</i><br/>
+Scratchpad DIV:
+<div id="divScratch"></div>
+<script>
+var DW = PF.DW;
+var StAttrQuoteInner = PF.StAttrQuoteInner;
+var ts = new PF.TestSuite();
+ts.DWOutputDiv();
+
+ts.AddTest("OOP", function(ut)
+{
+    function Base()
+    {
+        this.x = 1;
+    }
+
+    Base.prototype.Double = function()
+    {
+        this.x *= 2;
+    }
+
+    var b = new Base;
+
+    b.Double();
+    ut.AssertEq(b.x, 2);
+
+    function Child()
+    {
+        this.__super.apply(this, arguments);
+        this.y = 1;
+    }
+
+    Child.DeriveFrom(Base);
+
+    var c = new Child;
+
+    ut.AssertEq(c.y, 1);
+    ut.AssertEq(c.x, 1);
+    c.Double();
+    ut.AssertEq(c.x, 2);
+
+    Child2.DeriveFrom(Base);
+    function Child2()
+    {
+        this.__super.apply(this, arguments);
+    }
+
+    Child2.prototype.Double = function()
+    {
+        this.__super.prototype.Double.apply(this, arguments);
+        this.__super.prototype.Double.apply(this, arguments);
+    }
+
+    var c2 = new Child2;
+    ut.AssertFn(function(){return c2.x == 1;});
+    c2.Double();
+    ut.AssertEq(c2.x, 4);
+});
+
+ts.AddTest("FnCallback", function (ut)
+{
+    function Base()
+    {
+        this.x = 7;
+    }
+
+    Base.prototype.Double = function()
+    {
+        this.x *= 2;
+    }
+
+    Base.prototype.Mult = function(x)
+    {
+        this.x *= x;
+    }
+
+    var b = new Base;
+    var fn = b.Double.FnCallback(b);
+    fn();
+    ut.AssertEq(b.x, 14);
+
+    var fn2 = b.Mult.FnCallback(b);
+    fn2(5);
+    ut.AssertEq(b.x, 14*5);
+
+    var fn5 = b.Mult.FnCallback(b).FnArgs(4);
+    fn5();
+    ut.AssertEq(b.x, 14*5*4);
+
+    // Doesn't matter which order Fn-augmentors are called in!
+    var fn6 = b.Mult.FnArgs(3).FnCallback(b);
+    fn6();
+    ut.AssertEq(b.x, 14*5*4*3);
+
+    function TestFnArgs(a,b,c)
+    {
+        ut.AssertEq(arguments.length, 3);
+        ut.AssertEq(a, 1);
+        ut.AssertEq(b, 2);
+        ut.AssertEq(c, 3);
+    }
+
+    var fn7 = TestFnArgs.FnArgs(1,2,3);
+    fn7();
+
+    // The second FnArgs appends it's args FIRST!
+    var fn8 = TestFnArgs.FnArgs(3).FnArgs(2);
+    fn8(1);
+});
+
+ts.AddTest("Named", function(ut)
+{
+    NBase.DeriveFrom(PF.Named);
+    function NBase()
+    {
+        PF.Named.apply(this, arguments);
+        this.x = 8;
+    }
+
+    var nb = new NBase();
+    var nb2 = new NBase();
+    ut.AssertEq(eval(nb.StNamed()), nb);
+    ut.AssertEq(eval(nb2.StNamed()), nb2);
+
+    ut.AssertEq(nb.StNamedPart(), "PF_0");
+    ut.AssertEq(nb.StNamedPart("foo"), "PF_0_foo");
+    ut.AssertEq(nb.StNamedPart("bar", 2), "PF_0_bar_2");
+    ut.AssertEq(nb.StPartID("bazz", 7), 'id="PF_0_bazz_7"');
+
+    var divScratch = document.getElementById("divScratch");
+    divScratch.innerHTML = "<DIV " + nb.StPartID("div") + ">Test Div</DIV>";
+    ut.AssertEq(nb.BoundPart("div").tagName, "DIV");
+});
+
+ts.AddTest("Quoting", function(ut)
+{
+    ut.AssertEq(StAttrQuoteInner("&and&"), "&amp;and&amp;");
+    ut.AssertEq(StAttrQuoteInner('"'), "&quot;");
+    ut.AssertEq(StAttrQuoteInner("'"), "&#39;");
+    ut.AssertEq(StAttrQuoteInner("Line1\r\nLine2"), "Line1&#13;&#10;Line2");
+});
+
+ts.AddTest("Browser", function(ut)
+{
+    ut.AssertEq(navigator.appName, PF.Browser.fIE ? "Microsoft Internet Explorer" : "Netscape");
+    ut.AssertEq(PF.Browser.version, PF.Browser.fIE ? 4 : 5);
+});
+
+ts.AddTest("Strings", function(ut)
+{
+    ut.AssertEq(PF.ReplaceKeys("this is {wow} test", {wow:"foo"}), "this is foo test");
+    ut.AssertEq(PF.ReplaceKeys("{key} is replaced {key} twice", {key:"yup"}), "yup is replaced yup twice");
+    ut.AssertEq(PF.ReplaceKeys("{key} and {key2}", {key:"mom"}), "mom and ");
+});
+
+ts.AddTest("StParams", function(ut)
+{
+    var stParams = PF.StParams({a:1, b:"hello"});
+    ut.AssertEq(stParams, "?a=1&b=hello");
+
+    stParams = PF.StParams({a:"Hello there"});
+    ut.AssertEq(stParams, "?a=Hello%20there");
+
+    stParams = PF.StParams({"a b": 1});
+    ut.AssertEq(stParams, "?a%20b=1");
+
+    stParams = PF.StParams({a:"?", b:"&"});
+    ut.AssertEq(stParams, "?a=%3F&b=%26");
+
+    stParams = PF.StParams();
+    ut.AssertEq(stParams, "");
+
+    stParams = PF.StParams({});
+    ut.AssertEq(stParams, "");
+
+    stParams = PF.StParams({a:1, _anchor:"my anchor"});
+    ut.AssertEq(stParams, "?a=1#my%20anchor");
+});
+
+ts.AddTest("ParseParams", function(ut)
+{
+    var stURL = "http://foo.com/page.htm?a=1&b=2#an-anchor";
+    var objParams = PF.ParseParams(stURL);
+    ut.AssertEq(objParams, {a:1, b:2, _anchor: "an-anchor"});
+
+    objParams = PF.ParseParams("?a=1&b=2#an%20anchor");
+    ut.AssertEq(objParams, {a:1, b:2, _anchor: "an anchor"});
+});
+
+ts.AddTest("Params Round Trip", function(ut)
+{
+    var stURL = "?a=1&b=2#an-anchor";
+    var stURL2 = PF.StParams(PF.ParseParams(stURL));
+    ut.AssertEq(stURL, stURL2);
+
+    var stURL = "?a=1&b=2#an%20anchor";
+    var stURL2 = PF.StParams(PF.ParseParams(stURL));
+    ut.AssertEq(stURL, stURL2);
+
+});
+
+ts.AddTest("String Concatenation", function(ut)
+{
+    var stb1 = new PF.StBuf();
+    ut.AssertEq(stb1, "");
+
+    stb1.Append("hello");
+    ut.AssertEq(stb1, "hello");
+
+    stb1.Append(", mom");
+    ut.AssertEq(stb1, "hello, mom");
+
+    var stb2 = new PF.StBuf();
+    stb2.Append(stb1).Append("-").Append(stb1);
+    stb1.Clear();
+    ut.AssertEq(stb1, "");
+    ut.AssertEq(stb2, "hello, mom-hello, mom");
+
+    var stb3 = new PF.StBuf();
+    stb3.Append("this", ", that", ", the other");
+    ut.AssertEq(stb3, "this, that, the other");
+
+    var stb4 = new PF.StBuf("initial", " value");
+    ut.AssertEq(stb4, "initial value");
+});
+
+ts.AddTest("Object Extension", function(ut)
+{
+    var obj1 = {a:1, b:"hello"};
+    PF.Extend(obj1, {c:3});
+    ut.AssertEq(obj1, {a:1, b:"hello", c:3});
+
+    PF.ExtendIfMissing(obj1, {a:2, b:"mom", d:"new property"});
+    ut.AssertEq(obj1, {a:1, b:"hello", c:3, d:"new property"});
+
+    var obj2 = {};
+    PF.Extend(obj2, {a: 1}, {b: 2}, {a: 3});
+    ut.AssertEq(obj2, {a: 3, b: 2});
+
+    var a = [];
+    var b = [1,[2,3],4];
+    PF.ExtendCopy(a, b);
+    ut.AssertEq(a, [1,[2,3],4]);
+    a[1][0] = 99;
+    ut.AssertEq(b, [1,[2,3],4]);
+
+    var o1 = {};
+    var o2 = {a:1, b:{c:2}};
+    var o3 = {d:3};
+    PF.ExtendCopy(o1, o2, o3);
+    ut.AssertEq(o1, {a:1, b:{c:2}, d:3});
+    o1.b.c = 99;
+    ut.AssertEq(o2, {a:1, b:{c:2}});
+});
+
+ts.AddTest("Trim", function(ut)
+{
+    ut.AssertEq(" hello, mom ".Trim(), "hello, mom");
+    ut.AssertEq(" leading".Trim(), "leading");
+    ut.AssertEq("trailing ".Trim(), "trailing");
+    ut.AssertEq("inner space".Trim(), "inner space");
+    ut.AssertEq("     ".Trim(), "");
+    ut.AssertEq("   \r\nWORD\r\n  ".Trim(), "WORD");
+});
+
+ts.AddTest("Cookies", function(ut)
+{
+    var x = PF.RandomInt(100);
+    var y = PF.RandomInt(100);
+    PF.SetCookie("c1", x);
+    PF.SetCookie("c2", y, 30);
+
+    var obj = PF.GetCookies();
+
+    ut.AssertEq(obj.c1, x);
+    ut.AssertEq(obj.c2, y);
+});
+
+ts.AddTest("Enum", function(ut)
+{
+    var e = new PF.Enum(["a", "b", "c"]);
+    ut.AssertEq(e, {a:0, b:1, c:2});
+    e = new PF.Enum([1, "a", "b", 5, "c"]);
+    ut.AssertEq(e, {a:1, b:2, c:5});
+    e = new PF.Enum();
+    ut.AssertEq(e, {});
+
+});
+
+ts.AddTest("ISO 8601 Formatting", function(ut)
+{
+    // Exercise SDigits function first
+    ut.AssertEq(PF.SDigits(1,2), "01");
+    ut.AssertEq(PF.SDigits(11, 10), "0000000011", "long numbers");
+    ut.AssertEq(PF.SDigits(123, 2), "23", "overflow");
+    ut.AssertEq(PF.SDigits(12.34, 2), "12", "fractions");
+    ut.AssertEq(PF.SDigits(-1, 2), "-01", "negative numbers");
+
+    var aTest = [
+        [[1960, 8, 31], [0,0,0,0], "1960-08-31"],
+        [[1960, 8, 31], [7,8], "1960-08-31T07:08Z"],
+        [[1960, 8, 31], [7,8,9,333], "1960-08-31T07:08:09.333Z"]
+    ];
+
+    var dt = new Date();
+    ut.AssertEq(dt.getTime(), dt.valueOf(), "Javascript assumption");
+    var sISO = PF.ISO.FromDate(dt);
+    var sTZ = PF.SDigits(-dt.getTimezoneOffset()/60, 2);
+    ut.AssertEq(sISO.substring(sISO.length-3), sTZ, "Timezone");
+
+    // Fix dt as a UTC date/time
+    dt.__tz = 0;
+    sISO = PF.ISO.FromDate(dt);
+    ut.AssertEq(sISO.substring(sISO.length-1), "Z", "Timezone - fixed at UTC: " + sISO);
+    for (var i = 0; i < aTest.length; i++)
+        {
+        ut.Trace(i);
+        var aDate = aTest[i][0];
+        aDate[1]--;
+        var aTime = aTest[i][1];
+        var sISO = aTest[i][2];
+        dt.setUTCFullYear.apply(dt, aDate);
+        dt.setUTCHours.apply(dt, aTime);
+        ut.AssertEq(PF.ISO.FromDate(dt), sISO);
+        }
+
+    dt.setUTCFullYear(1995, 0, 15);
+    dt.setUTCHours(0,0,0,0);
+    ut.AssertEq(PF.ISO.FromDate(dt, true), "1995-01-15T00:00Z");
+});
+
+ts.AddTest("ISO 8601 Parsing", function(ut)
+{
+    var dt = new Date();
+
+    var aTest = [
+    // ISO, UTC: [Y,M,D], [h,m,s,ms], tz
+    ["1984-01-01", [1984, 1, 1], [0,0,0,0], 0],
+    ["", undefined],
+    ["1984", undefined],
+    ["1984-01", undefined],
+    ["1984-01-01T01:02:03.456-07", [1984,1,1], [8,2,3,456], -7],
+    ["1984-01-01T01:02:03.456Z", [1984,1,1], [1,2,3,456], 0],
+    ["19840101T010203.456Z", [1984,1,1], [1,2,3,456], 0],
+    ["19840101 010203.456Z", undefined],
+    ["1984-01-01T01:02:03X456-07", undefined]
+    ];
+
+    for (var i = 0; i < aTest.length; i++)
+        {
+        ut.Trace(i);
+        var aDate = aTest[i][1];
+        if (!aDate)
+            {
+            ut.AssertEq(PF.ISO.ToDate(aTest[i][0]), undefined);
+            continue;
+            }
+        aDate[1]--;
+        var aTime = aTest[i][2];
+        dt.setUTCFullYear.apply(dt, aDate);
+        dt.setUTCHours.apply(dt, aTime);
+        dt.__tz = aTest[i][3];
+        ut.AssertEq(PF.ISO.ToDate(aTest[i][0]), dt);
+        }
+});
+
+ts.AddTest("Event handler - move the mouse", function(ut)
+{
+    var fOnce = false;
+    PF.AddEventFn(document, "mousemove", Handler);
+
+    function Handler(evt)
+    {
+        if (fOnce)
+            return;
+        fOnce = true;
+        ut.AssertEq(arguments.length, 1);
+        ut.AssertEq(evt.type, "mousemove");
+        ut.Async(false);
+    }
+}).Async(true);
+
+function GlobalFunction()
+{
+    alert("Function should never be called");
+}
+
+function GlobalFunction2 ()
+{
+    alert("Function should never be called 2");
+}
+
+ts.AddTest("Function naming", function(ut)
+{
+    var ns = {};
+
+    ns.Class = function()
+    {
+    }
+
+    ns.Class.prototype.Method = function()
+    {
+    }
+
+    PF.NameFunctions(ns, "ns");
+
+    var o = new ns.Class();
+
+    ut.AssertEq(PF.FunctionName(GlobalFunction), "GlobalFunction");
+    ut.AssertEq(PF.FunctionName(GlobalFunction2), "GlobalFunction2");
+    ut.AssertEq(PF.FunctionName(ns), undefined);
+    ut.AssertEq(PF.FunctionName(o.constructor), "ns.Class");
+    ut.AssertEq(PF.FunctionName(o.Method), "ns.Class.prototype.Method");
+});
+
+ts.AddTest("Vector functions", function(ut)
+{
+    var V = PF.Vector;
+
+    var vOrig = [1,2,3];
+    var v = V.Copy(vOrig);
+    ut.AssertEq(v, [1,2,3]);
+    ut.Assert(v !== vOrig, "copy must be distinct");
+    vOrig[0] = 4;
+    ut.AssertEq(v, [1,2,3]);
+
+    vOrig = [1,[2,3], 4];
+    v = V.Copy(vOrig);
+    ut.AssertEq(v, [1,[2,3],4]);
+    vOrig[1][0] = 5;
+    ut.AssertEq(v, [1, [5,3],4], "only shallow copy");
+
+    var v1 = [2,5];
+    var v2 = [1, 2];
+    v = V.Add(v1, v2);
+    ut.AssertEq(v, [3,7]);
+    ut.AssertEq(v1, [2,5], "unmodified args");
+    ut.AssertEq(v2, [1,2], "unmodified args");
+    v = V.Add(v1, v1, v1, v1);
+    ut.AssertEq(v, [8, 20]);
+
+    v = V.Sub(v1, v2);
+    ut.AssertEq(v, [1, 3]);
+
+    // Vector multiply
+    v = V.Mult(v1, v2);
+    ut.AssertEq(v, [2, 10]);
+
+    // Scalar multiply
+    v = V.Mult(v1, 2);
+    ut.AssertEq(v, [4, 10]);
+
+    v = V.Mult(2, v1);
+    ut.AssertEq(v, [4, 10]);
+
+    v = V.Mult(1,2,3);
+    ut.AssertEq(v, 6);
+
+    // Mixed multiply
+    v = V.Mult(v1, 2, v2);
+    ut.AssertEq(v, [4,20]);
+
+    // Unequal arrays throws
+    ut.AssertThrows("Mismatched Vector Size", function(ut)
+        {
+        v = V.Mult([1,2,3], [1,2]);
+        });
+
+    ut.AssertEq(V.Floor([1,1.2, -0.5]), [1, 1, -1]);
+    ut.AssertEq(V.DotProduct(v1, v2), 12);
+
+    v = V.AddTo(v1, v2);
+    ut.AssertIdent(v, v1);
+    ut.AssertEq(v1, [3, 7]);
+
+    v = V.SubFrom(v1, v2);
+    ut.AssertIdent(v, v1);
+    ut.AssertEq(v1, [2, 5]);
+
+    ut.AssertEq(V.Max([0, 5], [-1, 10]), [0, 10]);
+});
+
+ts.AddTest("Point and Rect Functions", function(ut)
+{
+    var V = PF.Vector;
+
+    var rc = [10, 10, 100, 100];
+
+    ut.AssertEq(V.UL(rc), [10, 10]);
+    ut.AssertEq(V.LR(rc), [100, 100]);
+    ut.AssertEq(V.Size(rc), [90, 90]);
+
+    ut.AssertEq(V.PtCenter(rc), [55, 55]);
+    ut.AssertEq(V.PtCenter(rc, 0), [10, 10]);
+    ut.AssertEq(V.PtCenter(rc, 1), [100, 100]);
+    ut.AssertEq(V.PtCenter(rc, 0.2), [28, 28]);
+    ut.AssertEq(rc, [10, 10, 100, 100]);
+
+    ut.AssertEq(V.PtCenter(rc, [0.5, 0.2]), [55, 28]);
+
+    ut.AssertEq(V.BoundingBox([0, 1], [1,0]), [0, 0, 1, 1]);
+    ut.AssertEq(V.BoundingBox([0,0,1,1], [2,2,4,4]), [0,0,4,4]);
+});
+
+ts.AddTest("Slewing", function(ut)
+{
+    ut.AssertThrows("argument", function() {new PF.Slew({});});
+
+    // Count up from 0
+    var slew = new PF.Slew({start: 0, end: 100, vMax: 50});
+    ut.AssertEq(slew.tMax, 2);
+    for (var t = 0; t <= 2; t++)
+        ut.AssertEq(slew.Value(t), t*50);
+    ut.AssertEq(slew.Value(3), 100);
+
+    // Count down
+    var slew2 = new PF.Slew({start: 200, end: 100, vMax: 50});
+    ut.AssertEq(slew2.tMax, 2);
+    for (t = 0; t <= 2; t++)
+        ut.AssertEq(slew2.Value(t), 200 - t * 50);
+    ut.AssertEq(slew2.Value(3), 100);
+
+    // Timer simulation
+    var msStart = PF.MSTime();
+    var count = 0;
+    slew.Start(function(v) {
+        count++;
+        if (count == 1) ut.AssertLT(v, 10);
+        if (count == 21) ut.AssertEq(v, 100);
+        if (v == 100)
+            {
+            var ms = PF.MSTime() - msStart;
+            console.log("time", ms, "count", count);
+            ut.Assert(ms > 2000*.9 && ms < 2000 * 1.1, "10% time accuracy");
+            ut.AssertEq(count, 21, "10 times per second call default");
+            ut.Async(false);
+            }
+        });
+
+}).Async();
+
+ts.Run();
+ts.Report();
+</script>
+</body>
+</html>
