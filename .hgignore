@@ -1,0 +1,7 @@
+syntax: glob
+
+*.pyc
+.svn/*
+check.log
+*~
+*.orig
