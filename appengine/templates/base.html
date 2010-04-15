@@ -19,9 +19,8 @@ $(document).ready(function() { $("input.focus:last").focus(); });
 {% endblock %}
 
 {% block js %}
-        {% for file_name in js_files.pageforest %}
-            <script type="text/javascript" src="{{ file_name }}"></script>
-        {% endfor %}
+{% for file_name in js_files.pageforest %}
+<script type="text/javascript" src="{{ file_name }}"></script>{% endfor %}
 {% endblock %}
 
 {% if refresh_seconds %}
@@ -40,12 +39,10 @@ $(document).ready(function() { $("input.focus:last").focus(); });
     document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
     </script>
     <script type="text/javascript">
-    try
-        {
+    try {
         var pageTracker = _gat._getTracker("{{analytics_code}}");
         pageTracker._trackPageview();
-        }
-    catch (e) {}
+    } catch (e) {}
     </script>
 {% endblock %}
 </body>
