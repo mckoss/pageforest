@@ -9,6 +9,7 @@ CHECK_FILES = """
 tools/rhino.js
 appengine/static/js/namespace.js
 appengine/static/js/json2.js
+appengine/static/js/registration.js
 """.split()
 
 IGNORE_MESSAGES = """
