@@ -39,6 +39,7 @@ class App(Cacheable, Dated):
         * hostname in alt_domains
         * hostname == key_name + '.' + one of settings.DOMAINS
         * hostname == key_name
+        * hostname == 'localhost' creates dummy app if settings.DEBUG
         """
         hostname = hostname.lower()
         app = cls.all().filter('default_domain', hostname).get()
@@ -49,5 +50,11 @@ class App(Cacheable, Dated):
             return app
         for domain in settings.DOMAINS:
             if hostname.endswith('.' + domain):
-                return cls.get_by_key_name(hostname[:-len(domain) - 1])
-        return cls.get_by_key_name(hostname)
+                app = cls.get_by_key_name(hostname[:-len(domain) - 1])
+                if app:
+                    return app
+        app = cls.get_by_key_name(hostname)
+        if app:
+            return app
+        if hostname.split(':')[0] == 'localhost' and settings.DEBUG:
+            return App(key_name='test', app_id='test')

@@ -18,7 +18,8 @@ def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
     """
-    request.app = App.get_by_hostname(request.META.get('HTTP_HOST', 'test'))
+    hostname = request.META.get('HTTP_HOST', 'test')
+    request.app = App.get_by_hostname(hostname)
     if request.app is None:
         raise Http404
     key = key or 'index.html'
@@ -30,7 +31,10 @@ def key_value(request, doc_id, key):
                  if name.startswith('key_value_')]
         allow.sort()
         return HttpResponseNotAllowed(allow)
-    return globals()[function_name](request)
+    response = globals()[function_name](request)
+    if 'HTTP_X_HELLO' in request.META:
+        response['X-Echo'] = request.META['HTTP_X_HELLO']
+    return response
 
 
 def key_value_head(request):
