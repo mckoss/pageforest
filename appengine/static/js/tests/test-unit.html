@@ -100,11 +100,6 @@ ts.AddTest("Types", function(ut)
         function Foo(){}
 }).Expect(0, 12);
 
-// This test is complete after 7 seconds!
-var utNA = ts.AddTest("No Asserts Asynch", function(ut)
-{
-}).Async(true);
-
 ts.AddTest("Async timeout", function(ut)
 {
         // No call to Async(false)

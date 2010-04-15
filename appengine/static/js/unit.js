@@ -48,7 +48,7 @@ UT.extend(UT.UnitTest.prototype, {
     cAsync: 0,
     fThrows: false,
     cThrows: 0,
-    msTimeout: 10000,
+    msTimeout: 5000,
     stTrace: "",
     cBreakOn: 0,
     fStopFail: false,
