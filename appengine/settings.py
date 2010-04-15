@@ -24,6 +24,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+SITE_NAME = "pageforest.com"
+
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.
 CACHEABLE_PREFIX = 'C1'
