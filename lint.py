@@ -21,12 +21,21 @@ Invalid name "urlpatterns"
 Invalid name "setUp"
 Invalid name "assert
 manage.py:35: [W0403] Relative import 'settings'
+Wildcard import settingsauto
+from wildcard import
 [E0611] No name 'Utils' in module 'email'
 :1: [C0111] Missing docstring
+Test] Missing docstring
 .setUp] Missing docstring
+.decorate] Missing docstring
+.wrapper] Missing docstring
 Unused import handler404
 Unused import handler500
+Unused argument 'request'
+Unused argument 'args'
+Unused argument 'kwargs'
 Use super on an old style class
+Access to a protected member _rollback_on_exception
 """.strip().splitlines()
 
 

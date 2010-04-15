@@ -1,6 +1,3 @@
-import os
-import logging
-
 SAFE_SETTINGS = """
 APPLICATION_ID
 CURRENT_VERSION_ID

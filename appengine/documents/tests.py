@@ -29,7 +29,8 @@ class DocumentTest(TestCase):
         self.assertEqual(self.doc.get_absolute_url(),
                          'http://test.pageforest.com/Doc')
 
-    def test_doc(self):
+    def test_json(self):
+        """Test JSON serializer for document."""
         response = self.client.get('/doc')
         self.assertContains(response, '"app_id": "test"')
         self.assertContains(response, '"doc_id": "Doc"')

@@ -9,6 +9,7 @@ from storage.models import KeyValue
 
 
 class AppTestCase(TestCase):
+    """TestCase with automatic test app."""
 
     def setUp(self):
         self.app = App(key_name='test', default_domain='test.pageforest.com',
@@ -133,6 +134,7 @@ class HostTest(AppTestCase):
 class MemcacheTest(AppTestCase):
 
     def assertProtoBuf(self, binary, data=None):
+        """Check binary protocol buffer."""
         self.assertTrue(binary is not None)
         self.assertEqual(binary.count('pageforest'), 1)
         self.assertEqual(binary.count('KeyValue'), 2)
