@@ -1,7 +1,6 @@
 import os
 import imp
 import doctest
-import time
 from datetime import datetime
 
 from django.test import TestCase
@@ -14,6 +13,7 @@ from utils.mixins import Dated
 
 
 class CachedModel(Cacheable, Dated):
+    """Simple datastore model for Cacheable mixin test."""
     text = db.TextProperty()
     blob = db.BlobProperty()
 
@@ -90,6 +90,7 @@ class CacheableTest(TestCase):
 class DocTest(TestCase):
 
     def has_doctest_testmod(self, filename):
+        """Check if doctest.testmod() appears in the file."""
         for line in file(filename):
             if line.strip() == 'doctest.testmod()':
                 return True
@@ -104,7 +105,7 @@ class DocTest(TestCase):
             if not self.has_doctest_testmod(full_path):
                 continue
             base, ext = os.path.splitext(filename)
-            fm = imp.find_module(base, [dir])
-            mod = imp.load_module('utils.' + base, *fm)
+            file, pathname, desc = imp.find_module(base, [dir])
+            mod = imp.load_module('utils.' + base, file, pathname, desc)
             failures, tests = doctest.testmod(mod)
             self.assertEqual(failures, 0)

@@ -1,8 +1,5 @@
 from google.appengine.ext import db
 
-from django.conf import settings
-from django.utils import simplejson as json
-
 from apps.models import App
 
 
@@ -22,5 +19,6 @@ class Document(db.Model):
     modified = db.DateTimeProperty()
 
     def get_absolute_url(self):
+        """Get the absolute URL for this model instance."""
         app = App.get_by_key_name(self.app_id)
         return '/'.join(('http:/', app.default_domain, self.doc_id))

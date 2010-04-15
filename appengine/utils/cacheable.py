@@ -10,6 +10,10 @@ from google.appengine.datastore import entity_pb
 
 
 class CacheHistory(object):
+    """
+    Remember timestamps for last datastore put and the last 10
+    memcache puts, to estimate the average put interval.
+    """
 
     def __init__(self, cacheable):
         cache_key = cacheable.get_cache_key()
@@ -21,6 +25,9 @@ class CacheHistory(object):
         self.memcache_puts = [float(t) for t in timestamps]
 
     def average_put_interval(self):
+        """
+        Average interval between memcache puts, in seconds.
+        """
         count = len(self.memcache_puts) - 1
         if count < 5:  # Not enough confidence to predict the next put.
             return 3600.0  # One hour.
@@ -29,9 +36,11 @@ class CacheHistory(object):
         return seconds / count
 
     def serialize_datastore_put(self):
+        """String representation of the last datastore put timestamp."""
         return {self.chd_key: '%.3f' % self.datastore_put}
 
     def serialize_memcache_puts(self):
+        """String representation of the last 10 memcache put timestamps."""
         self.memcache_puts.sort()
         timestamps = ['%.3f' % t for t in self.memcache_puts[-10:]]
         return {self.chm_key: ' '.join(timestamps)}

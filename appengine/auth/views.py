@@ -1,4 +1,3 @@
-from django import forms
 from django.shortcuts import redirect
 from django.http import HttpResponse
 

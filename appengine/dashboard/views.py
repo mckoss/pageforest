@@ -7,6 +7,9 @@ from storage.models import KeyValue
 
 
 def index(request):
+    """
+    Dashboard overview.
+    """
     now = datetime.now()
     day_ago = now - timedelta(hours=24)
     week_ago = now - timedelta(days=7)

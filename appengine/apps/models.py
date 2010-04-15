@@ -31,11 +31,20 @@ class App(Cacheable, Dated):
 
     @classmethod
     def get_by_hostname(cls, hostname):
+        """
+        Find the app that serves a given domain (case insensitive).
+
+        Possible matches are checked in this order:
+        * hostname == default_domain
+        * hostname in alt_domains
+        * hostname == key_name + '.' + one of settings.DOMAINS
+        * hostname == key_name
+        """
         hostname = hostname.lower()
         app = cls.all().filter('default_domain', hostname).get()
         if app:
             return app
-        app = cls.all().filter('alt_domain', hostname).get()
+        app = cls.all().filter('alt_domains', hostname).get()
         if app:
             return app
         for domain in settings.DOMAINS:

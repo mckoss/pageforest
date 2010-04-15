@@ -31,16 +31,16 @@ class UserTest(TestCase):
 
         def dummy_migrate(self, schema):
             """Set the migrated flag for this test."""
-            self.migrated = True
+            self.migrated = schema
 
         # TODO: The following monkey patch might break other tests.
         User.migrate = dummy_migrate
         User.schema_current = 2
-        self.peter.migrated = False
+        self.peter.migrated = 0
         self.assertEqual(self.peter.schema, 1)
         self.peter.update_schema()
-        self.assertTrue(self.peter.migrated)
         self.assertEqual(self.peter.schema, 2)
+        self.assertEqual(self.peter.migrated, 2)
 
 
 class RegistrationTest(TestCase):

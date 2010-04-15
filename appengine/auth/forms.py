@@ -1,5 +1,3 @@
-import logging
-
 from django import forms
 from django.conf import settings
 from django.utils import simplejson as json

@@ -8,16 +8,16 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
     Serialize a datastore entity to JSON.
     """
     mapping = {}
-    for property in entity.properties():
-        if include and property not in include:
+    for name in entity.properties():
+        if include and name not in include:
             continue
-        if exclude and property in exclude:
+        if exclude and name in exclude:
             continue
-        value = getattr(entity, property)
+        value = getattr(entity, name)
         if isinstance(value, datetime):
             value = {"__class__": "Date",
                      "isoformat": value.isoformat() + 'Z'}
-        mapping[property] = value
+        mapping[name] = value
     if extra:
         mapping.update(extra)
     return json.dumps(mapping)

@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
     Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
@@ -16,6 +15,9 @@ JSON_MIME_TYPE = 'application/json'
 
 @jsonp
 def key_value(request, doc_id, key):
+    """
+    Dispatch requests to the key-value storage interface.
+    """
     request.app = App.get_by_hostname(request.META.get('HTTP_HOST', 'test'))
     if request.app is None:
         raise Http404
@@ -32,12 +34,14 @@ def key_value(request, doc_id, key):
 
 
 def key_value_head(request):
+    """HTTP HEAD request handler."""
     response = key_value_get(request)
     response.content = ''
     return response
 
 
 def key_value_get(request):
+    """HTTP GET request handler."""
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404
@@ -52,6 +56,7 @@ def key_value_get(request):
 
 
 def key_value_put(request):
+    """HTTP PUT request handler."""
     value = request.GET.get('value', request.raw_post_data)
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
@@ -68,6 +73,7 @@ def key_value_put(request):
 
 
 def key_value_delete(request):
+    """HTTP DELETE request handler."""
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404
@@ -78,6 +84,7 @@ def key_value_delete(request):
 
 @run_in_transaction
 def push_transaction(request, value, max_length):
+    """Datastore transaction for appending to JSON array."""
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         entity = KeyValue(key_name=request.key_name, value='[]')
@@ -90,6 +97,7 @@ def push_transaction(request, value, max_length):
 
 
 def key_value_push(request):
+    """PUSH method request handler."""
     max_length = get_int(request.GET, 'max', 100, min=0, max=1000)
     try:  # Attempt to decode JSON.
         value = json.loads(request.raw_post_data)
@@ -102,6 +110,7 @@ def key_value_push(request):
 
 
 def key_value_slice(request):
+    """SLICE method request handler."""
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
     response = key_value_get(request)
