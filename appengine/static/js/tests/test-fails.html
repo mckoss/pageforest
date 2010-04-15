@@ -1,11 +1,15 @@
 <html>
 <head>
 <title>fails.htm - dummy Unit Test</title>
-<script SRC="unit.js"></script>
+<script src="/static/js/namespace.js"></script>
+<script src="/static/js/base.js"></script>
+<script src="/static/js/timer.js"></script>
+<script src="/static/js/unit.js"></script>
 </head>
 <body>
 <h1><script>document.write(document.title);</script></h1>
 <script>
+var UT = global_namespace.import("org.startpad.unit");
 var ts = new UT.TestSuite();
 ts.DWOutputDiv();
 ts.AddTest("Assert(false)", function (ut) {ut.Assert(false, "Never true");});

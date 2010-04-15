@@ -1,4 +1,4 @@
-global_namespace.define('startpad.base', function(NS) {
+global_namespace.define('org.startpad.base', function(NS) {
 
 NS.extend(NS, {
 Browser:
