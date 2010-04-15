@@ -19,7 +19,7 @@ class AppTestCase(TestCase):
 class KeyValueTest(AppTestCase):
 
     def setUp(self):
-        super(TestCase, self).setUp()
+        super(AppTestCase, self).setUp()
         self.key = 'test/data/key'
         self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
         self.data = KeyValue(key_name=self.key, value=self.value)
@@ -108,7 +108,7 @@ class JsonpApiTest(AppTestCase):
 class HostTest(AppTestCase):
 
     def setUp(self):
-        super(TestCase, self).setUp()
+        super(AppTestCase, self).setUp()
         self.myapp = App(key_name='myapp',
                          default_domain='myapp.pageforest.com')
         self.myapp.put()
@@ -221,7 +221,7 @@ class JsonArrayTest(AppTestCase):
 
     def setUp(self):
         """Prepare a simple chat array."""
-        super(TestCase, self).setUp()
+        super(AppTestCase, self).setUp()
         self.chat = KeyValue(key_name='test/doc/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
