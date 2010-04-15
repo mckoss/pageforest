@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block jquery %}
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript">
+function html_message(name, message) {
+  if ($("#id_" + name).val() === '') { return ''; }
+  if (message) { return '<span class="error">' + message + '</span>'; }
+  return '<span class="success">OK</span>';
+}
+
+function validate_success(message, status, xhr) {
+  var fields = {"username": "username", "email": "email",
+                "password": "password", "repeat": "__all__"};
+  for (var name in fields) {
+    $("#validate_" + name).html(html_message(name, message[fields[name]]));
+  }
+}
+
+function validate_error(xhr, status, message) {
+  console.error(xhr);
+}
+
+function validate_if_changed() {
+  var data = {
+    username: $("#id_username").val(),
+    email: $("#id_email").val(),
+    password: $("#id_password").val(),
+    repeat: $("#id_repeat").val(),
+    tos: true};
+  var oneline = [data.username, data.email, data.password, data.repeat];
+  oneline = oneline.join('~');
+  // TODO: Use namespace instead of $.
+  if (oneline == $.previous) return;
+  $.previous = oneline;
+  console.log(oneline);
+  $.ajax({
+    type: "POST",
+    url: "/auth/register/validate/",
+    data: data,
+    dataType: "json",
+    success: validate_success,
+    error: validate_error});
+}
+
+$(document).ready(function() {
+  $.previous = '~~~';
+  setInterval(validate_if_changed, 1000);  // Once per second.
+  $("input.focus:last").focus();
+});
+</script>
+{% endblock %}
+
+{% block title %}Registration{% endblock %}
+
+{% block content %}
+<form method="post">
+<table>
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td id="validate_{{ field.html_name }}">{{ field.errors.0 }}</td>
+</tr>
+{% endfor %}
+<tr><td></td><td><input type="submit" /></td></tr>
+</table>
+</form>
+{% endblock %}
