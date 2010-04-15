@@ -15,7 +15,8 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
             continue
         value = getattr(entity, property)
         if isinstance(value, datetime):
-            value = value.isoformat() + 'Z'
+            value = {"__class__": "Date",
+                     "isoformat": value.isoformat() + 'Z'}
         mapping[property] = value
     if extra:
         mapping.update(extra)
