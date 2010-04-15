@@ -52,14 +52,11 @@ def main():
     parser.add_option('-i', '--ignore', action='store_true',
         help="ignore errors from check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
-    # Accept version as command line argument without -v or --version.
-    if len(args) == 1 and not options.version:
-        options.version = args[0]
-    elif args:
-        parser.error("Unexpected command line arguments: " + ' '.join(args))
     # Check coding style and unit tests.
+    if os.system('python build.py -v'):
+        sys.exit('build failed')
     if not options.ignore and os.system('python check.py'):
-        sys.exit('failed')
+        sys.exit('check failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
@@ -68,7 +65,7 @@ def main():
                     version=options.version)
     try:
         # Deploy source code to Google App Engine.
-        if os.system('appcfg.py update ' + PROJECT):
+        if os.system('appcfg.py -v update ' + PROJECT):
             sys.exit('failed')
     finally:
         # Restore app.yaml to original.
