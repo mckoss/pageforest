@@ -1,7 +1,10 @@
 <html>
 <head>
 <title>unit.js Unit Test</title>
-<script SRC="unit.js"></script>
+<script src="/static/js/namespace.js"></script>
+<script src="/static/js/base.js"></script>
+<script src="/static/js/timer.js"></script>
+<script src="/static/js/unit.js"></script>
 <script>
 function Sample()
 {
@@ -13,12 +16,15 @@ Sample.prototype.Double = function()
         this.x *= 2;
 }
 
-</SCRIPT>
-</HEAD>
-<BODY>
+</script>
+</head>
+<body>
 <h1><script>document.write(document.title);</script></h1>
 Note: Be sure pop-ups are not blocked while running this test.
-<SCRIPT>
+<script>
+var UT = global_namespace.import("org.startpad.unit");
+var Timer = global_namespace.import("org.startpad.timer");
+var Base = global_namespace.import("org.startpad.base");
 ts = new UT.TestSuite();
 ts.DWOutputDiv();
 </script>
@@ -106,14 +112,14 @@ ts.AddTest("Async timeout", function(ut)
 
 ts.AddTest("Multiple Async calls", function(ut)
 {
-        new UT.Timer(function () {ut.Async(false);}, 1000).Active(true);
-        new UT.Timer(function () {ut.Async(false);}, 1000).Active(true);
-        new UT.Timer(function () {ut.Async(false);}, 1000).Active(true);
+        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
+        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
+        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
 }).Async(3);
 
 ts.AddTest("AsyncSequence", function(ut)
 {
-        var tm = new UT.Timer(function () {tm.cAS++; ut.NextFn()}, 1000);
+        var tm = new Timer.Timer(1000, function () {tm.cAS++; ut.NextFn()});
         tm.cAS = 0;
         ut.AsyncSequence(
                 [
@@ -140,7 +146,7 @@ ts.AddTest("AsyncSequence", function(ut)
 ts.AddTest("Script error expected", function(ut)
 {
         IllegalFunction();
-}).Throws(UT.Browser.fIE ? "TypeError" : "ReferenceError").Expect(0,1);
+}).Throws(Base.Browser.fIE ? "TypeError" : "ReferenceError").Expect(0,1);
 
 ts.AddTest("Some exception expected", function(ut)
 {
@@ -160,7 +166,7 @@ ts.AddTest("Fails: Wrong exception", function(ut)
 ts.AddTest("Multiple Exceptions", function(ut)
 {
         try { IllegalFunction(); }
-        catch (e) { ut.AssertException(e, UT.Browser.fIE ? "TypeError" : "ReferenceError"); }
+        catch (e) { ut.AssertException(e, Base.Browser.fIE ? "TypeError" : "ReferenceError"); }
 
         ut.AssertThrows(undefined, function(ut1)
                 {
@@ -184,8 +190,8 @@ ts.AddTest("Markers and Assert Numbers", function(ut)
                 }
 }).Expect(1,10);
 
-ts.AddSubTest("passes.html").Expect(0,1);
-ts.AddSubTest("fails.html").Expect(1,1);
+ts.AddSubTest("test-passes.html").Expect(0,1);
+ts.AddSubTest("test-fails.html").Expect(1,1);
 
 ts.Run();
 ts.AddTest("Post Run Test", function(ut) {ut.Assert(true);}).Expect(0,1);

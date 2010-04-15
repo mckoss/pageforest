@@ -16,7 +16,6 @@
 
 global_namespace.define('org.startpad.unit', function (UT) {
         Timer = UT.import('org.startpad.timer');
-        console.log(new Timer.Timer());
 
 UT.extend(UT, {
 DW: function(st)
@@ -65,7 +64,7 @@ Run: function(ts)
     console.log("=== Running test: " + this.stName + " ===");
 
     if (this.cAsync)
-        this.tm = new Timer(this.Timeout.FnMethod(this), this.msTimeout).Active();
+        this.tm = new Timer.Timer(this.msTimeout, this.Timeout.FnMethod(this)).Active();
 
     try
         {
