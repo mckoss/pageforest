@@ -1,28 +1,35 @@
 {% extends "base.html" %}
 
 {% block jquery %}
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript">
-function format_result(xhr, status, message) {
+function formatResult(xhr, status, message) {
   return xhr.status + ' ' + xhr.statusText + ' ' +
-    status + ' ' + message;
+    status + ' ' + message + ' ' +
+    xhr.getResponseHeader("X-Echo");
 }
 
-function success_callback(message, status, xhr) {
+function successCallback(message, status, xhr) {
   $('#results').prepend('<div style="color:#080">' +
-    format_result(xhr, status, message) + '</div>');
+    formatResult(xhr, status, message) + '</div>');
 }
 
-function error_callback(xhr, status, error) {
+function errorCallback(xhr, status, error) {
   $('#results').prepend('<div style="color:#800">' +
-    format_result(xhr, status, error) + '</div>');
+    formatResult(xhr, status, error) + '</div>');
+}
+
+function beforeSend(xhr) {
+  xhr.setRequestHeader("X-Hello", "Good morning");
 }
 
 function ajax(method) {
   options = {
     type: method,
     url: '/data/' + $("#id_key").val(),
-    success: success_callback,
-    error: error_callback,
+    beforeSend: beforeSend,
+    success: successCallback,
+    error: errorCallback,
   };
   if (method == "PUT") options.data = $("#id_value").val();
   $.ajax(options);

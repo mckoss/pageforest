@@ -7,6 +7,7 @@ urlpatterns = patterns('',
     (r'^terms-of-service$', direct_to_template, {'template': 'tos.html'}),
 
     (r'^auth/', include('auth.urls')),
+    (r'^demo/', include('demo.urls')),
     (r'^dashboard/', include('dashboard.urls')),
     (r'^([A-Za-z0-9\._-]+)/?$', 'documents.views.document'),
     (r'^([A-Za-z0-9\._-]+)/(.+)$', 'storage.views.key_value'),

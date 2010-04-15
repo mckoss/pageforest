@@ -12,8 +12,12 @@ def document(request, doc_id):
     """
     Get document metadata.
     """
-    request.app = App.get_by_hostname(request.META.get('HTTP_HOST', 'test'))
-    request.key_name = '/'.join((request.app.key().name(), doc_id))
+    hostname = request.META.get('HTTP_HOST', 'test')
+    request.app = App.get_by_hostname(hostname)
+    if request.app is None:
+        raise Http404
+    app_id = request.app.key().name()
+    request.key_name = '/'.join((app_id, doc_id)).lower()
     doc = Document.get_by_key_name(request.key_name)
     if doc is None:
         raise Http404
