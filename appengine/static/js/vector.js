@@ -1,13 +1,13 @@
 // --------------------------------------------------------------------------
 // Vector Functions
 // --------------------------------------------------------------------------
-global_namespace.define('org.startpad.vector', function(NS) {
+global_namespace.define('org.startpad.vector', function(ns) {
 
-NS.extend(NS, {
+ns.extend(ns, {
         x:0, y:1,
         x2:2, y2:3,
 
-SubFrom: function(v1, v2)
+subFrom: function(v1, v2)
         {
         for (var i = 0; i < v1.length; i++)
                 {
@@ -16,17 +16,17 @@ SubFrom: function(v1, v2)
         return v1;
         },
 
-Sub: function(v1, v2)
+sub: function(v1, v2)
         {
 
-        var vDiff = NS.Copy(v1);
-        return NS.SubFrom(vDiff, v2);
+        var vDiff = ns.Copy(v1);
+        return ns.subFrom(vDiff, v2);
         },
 
-//In-place vector addition
+// In-place vector addition
 // If smaller arrays are added to larger ones, they wrap around
 // so that points can be added to rects, for example.
-AddTo: function(vSum)
+addTo: function(vSum)
         {
         for (var iarg = 1; iarg < arguments.length; iarg++)
                 {
@@ -39,21 +39,21 @@ AddTo: function(vSum)
         return vSum;
         },
 
-//Add corresponding elements of all arguments
-Add: function()
+// Add corresponding elements of all arguments
+add: function()
         {
-        var vSum = NS.Copy(arguments[0]);
-        var args = NS.Copy(arguments);
+        var vSum = ns.Copy(arguments[0]);
+        var args = ns.Copy(arguments);
         args[0] = vSum;
-        return NS.AddTo.apply(undefined, args);
+        return ns.addTo.apply(undefined, args);
         },
 
-//Return new vector with element-wise max
-//All arguments must be same dimensioned array
-//TODO: Allow mixing scalars - share code with Mult - iterator/callback pattern
-Max: function()
+// Return new vector with element-wise max
+// All arguments must be same dimensioned array
+// TODO: Allow mixing scalars - share code with mult - iterator/callback pattern
+max: function()
         {
-        var vMax = NS.Copy(arguments[0]);
+        var vMax = ns.Copy(arguments[0]);
         for (var iarg = 1; iarg < arguments.length; iarg++)
                 {
                 var v = arguments[iarg];
@@ -68,9 +68,9 @@ Max: function()
         return vMax;
         },
 
-//Multiply corresponding elements of all arguments (including scalars)
-//All vectors must be the same dimension (length).
-Mult: function()
+// Multiply corresponding elements of all arguments (including scalars)
+// All vectors must be the same dimension (length).
+mult: function()
         {
         var vProd = 1;
         var i;
@@ -80,12 +80,12 @@ Mult: function()
                 var v = arguments[iarg];
                 if (typeof v === "number")
                         {
-                        // Mult(scalar, scalar)
+                        // mult(scalar, scalar)
                         if (typeof vProd === "number")
                                 {
                                 vProd *= v;
                                 }
-                        // Mult(vector, scalar)
+                        // mult(vector, scalar)
                         else
                                 {
                                 for (i = 0; i < vProd.length; i++)
@@ -96,17 +96,17 @@ Mult: function()
                         }
                 else
                         {
-                        // Mult(scalar, vector)
+                        // mult(scalar, vector)
                         if (typeof vProd === "number")
                                 {
                                 var vT = vProd;
-                                vProd = NS.Copy(v);
+                                vProd = ns.Copy(v);
                                 for (i = 0; i < vProd.length; i++)
                                         {
                                         vProd[i] *= vT;
                                         }
                                 }
-                        // Mult(vector, vector)
+                        // mult(vector, vector)
                         else
                                 {
                                 if (v.length !== vProd.length)
@@ -123,7 +123,7 @@ Mult: function()
         return vProd;
         },
 
-Floor: function(v)
+floor: function(v)
         {
         var vFloor = [];
         for (var i = 0; i < v.length; i++)
@@ -133,9 +133,9 @@ Floor: function(v)
         return vFloor;
         },
 
-DotProduct: function()
+dotProduct: function()
         {
-        var v = NS.Mult.apply(undefined, arguments);
+        var v = ns.mult.apply(undefined, arguments);
         var s = 0;
         for (var i = 0; i < v.length; i++)
                 {
@@ -144,15 +144,15 @@ DotProduct: function()
         return s;
         },
 
-//Append all arrays into a new array (Append(v) is same as Copy(v)
-Append: function()
+// Append all arrays into a new array (append(v) is same as Copy(v)
+append: function()
         {
         var v1 = [].concat.apply([], arguments);
         return v1;
         },
 
-//Do a (shallow) comparison of two arrays
-Equal: function(v1, v2)
+// Do a (shallow) comparison of two arrays
+equal: function(v1, v2)
         {
         if (typeof v1 != typeof v2)
                 return false;
@@ -168,29 +168,29 @@ Equal: function(v1, v2)
         return true;
         },
 
-//Routines for dealing with Points [x, y] and Rects [left, top, bottom, right]
+// Routines for dealing with Points [x, y] and Rects [left, top, bottom, right]
 
-UL: function(rc)
+ul: function(rc)
         {
         return rc.slice(0, 2);
         },
 
-LR: function(rc)
+lr: function(rc)
         {
         return rc.slice(2, 4);
         },
 
-Size: function(rc)
+size: function(rc)
         {
-        return NS.Sub(NS.LR(rc), NS.UL(rc));
+        return ns.sub(ns.lr(rc), ns.ul(rc));
         },
 
-NumInRange: function(num, numMin, numMax)
+numInRange: function(num, numMin, numMax)
         {
         return num >= numMin && num <= numMax;
         },
 
-ClipToRange: function(num, numMin, numMax)
+clipToRange: function(num, numMin, numMax)
         {
         if (num < numMin)
                 return numMin;
@@ -199,50 +199,50 @@ ClipToRange: function(num, numMin, numMax)
         return num;
         },
 
-PtInRect: function(pt, rc)
+ptInRect: function(pt, rc)
         {
-        return NS.NumInRange(pt[NS.x], rc[NS.x], rc[NS.x2]) &&
-                NS.NumInRange(pt[NS.y], rc[NS.y], rc[NS.y2]);
+        return ns.numInRange(pt[ns.x], rc[ns.x], rc[ns.x2]) &&
+                ns.numInRange(pt[ns.y], rc[ns.y], rc[ns.y2]);
         },
 
-PtClipToRect: function(pt, rc)
+ptClipToRect: function(pt, rc)
         {
-        return [NS.ClipToRange(pt[NS.x], rc[NS.x], rc[NS.x2]),
-                NS.ClipToRange(pt[NS.y], rc[NS.y], rc[NS.y2])];
+        return [ns.clipToRange(pt[ns.x], rc[ns.x], rc[ns.x2]),
+                ns.clipToRange(pt[ns.y], rc[ns.y], rc[ns.y2])];
         },
 
-RcClipToRect: function(rc, rcClip)
+rcClipToRect: function(rc, rcClip)
         {
-        return NS.Append(NS.PtClipToRect(NS.UL(rc), rcClip),
-                                         NS.PtClipToRect(NS.LR(rc), rcClip));
+        return ns.append(ns.ptClipToRect(ns.ul(rc), rcClip),
+                                         ns.ptClipToRect(ns.lr(rc), rcClip));
         },
 
-RcExpand: function(rc, ptSize)
+rcExpand: function(rc, ptSize)
         {
-        return NS.Append(NS.Sub(NS.UL(rc), ptSize),
-                                         NS.Add(NS.LR(rc), ptSize));
+        return ns.append(ns.sub(ns.ul(rc), ptSize),
+                                         ns.add(ns.lr(rc), ptSize));
         },
 
-KeepInRect: function(rcIn, rcBound)
+keepInRect: function(rcIn, rcBound)
         {
         // First, make sure the rectangle is not bigger than either bound dimension
-        var ptFixSize = NS.Max([0,0],NS.Sub(NS.Size(rcIn), NS.Size(rcBound)));
-        rcIn[NS.x2] -= ptFixSize[NS.x];
-        rcIn[NS.y2] -= ptFixSize[NS.y];
+        var ptFixSize = ns.max([0,0],ns.sub(ns.size(rcIn), ns.size(rcBound)));
+        rcIn[ns.x2] -= ptFixSize[ns.x];
+        rcIn[ns.y2] -= ptFixSize[ns.y];
 
         // Now move the rectangle to be totally within the bounds
         var dx = 0; dy = 0;
-        dx = Math.max(0, rcBound[NS.x] - rcIn[NS.x]);
-        dy = Math.max(0, rcBound[NS.y] - rcIn[NS.y]);
+        dx = Math.max(0, rcBound[ns.x] - rcIn[ns.x]);
+        dy = Math.max(0, rcBound[ns.y] - rcIn[ns.y]);
         if (dx == 0)
-                dx = Math.min(0, rcBound[NS.x2] - rcIn[NS.x2]);
+                dx = Math.min(0, rcBound[ns.x2] - rcIn[ns.x2]);
         if (dy == 0)
-                dy = Math.min(0, rcBound[NS.y2] - rcIn[NS.y2]);
-        NS.AddTo(rcIn, [dx, dy]);
+                dy = Math.min(0, rcBound[ns.y2] - rcIn[ns.y2]);
+        ns.addTo(rcIn, [dx, dy]);
         },
 
-//Return pt (1-scale) * UL + scale * LR
-PtCenter: function(rc, scale)
+// Return pt (1-scale) * ul + scale * lr
+ptCenter: function(rc, scale)
         {
         if (scale === undefined)
                 {
@@ -252,43 +252,43 @@ PtCenter: function(rc, scale)
                 {
                 scale = [scale, scale];
                 }
-        var pt = NS.Mult(scale, NS.LR(rc));
-        scale = NS.Sub([1,1], scale);
-        NS.AddTo(pt, NS.Mult(scale, NS.UL(rc)));
+        var pt = ns.mult(scale, ns.lr(rc));
+        scale = ns.sub([1,1], scale);
+        ns.addTo(pt, ns.mult(scale, ns.ul(rc)));
         return pt;
         },
 
-// PtRegistration - return one of 9 registration points of a rectangle
+// ptRegistration - return one of 9 registration points of a rectangle
 // 0 1 2
 // 3 4 5
 // 6 7 8
-PtRegistration: function(rc, iReg)
+ptRegistration: function(rc, iReg)
         {
         var xScale = (iReg % 3) * 0.5;
         var yScale = Math.floor(iReg/3) * 0.5;
-        return NS.PtCenter(rc, [xScale, yScale]);
+        return ns.ptCenter(rc, [xScale, yScale]);
         },
 
-IRegClosest: function(pt, rc)
+iRegClosest: function(pt, rc)
         {
         var aPoints = [];
         for (var i = 0; i < 9; i++)
                 {
-                aPoints.push(NS.PtRegistration(rc, i));
+                aPoints.push(ns.ptRegistration(rc, i));
                 }
-        return NS.IPtClosest(pt, aPoints)[0];
+        return ns.IPtClosest(pt, aPoints)[0];
         },
 
-// RectDeltaReg - Move or resize the rectangle based on the registration
+// rectDeltaReg - Move or resize the rectangle based on the registration
 // point to be modified.  Center (4) moves the whole rect.
 // Others resize one or more edges of the rectangle
-RectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
+rectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
         {
         if (iReg == 4)
                 {
-                var rcT = NS.Add(rc, dpt);
+                var rcT = ns.add(rc, dpt);
                 if (rcBounds)
-                        NS.KeepInRect(rcT, rcBounds);
+                        ns.keepInRect(rcT, rcBounds);
                 return rcT;
                 }
 
@@ -307,7 +307,7 @@ RectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
                         rcDelta[iX] = dpt[0];
                 if (iY != undefined)
                         rcDelta[iY+1] = dpt[1];
-                return NS.Add(rc, rcDelta);
+                return ns.add(rc, rcDelta);
                 }
 
         var rcT = ApplyDelta(rc, dpt);
@@ -315,8 +315,8 @@ RectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
         // Ensure the rectangle is not less than the minimum size
         if (!ptSizeMin)
                 ptSizeMin = [0,0];
-        var ptSize = NS.Size(rcT);
-        var ptFixSize = NS.Max([0,0],NS.Sub(ptSizeMin, ptSize));
+        var ptSize = ns.size(rcT);
+        var ptFixSize = ns.max([0,0],ns.sub(ptSizeMin, ptSize));
         if (iX == 0)
                 ptFixSize[0] *= -1;
         if (iY == 0)
@@ -325,14 +325,14 @@ RectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
 
         // Ensure rectangle is not outside the bounding box
         if (rcBounds)
-                NS.KeepInRect(rcT, rcBounds);
+                ns.keepInRect(rcT, rcBounds);
         return rcT;
         },
 
 // Find the closest point to the given point
 // (multiple) arguments can be points, or arrays of points
 // Returns [i, pt] result
-IPtClosest: function(pt)
+iPtClosest: function(pt)
         {
         var d2Min = undefined;
         var ptClosest = undefined;
@@ -345,7 +345,7 @@ IPtClosest: function(pt)
                 // Looks like a single point
                 if (typeof v[0] == "number")
                         {
-                        var d2 = NS.Distance2(pt, v);
+                        var d2 = ns.Distance2(pt, v);
                         if (d2Min == undefined || d2 < d2Min)
                                 {
                                 d2Min = d2;
@@ -360,7 +360,7 @@ IPtClosest: function(pt)
                         for (var i = 0; i < v.length; i++)
                                 {
                                 vT = v[i];
-                                var d2 = NS.Distance2(pt, vT);
+                                var d2 = ns.Distance2(pt, vT);
                                 if (d2Min == undefined || d2 < d2Min)
                                         {
                                         d2Min = d2;
@@ -375,7 +375,7 @@ IPtClosest: function(pt)
         },
 
 // Return square of distance between to "points" (N-dimensional)
-Distance2: function (v1, v2)
+distance2: function (v1, v2)
         {
         var d2 = 0;
         for (var i = 0; i < v1.length; i++)
@@ -383,13 +383,13 @@ Distance2: function (v1, v2)
         return d2;
         },
 
-//Return the bounding box of the collection of pt's and rect's
-BoundingBox: function()
+// Return the bounding box of the collection of pt's and rect's
+boundingBox: function()
         {
-        var vPoints = NS.Append.apply(undefined, arguments);
+        var vPoints = ns.append.apply(undefined, arguments);
         if (vPoints.length % 2 !== 0)
                 {
-                throw Error("Invalid arguments to BoundingBox");
+                throw Error("Invalid arguments to boundingBox");
                 }
 
         var ptMin = vPoints.slice(0,2),
@@ -419,8 +419,8 @@ BoundingBox: function()
         return [ptMin[0], ptMin[1], ptMax[0], ptMax[1]];
         },
 
-// Return JSON string for numeric array
-JSON: function(v)
+// Return json string for numeric array
+json: function(v)
         {
         var sRect = "[";
         var chSep = "";
@@ -434,7 +434,7 @@ JSON: function(v)
         }
 });
 
-//Synonym - Copy(v) is same as Append(v)
-NS.Copy = NS.Append;
+// Synonym - copy(v) is same as append(v)
+ns.copy = ns.append;
 
 }); // startpad.vector
