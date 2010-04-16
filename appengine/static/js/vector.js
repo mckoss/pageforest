@@ -19,7 +19,7 @@ subFrom: function(v1, v2)
 sub: function(v1, v2)
     {
 
-    var vDiff = ns.Copy(v1);
+    var vDiff = ns.copy(v1);
     return ns.subFrom(vDiff, v2);
     },
 
@@ -42,8 +42,8 @@ addTo: function(vSum)
 // Add corresponding elements of all arguments
 add: function()
     {
-    var vSum = ns.Copy(arguments[0]);
-    var args = ns.Copy(arguments);
+    var vSum = ns.copy(arguments[0]);
+    var args = ns.copy(arguments);
     args[0] = vSum;
     return ns.addTo.apply(undefined, args);
     },
@@ -53,7 +53,7 @@ add: function()
 // TODO: Allow mixing scalars - share code with mult - iterator/callback pattern
 max: function()
     {
-    var vMax = ns.Copy(arguments[0]);
+    var vMax = ns.copy(arguments[0]);
     for (var iarg = 1; iarg < arguments.length; iarg++)
         {
         var v = arguments[iarg];
@@ -100,7 +100,7 @@ mult: function()
             if (typeof vProd === "number")
                 {
                 var vT = vProd;
-                vProd = ns.Copy(v);
+                vProd = ns.copy(v);
                 for (i = 0; i < vProd.length; i++)
                     {
                     vProd[i] *= vT;
@@ -144,7 +144,7 @@ dotProduct: function()
     return s;
     },
 
-// Append all arrays into a new array (append(v) is same as Copy(v)
+// Append all arrays into a new array (append(v) is same as copy(v)
 append: function()
     {
     var v1 = [].concat.apply([], arguments);
