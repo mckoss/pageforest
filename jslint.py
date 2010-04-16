@@ -10,7 +10,6 @@ tools/jslint-cl.js
 appengine/static/js/namespace.js
 appengine/static/js/json2.js
 appengine/static/js/registration.js
-appengine/static/js/pfclient.js
 """.split()
 
 IGNORE_MESSAGES = """
@@ -19,6 +18,7 @@ Missing space after 'function'.
 json2.js:193:120: Line too long.
 json2.js:194:143: Line too long.
 json2.js:460:81: Line too long.
+The body of a for in should be wrapped in an if statement
 """.strip().splitlines()
 
 

@@ -1,12 +1,14 @@
 global_namespace.define('com.pageforest.registration', function(ns) {
 
     function html_message(name, message) {
-        if ($("#id_" + name).val() === '') { return ''; }
+        if ($("#id_" + name).val() === '') {
+            return '';
+        }
         if (message) {
             return '<span class="error">' + message + '</span>';
         }
         return '<span class="success">OK</span>';
-    };
+    }
 
     function validate_success(message, status, xhr) {
         var fields = {"username": "username", "email": "email",
@@ -15,11 +17,11 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             $("#validate_" + name).html(
                 html_message(name, message[fields[name]]));
         }
-    };
+    }
 
     function validate_error(xhr, status, message) {
         console.error(xhr);
-    };
+    }
 
     function validate_if_changed() {
         var data = {
@@ -27,11 +29,14 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             email: $("#id_email").val(),
             password: $("#id_password").val(),
             repeat: $("#id_repeat").val(),
-            tos: true};
+            tos: true
+        };
         var oneline = [data.username, data.email,
                        data.password, data.repeat];
         oneline = oneline.join('~');
-        if (oneline == ns.previous) return;
+        if (oneline == ns.previous) {
+            return;
+        }
         ns.previous = oneline;
         console.log(oneline);
         $.ajax({
@@ -40,8 +45,9 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             data: data,
             dataType: "json",
             success: validate_success,
-            error: validate_error});
-    };
+            error: validate_error
+        });
+    }
 
     ns.document_ready = function () {
         ns.previous = '~~~';

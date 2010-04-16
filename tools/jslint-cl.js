@@ -15,12 +15,12 @@ load("fulljslint.js");
     for (var index = 0; index < a.length; index++) {
         var filename = a[index];
         input = readFile(filename);
-        input = "/*global global_namespace, $ */\n" + input;
+        input = "/*global global_namespace, $, console */\n" + input;
         if (!input) {
             print("jslint: Couldn't read " + filename + "");
             quit(1);
         }
-        var options = {eqeqeq: true, immed: true, newcap: true, nomen: true,
+        var options = {eqeqeq: false, immed: true, newcap: true, nomen: true,
                        regexp: false, rhino: true, undef: true, white: true,
                        maxlen: 80, browser: true};
         if (!JSLINT(input, options)) {
