@@ -40,14 +40,14 @@ ts.AddTest("Vector functions", function(ut)
 
     vOrig = [1,[2,3], 4];
     v = V.copy(vOrig);
-    ut.AssertEq(v, [1,[2,3],4]);
+    ut.Assert(V.equal(v, [1,[2,3],4]));
     vOrig[1][0] = 5;
-    ut.AssertEq(v, [1, [5,3],4], "only shallow copy");
+    ut.Assert(V.equal(v, [1, [5,3],4]), "only shallow copy");
 
     var v1 = [2,5];
     var v2 = [1, 2];
     v = V.add(v1, v2);
-    ut.AssertEq(v, [3,7]);
+    ut.Assert(V.equal(v, [3,7]));
     ut.AssertEq(v1, [2,5], "unmodified args");
     ut.AssertEq(v2, [1,2], "unmodified args");
     v = V.add(v1, v1, v1, v1);
