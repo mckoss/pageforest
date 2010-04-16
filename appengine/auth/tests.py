@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.test import TestCase
+from django.test.client import Client
 
 from auth.models import User
 
@@ -52,32 +53,33 @@ class RegistrationTest(TestCase):
                           email='peter@example.com')
         self.peter.set_password('password')
         self.peter.put()
+        self.www = Client(HTTP_HOST='www.pageforest.com')
 
     def test_username_invalid(self):
         """Test that invalid usernames are rejected."""
         for name in '_name a-b 0.5'.split():
-            response = self.client.post('/auth/register/', {'username': name})
+            response = self.www.post('/auth/register/', {'username': name})
             self.assertContains(response, 'Username must be alphanumeric.')
 
     def test_username_too_long(self):
         """Test that excessively long usernames are rejected."""
-        response = self.client.post('/auth/register/', {'username': 'a' * 31})
+        response = self.www.post('/auth/register/', {'username': 'a' * 31})
         self.assertContains(response,
             'Ensure this value has at most 30 characters (it has 31).')
 
     def test_username_reserved(self):
         """Test that reserved usernames are enforced."""
         for name in 'root admin test'.split():
-            response = self.client.post('/auth/register/', {'username': name})
+            response = self.www.post('/auth/register/', {'username': name})
             self.assertContains(response, 'This username is reserved.')
 
     def test_password_silly(self):
         """Test that silly passwords are rejected."""
         for pw in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.client.post('/auth/register/', {'password': pw})
+            response = self.www.post('/auth/register/', {'password': pw})
             self.assertContains(response, 'This password is too simple.')
 
     def test_username_taken(self):
         """Test that existing usernames are reserved."""
-        response = self.client.post('/auth/register/', {'username': 'peter'})
+        response = self.www.post('/auth/register/', {'username': 'peter'})
         self.assertContains(response, 'This username is already taken.')
