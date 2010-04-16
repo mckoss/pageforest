@@ -12,9 +12,8 @@ class AppMiddleware(object):
         hostname = request.META.get('HTTP_HOST', 'testserver').split(':')[0]
         if hostname.startswith('www.'):
             hostname = hostname[4:]
-        if (hostname == settings.DEFAULT_DOMAIN or
-            hostname in ['localhost', 'testserver']):
-            return
+        if hostname == settings.DEFAULT_DOMAIN:
+            return  # Front-end (www.pageforest.com).
         request.app = App.get_by_hostname(hostname)
         if request.app is None:
             app_id = hostname.split('.')[0]
