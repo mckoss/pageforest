@@ -4,6 +4,8 @@
 /*global JSLINT */
 /*jslint rhino: true, strict: false */
 
+load("fulljslint.js");
+
 (function (a) {
     var e, i, input;
     if (!a[0]) {
@@ -13,25 +15,26 @@
     for (var index = 0; index < a.length; index++) {
         var filename = a[index];
         input = readFile(filename);
+        input = "/*global global_namespace, $ */\n" + input;
         if (!input) {
             print("jslint: Couldn't read " + filename + "");
             quit(1);
         }
         var options = {eqeqeq: true, immed: true, newcap: true, nomen: true,
-                       regexp: true, rhino: true, undef: true, white: true,
-                       maxlen: 78};
+                       regexp: false, rhino: true, undef: true, white: true,
+                       maxlen: 80, browser: true};
         if (!JSLINT(input, options)) {
             for (i = 0; i < JSLINT.errors.length; i += 1) {
                 e = JSLINT.errors[i];
                 if (e) {
-                    print(filename + ':' + e.line + ':' + e.character +
+                    // Adjust line numbers for prefixed comment above
+                    print(filename + ':' + (e.line - 1) + ':' + e.character +
                           ': ' + e.reason);
                     // print((e.evidence || '').
                     //     replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1"));
                     print('');
                 }
             }
-            quit(2);
         }
     }
 }(arguments));

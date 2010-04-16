@@ -6,23 +6,20 @@ import sys
 import subprocess
 
 CHECK_FILES = """
-tools/rhino.js
+tools/jslint-cl.js
 appengine/static/js/namespace.js
 appengine/static/js/json2.js
 appengine/static/js/registration.js
+appengine/static/js/pfclient.js
 """.split()
 
 IGNORE_MESSAGES = """
 Unexpected dangling '_' in '_
+Missing space after 'function'.
+json2.js:193:120: Line too long.
+json2.js:194:143: Line too long.
+json2.js:460:81: Line too long.
 """.strip().splitlines()
-
-
-def combine_jslint(path):
-    os.system('cat %s %s > %s' % (
-            os.path.join(path, 'tools/fulljslint.js'),
-            os.path.join(path, 'tools/rhino.js'),
-            os.path.join(path, 'tools/jslint.js'),
-            ))
 
 
 def ignore(line):
@@ -33,17 +30,19 @@ def ignore(line):
 
 def main():
     path = os.path.dirname(__file__) or '.'
-    combine_jslint(path)
-    command = ['java', 'org.mozilla.javascript.tools.shell.Main']
-    command.append(os.path.join(path, 'tools/jslint.js'))
+    os.chdir(os.path.join(path, 'tools'))
+    command = ['java',
+               'org.mozilla.javascript.tools.shell.Main',
+               'jslint-cl.js']
     for filename in CHECK_FILES:
-        command.append(os.path.join(path, filename))
+        command.append(os.path.join(path, *filename.split('/')))
     jslint = subprocess.Popen(' '.join(command), shell=True,
                               stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT)
+                              stderr=subprocess.PIPE)
     stdout, stderr = jslint.communicate()
     # Filter error messages and count errors.
     errors = 0
+    stdout += stderr
     for line in stdout.splitlines():
         line = line.rstrip()
         if line == '' or ignore(line):
