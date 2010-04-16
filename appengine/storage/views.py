@@ -18,10 +18,6 @@ def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
     """
-    hostname = request.META.get('HTTP_HOST', 'test')
-    request.app = App.get_by_hostname(hostname)
-    if request.app is None:
-        raise Http404
     key = key or 'index.html'
     request.key_name = '%s/%s/%s' % (request.app.key().name(), doc_id, key)
     method = request.GET.get('method', request.method)
@@ -48,7 +44,7 @@ def key_value_get(request):
     """HTTP GET request handler."""
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
-        raise Http404
+        raise Http404("Could not find entity " + request.key_name)
     last_modified = http_datetime(entity.modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
@@ -80,7 +76,7 @@ def key_value_delete(request):
     """HTTP DELETE request handler."""
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
-        raise Http404
+        raise Http404("Could not find entity " + request.key_name)
     entity.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}\n',
                         mimetype='application/json')
