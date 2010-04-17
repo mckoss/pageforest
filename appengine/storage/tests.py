@@ -12,7 +12,11 @@ class AppTestCase(TestCase):
     """TestCase with automatic test app."""
 
     def setUp(self):
-        self.app = App(key_name='test', default_domain='test.pageforest.com',
+        self.meta = App(key_name='meta',
+                        default_domain='meta.pageforest.com')
+        self.meta.put()
+        self.app = App(key_name='test',
+                       default_domain='test.pageforest.com',
                        alt_domains=['testserver'])
         self.app.put()
 
@@ -183,10 +187,10 @@ class MimeTest(AppTestCase):
 
     def test_html(self):
         """Test that the mime type is guessed correctly for HTML."""
-        response = self.put_and_get('/global/index.html')
+        response = self.put_and_get('/.global/index.html')
         self.assertEqual(response['Content-Type'], 'text/html')
         response = self.client.get('/')
-        self.assertEqual(response['Content-Type'], 'text/html; charset=utf-8')
+        self.assertEqual(response['Content-Type'], 'text/html')
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
