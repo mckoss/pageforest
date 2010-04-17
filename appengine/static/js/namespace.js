@@ -151,7 +151,7 @@ if (!window.console) {
             return window[sGlobal].define(sPath);
         },
 
-        'SGlobalName': function (sInNamespace) {
+        'nameOf': function (sInNamespace) {
             sInNamespace = sInNamespace.replace(/-/g, '_');
             return sGlobal + '.' + this._sPath + '.' + sInNamespace;
         }
