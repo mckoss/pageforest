@@ -19,7 +19,7 @@ class AppMiddleware(object):
         request.app = App.get_by_hostname(hostname)
         request.app_id = request.app.key().name()
         # Rewrite / to default HTML page.
-        logging.info("original URL: http://" +
+        logging.info(" original URL: http://" +
                      request.META.get('HTTP_HOST', '') +
                      request.get_full_path())
         if request.path_info == '/':
@@ -41,6 +41,7 @@ class AppMiddleware(object):
                      request.get_full_path())
         # Load the document.
         request.doc_id = parts[1]
-        request.doc = Document.get_by_key_name(request.doc_id)
+        request.doc = Document.get_by_key_name(
+            '/'.join((request.app_id, request.doc_id.lower())))
         if request.doc is None and settings.DEBUG:
             request.doc = Document(key_name=request.doc_id)
