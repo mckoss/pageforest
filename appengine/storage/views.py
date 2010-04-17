@@ -18,8 +18,7 @@ def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
     """
-    key = key or 'index.html'
-    request.key_name = '%s/%s/%s' % (request.app.key().name(), doc_id, key)
+    request.key_name = '/'.join((request.app_id, doc_id.lower(), key))
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():
