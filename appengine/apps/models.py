@@ -32,7 +32,8 @@ class App(Cacheable, Dated):
     @classmethod
     def get_by_hostname(cls, hostname):
         """
-        Find the app that serves a given domain (case insensitive).
+        Find the app that serves a given domain. The matching is case
+        insensitive and ignores ports like :8080.
 
         Possible matches are checked in this order:
         * hostname == default_domain
@@ -41,7 +42,7 @@ class App(Cacheable, Dated):
         * hostname == key_name
         * hostname == 'localhost' creates dummy app if settings.DEBUG
         """
-        hostname = hostname.lower()
+        hostname = hostname.lower().split(':')[0]
         app = cls.all().filter('default_domain', hostname).get()
         if app:
             return app
@@ -56,5 +57,6 @@ class App(Cacheable, Dated):
         app = cls.get_by_key_name(hostname)
         if app:
             return app
-        if hostname.split(':')[0] == 'localhost' and settings.DEBUG:
-            return App(key_name='test', app_id='test')
+        if settings.DEBUG:
+            app_id = hostname.split('.')[0]
+            return App(key_name=app_id, app_id=app_id)
