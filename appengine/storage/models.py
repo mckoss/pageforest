@@ -16,5 +16,4 @@ class KeyValue(Cacheable, Dated):
         """The URL includes the default domain name for this app."""
         app_id, key = self.key().name().split('/', 1)
         app = App.get_by_key_name(app_id)
-        domain = app.default_domain
-        return '/'.join(('http:/', domain, key))
+        return '/'.join(('http:/', app.domain, key))

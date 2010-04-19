@@ -13,10 +13,10 @@ class AppTestCase(TestCase):
 
     def setUp(self):
         self.meta = App(key_name='meta',
-                        default_domain='meta.pageforest.com')
+                        domain='meta.pageforest.com')
         self.meta.put()
         self.app = App(key_name='test',
-                       default_domain='test.pageforest.com',
+                       domain='test.pageforest.com',
                        alt_domains=['testserver'])
         self.app.put()
 
@@ -115,14 +115,14 @@ class HostTest(AppTestCase):
     def setUp(self):
         super(HostTest, self).setUp()
         self.myapp = App(key_name='myapp',
-                         default_domain='myapp.pageforest.com')
+                         domain='myapp.pageforest.com')
         self.myapp.put()
 
     def test_host(self):
         """Test namespaces by Host header."""
-        host_client = Client(HTTP_HOST='myapp.pageforest.com')
         url = '/doc_id/key'
-        response = host_client.put(url, 'data', content_type='text/html')
+        host_client = Client(HTTP_HOST='myapp.pageforest.com')
+        response = host_client.put(url, 'data', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         key_name = 'myapp' + url
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
