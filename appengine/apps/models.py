@@ -9,6 +9,7 @@ class App(Cacheable, Dated):
     """
     The entity key name contains the app_id string.
     """
+    secret = db.BlobProperty()             # Pseudo-random Base64 string.
     default_domain = db.StringProperty()   # Lowercase, fully qualified.
     alt_domains = db.StringListProperty()  # Zero or more lowercase FQDN.
     developers = db.StringListProperty()   # One or more usernames.
