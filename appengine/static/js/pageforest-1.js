@@ -9,7 +9,7 @@ for(var i=1;i<arguments.length;i++){var oSource=arguments[i];for(var prop in oSo
 return oDest;};var ns=window[sGlobal]=new Namespace(null);ns.extend(Namespace.prototype,{'define':function(sPath,fnCallback){sPath=sPath.replace(/-/g,'_');var aPath=sPath.split('.');var nsCur=this;for(var i=0;i<aPath.length;i++){var sName=aPath[i];if(nsCur[sName]===undefined){var nsNew=new Namespace(nsCur,sName);}
 nsCur=nsCur[sName];}
 if(fnCallback){if(!nsCur._fDefined){nsCur._fDefined=true;fnCallback(nsCur);console.info("Namespace '"+nsCur._sPath+"' defined.");}else{console.warn("WARNING: Namespace '"+nsCur._sPath+"' redefinition.");}}else if(!nsCur._fDefined){console.warn("Namespace '"+nsCur._sPath+"' forward reference.");}
-return nsCur;},'import':function(sPath){return window[sGlobal].define(sPath);},'SGlobalName':function(sInNamespace){sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});}());
+return nsCur;},'import':function(sPath){return window[sGlobal].define(sPath);},'nameOf':function(sInNamespace){sInNamespace=sInNamespace.replace(/-/g,'_');return sGlobal+'.'+this._sPath+'.'+sInNamespace;}});}());
 /* Begin file: json2.js */
 global_namespace.define('org.json.json2',function(JSON){function f(n){return n<10?'0'+n:n;}
 if(typeof Date.prototype.toJSON!=='function'){Date.prototype.toJSON=function(key){return isFinite(this.valueOf())?this.getUTCFullYear()+'-'+

@@ -34,7 +34,7 @@ def main():
         if yesno.lower().startswith('n'):
             return
 
-    os.chdir(pftool.tool_dir)
+    os.chdir(pftool.tools_dir)
     attempt('python whitespace.py')
     attempt('python settingsparser.py')
     attempt('python jslint.py')
