@@ -115,26 +115,14 @@ class LoginTest(TestCase):
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
         challenge = self.auth.get('/challenge/').content
-        print challenge
         parts = challenge.split(crypto.SEPARATOR)
         parts[1] = datetime.strptime(parts[1], "%Y-%m-%dT%H:%M:%SZ")
         parts[1] -= timedelta(seconds=61)
         challenge = crypto.join(*parts)
-        print challenge
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
-        print response.content
         self.assertContains(response, 'The challenge is expired.',
-                            status_code=412)
-
-    def test_wrong_password(self):
-        """Test that incorrect password cannot login."""
-        challenge = self.auth.get('/challenge/').content
-        signed = crypto.sign(challenge, self.peter.password + 'x')
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
-        self.assertContains(response, 'The password signature is incorrect.',
                             status_code=412)
 
     def test_replay(self):
@@ -148,4 +136,22 @@ class LoginTest(TestCase):
         # Replay should fail with 412 Precondition Failed.
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'The challenge is unknown.',
+                            status_code=412)
+
+    def test_unknown_user(self):
+        """Test that unknown user cannot login."""
+        challenge = self.auth.get('/challenge/').content
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join('unknown', signed)
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response, "The username 'unknown' is unknown.",
+                            status_code=412)
+
+    def test_wrong_password(self):
+        """Test that incorrect password cannot login."""
+        challenge = self.auth.get('/challenge/').content
+        signed = crypto.sign(challenge, self.peter.password + 'x')
+        data = crypto.join(self.peter.username.lower(), signed)
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response, 'The password signature is incorrect.',
                             status_code=412)
