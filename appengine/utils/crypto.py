@@ -1,5 +1,6 @@
 import random
-from hashlib import sha1, md5
+import hmac
+import hashlib
 from datetime import datetime
 
 SEPARATOR = '$'
@@ -36,13 +37,13 @@ def canonical(value):
     """
     Convert special types to canonical string representation.
 
-    >>> canonical(datetime(2010, 4, 19, 9, 24, 56))
+    >>> canonical(datetime(2010, 4, 19, 9, 24, 56, 123456))
     '2010-04-19T09:24:56Z'
     >>> canonical(1.0 / 9.0)
     '0.1111111'
     """
     if isinstance(value, datetime):
-        return value.isoformat() + 'Z'
+        return value.isoformat()[:19] + 'Z'
     if isinstance(value, float):
         return '%.7f' % value
     return str(value)
@@ -52,34 +53,36 @@ def join(*args, **kwargs):
     """
     >>> join('a', 'b', 'c', separator=',')
     'a,b,c'
-    >>> join('a', 'b+c', 'd', separator='+')
-    Traceback (most recent call last):
-    ValueError: Found separator '+' inside string value.
     """
     separator = kwargs.get('separator', SEPARATOR)
     args = [canonical(arg) for arg in args]
-    for arg in args:
-        if separator in arg:
-            raise ValueError(
-                "Found separator '%s' inside string value." % separator)
     return separator.join(args)
 
 
 def hash(*args, **kwargs):
     """
+    The last item in args is the secret key for HMAC.
+
     >>> hash('a', 'b', 'c', separator=',')
-    '9caa91157421e243281346b0bf7a82b5200e67e2'
+    '35f2e8a17d82aa42e207df72ac786c84b98a220f'
     """
-    return sha1(join(*args, **kwargs)).hexdigest()
+    args = list(args)
+    key = args.pop()
+    msg = join(*args, **kwargs)
+    return hmac.new(key, msg, hashlib.sha1).hexdigest()
 
 
 def sign(*args, **kwargs):
     """
+    The last item in args is the secret key for HMAC.
+
     >>> sign('a', 'b', 'c', separator=',')
-    'a,b,9caa91157421e243281346b0bf7a82b5200e67e2'
+    'a,b,35f2e8a17d82aa42e207df72ac786c84b98a220f'
     """
     args = list(args)
-    args[-1] = hash(*args, **kwargs)
+    key = args.pop()
+    msg = join(*args, **kwargs)
+    args.append(hmac.new(key, msg, hashlib.sha1).hexdigest())
     return join(*args, **kwargs)
 
 
