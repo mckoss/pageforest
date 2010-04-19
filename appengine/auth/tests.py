@@ -6,14 +6,16 @@ from django.test.client import Client
 from auth.models import User
 from apps.models import App
 
+from utils import crypto
+
 
 class UserTest(TestCase):
 
     def setUp(self):
         self.start_time = datetime.now()
-        self.peter = User(key_name='peter')
+        self.peter = User(key_name='peter', username='Peter')
         self.peter.put()
-        self.paul = User(key_name='paul')
+        self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
 
     def test_random_salt(self):
@@ -89,10 +91,25 @@ class RegistrationTest(TestCase):
 class LoginTest(TestCase):
 
     def setUp(self):
-        self.app = App(key_name='myapp', domain='myapp.pageforest.com')
+        self.peter = User(key_name='peter', username='Peter')
+        self.peter.set_password('SecreT!1')
+        self.peter.put()
+        self.app = App(key_name='myapp', domain='myapp.pageforest.com',
+                       secret=crypto.random64())
         self.app.put()
-        self.auth = Client(HTTP_HOST='auth.myapp.pageforest.com')
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
 
-    def test_challenge(self):
+    def test_login(self):
+        """Test challenge and login."""
+        # Get a challenge from the server.
         response = self.auth.get('/challenge/')
         self.assertContains(response, '$201')
+        self.assertEqual(len(response.content), 94)
+        # Sign the challenge and attempt login.
+        print self.peter.password
+        signed = crypto.sign(response.content, self.peter.password)
+        print signed
+        data = crypto.join(self.peter.username.lower(), signed)
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response, 'myapp$peter$201')
+        print response.content
