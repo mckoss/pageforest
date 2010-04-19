@@ -29,7 +29,7 @@ def ignore(line):
 
 
 def main():
-    path = os.path.dirname(__file__) or '.'
+    path = os.path.join(os.path.dirname(__file__) or '.', '..')
     os.chdir(os.path.join(path, 'tools'))
     command = ['java',
                'org.mozilla.javascript.tools.shell.Main',

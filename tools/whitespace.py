@@ -4,8 +4,10 @@ import os
 import sys
 from fnmatch import fnmatch
 
+import pftool
+
 IGNORE_DIR = '.hg .git .bzr .svn'.split()
-IGNORE_EXT = '~ .png .pyc .gif .png'.split()
+IGNORE_EXT = '~ .pyc .gif .png .log .orig'.split()
 IGNORE_FILES = 'jquery-*.js .#*'.split()
 
 
@@ -56,8 +58,8 @@ def file_ignored(filename):
 
 def main():
     errors = 0
-    top = os.path.dirname(__file__) or '.'
-    for dirpath, dirnames, filenames in os.walk(top):
+    os.chdir(pftool.root_dir)
+    for dirpath, dirnames, filenames in os.walk(pftool.root_dir):
         for ignored in IGNORE_DIR:
             if ignored in dirnames:
                 dirnames.remove(ignored)
