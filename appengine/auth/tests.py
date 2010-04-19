@@ -104,9 +104,23 @@ class LoginTest(TestCase):
         # Get a challenge from the server.
         response = self.auth.get('/challenge/')
         self.assertContains(response, '$201')
-        self.assertEqual(len(response.content), 94)
+        challenge = response.content
+        self.assertEqual(len(challenge), 94)
         # Sign the challenge and attempt login.
-        signed = crypto.sign(response.content, self.peter.password)
+        signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'myapp$peter$201')
+
+    def test_replay(self):
+        """Test that a replay attack does not login successfully."""
+        challenge = self.auth.get('/challenge/').content
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join(self.peter.username.lower(), signed)
+        # First login should be successful.
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response, 'myapp$peter$201')
+        # Replay should fail with 412 Precondition Failed.
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response, 'The challenge is unknown.',
+                            status_code=412)
