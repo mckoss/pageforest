@@ -7,13 +7,16 @@ import subprocess
 import shutil
 from hashlib import md5
 
-import tools.jsmin as jsmin
-import tools.settingsparser as settingsparser
+import pftool
+import jsmin
+import settingsparser
 
-import appengine.settings as settings
+sys.path.insert(0, pftool.app_dir)
 
-STATIC_DIR = os.path.join("appengine", "static")
-SETTINGS_AUTO = os.path.join("appengine", "settingsauto.py")
+import  settings
+
+STATIC_DIR = os.path.join(pftool.app_dir, "static")
+SETTINGS_AUTO = os.path.join(pftool.app_dir, "settingsauto.py")
 
 
 def combine_files(settings_dict, overwrite=False, verbose=False):
@@ -112,8 +115,7 @@ def main():
     parser.add_option('-v', '--verbose', action='store_true')
     (options, args) = parser.parse_args()
 
-    path = os.path.dirname(__file__) or '.'
-    os.chdir(path)
+    os.chdir(pftool.root_dir)
 
     settings_auto = open(SETTINGS_AUTO, 'r')
     settings_dict = settingsparser.load(settings_auto.read())
