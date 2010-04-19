@@ -13,7 +13,6 @@ class CacheableTest(TestCase):
     def test_get_by_key_name(self):
         """Test that get_by_key_name uses the class cache."""
         # Create cache attribute on the App class.
-        self.assertFalse(hasattr(App, 'cache'))
         app = App.get_by_key_name('unknown')
         self.assertEqual(app, None)
         self.assertTrue(hasattr(App, 'cache'))

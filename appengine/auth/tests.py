@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from auth.models import User
+from apps.models import App
 
 
 class UserTest(TestCase):
@@ -83,3 +84,15 @@ class RegistrationTest(TestCase):
         """Test that existing usernames are reserved."""
         response = self.www.post('/auth/register/', {'username': 'peter'})
         self.assertContains(response, 'This username is already taken.')
+
+
+class LoginTest(TestCase):
+
+    def setUp(self):
+        self.app = App(key_name='myapp', domain='myapp.pageforest.com')
+        self.app.put()
+        self.auth = Client(HTTP_HOST='auth.myapp.pageforest.com')
+
+    def test_challenge(self):
+        response = self.auth.get('/challenge/')
+        self.assertContains(response, '$201')

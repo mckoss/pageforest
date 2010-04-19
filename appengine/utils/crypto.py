@@ -1,5 +1,6 @@
 import random
 from hashlib import sha1, md5
+from datetime import datetime
 
 SEPARATOR = '$'
 BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -31,6 +32,22 @@ def random64url(length=32):
     return random64(length, BASE64URL)
 
 
+def canonical(value):
+    """
+    Convert special types to canonical string representation.
+
+    >>> canonical(datetime(2010, 4, 19, 9, 24, 56))
+    '2010-04-19T09:24:56Z'
+    >>> canonical(1.0 / 9.0)
+    '0.1111111'
+    """
+    if isinstance(value, datetime):
+        return value.isoformat() + 'Z'
+    if isinstance(value, float):
+        return '%.7f' % value
+    return str(value)
+
+
 def join(*args, **kwargs):
     """
     >>> join('a', 'b', 'c', separator=',')
@@ -40,6 +57,7 @@ def join(*args, **kwargs):
     ValueError: Found separator '+' inside string value.
     """
     separator = kwargs.get('separator', SEPARATOR)
+    args = [canonical(arg) for arg in args]
     for arg in args:
         if separator in arg:
             raise ValueError(
