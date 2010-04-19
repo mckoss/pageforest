@@ -77,10 +77,14 @@ def login(request):
         return HttpResponse("The password signature is incorrect.",
                             content_type='text/plain', status=403)
     # Generate a session key for the next 24 hours.
-    expires = datetime.now() + timedelta(hours=24)
     key = crypto.join(user.password, request.app.secret)
+    expires = datetime.now() + timedelta(hours=24)
     session_key = crypto.sign(request.app_id, username, expires, key)
-    return HttpResponse(session_key, content_type='text/plain')
+    expires = datetime.now() + timedelta(days=30)
+    reauth_cookie = crypto.sign(request.app_id, username, expires, key)
+    response = HttpResponse(session_key, content_type='text/plain')
+    response['Set-Cookie'] = 'reauth=' + reauth_cookie
+    return response
 
 
 def logout(request):
