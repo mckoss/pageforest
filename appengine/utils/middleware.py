@@ -14,7 +14,7 @@ class AppMiddleware(object):
         hostname = request.META.get('HTTP_HOST', 'testserver').split(':')[0]
         if hostname.startswith('www.'):
             hostname = hostname[4:]
-        if hostname in (settings.DEFAULT_DOMAIN, 'localhost'):
+        if hostname in (settings.DEFAULT_DOMAIN, 'localhost', 'pageforest'):
             return  # Front-end (www.pageforest.com).
         if hostname.startswith('auth.') and hostname.count('.') == 3:
             request.path_info = '/auth' + request.path_info
