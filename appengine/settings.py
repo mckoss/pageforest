@@ -83,7 +83,13 @@ test tester testuser testclient staff
 
 # Prevent app registration with some special app names.
 RESERVED_APPS = """
-www meta ssl static auth login
+www meta
+ssl static auth login
+blog test doc docs documents list notecomment
+pageforest pgfrst page
+a b c d e f g h i j k l m n o p  r s t u v w x y z
+app application js javascript
+google microsoft twitter yahoo facebook fb
 """.split()
 
 # List of callables that know how to import templates from various sources.
