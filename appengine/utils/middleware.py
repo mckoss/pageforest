@@ -16,6 +16,9 @@ class AppMiddleware(object):
             hostname = hostname[4:]
         if hostname in (settings.DEFAULT_DOMAIN, 'localhost'):
             return  # Front-end (www.pageforest.com).
+        if hostname.startswith('auth.') and hostname.count('.') == 3:
+            request.path_info = '/auth' + request.path_info
+            hostname = hostname[5:]
         request.app = App.get_by_hostname(hostname)
         request.app_id = request.app.key().name()
         # Rewrite / to default HTML page.
