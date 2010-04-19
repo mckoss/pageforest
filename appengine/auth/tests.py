@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from google.appengine.api import memcache
+
 from django.test import TestCase
 from django.test.client import Client
 
@@ -123,20 +125,31 @@ class LoginTest(TestCase):
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'The challenge is expired.',
-                            status_code=412)
+                            status_code=403)
 
     def test_replay(self):
-        """Test that a replay attack does not login successfully."""
+        """Test that a replay attack cannot login."""
         challenge = self.auth.get('/challenge/').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         # First login should be successful.
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'myapp$peter$201')
-        # Replay should fail with 412 Precondition Failed.
+        # Replay should fail with 403 Forbidden.
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'The challenge is unknown.',
-                            status_code=412)
+                            status_code=403)
+
+    def test_different_ip(self):
+        """Test that different IP address cannot login."""
+        challenge = self.auth.get('/challenge/').content
+        memcache.set(challenge, '10.4.5.6', 60)
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join('unknown', signed)
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        self.assertContains(response,
+                            "The challenge was issued to a different IP.",
+                            status_code=403)
 
     def test_unknown_user(self):
         """Test that unknown user cannot login."""
@@ -145,7 +158,7 @@ class LoginTest(TestCase):
         data = crypto.join('unknown', signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, "The username 'unknown' is unknown.",
-                            status_code=412)
+                            status_code=403)
 
     def test_wrong_password(self):
         """Test that incorrect password cannot login."""
@@ -154,4 +167,4 @@ class LoginTest(TestCase):
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'The password signature is incorrect.',
-                            status_code=412)
+                            status_code=403)
