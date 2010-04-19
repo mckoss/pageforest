@@ -56,6 +56,7 @@ def login(request):
     if memcache.get(challenge) is None:
         return HttpResponse("The challenge is unknown.",
                             content_type='text/plain', status=412)
+    memcache.delete(challenge)
     # Check that the username exists.
     username = parts[0].lower()
     user = User.get_by_key_name(username)
