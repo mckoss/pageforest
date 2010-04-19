@@ -66,7 +66,11 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
 
 
 def trim(docstring):
-    """ Code http://www.python.org/dev/peps/pep-0257/ """
+    """
+    Trim docstring for display.
+
+    Code from http://www.python.org/dev/peps/pep-0257/
+    """
     if not docstring:
         return ''
     # Convert tabs to spaces (following the normal Python rules)
