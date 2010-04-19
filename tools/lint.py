@@ -4,6 +4,8 @@ import os
 import sys
 import subprocess
 
+import pftool
+
 DISABLE_MESSAGES = """
 C0121 Missing required attribute "__revision__"
 E1101 Class 'KeyValue' has no 'get_by_key_name' member
@@ -55,6 +57,7 @@ def ignore(line):
 
 
 def main():
+    os.chdir(pftool.root_dir)
     command = ['pylint']
     command.append('--output-format=parseable')
     command.append('--include-ids=yes')
