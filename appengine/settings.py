@@ -81,6 +81,11 @@ admin administrator root webmaster www-data postmaster
 test tester testuser testclient staff
 """.split()
 
+# Prevent app registration with some special app names.
+RESERVED_APPS = """
+www meta ssl static auth login
+""".split()
+
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',
