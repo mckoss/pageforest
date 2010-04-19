@@ -5,6 +5,8 @@ import re
 import sys
 import subprocess
 
+import pftool
+
 CHECK_FILES = """
 tools/jslint-cl.js
 appengine/static/js/namespace.js
@@ -29,13 +31,12 @@ def ignore(line):
 
 
 def main():
-    path = os.path.join(os.path.dirname(__file__) or '.', '..')
-    os.chdir(os.path.join(path, 'tools'))
+    os.chdir(pftool.tools_dir)
     command = ['java',
                'org.mozilla.javascript.tools.shell.Main',
                'jslint-cl.js']
     for filename in CHECK_FILES:
-        command.append(os.path.join(path, *filename.split('/')))
+        command.append(os.path.join(pftool.root_dir, *filename.split('/')))
     jslint = subprocess.Popen(' '.join(command), shell=True,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.PIPE)

@@ -13,7 +13,7 @@ import settingsparser
 
 sys.path.insert(0, pftool.app_dir)
 
-import  settings
+import settings
 
 STATIC_DIR = os.path.join(pftool.app_dir, "static")
 SETTINGS_AUTO = os.path.join(pftool.app_dir, "settingsauto.py")

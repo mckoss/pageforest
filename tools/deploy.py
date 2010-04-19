@@ -5,7 +5,7 @@ import sys
 import subprocess
 from optparse import OptionParser
 
-PROJECT = 'appengine'
+import pftool
 
 
 def load_app_yaml():
@@ -13,7 +13,7 @@ def load_app_yaml():
     Read all lines of text from app.yaml and remove blank lines from
     the end of the file.
     """
-    input = open(os.path.join(PROJECT, 'app.yaml'), 'r')
+    input = open(os.path.join(pftool.app_dir, 'app.yaml'), 'r')
     lines = input.readlines()
     input.close()
     while lines and not lines[-1].strip():
@@ -27,7 +27,7 @@ def update_app_yaml(lines, **kwargs):
     to kwargs. If options contain - (dash) in app.yaml, they can be
     specified with _ (underscore) instead.
     """
-    output = open(os.path.join(PROJECT, 'app.yaml'), 'w')
+    output = open(os.path.join(pftool.app_dir, 'app.yaml'), 'w')
     for line in lines:
         if ':' in line:
             key, value = line.split(':', 1)
@@ -53,6 +53,7 @@ def main():
         help="ignore errors from check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
     # Check coding style and unit tests.
+    os.chdir(pftool.tools_dir)
     if os.system('python build.py -v'):
         sys.exit('build failed')
     if not options.ignore and os.system('python check.py'):
@@ -65,7 +66,7 @@ def main():
                     version=options.version)
     try:
         # Deploy source code to Google App Engine.
-        if os.system('appcfg.py -v update ' + PROJECT):
+        if os.system('appcfg.py -v update ' + pftool.app_dir):
             sys.exit('failed')
     finally:
         # Restore app.yaml to original.
