@@ -11,7 +11,7 @@ class DocumentTest(TestCase):
 
     def setUp(self):
         self.started = datetime.now()
-        self.app = App(key_name='test', default_domain='test.pageforest.com',
+        self.app = App(key_name='test', domain='test.pageforest.com',
                        alt_domains=['testserver'])
         self.app.put()
         self.doc = Document(key_name='test/doc', app_id='test', doc_id='Doc',

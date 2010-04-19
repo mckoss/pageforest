@@ -9,10 +9,10 @@ class App(Cacheable, Dated):
     """
     The entity key name contains the app_id string.
     """
-    secret = db.BlobProperty()             # Pseudo-random Base64 string.
-    default_domain = db.StringProperty()   # Lowercase, fully qualified.
+    domain = db.StringProperty()           # Lowercase, fully qualified.
     alt_domains = db.StringListProperty()  # Zero or more lowercase FQDN.
     developers = db.StringListProperty()   # One or more usernames.
+    secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
     @classmethod
     def get_by_key_name(cls, app_id, parent=None):
@@ -37,14 +37,14 @@ class App(Cacheable, Dated):
         insensitive and ignores ports like :8080.
 
         Possible matches are checked in this order:
-        * hostname == default_domain
+        * hostname == domain
         * hostname in alt_domains
         * hostname == key_name + '.' + one of settings.DOMAINS
         * hostname == key_name
         * hostname == 'localhost' creates dummy app if settings.DEBUG
         """
         hostname = hostname.lower().split(':')[0]
-        app = cls.all().filter('default_domain', hostname).get()
+        app = cls.all().filter('domain', hostname).get()
         if app:
             return app
         app = cls.all().filter('alt_domains', hostname).get()
