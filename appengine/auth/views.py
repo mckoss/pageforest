@@ -58,10 +58,10 @@ def login(request):
                             content_type='text/plain', status=412)
     memcache.delete(challenge)
     # Check that the username exists.
-    username = parts[0].lower()
-    user = User.get_by_key_name(username)
+    username = parts[0]
+    user = User.get_by_key_name(username.lower())
     if user is None:
-        return HttpResponse("The username '%s' is unknown.",
+        return HttpResponse("The username '%s' is unknown." % username,
                             content_type='text/plain', status=412)
     # Check the password signature.
     signed = crypto.sign(challenge, user.password)
