@@ -106,10 +106,7 @@ class LoginTest(TestCase):
         self.assertContains(response, '$201')
         self.assertEqual(len(response.content), 94)
         # Sign the challenge and attempt login.
-        print self.peter.password
         signed = crypto.sign(response.content, self.peter.password)
-        print signed
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'myapp$peter$201')
-        print response.content
