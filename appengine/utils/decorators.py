@@ -1,7 +1,7 @@
 import time
 import email
 
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotAllowed
 
 from google.appengine.ext import db
 
@@ -59,3 +59,17 @@ def jsonp(func):
             response['Content-Type'] = 'application/javascript'
         return response
     return wrapper
+
+
+def require_method(*methods):
+    """
+    Check that request.method is allowed, otherwise return
+    405 Method Not Allowed with a list of allowed methods.
+    """
+    def decorate(func):
+        def wrapper(request, *args, **kwargs):
+            if request.method not in methods:
+                return HttpResponseNotAllowed(methods)
+            return func(request, *args, **kwargs)
+        return wrapper
+    return decorate
