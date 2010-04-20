@@ -8,9 +8,10 @@ from utils.mixins import Cacheable, Dated
 class App(Cacheable, Dated):
     """
     The entity key name contains the app_id string.
+    The first entry in domains is the default domain.
+    The first entry in developers is the owner.
     """
-    domain = db.StringProperty()           # Lowercase, fully qualified.
-    alt_domains = db.StringListProperty()  # Zero or more lowercase FQDN.
+    domains = db.StringListProperty()      # One or more lowercase FQDN.
     developers = db.StringListProperty()   # One or more usernames.
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
@@ -37,17 +38,13 @@ class App(Cacheable, Dated):
         insensitive and ignores ports like :8080.
 
         Possible matches are checked in this order:
-        * hostname == domain
-        * hostname in alt_domains
+        * hostname in domains
         * hostname == key_name + '.' + one of settings.DOMAINS
         * hostname == key_name
-        * hostname == 'localhost' creates dummy app if settings.DEBUG
+        * create dummy app if settings.DEBUG
         """
         hostname = hostname.lower().split(':')[0]
-        app = cls.all().filter('domain', hostname).get()
-        if app:
-            return app
-        app = cls.all().filter('alt_domains', hostname).get()
+        app = cls.all().filter('domains', hostname).get()
         if app:
             return app
         for domain in settings.DOMAINS:
@@ -55,9 +52,10 @@ class App(Cacheable, Dated):
                 app = cls.get_by_key_name(hostname[:-len(domain) - 1])
                 if app:
                     return app
-        app = cls.get_by_key_name(hostname)
-        if app:
-            return app
+        if '.' not in hostname:
+            app = cls.get_by_key_name(hostname)
+            if app:
+                return app
         if settings.DEBUG:
             app_id = hostname.split('.')[0]
             return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')

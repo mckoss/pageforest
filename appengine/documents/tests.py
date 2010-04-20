@@ -12,7 +12,7 @@ class DocumentTest(TestCase):
 
     def setUp(self):
         self.started = datetime.now()
-        self.app = App(key_name='test', domain='test.pageforest.com')
+        self.app = App(key_name='test', domains=['test.pageforest.com'])
         self.app.put()
         self.doc = Document(key_name='test/doc', app_id='test', doc_id='Doc',
                             title="My Document", owner='peter',
@@ -23,7 +23,7 @@ class DocumentTest(TestCase):
         self.data = KeyValue(key_name='test/doc', app_id='test', doc_id='Doc',
                              value='{"int": 123}')
         self.data.put()
-        self.app_client = Client(HTTP_HOST=self.app.domain)
+        self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
     def test_get_absolute_url(self):
         """Test that the absolute URL is generated correctly."""
