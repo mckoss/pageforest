@@ -2,6 +2,7 @@ from django.utils import simplejson as json
 from django.http import \
     Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
 
+from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
@@ -14,6 +15,7 @@ JSON_MIME_TYPE = 'application/json'
 
 
 @jsonp
+@login_required
 def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
