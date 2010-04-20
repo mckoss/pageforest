@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseForbidden
 
@@ -75,20 +76,20 @@ def login(request):
             content_type='text/plain')
     # Check the password signature.
     signed = crypto.sign(challenge, user.password)
-    joined = crypto.join(user.username.lower(), signed)
+    joined = crypto.join(username, signed)
     if request.raw_post_data != joined:
         return HttpResponseForbidden(
             "The password signature is incorrect.",
             content_type='text/plain')
     # Generate a session key for the next 24 hours.
     key = crypto.join(user.password, request.app.secret)
-    expires = datetime.now() + timedelta(hours=24)
+    expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
     session_key = crypto.sign(request.app_id, username, expires, key)
-    expires = datetime.now() + timedelta(days=30)
+    expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
     reauth_cookie = crypto.sign(request.app_id, username, expires, key)
     response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = 'reauth=%s; path=/; expires=%s' % (
-        reauth_cookie, http_datetime(expires))
+    response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
+        settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
     return response
 
 
