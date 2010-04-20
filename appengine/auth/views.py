@@ -7,6 +7,7 @@ from google.appengine.api import memcache
 
 from utils.decorators import jsonp, require_method
 from utils.shortcuts import render_to_response
+from utils.http import http_datetime
 from utils import crypto
 
 from auth.forms import RegistrationForm
@@ -83,7 +84,8 @@ def login(request):
     expires = datetime.now() + timedelta(days=30)
     reauth_cookie = crypto.sign(request.app_id, username, expires, key)
     response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = 'reauth=' + reauth_cookie
+    response['Set-Cookie'] = 'reauth=%s; path=/; expires=%s' % (
+        reauth_cookie, http_datetime(expires))
     return response
 
 

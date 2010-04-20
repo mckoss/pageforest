@@ -113,8 +113,10 @@ class LoginTest(TestCase):
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'myapp$peter$201')
-        self.assertTrue(response['Set-Cookie'].startswith(
-                'reauth=myapp$peter$201'))
+        cookie = response['Set-Cookie']
+        self.assertTrue(cookie.startswith('reauth=myapp$peter$201'))
+        self.assertTrue(cookie.endswith(' GMT'))
+        self.assertTrue('; path=/; expires=' in cookie)
 
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
