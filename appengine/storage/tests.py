@@ -4,6 +4,9 @@ from google.appengine.api import memcache
 
 from django.test import TestCase, Client
 
+from utils import crypto
+
+from auth.models import User
 from apps.models import App
 from storage.models import KeyValue
 
@@ -12,13 +15,26 @@ class AppTestCase(TestCase):
     """TestCase with automatic test app."""
 
     def setUp(self):
+        self.peter = User(key_name='peter', username='Peter')
+        self.peter.set_password('SecreT!1')
+        self.peter.put()
         self.meta = App(key_name='meta',
                         domain='meta.pageforest.com')
         self.meta.put()
         self.app = App(key_name='test',
                        domain='test.pageforest.com',
-                       alt_domains=['testserver'])
+                       alt_domains=['testserver'],
+                       secret="SecreT!1")
         self.app.put()
+        # Authenticate.
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
+        challenge = self.auth.get('/challenge/').content
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join(self.peter.username.lower(), signed)
+        response = self.auth.post('/login/', data, content_type='text/plain')
+        cookie = response['Set-Cookie']
+        self.session_key = cookie.split(';')[0].split('=')[1]
+        self.client.cookies['session_key'] = self.session_key
 
 
 class KeyValueTest(AppTestCase):
