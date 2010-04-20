@@ -60,4 +60,4 @@ class App(Cacheable, Dated):
             return app
         if settings.DEBUG:
             app_id = hostname.split('.')[0]
-            return App(key_name=app_id, app_id=app_id)
+            return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')
