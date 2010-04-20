@@ -87,10 +87,14 @@ www meta
 ssl static auth login
 blog test doc docs documents list notecomment
 pageforest pgfrst page
-a b c d e f g h i j k l m n o p  r s t u v w x y z
-app application js javascript
+a b c d e f g h i j k l m n o p r s t u v w x y z
+app app_id appid application
+css img images js javascript
 google microsoft twitter yahoo facebook fb
 """.split()
+
+# Name of the session cookie for simple request authentication.
+SESSION_COOKIE_NAME = 'sessionkey'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
