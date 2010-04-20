@@ -3,6 +3,8 @@ from datetime import datetime
 from django.conf import settings
 from django.http import HttpResponseForbidden
 
+from utils import crypto
+
 from auth.models import User
 
 
@@ -14,7 +16,7 @@ class AuthMiddleware(object):
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
         parts = session_key.split('$')
         if len(parts) != 4:
-            return HttpResponseForbidden("Session key must have 4 parts.")
+            return HttpResponseForbidden("Session key must have four parts.")
         # Check the expiration time.
         expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
         if expires < datetime.now():
@@ -28,4 +30,8 @@ class AuthMiddleware(object):
         user = User.get_by_key_name(username.lower())
         if user is None:
             return HttpResponseForbidden("Session key user not found.")
+        key = crypto.join(user.password, request.app.secret)
+        correct = crypto.sign(app_id, username, expires, key)
+        if session_key != correct:
+            return HttpResponseForbidden("Session key is incorrect.")
         request.user = user

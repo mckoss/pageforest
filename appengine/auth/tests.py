@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from google.appengine.api import memcache
 
+from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
 
@@ -124,7 +125,7 @@ class LoginTest(TestCase):
         parts = challenge.split(crypto.SEPARATOR)
         parts[1] = datetime.strptime(parts[1], "%Y-%m-%dT%H:%M:%SZ")
         parts[1] -= timedelta(seconds=61)
-        challenge = crypto.join(*parts)
+        challenge = crypto.join(parts)
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
@@ -171,4 +172,41 @@ class LoginTest(TestCase):
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.post('/login/', data, content_type='text/plain')
         self.assertContains(response, 'The password signature is incorrect.',
+                            status_code=403)
+
+
+class SimpleAuthTest(TestCase):
+
+    def setUp(self):
+        self.peter = User(key_name='peter', username='Peter',
+                          email='peter@example.com')
+        self.peter.set_password('password')
+        self.peter.put()
+        self.app = App(key_name='myapp', domain='myapp.pageforest.com',
+                       secret=crypto.random64())
+        self.app.put()
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
+        challenge = self.auth.get('/challenge/').content
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join(self.peter.username, signed)
+        self.session_key = self.auth.post(
+            '/login/', data, content_type='text/plain').content
+
+    def test_bogus_session_key(self):
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
+        response = self.client.get('/doc/')
+        self.assertContains(response, "Session key must have four parts.",
+                            status_code=403)
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = crypto.join(
+            self.session_key, 'bogus')
+        response = self.client.get('/doc/')
+        self.assertContains(response, "Session key must have four parts.",
+                            status_code=403)
+
+    def test_session_key_expired(self):
+        parts = self.session_key.split(crypto.SEPARATOR)
+        parts[2] = datetime.now() - timedelta(seconds=10)
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = crypto.join(parts)
+        response = self.client.get('/doc/')
+        self.assertContains(response, "Session key is expired.",
                             status_code=403)
