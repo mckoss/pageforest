@@ -3,8 +3,7 @@
 import os
 import sys
 import subprocess
-
-import pftool
+from optparse import OptionParser
 
 DISABLE_MESSAGES = """
 C0121 Missing required attribute "__revision__"
@@ -57,18 +56,26 @@ def ignore(line):
 
 
 def main():
-    os.chdir(pftool.root_dir)
+    parser = OptionParser(
+        usage="%prog [options] module_or_package")
+    parser.add_option('-v', '--verbose', action='store_true')
+    parser.add_option('-e', '--errors_only', action='store_true')
+    (options, args) = parser.parse_args()
+
+    if len(args) < 1:
+        parser.error("missing module or package")
+
     command = ['pylint']
     command.append('--output-format=parseable')
     command.append('--include-ids=yes')
     command.append('--reports=no')
     command.append('--disable-msg=' + disable_msg())
-    command.extend(sys.argv[1:])
-    if command[-1].startswith('-'):
-        path = os.path.dirname(__file__) or '.'
-        command.append(os.path.join(path, 'appengine'))
+    if options.errors_only:
+        command.append('-e')
+    command.extend(args)
     command = ' '.join(command)
-    # print "command: %s" % command
+    if options.verbose:
+        print "command: %s" % command
     pylint = subprocess.Popen(command, shell=True,
                               stdout=subprocess.PIPE,
                               stderr=subprocess.STDOUT)
