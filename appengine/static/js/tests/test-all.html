@@ -1,0 +1,30 @@
+<html>
+<head>
+<title>All pageforest Tests</title>
+<script>var pfroot = "/";</script>
+<script src="/static/js/namespace.js"></script>
+<script src="/static/js/base.js"></script>
+<script src="/static/js/timer.js"></script>
+<script src="/static/js/unit.js"></script>
+</head>
+<body>
+<h1><script>document.write(document.title);</script></h1>
+<script>
+var UT = global_namespace.import('org.startpad.unit');
+var ts = new UT.TestSuite();
+ts.DWOutputDiv();
+
+rgTests = ["unit", "base", "vector"];
+
+for (var i = 0; i < rgTests.length; i++) {
+    var ut = ts.AddSubTest("test-" + rgTests[i] + ".html");
+    if (rgTests[i] == "unit")
+        ut.Async(0).Async(true, 15000);
+}
+
+ts.Run();
+ts.Report();
+
+</script>
+</body>
+</html>
