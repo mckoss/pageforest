@@ -55,7 +55,7 @@ def login(request):
         return HttpResponseForbidden("The challenge is expired.",
                                      content_type='text/plain')
     # Check that the challenge is unused and was generated recently.
-    challenge = crypto.join(*parts[1:4])
+    challenge = crypto.join(parts[1:4])
     challenge_ip = memcache.get(challenge)
     if challenge_ip is None:
         return HttpResponseForbidden("The challenge is unknown.",
