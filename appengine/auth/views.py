@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from django.shortcuts import redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseForbidden
 
 from google.appengine.api import memcache
 
@@ -51,32 +51,35 @@ def login(request):
     # Check that the expiration time is in the future.
     expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
     if expires < datetime.now():
-        return HttpResponse("The challenge is expired.",
-                            content_type='text/plain', status=403)
+        return HttpResponseForbidden("The challenge is expired.",
+                                     content_type='text/plain')
     # Check that the challenge is unused and was generated recently.
     challenge = crypto.join(*parts[1:4])
     challenge_ip = memcache.get(challenge)
     if challenge_ip is None:
-        return HttpResponse("The challenge is unknown.",
-                            content_type='text/plain', status=403)
+        return HttpResponseForbidden("The challenge is unknown.",
+                                     content_type='text/plain')
     memcache.delete(challenge)
     # Check that the IP address matches.
     request_ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
     if request_ip != challenge_ip:
-        return HttpResponse("The challenge was issued to a different IP.",
-                            content_type='text/plain', status=403)
+        return HttpResponseForbidden(
+            "The challenge was issued to a different IP.",
+            content_type='text/plain')
     # Check that the username exists.
     username = parts[0]
     user = User.get_by_key_name(username.lower())
     if user is None:
-        return HttpResponse("The username '%s' is unknown." % username,
-                            content_type='text/plain', status=403)
+        return HttpResponseForbidden(
+            "The username '%s' is unknown." % username,
+            content_type='text/plain')
     # Check the password signature.
     signed = crypto.sign(challenge, user.password)
     joined = crypto.join(user.username.lower(), signed)
     if request.raw_post_data != joined:
-        return HttpResponse("The password signature is incorrect.",
-                            content_type='text/plain', status=403)
+        return HttpResponseForbidden(
+            "The password signature is incorrect.",
+            content_type='text/plain')
     # Generate a session key for the next 24 hours.
     key = crypto.join(user.password, request.app.secret)
     expires = datetime.now() + timedelta(hours=24)
