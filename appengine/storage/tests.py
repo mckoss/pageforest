@@ -2,6 +2,7 @@ from datetime import datetime
 
 from google.appengine.api import memcache
 
+from django.conf import settings
 from django.test import TestCase, Client
 
 from utils import crypto
@@ -30,11 +31,9 @@ class AppTestCase(TestCase):
         self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
         challenge = self.auth.get('/challenge/').content
         signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
-        cookie = response['Set-Cookie']
-        self.session_key = cookie.split(';')[0].split('=')[1]
-        self.client.cookies['session_key'] = self.session_key
+        data = crypto.join(self.peter.username, signed)
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = self.auth.post(
+            '/login/', data, content_type='text/plain').content
 
 
 class KeyValueTest(AppTestCase):
