@@ -95,6 +95,11 @@ google microsoft twitter yahoo facebook fb
 
 # Name of the session cookie for simple request authentication.
 SESSION_COOKIE_NAME = 'sessionkey'
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
+
+# Name of the reauth cookie on auth.app_id.pageforest.com.
+REAUTH_COOKIE_NAME = 'reauth'
+REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -117,7 +122,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'utils.middleware.AppMiddleware',
+    'apps.middleware.AppMiddleware',
+    'documents.middleware.DocMiddleware',
+    'auth.middleware.AuthMiddleware',
 )
 
 ROOT_URLCONF = 'urls'
