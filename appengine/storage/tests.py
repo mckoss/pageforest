@@ -20,18 +20,18 @@ class AppTestCase(TestCase):
         self.peter.set_password('SecreT!1')
         self.peter.put()
         self.meta = App(key_name='meta',
-                        domain='meta.pageforest.com')
+                        domains=['meta.pageforest.com'])
         self.meta.put()
         self.app = App(key_name='app',
-                       domain='app.pageforest.com',
+                       domains=['app.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
         # Authenticate.
-        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domains[0])
         challenge = self.auth.get('/challenge/').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
-        self.app_client = Client(HTTP_HOST=self.app.domain)
+        self.app_client = Client(HTTP_HOST=self.app.domains[0])
         session_key = self.auth.post(
             '/login/', data, content_type='text/plain').content
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
@@ -131,17 +131,17 @@ class HostTest(AppTestCase):
     def setUp(self):
         super(HostTest, self).setUp()
         self.other = App(key_name='other',
-                         domain='other.pageforest.com',
+                         domains=['other.pageforest.com'],
                          secret='OtherSecreT')
         self.other.put()
         # Authenticate.
-        self.other_auth = Client(HTTP_HOST='auth.' + self.other.domain)
+        self.other_auth = Client(HTTP_HOST='auth.' + self.other.domains[0])
         challenge = self.auth.get('/challenge/').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
         session_key = self.other_auth.post(
             '/login/', data, content_type='text/plain').content
-        self.other_client = Client(HTTP_HOST=self.other.domain)
+        self.other_client = Client(HTTP_HOST=self.other.domains[0])
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
 
     def test_host(self):

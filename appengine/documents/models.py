@@ -21,4 +21,4 @@ class Document(db.Model):
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
         app = App.get_by_key_name(self.app_id)
-        return '/'.join(('http:/', app.domain, self.doc_id))
+        return '/'.join(('http:/', app.domains[0], self.doc_id))

@@ -97,10 +97,10 @@ class LoginTest(TestCase):
         self.peter = User(key_name='peter', username='Peter')
         self.peter.set_password('SecreT!1')
         self.peter.put()
-        self.app = App(key_name='myapp', domain='myapp.pageforest.com',
+        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
                        secret=crypto.random64())
         self.app.put()
-        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domains[0])
 
     def test_login(self):
         """Test challenge and login."""
@@ -182,10 +182,10 @@ class SimpleAuthTest(TestCase):
                           email='peter@example.com')
         self.peter.set_password('password')
         self.peter.put()
-        self.app = App(key_name='myapp', domain='myapp.pageforest.com',
+        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
                        secret=crypto.random64())
         self.app.put()
-        self.auth = Client(HTTP_HOST='auth.' + self.app.domain)
+        self.auth = Client(HTTP_HOST='auth.' + self.app.domains[0])
         challenge = self.auth.get('/challenge/').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
