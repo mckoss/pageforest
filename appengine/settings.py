@@ -78,7 +78,7 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
 admin administrator root webmaster www-data postmaster
-test tester testuser testclient staff
+test tester testuser testclient staff unknown
 """.split()
 
 # Prevent app registration with some special app names.
