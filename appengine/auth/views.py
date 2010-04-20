@@ -5,7 +5,7 @@ from django.http import HttpResponse
 
 from google.appengine.api import memcache
 
-from utils.decorators import jsonp, require_method
+from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
 from utils import crypto
@@ -32,7 +32,7 @@ def register(request, ajax=None):
 
 
 @jsonp
-@require_method('GET')
+@method_required('GET')
 def challenge(request):
     """Generate a random signed challenge for login."""
     random_key = crypto.random64url(32)
@@ -44,7 +44,7 @@ def challenge(request):
 
 
 @jsonp
-@require_method('POST')
+@method_required('POST')
 def login(request):
     """User login after challenge."""
     parts = request.raw_post_data.split(crypto.SEPARATOR)

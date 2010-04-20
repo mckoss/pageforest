@@ -61,7 +61,7 @@ def jsonp(func):
     return wrapper
 
 
-def require_method(*methods):
+def method_required(*methods):
     """
     Check that request.method is allowed, otherwise return
     405 Method Not Allowed with a list of allowed methods.
