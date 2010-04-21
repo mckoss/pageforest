@@ -13,8 +13,10 @@ class App(Cacheable, Migratable, Dated):
     The first entry in domains is the default domain.
     The first entry in developers is the owner.
     """
+    title = db.StringProperty()            # Full unicode.
     domains = db.StringListProperty()      # One or more lowercase FQDN.
-    developers = db.StringListProperty()   # One or more usernames.
+    writers = db.StringListProperty()      # One or more usernames.
+    readers = db.StringListProperty()      # One or more usernames.
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
     @classmethod
