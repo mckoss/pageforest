@@ -1,10 +1,10 @@
 from google.appengine.ext import db
 
-from utils.mixins import Cacheable, Dated
+from utils.mixins import Cacheable, Timestamped
 from apps.models import App
 
 
-class KeyValue(Cacheable, Dated):
+class KeyValue(Cacheable, Timestamped):
     """
     Key-value store for PageForest documents and resources.
     Entity key name format: app_id/doc_id/key/with/slashes
