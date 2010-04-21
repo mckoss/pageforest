@@ -119,6 +119,12 @@ class LoginTest(TestCase):
         self.assertTrue(cookie.endswith(' GMT'))
         self.assertTrue('; path=/; expires=' in cookie)
 
+    def test_bogus_login(self):
+        """Test that a bogus authentication string cannot login."""
+        response = self.auth.post('/login/', 'x', content_type='text/plain')
+        self.assertContains(response, 'Authentication must have five parts.',
+                            status_code=403)
+
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
         challenge = self.auth.get('/challenge/').content
