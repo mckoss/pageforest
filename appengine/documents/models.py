@@ -2,10 +2,10 @@ from google.appengine.ext import db
 
 from apps.models import App
 
-from utils.mixins import Cacheable, Migratable, Dated
+from utils.mixins import Cacheable, Migratable, Timestamped
 
 
-class Document(Cacheable, Migratable, Dated):
+class Document(Cacheable, Migratable, Timestamped):
     """
     Metadata for each PageForest document (saved application state).
     Entity key name format: app_id/doc_id (all lower case).

@@ -8,11 +8,11 @@ from django.test import TestCase
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from utils.cacheable import Cacheable, CacheHistory
-from utils.mixins import Dated
+from utils.mixins.cacheable import Cacheable, CacheHistory
+from utils.mixins import Timestamped
 
 
-class CachedModel(Cacheable, Dated):
+class CachedModel(Cacheable, Timestamped):
     """Simple datastore model for Cacheable mixin test."""
     text = db.TextProperty()
     blob = db.BlobProperty()

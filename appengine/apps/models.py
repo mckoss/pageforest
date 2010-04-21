@@ -2,10 +2,10 @@ from google.appengine.ext import db
 
 from django.conf import settings
 
-from utils.mixins import Cacheable, Migratable, Dated
+from utils.mixins import Cacheable, Migratable, Timestamped
 
 
-class App(Cacheable, Migratable, Dated):
+class App(Cacheable, Migratable, Timestamped):
     """
     The entity key name contains the app_id string,
     minimum length is 2 characters.
