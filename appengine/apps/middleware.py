@@ -27,14 +27,6 @@ class AppMiddleware(object):
                      request.get_full_path())
         if request.path_info == '/':
             request.path_info = '/.global/index.html'
-        # Rewrite /.global/ to the meta app.
-        parts = request.path_info.split('/')
-        if parts[1] == '.global':
-            parts[1] = request.app_id
-            request.path_info = '/'.join(parts)
-            request.META['HTTP_HOST'] = 'meta'
-            request.app = App.get_by_hostname('meta')
-            request.app_id = request.app.key().name()
         # Prefix path with /app for matching with urls.py.
         request.path_info = '/app' + request.path_info
         request.META['PATH_INFO'] = request.path_info
