@@ -15,7 +15,6 @@ JSON_MIME_TYPE = 'application/json'
 
 
 @jsonp
-@login_required
 def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
