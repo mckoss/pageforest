@@ -15,8 +15,8 @@ class DocumentTest(TestCase):
         self.app = App(key_name='test', domains=['test.pageforest.com'])
         self.app.put()
         self.doc = Document(key_name='test/doc', app_id='test', doc_id='Doc',
-                            title="My Document", owner='peter',
-                            tags='one two three'.split())
+                            title="My Document", tags='one two three'.split(),
+                            readers=['anybody'], writers=['peter'])
         self.doc.put()
         self.data = KeyValue(key_name='test/doc', app_id='test', doc_id='Doc',
                              value='{"int": 123}')
@@ -34,9 +34,8 @@ class DocumentTest(TestCase):
         self.assertContains(response, '"app_id": "test"')
         self.assertContains(response, '"doc_id": "Doc"')
         self.assertContains(response, '"title": "My Document"')
-        self.assertContains(response, '"owner": "peter"')
-        self.assertContains(response, '"readers": []')
-        self.assertContains(response, '"writers": []')
+        self.assertContains(response, '"readers": ["anybody"]')
+        self.assertContains(response, '"writers": ["peter"]')
         self.assertContains(response, '"schema": 1')
         self.assertContains(response, '"tags": ["one", "two", "three"]')
         self.assertContains(
