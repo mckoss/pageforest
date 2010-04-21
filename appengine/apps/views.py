@@ -33,6 +33,8 @@ def app_info(request):
                     assert_string_list(key, parsed[key])
                     setattr(request.app, key, parsed[key])
         request.app.put()
+        return HttpResponse('{"status": 200, "statusText": "Saved"}',
+                            mimetype='application/json')
     except ValueError, e:
         return HttpResponse(unicode(e), mimetype='text/plain', status=400)
     return HttpResponse(model_to_json(request.app, exclude='secret'.split()),
