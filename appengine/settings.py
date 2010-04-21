@@ -77,18 +77,22 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
-admin administrator root webmaster www-data postmaster
-test tester testuser testclient staff unknown
+admin administrator root staff
+www www-data webmaster postmaster
+test tester testuser testclient
+friends family public private
+authenticated anonymous unknown noname
+everybody anybody nobody
 """.split()
 
 # Prevent app registration with some special app names.
 RESERVED_APPS = """
-www meta
-ssl static auth login
-blog test doc docs documents list notecomment
+www meta ssl static auth login
+doc docs document documents
+blog list note comment
+test tester testclient testserver
 pageforest pgfrst page
-a b c d e f g h i j k l m n o p r s t u v w x y z
-app app_id appid application
+app apps application applications app_id appid
 css img images js javascript
 google microsoft twitter yahoo facebook fb
 """.split()
