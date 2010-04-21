@@ -7,7 +7,9 @@ from utils.mixins import Cacheable, Migratable, Dated
 
 class App(Cacheable, Migratable, Dated):
     """
-    The entity key name contains the app_id string.
+    The entity key name contains the app_id string,
+    minimum length is 2 characters.
+
     The first entry in domains is the default domain.
     The first entry in developers is the owner.
     """
