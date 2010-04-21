@@ -34,7 +34,8 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
         if isinstance(value, datetime):
             value = {"__class__": "Date",
                      "isoformat": value.isoformat() + 'Z'}
-        lines.append('"%s": %s' % (key, json.dumps(value)))
+        value = json.dumps(value, sort_keys=True)
+        lines.append('"%s": %s' % (key, value))
     return '{\n' + ',\n'.join(lines) + '\n}'
 
 
