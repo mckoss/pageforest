@@ -2,8 +2,10 @@ from google.appengine.ext import db
 
 from apps.models import App
 
+from utils.mixins import Cacheable, Migratable, Dated
 
-class Document(db.Model):
+
+class Document(Cacheable, Migratable, Dated):
     """
     Metadata for each PageForest document (saved application state).
     Entity key name format: app_id/doc_id (all lower case).
@@ -15,8 +17,6 @@ class Document(db.Model):
     readers = db.StringListProperty()  # Usernames that have read access.
     writers = db.StringListProperty()  # Usernames that have write access.
     tags = db.StringListProperty()
-    created = db.DateTimeProperty()
-    modified = db.DateTimeProperty()
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
