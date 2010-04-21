@@ -2,10 +2,10 @@ from google.appengine.ext import db
 
 from django.conf import settings
 
-from utils.mixins import Cacheable, Dated
+from utils.mixins import Cacheable, Migratable, Dated
 
 
-class App(Cacheable, Dated):
+class App(Cacheable, Migratable, Dated):
     """
     The entity key name contains the app_id string.
     The first entry in domains is the default domain.
