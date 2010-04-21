@@ -35,11 +35,12 @@ class DocumentTest(TestCase):
         self.assertContains(response, '"doc_id": "Doc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"owner": "peter"')
-        self.assertNotContains(response, '"readers":')
-        self.assertNotContains(response, '"writers":')
+        self.assertContains(response, '"readers": []')
+        self.assertContains(response, '"writers": []')
+        self.assertContains(response, '"schema": 1')
         self.assertContains(response, '"tags": ["one", "two", "three"]')
-        self.assertContains(response, '"created": {')
-        self.assertContains(response, '"modified": {')
-        self.assertContains(response, '"__class__": "Date"')
-        self.assertContains(response, '"isoformat": "201')
+        self.assertContains(
+            response, '"created": {"__class__": "Date", "isoformat": "201')
+        self.assertContains(
+            response, '"modified": {"__class__": "Date", "isoformat": "201')
         self.assertContains(response, '"json": {"int": 123}')
