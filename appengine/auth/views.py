@@ -49,6 +49,10 @@ def challenge(request):
 def login(request):
     """User login after challenge."""
     parts = request.raw_post_data.split(crypto.SEPARATOR)
+    # Check that the request data contains five parts.
+    if len(parts) != 5:
+        return HttpResponseForbidden("Authentication must have five parts.",
+                                     content_type='text/plain')
     # Check that the expiration time is in the future.
     expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
     if expires < datetime.now():
