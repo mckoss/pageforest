@@ -11,6 +11,7 @@ META_FILENAME = 'app.json'
 CONFIG_FILENAME = '.url'
 IGNORE_FILENAMES = [META_FILENAME, CONFIG_FILENAME]
 
+
 class PutRequest(urllib2.Request):
     """Request to upload a file with HTTP PUT."""
 
