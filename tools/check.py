@@ -21,6 +21,7 @@ def attempt(command):
         print command
     else:
         sys.stdout.write('.')
+        sys.stdout.flush()
     logfile = open(LOGFILENAME, 'w')
     returncode = subprocess.call(command.split(), stderr=logfile)
     logfile.close()
@@ -70,6 +71,8 @@ def main():
     os.chdir(pftool.tools_dir)
     attempt('python %s test -v0' %
             os.path.join(pftool.app_dir, 'manage.py'))
+    if not options.verbose:
+        print  # Newline after .....
 
 
 if __name__ == '__main__':

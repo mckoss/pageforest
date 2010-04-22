@@ -172,7 +172,7 @@ class Cacheable(db.Model):
         if instance is not None:
             if settings.DEBUG:
                 logging.info("get_by_key_name used datastore: " +
-                             cls._cache_key(key_name))
+                             cls.class_get_cache_key(key_name))
             instance.cache_put()
         return instance
 

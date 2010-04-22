@@ -5,3 +5,4 @@ syntax: glob
 check.log
 *~
 *.orig
+.passwd

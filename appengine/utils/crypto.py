@@ -33,30 +33,37 @@ def random64url(length=32):
     return random64(length, BASE64URL)
 
 
-def canonical(value):
-    """
-    Convert special types to canonical string representation.
-
-    >>> canonical(datetime(2010, 4, 19, 9, 24, 56, 123456))
-    '2010-04-19T09:24:56Z'
-    >>> canonical(1.0 / 9.0)
-    '0.1111111'
-    """
-    if isinstance(value, datetime):
-        return value.isoformat()[:19] + 'Z'
-    if isinstance(value, float):
-        return '%.7f' % value
-    return str(value)
-
-
 def join(*args, **kwargs):
     """
-    >>> join('a', 'b', 'c', separator=',')
-    'a,b,c'
+    Join arguments with separator. Special types are converted to
+    canonical string representation.
+
+    >>> join('a', 'b', 'c')
+    'a$b$c'
+    >>> join(1, 2, 3, separator=',')
+    '1,2,3'
+    >>> join(['a', 'b', 'c'], 'd')
+    'a$b$c$d'
+    >>> join(datetime(2010, 4, 19, 9, 24, 56, 123456))
+    '2010-04-19T09:24:56Z'
+    >>> join(datetime(2010, 4, 19, 9, 24, 56, 987654))
+    '2010-04-19T09:24:56Z'
+    >>> join(1.0 / 9.0)
+    '0.1111111'
     """
     separator = kwargs.get('separator', SEPARATOR)
-    args = [canonical(arg) for arg in args]
-    return separator.join(args)
+    parts = []
+    for arg in args:
+        if isinstance(arg, datetime):
+            arg = arg.isoformat()[:19] + 'Z'
+        elif isinstance(arg, float):
+            arg = '%.7f' % arg
+        elif isinstance(arg, (tuple, list)):
+            arg = join(*arg)
+        else:
+            arg = str(arg)
+        parts.append(arg)
+    return separator.join(parts)
 
 
 def hash(*args, **kwargs):

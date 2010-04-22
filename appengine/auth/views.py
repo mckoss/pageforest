@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from django.conf import settings
 from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseForbidden
 
@@ -48,13 +49,17 @@ def challenge(request):
 def login(request):
     """User login after challenge."""
     parts = request.raw_post_data.split(crypto.SEPARATOR)
+    # Check that the request data contains five parts.
+    if len(parts) != 5:
+        return HttpResponseForbidden("Authentication must have five parts.",
+                                     content_type='text/plain')
     # Check that the expiration time is in the future.
     expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
     if expires < datetime.now():
         return HttpResponseForbidden("The challenge is expired.",
                                      content_type='text/plain')
     # Check that the challenge is unused and was generated recently.
-    challenge = crypto.join(*parts[1:4])
+    challenge = crypto.join(parts[1:4])
     challenge_ip = memcache.get(challenge)
     if challenge_ip is None:
         return HttpResponseForbidden("The challenge is unknown.",
@@ -75,20 +80,20 @@ def login(request):
             content_type='text/plain')
     # Check the password signature.
     signed = crypto.sign(challenge, user.password)
-    joined = crypto.join(user.username.lower(), signed)
+    joined = crypto.join(username, signed)
     if request.raw_post_data != joined:
         return HttpResponseForbidden(
             "The password signature is incorrect.",
             content_type='text/plain')
     # Generate a session key for the next 24 hours.
     key = crypto.join(user.password, request.app.secret)
-    expires = datetime.now() + timedelta(hours=24)
+    expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
     session_key = crypto.sign(request.app_id, username, expires, key)
-    expires = datetime.now() + timedelta(days=30)
+    expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
     reauth_cookie = crypto.sign(request.app_id, username, expires, key)
     response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = 'reauth=%s; path=/; expires=%s' % (
-        reauth_cookie, http_datetime(expires))
+    response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
+        settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
     return response
 
 

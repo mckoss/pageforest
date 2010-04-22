@@ -6,6 +6,16 @@ from django.utils import simplejson as json
 def model_to_json(entity, extra=None, include=None, exclude=None):
     """
     Serialize a datastore entity to JSON.
+
+    >>> from google.appengine.ext import db
+    >>> class Example(db.Model):
+    ...     text = db.StringProperty()
+    ...     number = db.IntegerProperty()
+    >>> print model_to_json(Example(text='abc', number=123))
+    {
+    "number": 123,
+    "text": "abc"
+    }
     """
     mapping = {}
     for name in entity.properties():
@@ -13,14 +23,20 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
             continue
         if exclude and name in exclude:
             continue
-        value = getattr(entity, name)
+        mapping[name] = getattr(entity, name)
+    if extra:
+        mapping.update(extra)
+    lines = []
+    keys = mapping.keys()
+    keys.sort()
+    for key in keys:
+        value = mapping[key]
         if isinstance(value, datetime):
             value = {"__class__": "Date",
                      "isoformat": value.isoformat() + 'Z'}
-        mapping[name] = value
-    if extra:
-        mapping.update(extra)
-    return json.dumps(mapping)
+        value = json.dumps(value, sort_keys=True)
+        lines.append('"%s": %s' % (key, value))
+    return '{\n' + ',\n'.join(lines) + '\n}'
 
 
 def probably_valid_json(text):
