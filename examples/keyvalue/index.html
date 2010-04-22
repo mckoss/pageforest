@@ -4,54 +4,59 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>REST API Demo - PageForest</title>
-<link rel="stylesheet" type="text/css" href="/.static/css/main.css" />
+<link rel="stylesheet" type="text/css" href="style.css" />
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript"
-src="http://www.pageforest.com/static/js/namespace-crypto.js"></script>
-<script type="text/javascript" src="/.app/demo.js"></script>
+src="http://www.pageforest.com/.static/js/namespace.js"></script>
+<script type="text/javascript" src="keyvalue.js"></script>
 <script type="text/javascript">
-demo = global_namespace.import("com.pageforest.demo");
+var keyvalue = global_namespace.import("com.pageforest.keyvalue");
 $(document).ready(function() { $("input.focus:last").focus(); });
 </script>
 </head>
 <body>
 <h1>REST API Demo</h1>
-<table>
+
+<table style="float:left">
 <tr>
 <th><label for="id_username">Username:</label></th>
-<td><input id="id_key" type="text" class="focus" name="key" /></td>
+<td><input id="id_username" type="text" name="key" class="focus" /></td>
 </tr>
 <tr>
 <th><label for="id_password">Password:</label></th>
-<td><input type="password" name="value" id="id_value" /></td>
+<td><input id="id_password" type="password" name="value" /></td>
 </tr>
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="demo.challenge()" value="Challenge" />
-<input type="button" onclick="demo.login()" value="Login" />
-<input type="button" onclick="demo.logout()" value="Logout" />
-</td>
-</tr>
-<tr>
-<th><label for="id_key">Key:</label></th>
-<td><input id="id_key" type="text" class="focus" name="key" /></td>
-</tr>
-<tr>
-<th><label for="id_value">Value:</label></th>
-<td><input type="text" name="value" id="id_value" /></td>
-</tr>
-<tr>
-<th></th>
-<td>
-<input type="button" onclick="demo.ajax('PUT')" value="Put" />
-<input type="button" onclick="demo.ajax('GET')" value="Get" />
-<input type="button" onclick="demo.ajax('DELETE')" value="Delete" />
-<input type="button" onclick="demo.ajax('HEAD')" value="Head" />
+<input type="button" onclick="keyvalue.challenge()" value="Challenge" />
+<input type="button" onclick="keyvalue.login()" value="Login" />
+<input type="button" onclick="keyvalue.logout()" value="Logout" />
 </td>
 </tr>
 </table>
-<div id="results"></div>
+
+<table style="float:left">
+<tr>
+<th><label for="id_key">Key:</label></th>
+<td><input id="id_key" type="text" name="key" /></td>
+</tr>
+<tr>
+<th><label for="id_value">Value:</label></th>
+<td><input id="id_value" type="text" name="value" /></td>
+</tr>
+<tr>
+<th></th>
+<td>
+<input type="button" onclick="keyvalue.ajax('PUT')" value="Put" />
+<input type="button" onclick="keyvalue.ajax('GET')" value="Get" />
+<input type="button" onclick="keyvalue.ajax('DELETE')" value="Delete" />
+<input type="button" onclick="keyvalue.ajax('HEAD')" value="Head" />
+</td>
+</tr>
+</table>
+
+<div id="results" style="clear:both"></div>
 </body>
 </html>

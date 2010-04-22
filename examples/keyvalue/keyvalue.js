@@ -1,4 +1,4 @@
-global_namespace.define("com.pageforest.demo", function(ns) {
+global_namespace.define("com.pageforest.keyvalue", function(ns) {
 
     function formatResult(xhr, status, message) {
         return xhr.status + ' ' + xhr.statusText + ' ' +
@@ -23,7 +23,7 @@ global_namespace.define("com.pageforest.demo", function(ns) {
     ns.ajax = function(method) {
         options = {
             type: method,
-            url: '/data/' + $("#id_key").val(),
+            url: '/doc/' + $("#id_key").val(),
             beforeSend: beforeSend,
             success: successCallback,
             error: errorCallback,
@@ -32,4 +32,4 @@ global_namespace.define("com.pageforest.demo", function(ns) {
         $.ajax(options);
     };
 
-}); // com.pageforest.demo.rest
+}); // com.pageforest.keyvalue
