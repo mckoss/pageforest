@@ -173,7 +173,6 @@ class MemcacheTest(AppTestCase):
         self.assertEqual(binary.count('created_ip'), 1)
         self.assertEqual(binary.count('modified'), 2)
         self.assertEqual(binary.count('modified_ip'), 1)
-        self.assertEqual(binary.count('127.0.0.1'), 1)
         if data:
             self.assertEqual(binary.count(data), 1)
 

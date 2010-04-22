@@ -1,16 +1,15 @@
 from google.appengine.ext import db
 
-from utils.mixins import Cacheable, Timestamped
+from utils.mixins import Cacheable, Migratable, Timestamped
 from apps.models import App
 
 
-class KeyValue(Cacheable, Timestamped):
+class KeyValue(Cacheable, Migratable, Timestamped):
     """
     Key-value store for PageForest documents and resources.
     Entity key name format: app_id/doc_id/key/with/slashes
     """
     value = db.BlobProperty()
-    ip = db.StringProperty()  # Last modified from this IPv4 address.
 
     def get_absolute_url(self):
         """The URL includes the default domain name for this app."""

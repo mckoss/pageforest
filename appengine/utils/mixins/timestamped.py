@@ -1,5 +1,7 @@
 from google.appengine.ext import db
 
+from utils.middleware import RequestMiddleware
+
 
 class Timestamped(db.Model):
     """
@@ -9,3 +11,11 @@ class Timestamped(db.Model):
     created_ip = db.StringProperty()
     modified = db.DateTimeProperty(auto_now=True)
     modified_ip = db.StringProperty()
+
+    def put(self, *args, **kwargs):
+        request = RequestMiddleware.get_request()
+        if request and 'REMOTE_ADDR' in request.META:
+            self.modified_ip = request.META['REMOTE_ADDR']
+            if not self.is_saved():
+                self.created_ip = request.META['REMOTE_ADDR']
+        super(Timestamped, self).put(*args, **kwargs)

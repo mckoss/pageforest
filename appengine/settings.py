@@ -126,9 +126,10 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'apps.middleware.AppMiddleware',
-    'documents.middleware.DocMiddleware',
-    'auth.middleware.AuthMiddleware',
+    'utils.middleware.RequestMiddleware',  # Put request in threading.local().
+    'apps.middleware.AppMiddleware',       # Get the app for this request.
+    'documents.middleware.DocMiddleware',  # Get the document for this request.
+    'auth.middleware.AuthMiddleware',      # Authenticate with session key.
 )
 
 ROOT_URLCONF = 'urls'
