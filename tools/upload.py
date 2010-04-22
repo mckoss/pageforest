@@ -9,7 +9,7 @@ import urllib2
 
 META_FILENAME = 'app.json'
 CONFIG_FILENAME = '.url'
-IGNORE_FILENAMES = [META_FILENAME, CONFIG_FILENAME]
+IGNORE_FILENAMES = ''.split()
 
 
 class PutRequest(urllib2.Request):
@@ -72,8 +72,6 @@ def main():
     session_key = login(username, password, hostname)
     if not os.path.exists(META_FILENAME):
         sys.exit('Could not find ' + META_FILENAME)
-    url = 'http://%s/.app' % hostname
-    upload(session_key, url, META_FILENAME)
     for dirpath, dirnames, filenames in os.walk('.'):
         for dirname in dirnames:
             if dirname.startswith('.'):
@@ -84,7 +82,7 @@ def main():
         for filename in filenames:
             if filename.startswith('.') or filename in IGNORE_FILENAMES:
                 continue
-            url = 'http://%s/.app/%s%s' % (hostname, urlpath, filename)
+            url = 'http://%s/%s%s' % (hostname, urlpath, filename)
             upload(session_key, url, filename)
     if not os.path.exists(CONFIG_FILENAME):
         save_config(username, password, hostname)
@@ -95,5 +93,5 @@ if __name__ == '__main__':
         main()
     except urllib2.HTTPError, e:
         print e
-        for line in e.fp:
+        for line in e.fp.readlines()[:10]:
             print line.rstrip()
