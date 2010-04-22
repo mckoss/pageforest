@@ -1,0 +1,57 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>REST API Demo - PageForest</title>
+<link rel="stylesheet" type="text/css" href="/static/css/main.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript"
+src="http://www.pageforest.com/static/js/namespace-crypto.js"></script>
+<script type="text/javascript" src="/.global/demo.js"></script>
+<script type="text/javascript">
+demo = global_namespace.import("com.pageforest.demo");
+$(document).ready(function() { $("input.focus:last").focus(); });
+</script>
+</head>
+<body>
+<h1>REST API Demo</h1>
+<table>
+<tr>
+<th><label for="id_username">Username:</label></th>
+<td><input id="id_key" type="text" class="focus" name="key" /></td>
+</tr>
+<tr>
+<th><label for="id_password">Password:</label></th>
+<td><input type="password" name="value" id="id_value" /></td>
+</tr>
+<tr>
+<th></th>
+<td>
+<input type="button" onclick="demo.challenge()" value="Challenge" />
+<input type="button" onclick="demo.login()" value="Login" />
+<input type="button" onclick="demo.logout()" value="Logout" />
+</td>
+</tr>
+<tr>
+<th><label for="id_key">Key:</label></th>
+<td><input id="id_key" type="text" class="focus" name="key" /></td>
+</tr>
+<tr>
+<th><label for="id_value">Value:</label></th>
+<td><input type="text" name="value" id="id_value" /></td>
+</tr>
+<tr>
+<th></th>
+<td>
+<input type="button" onclick="demo.ajax('PUT')" value="Put" />
+<input type="button" onclick="demo.ajax('GET')" value="Get" />
+<input type="button" onclick="demo.ajax('DELETE')" value="Delete" />
+<input type="button" onclick="demo.ajax('HEAD')" value="Head" />
+</td>
+</tr>
+</table>
+<div id="results"></div>
+</body>
+</html>
