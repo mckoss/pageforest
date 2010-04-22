@@ -53,9 +53,17 @@ def main():
     url = 'http://%s/.app' % SERVER
     upload(session_key, url, META_FILENAME)
     for dirpath, dirnames, filenames in os.walk('.'):
-        url = 'http://%s/.app/%s/%s' % (
-            SERVER, dirpath, os.path.basename(filename))
-        upload(session_key, url, filename)
+        for dirname in dirnames:
+            if dirname.startswith('.'):
+                dirnames.remove(dirname)
+        urlpath = dirpath.replace('\\', '/') + '/'
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        for filename in filenames:
+            if filename.startswith('.') or filename == META_FILENAME:
+                continue
+            url = 'http://%s/.app/%s%s' % (SERVER, urlpath, filename)
+            upload(session_key, url, filename)
 
 
 if __name__ == '__main__':
