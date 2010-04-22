@@ -44,19 +44,22 @@ def main():
     parser.add_option('-a', '--application',
         default='pageforest', metavar='<name>',
         help="override app name in app.yaml (default: pageforest)")
-    parser.add_option('-v', '--version',
+    parser.add_option('-V', '--version',
         default='dev', metavar='<string>',
         help="override version in app.yaml (default: dev)")
+    parser.add_option('-v', '--verbose', action='store_true',
+        help="show more output")
     parser.add_option('-c', '--check', action='store_true',
         help="run tests but don't deploy to Google App Engine")
     parser.add_option('-i', '--ignore', action='store_true',
         help="ignore errors from check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
+    dash_v = options.verbose and '-v' or ''
     # Check coding style and unit tests.
     os.chdir(pftool.tools_dir)
-    if os.system('python build.py -v'):
+    if os.system('python build.py ' + dash_v):
         sys.exit('build failed')
-    if not options.ignore and os.system('python check.py'):
+    if not options.ignore and os.system('python check.py ' + dash_v):
         sys.exit('check failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
@@ -66,7 +69,7 @@ def main():
                     version=options.version)
     try:
         # Deploy source code to Google App Engine.
-        if os.system('appcfg.py -v update ' + pftool.app_dir):
+        if os.system('appcfg.py %s update %s' % (dash_v, pftool.app_dir)):
             sys.exit('failed')
     finally:
         # Restore app.yaml to original.
