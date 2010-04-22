@@ -26,11 +26,11 @@ class DocumentTest(TestCase):
     def test_get_absolute_url(self):
         """Test that the absolute URL is generated correctly."""
         self.assertEqual(self.doc.get_absolute_url(),
-                         'http://test.pageforest.com/Doc')
+                         'http://test.pageforest.com/docs/Doc')
 
     def test_json(self):
         """Test JSON serializer for document."""
-        response = self.app_client.get('/doc')
+        response = self.app_client.get('/docs/doc')
         self.assertContains(response, '"app_id": "test"')
         self.assertContains(response, '"doc_id": "Doc"')
         self.assertContains(response, '"title": "My Document"')
