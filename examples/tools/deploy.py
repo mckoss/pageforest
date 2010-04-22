@@ -1,13 +1,15 @@
 #!/usr/bin/env python
 
-META_FILENAME = 'app.json'
-SERVER = 'keyvalue.localhost:8080'
-
 import os
 import sys
 import hmac
 import hashlib
 import urllib2
+
+META_FILENAME = 'app.json'
+SERVER = 'keyvalue.localhost:8080'
+if len(sys.argv) > 1:
+    SERVER = sys.argv[1]
 
 
 class PutRequest(urllib2.Request):
