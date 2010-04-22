@@ -23,7 +23,7 @@ global_namespace.define("com.pageforest.keyvalue", function(ns) {
     ns.ajax = function(method) {
         options = {
             type: method,
-            url: '/doc/' + $("#id_key").val(),
+            url: '/docs/doc/' + $("#id_key").val(),
             beforeSend: beforeSend,
             success: successCallback,
             error: errorCallback,
