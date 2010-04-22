@@ -24,12 +24,13 @@ def hmac_sha1(key, message):
 
 
 def login(username, password, hostname):
-    url = 'http://auth.%s/challenge/' % hostname
+    url = 'http://auth.%s/challenge' % hostname
     challenge = urllib2.urlopen(url).read()
     userpass = hmac_sha1(password, username.lower())
-    data = '$'.join((username, challenge, hmac_sha1(userpass, challenge)))
-    url = 'http://auth.%s/login/' % hostname
-    return urllib2.urlopen(url, data).read()
+    signature = hmac_sha1(userpass, challenge)
+    response = '$'.join((username, challenge, signature))
+    url = 'http://auth.%s/login/%s' % (hostname, response)
+    return urllib2.urlopen(url).read()
 
 
 def upload(session_key, url, filename):

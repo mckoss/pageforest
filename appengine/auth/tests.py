@@ -64,30 +64,30 @@ class RegistrationTest(TestCase):
     def test_username_invalid(self):
         """Test that invalid usernames are rejected."""
         for name in '_name a-b 0.5'.split():
-            response = self.www.post('/auth/register/', {'username': name})
+            response = self.www.post('/auth/register', {'username': name})
             self.assertContains(response, 'Username must be alphanumeric.')
 
     def test_username_too_long(self):
         """Test that excessively long usernames are rejected."""
-        response = self.www.post('/auth/register/', {'username': 'a' * 31})
+        response = self.www.post('/auth/register', {'username': 'a' * 31})
         self.assertContains(response,
             'Ensure this value has at most 30 characters (it has 31).')
 
     def test_username_reserved(self):
         """Test that reserved usernames are enforced."""
         for name in 'root admin test'.split():
-            response = self.www.post('/auth/register/', {'username': name})
+            response = self.www.post('/auth/register', {'username': name})
             self.assertContains(response, 'This username is reserved.')
 
     def test_password_silly(self):
         """Test that silly passwords are rejected."""
         for pw in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.www.post('/auth/register/', {'password': pw})
+            response = self.www.post('/auth/register', {'password': pw})
             self.assertContains(response, 'This password is too simple.')
 
     def test_username_taken(self):
         """Test that existing usernames are reserved."""
-        response = self.www.post('/auth/register/', {'username': 'peter'})
+        response = self.www.post('/auth/register', {'username': 'peter'})
         self.assertContains(response, 'This username is already taken.')
 
 
@@ -105,14 +105,14 @@ class LoginTest(TestCase):
     def test_login(self):
         """Test challenge and login."""
         # Get a challenge from the server.
-        response = self.auth.get('/challenge/')
+        response = self.auth.get('/challenge')
         self.assertContains(response, '$201')
         challenge = response.content
         self.assertEqual(len(challenge), 94)
         # Sign the challenge and attempt login.
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, 'myapp$peter$201')
         cookie = response['Set-Cookie']
         self.assertTrue(cookie.startswith('reauth=myapp$peter$201'))
@@ -121,62 +121,62 @@ class LoginTest(TestCase):
 
     def test_bogus_login(self):
         """Test that a bogus authentication string cannot login."""
-        response = self.auth.post('/login/', 'x', content_type='text/plain')
+        response = self.auth.get('/login/x')
         self.assertContains(response, 'Authentication must have five parts.',
                             status_code=403)
 
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         parts = challenge.split(crypto.SEPARATOR)
         parts[1] = datetime.strptime(parts[1], "%Y-%m-%dT%H:%M:%SZ")
         parts[1] -= timedelta(seconds=61)
         challenge = crypto.join(parts)
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, 'The challenge is expired.',
                             status_code=403)
 
     def test_replay(self):
         """Test that a replay attack cannot login."""
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         # First login should be successful.
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, 'myapp$peter$201')
         # Replay should fail with 403 Forbidden.
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, 'The challenge is unknown.',
                             status_code=403)
 
     def test_different_ip(self):
         """Test that different IP address cannot login."""
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         memcache.set(challenge, '10.4.5.6', 60)
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join('unknown', signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response,
                             "The challenge was issued to a different IP.",
                             status_code=403)
 
     def test_unknown_user(self):
         """Test that unknown user cannot login."""
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join('unknown', signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, "The username 'unknown' is unknown.",
                             status_code=403)
 
     def test_wrong_password(self):
         """Test that incorrect password cannot login."""
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password[::-1])
         data = crypto.join(self.peter.username.lower(), signed)
-        response = self.auth.post('/login/', data, content_type='text/plain')
+        response = self.auth.get('/login/' + data)
         self.assertContains(response, 'The password signature is incorrect.',
                             status_code=403)
 
@@ -192,11 +192,10 @@ class SimpleAuthTest(TestCase):
                        secret=crypto.random64())
         self.app.put()
         self.auth = Client(HTTP_HOST='auth.' + self.app.domains[0])
-        challenge = self.auth.get('/challenge/').content
+        challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
-        self.session_key = self.auth.post(
-            '/login/', data, content_type='text/plain').content
+        self.session_key = self.auth.get('/login/' + data).content
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
     def test_bogus_session_key(self):

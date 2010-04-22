@@ -1,4 +1,6 @@
-global_namespace.define("com.pageforest.keyvalue", function(ns) {
+global_namespace.define("com.pageforest.keyvalue", function (ns) {
+
+    var crypto = ns.import("com.googlecode.crypto-js");
 
     function formatResult(xhr, status, message) {
         return xhr.status + ' ' + xhr.statusText + ' ' +
@@ -20,16 +22,48 @@ global_namespace.define("com.pageforest.keyvalue", function(ns) {
         xhr.setRequestHeader("X-Hello", "Good morning");
     }
 
-    ns.ajax = function(method) {
-        options = {
+    ns.ajax = function (method) {
+        var options = {
             type: method,
             url: '/docs/doc/' + $("#id_key").val(),
             beforeSend: beforeSend,
             success: successCallback,
-            error: errorCallback,
+            error: errorCallback
         };
-        if (method == "PUT") options.data = $("#id_value").val();
+        if (method == "PUT") {
+            options.data = $("#id_value").val();
+        }
         $.ajax(options);
+    };
+
+    ns.getChallenge = function () {
+        $.ajax({
+            dataType: 'jsonp',
+            url: 'http://auth.' + location.host + '/challenge',
+            success: function (message) {
+                $('#results').prepend('<div>' + message + '</div>');
+                ns.challenge = message;
+            }
+        });
+    };
+
+    ns.login = function () {
+        if (!ns.challenge) {
+            return;
+        }
+        var username = $('#id_username').val();
+        var password = $('#id_password').val();
+        var userpass = crypto.HMAC_SHA1(password, username.toLowerCase());
+        var signature = crypto.HMAC_SHA1(userpass, ns.challenge);
+        var response = username + '$' + ns.challenge + '$' + signature;
+        $.ajax({
+            dataType: 'jsonp',
+            url: 'http://auth.' + location.host + '/login/' + response,
+            success: function (message) {
+                $('#results').prepend('<div>' + message + '</div>');
+                ns.sessionKey = message;
+            }
+        });
     };
 
 }); // com.pageforest.keyvalue

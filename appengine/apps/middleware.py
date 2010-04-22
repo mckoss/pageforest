@@ -34,3 +34,4 @@ class AppMiddleware(object):
         logging.info("rewritten URL: http://" +
                      request.META.get('HTTP_HOST', '') +
                      request.get_full_path())
+        # print request.get_full_path()

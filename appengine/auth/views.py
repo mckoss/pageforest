@@ -45,10 +45,10 @@ def challenge(request):
 
 
 @jsonp
-@method_required('POST')
-def login(request):
+@method_required('GET')
+def login(request, signature):
     """User login after challenge."""
-    parts = request.raw_post_data.split(crypto.SEPARATOR)
+    parts = signature.split(crypto.SEPARATOR)
     # Check that the request data contains five parts.
     if len(parts) != 5:
         return HttpResponseForbidden("Authentication must have five parts.",
@@ -81,7 +81,7 @@ def login(request):
     # Check the password signature.
     signed = crypto.sign(challenge, user.password)
     joined = crypto.join(username, signed)
-    if request.raw_post_data != joined:
+    if signature != joined:
         return HttpResponseForbidden(
             "The password signature is incorrect.",
             content_type='text/plain')
