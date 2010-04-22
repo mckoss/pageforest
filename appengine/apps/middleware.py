@@ -26,7 +26,7 @@ class AppMiddleware(object):
                      request.META.get('HTTP_HOST', '') +
                      request.get_full_path())
         if request.path_info == '/':
-            request.path_info = '/.app/index.html'
+            request.path_info = '/index.html'
         # Prefix path with /app for matching with urls.py.
         request.path_info = '/app' + request.path_info
         request.META['PATH_INFO'] = request.path_info

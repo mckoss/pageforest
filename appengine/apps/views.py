@@ -6,16 +6,16 @@ from utils.decorators import jsonp, method_required
 
 
 @method_required('GET', 'PUT')
-def app_info(request):
+def app_json(request):
     """Read and write application info with REST API."""
     if request.method == 'GET':
         content = model_to_json(request.app, exclude='secret'.split())
         return HttpResponse(content, mimetype='application/json')
     if request.method == 'PUT':
-        return app_info_put(request)
+        return app_json_put(request)
 
 
-def app_info_put(request):
+def app_json_put(request):
     try:
         parsed = json.loads(request.raw_post_data)
         for key in ('title', ):

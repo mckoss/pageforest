@@ -12,7 +12,8 @@ urlpatterns = patterns('',
 
     # Pageforest applications on subdomains.
     (r'^app/auth/', include('auth.urls')),
-    (r'^app/.app/?$', 'apps.views.app_info'),
-    (r'^app/([A-Za-z0-9\._-]*)/?$', 'documents.views.document'),
-    (r'^app/([A-Za-z0-9\._-]+)/(.+)$', 'storage.views.key_value'),
+    (r'^app/app.json$', 'apps.views.app_json'),
+    (r'^app/docs/([A-Za-z0-9\._-]*)/?$', 'documents.views.document'),
+    (r'^app/docs/([A-Za-z0-9\._-]+)/(.+)$', 'storage.views.key_value'),
+    (r'^app/()([A-Za-z0-9\._/-]*)', 'storage.views.key_value'),
 )
