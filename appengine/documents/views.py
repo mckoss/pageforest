@@ -15,9 +15,6 @@ def document(request, doc_id):
     """
     Get document metadata.
     """
-    if request.app.key().name() == 'meta':
-        result = model_to_json(request.app, exclude=['secret'])
-        return HttpResponse(result, mimetype='application/json')
     request.key_name = '/'.join((request.app_id, doc_id.lower()))
     if request.doc is None:
         raise Http404("Could not find document " + request.key_name)
