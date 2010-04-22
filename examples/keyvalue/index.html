@@ -9,6 +9,8 @@
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript"
         src="http://www.pageforest.com/static/js/namespace.js"></script>
+<script type="text/javascript"
+        src="http://www.pageforest.com/static/js/crypto.js"></script>
 <script type="text/javascript" src="keyvalue.js"></script>
 <script type="text/javascript">
 var keyvalue = global_namespace.import("com.pageforest.keyvalue");
@@ -30,7 +32,7 @@ $(document).ready(function() { $("input.focus:last").focus(); });
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="keyvalue.challenge()" value="Challenge" />
+<input type="button" onclick="keyvalue.getChallenge()" value="Challenge" />
 <input type="button" onclick="keyvalue.login()" value="Login" />
 <input type="button" onclick="keyvalue.logout()" value="Logout" />
 </td>
