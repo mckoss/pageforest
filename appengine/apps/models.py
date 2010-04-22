@@ -44,8 +44,7 @@ class App(Cacheable, Migratable, Timestamped):
         Possible matches are checked in this order:
         * hostname in domains
         * hostname == key_name + '.' + one of settings.DOMAINS
-        * hostname == key_name
-        * create dummy app if settings.DEBUG
+        * create dummy app
         """
         hostname = hostname.lower().split(':')[0]
         app = cls.all().filter('domains', hostname).get()
@@ -56,10 +55,5 @@ class App(Cacheable, Migratable, Timestamped):
                 app = cls.get_by_key_name(hostname[:-len(domain) - 1])
                 if app:
                     return app
-        if '.' not in hostname:
-            app = cls.get_by_key_name(hostname)
-            if app:
-                return app
-        if settings.DEBUG:
-            app_id = hostname.split('.')[0]
-            return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')
+        app_id = hostname.split('.')[0]
+        return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')
