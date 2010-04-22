@@ -15,7 +15,6 @@ JSON_MIME_TYPE = 'application/json'
 
 
 @jsonp
-@login_required
 def key_value(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
@@ -67,7 +66,7 @@ def key_value_put(request):
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
     entity.put()
-    response = HttpResponse('{"status": 200, "statusText": "Saved"}\n',
+    response = HttpResponse('{"status": 200, "statusText": "Saved"}',
                             mimetype='application/json')
     response['Last-Modified'] = http_datetime(entity.modified)
     return response
@@ -79,7 +78,7 @@ def key_value_delete(request):
     if entity is None:
         raise Http404("Could not find entity " + request.key_name)
     entity.delete()
-    return HttpResponse('{"status": 200, "statusText": "Deleted"}\n',
+    return HttpResponse('{"status": 200, "statusText": "Deleted"}',
                         mimetype='application/json')
 
 
@@ -106,7 +105,7 @@ def key_value_push(request):
         value = request.raw_post_data
     length = push_transaction(request, value, max_length)
     return HttpResponse(
-        '{"status": 200, "statusText": "Pushed", "newLength": %d}\n' % length,
+        '{"status": 200, "statusText": "Pushed", "newLength": %d}' % length,
         mimetype=JSON_MIME_TYPE)
 
 

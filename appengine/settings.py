@@ -77,20 +77,33 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
-admin administrator root webmaster www-data postmaster
-test tester testuser testclient staff
+admin administrator root staff
+www www-data webmaster postmaster
+test tester testuser testclient
+friends family public private
+authenticated anonymous unknown noname
+everybody anybody nobody
 """.split()
 
 # Prevent app registration with some special app names.
 RESERVED_APPS = """
-www meta
-ssl static auth login
-blog test doc docs documents list notecomment
+www meta ssl static auth login
+doc docs document documents
+blog list note comment
+test tester testclient testserver
 pageforest pgfrst page
-a b c d e f g h i j k l m n o p  r s t u v w x y z
-app application js javascript
+app apps application applications app_id appid
+css img images js javascript
 google microsoft twitter yahoo facebook fb
 """.split()
+
+# Name of the session cookie for simple request authentication.
+SESSION_COOKIE_NAME = 'sessionkey'
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
+
+# Name of the reauth cookie on auth.app_id.pageforest.com.
+REAUTH_COOKIE_NAME = 'reauth'
+REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -113,7 +126,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'utils.middleware.AppMiddleware',
+    'apps.middleware.AppMiddleware',
+    'documents.middleware.DocMiddleware',
+    'auth.middleware.AuthMiddleware',
 )
 
 ROOT_URLCONF = 'urls'

@@ -49,10 +49,10 @@ def jsonp(func):
         callback = request.GET.get('callback', None)
         if callback and response.status_code == 200:
             content = response.content
-            # Remove or escape newlines.
-            content = content.rstrip('\n').replace('\n', r'\n')
-            # Force valid JSON by adding double quotes if necessary.
             if not probably_valid_json(content):
+                # Remove or escape newlines.
+                content = content.rstrip('\n').replace('\n', r'\n')
+                # Force valid JSON by adding double quotes.
                 content = '"' + content + '"'
             # Add the requested callback function.
             response.content = callback + '(' + content + ')'
