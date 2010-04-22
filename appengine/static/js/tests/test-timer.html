@@ -1,0 +1,141 @@
+<html>
+<head>
+<title>timer.js Unit Tests</title>
+<script>var pfroot = "/";</script>
+<script src="/.static/js/namespace.js"></script>
+<script src="/.static/js/base.js"></script>
+<script src="/.static/js/timer.js"></script>
+<script src="/.static/js/unit.js"></script>
+</head>
+<body>
+<h1><script>document.write(document.title);</script></h1>
+<script>
+var UT = global_namespace.import("org.startpad.unit");
+var Timer = global_namespace.import("org.startpad.timer");
+var ts = new UT.TestSuite();
+ts.DWOutputDiv();
+ts.AddTest("One Shot", function(ut)
+{
+    var c = 0;
+
+    new Timer.Timer(100, Test).Active();
+
+    function Test()
+    {
+        c++;
+        ut.Assert(c == 1, "Multiple calls to oneshot timer.");
+        ut.Async(false);
+    }
+}).Async().Expect(0,1);
+
+ts.AddTest("Sequential Accuracy", function(ut)
+{
+    function Measure(iTest)
+    {
+        this.mst = new Timer.MSTimer();
+        this.iTest = iTest
+    }
+
+    Measure.prototype.Start = function()
+    {
+        this.msTest = 100*this.iTest;
+        this.mst.Reset().Start();
+        this.tm = new Timer.Timer(this.msTest, this.End.FnCallback(this)).Active();
+    }
+
+    Measure.prototype.End = function()
+    {
+        this.mst.Stop();
+        ut.Assert(this.mst.ms > (this.msTest*0.9) && this.mst.ms < (this.msTest*1.1),
+            "Timer accuracy " + this.mst.ms + " vs. " + this.msTest + " " +
+            Math.floor(this.mst.ms/this.msTest*100) + "%");
+        if (--this.iTest > 0)
+            this.Start();
+        else
+            ut.Async(false);
+    }
+
+    var m = new Measure(5);
+    m.Start();
+}).Async(true).Expect(0,5);
+
+ts.AddTest("Concurrent Accuracy", function(ut)
+{
+    var iFinished = 0;
+    function Measure(iTest)
+    {
+        this.mst = new Timer.MSTimer();
+        this.iTest = iTest;
+        return this;
+    }
+
+    Measure.prototype.Start = function()
+    {
+        this.msTest = 100*this.iTest;
+        this.mst.Reset().Start();
+        this.tm = new PF.Timer(this.End.FnCallback(this), this.msTest).Active();
+    }
+
+    Measure.prototype.End = function()
+    {
+        this.mst.Stop();
+        ut.Assert(this.mst.ms > (this.msTest*0.9) && this.mst.ms < (this.msTest*1.1),
+            "Timer accuracy " + this.mst.ms + " vs. " + this.msTest + " " +
+            Math.floor(this.mst.ms/this.msTest*100) + "%");
+        iFinished++;
+        if (iFinished == 5)
+            ut.Async(false);
+    }
+
+    var i;
+    for (i = 1; i <= 5; i++)
+        new Measure(i).Start();
+
+}).Async().Expect(0, 5);
+
+ts.AddTest("Repeat", function(ut)
+{
+    var c = 20;
+    var tm = new PF.Timer(Callback, 100, false).Repeat().Active();
+
+    function Callback()
+    {
+        c--;
+        ut.Assert(c >= 0, "Called after timer canceled");
+
+        if (c == 0)
+            {
+            tm.Active(false);
+            ut.Async(false);
+            }
+    }
+}).Async().Enable(true).Expect(0,20);
+
+ts.AddTest("Restart Timer", function(ut)
+{
+    var c = 0;
+    var tm = new PF.Timer(Start, 100).Active();
+    new PF.Timer(Eval, 500).Active();
+
+    function Start()
+    {
+        if (c == 0)
+            tm.Active();
+        c++;
+        ut.Assert(c <= 2, "Should just call twice");
+    }
+
+    function Eval()
+    {
+        ut.AssertEq(c, 2);
+        ut.Async(false);
+    }
+
+}).Async().Expect(0,3);
+
+ts.Run();
+ts.Report();
+
+</script>
+</body>
+</html>

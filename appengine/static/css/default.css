@@ -1,0 +1,267 @@
+/* Begin file: main.css */
+body {
+    font-family: Arial, san-serif;
+    font-size: 12px;
+    margin: 0;
+    padding: 0;
+    background-color: #E2E2E2;
+}
+
+div.topbar {
+    float: right;
+    width: 220px;
+}
+
+div.topbarLeft {
+    background: url(/.static/images/nav/topbar-left.png) no-repeat scroll;
+    float: left;
+    width: 10px;
+    height: 35px;
+    margin: 0px;
+}
+
+div.topbarMid {
+    background: url(/.static/images/nav/topbar-center.png) repeat-x scroll top;
+    float: left;
+    height: 35px;
+    margin: 0px;
+}
+
+div.topbarRight {
+    background: url(/.static/images/nav/topbar-right.png) no-repeat top right scroll;
+    float: left;
+    width: 10px;
+    height: 35px;
+    margin: 0px;
+}
+
+div.topbarMid a {
+    text-decoration: none;
+    color: #898989;
+    line-height: 28px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.topbarMid a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.tabLeft {
+    background: #ECECEC;
+    float: left;
+    width: 10px;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabLeftSelect {
+    background: url(/.static/images/nav/tab-left.png) no-repeat scroll;
+    font-weight:bold;
+    float: left;
+    width: 10px;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabMiddle {
+    background: #ECECEC;
+    float: left;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabMiddleSelect {
+    background: url(/.static/images/nav/tab-center.png) repeat-x scroll top;
+    font-weight: bold;
+    float: left;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabRight {
+    background: #ECECEC;
+    float: left;
+    width: 10px;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabRightSelect {
+    background: url(/.static/images/nav/tab-right.png) no-repeat top right scroll;
+    font-weight: bold;
+    float: left;
+    width: 10px;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabSpacer {
+    float: left;
+    width: 3px;
+    height: 30px;
+}
+
+div.tabMiddle a {
+    text-decoration: none;
+    color: #898989;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tabMiddleSelect a {
+    text-decoration: none;
+    color: #4D2500;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tabMiddle a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.spacer {
+    height: 10px;
+}
+
+div.spacer2 {
+    height: 20px;
+    width: 100%;
+}
+
+div.breadcrumb {
+    margin: 0 0 18px 125px;
+    background:url(/.static/images/nav/rule-horiz.gif) repeat-x bottom left scroll;
+    padding-bottom: 7px;
+    color: #4D2500;
+}
+
+div.breadcrumb a {
+    text-decoration: none;
+    color: #898989;
+    font-weight: bold;
+}
+
+div.breadcrumb a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.footer {
+    color: #898989;
+    font-size: 11px;
+}
+
+div.footer a {
+    text-decoration: none;
+    color: #898989;
+    font-size: 11px;
+}
+
+div.footer a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.CallToAction {
+    background: url(/.static/images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+}
+
+div.CallToAction p {
+    text-align:center;
+    font-size: 24px;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    padding: 15px;
+}
+
+/* Installation Page */
+#widget input[type=radio] {
+    margin-bottom: 3px;
+}
+
+#widget label {
+    font-size: 11px;
+    font-weight: bold;
+    position: relative;
+    top: -5px;
+}
+
+#widget h2 {
+    font-size: 14px;
+    font-weight: bold;
+    color: #598527;
+    margin: 0 0 5px 0;
+}
+/* Begin file: home.css */
+# Styles used only on the home page
+#home {
+    color: #8C6239;
+    font-size: 14px;
+}
+
+#home p {
+    line-height: 19px;
+    margin: 5px 0 5px 0;
+}
+
+#home h1 {
+    font-size: 24px;
+    color: #4D2500;
+    line-height: 30px;
+    font-weight: normal;
+    margin: 0;
+    position: relative;
+    top: -4px;
+}
+
+#home h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4D2500;
+    margin: 0;
+}
+
+#home div.homeCopy {
+    font-size:14px;
+    width:340px;
+}
+
+#home div.Left {
+    float:left;
+}
+
+#home div.Right {
+    float: right;
+}
+
+#home a {
+    text-decoration: none;
+    color: #598527;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+#home a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+    font-weight: bold;
+}
+
+img.homeScreenLeft {
+    float:left;
+    margin-right: 15px;
+}
+
+img.homeScreenRight {
+    float:right;
+    margin-left:15px;
+}
