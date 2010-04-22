@@ -19,9 +19,6 @@ class AppTestCase(TestCase):
         self.peter = User(key_name='peter', username='Peter')
         self.peter.set_password('SecreT!1')
         self.peter.put()
-        self.meta = App(key_name='meta',
-                        domains=['meta.pageforest.com'])
-        self.meta.put()
         self.app = App(key_name='app',
                        domains=['app.pageforest.com'],
                        secret="SecreT!1")
