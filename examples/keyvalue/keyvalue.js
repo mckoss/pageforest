@@ -19,7 +19,9 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     }
 
     function beforeSend(xhr) {
-        xhr.setRequestHeader("X-Hello", "Good morning");
+        if (ns.sessionKey) {
+            xhr.setRequestHeader("Cookie", "sessionkey=" + ns.sessionKey);
+        }
     }
 
     ns.ajax = function (method) {
@@ -64,6 +66,11 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
                 ns.sessionKey = message;
             }
         });
+    };
+
+    ns.logout = function () {
+        delete ns.sessionKey;
+        $('#results').prepend('<div>deleted session key</div>');
     };
 
 }); // com.pageforest.keyvalue
