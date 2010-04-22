@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block extra-head %}
-<script type="text/javascript" src="/.static/js/registration.js"></script>
+<script type="text/javascript" src="{{MEDIA_URL}}js/registration.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
   var registration = global_namespace.import("com.pageforest.registration");
