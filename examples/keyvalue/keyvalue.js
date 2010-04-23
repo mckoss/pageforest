@@ -1,6 +1,6 @@
 global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
-    var crypto = ns.import("com.googlecode.crypto-js");
+    var crypto = ns.lookup("com.googlecode.crypto-js");
 
     function formatResult(xhr, status, message) {
         return xhr.status + ' ' + xhr.statusText + ' ' +
