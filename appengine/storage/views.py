@@ -58,6 +58,7 @@ def key_value_get(request):
     return response
 
 
+@login_required
 def key_value_put(request):
     """HTTP PUT request handler."""
     value = request.GET.get('value', request.raw_post_data)
@@ -75,6 +76,7 @@ def key_value_put(request):
     return response
 
 
+@login_required
 def key_value_delete(request):
     """HTTP DELETE request handler."""
     entity = KeyValue.get_by_key_name(request.key_name)
@@ -99,6 +101,7 @@ def push_transaction(request, value, max_length):
     return len(array)
 
 
+@login_required
 def key_value_push(request):
     """PUSH method request handler."""
     max_length = get_int(request.GET, 'max', 100, min=0, max=1000)
