@@ -14,7 +14,7 @@ class AuthMiddleware(object):
         if settings.SESSION_COOKIE_NAME not in request.COOKIES:
             return
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-        parts = session_key.split('$')
+        parts = session_key.split(crypto.SEPARATOR)
         if len(parts) != 4:
             return HttpResponseForbidden("Session key must have four parts.")
         # Check the expiration time.
