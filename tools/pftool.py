@@ -24,8 +24,6 @@ def walk_files(args, extensions=None, ignored=None):
     if len(args) == 0:
         args.append(os.getcwd())
 
-    print("args: %r" % args)
-
     for arg in args:
         if os.path.isfile(arg):
             yield arg

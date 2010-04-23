@@ -3,12 +3,12 @@
 import os
 import sys
 from fnmatch import fnmatch
+from optparse import OptionParser, make_option
 
 import pftool
 
-IGNORE_DIR = '.hg .git .bzr .svn'.split()
 IGNORE_EXT = '~ .pyc .gif .png .log .orig'.split()
-IGNORE_FILES = 'jquery-*.js .#*'.split()
+IGNORE_FILES = '*jquery-*.js .#*'.split()
 
 
 def short_path(path):
@@ -57,17 +57,24 @@ def file_ignored(filename):
 
 
 def main():
+    option_list = (
+        make_option('-v', '--verbose', action='store_true'),
+        make_option('-s', '--halt', action='store_true',
+                    help="stop on error"),
+        make_option('-i', '--ignore', action='append',
+                    dest='ignored', metavar="FILENAME",
+                    help="ignore files with this name"),
+        )
+    parser = OptionParser(option_list=option_list,
+        usage="%prog [options] files_or_directories")
+    (options, args) = parser.parse_args()
     errors = 0
-    os.chdir(pftool.root_dir)
-    for dirpath, dirnames, filenames in os.walk(pftool.root_dir):
-        for ignored in IGNORE_DIR:
-            if ignored in dirnames:
-                dirnames.remove(ignored)
-        for filename in filenames:
-            if file_ignored(filename):
-                continue
-            path = os.path.join(dirpath, filename)
-            errors += check(path)
+    for filename in pftool.walk_files(args):
+        if file_ignored(filename):
+            continue
+        if options.verbose:
+            print("checking %s" % filename)
+        errors += check(filename)
     if errors:
         sys.exit('%d errors' % errors)
 
