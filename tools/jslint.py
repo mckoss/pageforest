@@ -93,7 +93,7 @@ def main():
         total_errors += errors
         if options.halt and errors:
             break
-        if options.verbose or options.quiet:
+        if options.verbose or options.quiet and errors > 0:
             print("%s errors: %d" % (filename, errors))
 
     if total_errors:

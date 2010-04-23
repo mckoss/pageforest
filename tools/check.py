@@ -9,15 +9,7 @@ from time import time
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
-PEP8_EXCLUDE = '.hg jsmin.py'.split()
-
-JSLINT_FILES = """
-tools/jslint-cl.js
-appengine/static/js/namespace.js
-appengine/static/js/registration.js
-""".split()
-JSLINT_FILES = [os.path.join(pftool.root_dir, *line.split('/')) \
-                for line in JSLINT_FILES]
+PEP8_EXCLUDE = 'jsmin.py'.split()
 
 total_time = 0.0
 
@@ -79,7 +71,8 @@ def part_callback(option, opt_str, value, parser, *args, **kwargs):
 def main():
     global options
 
-    all_parts = ('whitespace', 'jslint', 'pep8', 'pylint', 'unit')
+    all_parts = ('whitespace', 'jslint-tools', 'jslint',
+                 'pep8', 'pylint', 'unit')
 
     parser = OptionParser(
         usage="%prog [options]")
@@ -104,8 +97,14 @@ def main():
         attempt('white', "python whitespace.py")
     if 'unit' in options.parts:
         attempt('sp-unit', "python settingsparser.py")
+    if 'jslint-tools' in options.parts:
+        attempt('jslint-tools',
+                "python jslint.py --strong " +
+                "--ignore beautify* --ignore fulljslint.js")
     if 'jslint' in options.parts:
-        attempt('jslint', "python jslint.py " + ' '.join(JSLINT_FILES))
+        attempt('jslint', "python jslint.py --weak %s %s" %
+                (os.path.join(pftool.app_dir, 'static', 'js'),
+                 ""))
 
     if 'pylint' in options.parts:
         os.chdir(pftool.app_dir)
