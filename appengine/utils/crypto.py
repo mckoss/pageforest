@@ -3,7 +3,7 @@ import hmac
 import hashlib
 from datetime import datetime
 
-SEPARATOR = '$'
+SEPARATOR = '/'
 BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
 BASE64 = BASE62 + '+/'
 BASE64URL = BASE62 + '-_'
@@ -39,11 +39,11 @@ def join(*args, **kwargs):
     canonical string representation.
 
     >>> join('a', 'b', 'c')
-    'a$b$c'
+    'a/b/c'
     >>> join(1, 2, 3, separator=',')
     '1,2,3'
     >>> join(['a', 'b', 'c'], 'd')
-    'a$b$c$d'
+    'a/b/c/d'
     >>> join(datetime(2010, 4, 19, 9, 24, 56, 123456))
     '2010-04-19T09:24:56Z'
     >>> join(datetime(2010, 4, 19, 9, 24, 56, 987654))
@@ -66,11 +66,11 @@ def join(*args, **kwargs):
     return separator.join(parts)
 
 
-def hash(*args, **kwargs):
+def hmac_sha1(*args, **kwargs):
     """
     The last item in args is the secret key for HMAC.
 
-    >>> hash('a', 'b', 'c', separator=',')
+    >>> hmac_sha1('a', 'b', 'c', separator=',')
     '35f2e8a17d82aa42e207df72ac786c84b98a220f'
     """
     args = list(args)
@@ -87,9 +87,7 @@ def sign(*args, **kwargs):
     'a,b,35f2e8a17d82aa42e207df72ac786c84b98a220f'
     """
     args = list(args)
-    key = args.pop()
-    msg = join(*args, **kwargs)
-    args.append(hmac.new(key, msg, hashlib.sha1).hexdigest())
+    args[-1] = hmac_sha1(*args, **kwargs)
     return join(*args, **kwargs)
 
 
