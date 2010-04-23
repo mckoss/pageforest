@@ -28,7 +28,7 @@ def login(username, password, hostname):
     challenge = urllib2.urlopen(url).read()
     userpass = hmac_sha1(password, username.lower())
     signature = hmac_sha1(userpass, challenge)
-    response = '$'.join((username, challenge, signature))
+    response = '/'.join((username, challenge, signature))
     url = 'http://auth.%s/login/%s' % (hostname, response)
     return urllib2.urlopen(url).read()
 
@@ -94,5 +94,5 @@ if __name__ == '__main__':
         main()
     except urllib2.HTTPError, e:
         print e
-        for line in e.fp.readlines()[:10]:
+        for line in e.fp.readlines()[:140]:
             print line.rstrip()
