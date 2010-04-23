@@ -9,27 +9,32 @@ import re
 
 import pftool
 
-IGNORE_MESSAGES = """
+IGNORED_MESSAGES = {
+    'weak': """
 Unexpected dangling '_' in '_
-Missing space after 'function'.
-json2.js:193:120: Line too long.
-json2.js:194:143: Line too long.
-json2.js:460:81: Line too long.
-The body of a for in should be wrapped in an if statement
-""".strip().splitlines()
+Missing space after '
+Use '===' to compare with
+""".strip().splitlines(),
+
+    'strong': """
+Unexpected dangling '_' in '_
+Missing space after 'function'
+""".strip().splitlines(),
+
+    'strict': """
+""".strip().splitlines(),
+}
 
 
-def ignore(line):
-    for message in IGNORE_MESSAGES:
+def ignore(line, level):
+    for message in IGNORED_MESSAGES[level]:
         if message.rstrip() in line:
             return True
 
 
 def main():
+    levels = ('weak', 'strong', 'strict')
     option_list = (
-        make_option('-l', '--level', type='choice',
-                    choices=('weak', 'strong', 'strict'),
-                    default='strong'),
         make_option('-v', '--verbose', action='store_true'),
         make_option('-s', '--halt', action='store_true',
                     help="stop on error"),
@@ -41,7 +46,15 @@ def main():
         )
     parser = OptionParser(option_list=option_list,
         usage="%prog [options] files_or_directories")
+    for level in levels:
+        parser.add_option('--' + level, action='store_true',
+                          help="set strictness level to " + level)
     (options, args) = parser.parse_args()
+    for level in levels:
+        if getattr(options, level):
+            options.level = level
+    if not hasattr(options, 'level'):
+        options.level = 'strong'
 
     save_dir = os.getcwd()
 
@@ -51,7 +64,8 @@ def main():
 
     command = ['java',
                'org.mozilla.javascript.tools.shell.Main',
-               'jslint-cl.js']
+               'jslint-cl.js',
+               '--' + options.level]
 
     total_errors = 0
     for filename in filenames:
@@ -71,7 +85,7 @@ def main():
         stdout += stderr
         for line in stdout.splitlines():
             line = line.rstrip()
-            if line == '' or ignore(line):
+            if line == '' or ignore(line, options.level):
                 continue
             if not options.quiet:
                 print line

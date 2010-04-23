@@ -9,29 +9,65 @@ load("fulljslint.js");
 (function (a) {
     var e, i, input;
     var options = {
-        'strong': {eqeqeq: false, immed: true, newcap: true, nomen: true,
-                   regexp: false, rhino: true, undef: true, white: true,
-                   maxlen: 80, browser: true}
+        'weak': {
+            browser: true,
+            debug: true,
+            devel: true,
+            forin: true,
+            laxbreak: true,
+            predef: ['global_namespace', '$', 'console', 'window']
+        },
+        'strong': {
+            browser: true,
+            debug: true,
+            devel: true,
+            immed: true,
+            maxlen: 80,
+            newcap: true,
+            nomen: true,
+            predef: ['global_namespace', '$', 'console', 'window'],
+            undef: true,
+            white: true
+        },
+        'strict': {
+            bitwise: true,
+            browser: true,
+            eqeqeq: true,
+            immed: true,
+            maxlen: 80,
+            newcap: true,
+            nomen: true,
+            predef: ['global_namespace', '$', 'console', 'window'],
+            regexp: true,
+            strict: true,
+            undef: true,
+            white: true
+        }
     };
+    var defOption = 'strong';
 
-    if (!a[0]) {
-        print("Usage: jslint.js file.js ...");
+    if (a.length < 1) {
+        print("Usage: jslint.js --weak --strong --strict file.js ...");
         quit(1);
     }
     for (var index = 0; index < a.length; index++) {
         var filename = a[index];
+
+        if (filename.indexOf('--') === 0) {
+            defOption = filename.substr(2);
+            continue;
+        }
         input = readFile(filename);
-        input = "/*global global_namespace, $, console */\n" + input;
         if (!input) {
             print("jslint: Couldn't read " + filename + "");
             quit(1);
         }
-        if (!JSLINT(input, options.strong)) {
+        if (!JSLINT(input, options[defOption])) {
             for (i = 0; i < JSLINT.errors.length; i += 1) {
                 e = JSLINT.errors[i];
                 if (e) {
                     // Adjust line numbers for prefixed comment above
-                    print(filename + ':' + (e.line - 1) + ':' + e.character +
+                    print(filename + ':' + e.line + ':' + e.character +
                           ': ' + e.reason);
                     // print((e.evidence || '').
                     //     replace(/^\s*(\S*(\s+\S+)*)\s*$/, "$1"));

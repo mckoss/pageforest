@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from optparse import OptionParser
+from time import time
 
 import pftool
 
@@ -13,14 +14,33 @@ PEP8_EXCLUDE = '.hg jsmin.py'.split()
 JSLINT_FILES = """
 tools/jslint-cl.js
 appengine/static/js/namespace.js
-appengine/static/js/json2.js
 appengine/static/js/registration.js
 """.split()
 JSLINT_FILES = [os.path.join(pftool.root_dir, *line.split('/')) \
                 for line in JSLINT_FILES]
 
+total_time = 0.0
 
-def attempt(command):
+
+def start_timer():
+    global start_time
+    start_time = time()
+
+
+def end_timer(nick):
+    global start_time
+    global options
+    global total_time
+    t = time() - start_time
+    total_time += t
+    if options.verbose:
+        print("=== %s time: %1.1fs ===" % (nick, t))
+    else:
+        sys.stdout.write("(%1.1fs) " % t)
+        sys.stdout.flush()
+
+
+def attempt(nick, command):
     """
     Run a shell command and exit with error message if it fails.
     """
@@ -29,10 +49,12 @@ def attempt(command):
     if options.verbose:
         print command
     else:
-        sys.stdout.write('.')
+        sys.stdout.write(nick)
         sys.stdout.flush()
+    start_timer()
     logfile = open(LOGFILENAME, 'w')
     returncode = subprocess.call(command.split(), stderr=logfile)
+    end_timer(nick)
     logfile.close()
     if returncode:
         message = "Failed with return code %d" % returncode
@@ -79,29 +101,31 @@ def main():
     os.chdir(pftool.tools_dir)
 
     if 'whitespace' in options.parts:
-        attempt("python whitespace.py")
+        attempt('white', "python whitespace.py")
     if 'unit' in options.parts:
-        attempt("python settingsparser.py")
+        attempt('sp-unit', "python settingsparser.py")
     if 'jslint' in options.parts:
-        attempt("python jslint.py " + ' '.join(JSLINT_FILES))
+        attempt('jslint', "python jslint.py " + ' '.join(JSLINT_FILES))
 
     if 'pylint' in options.parts:
         os.chdir(pftool.app_dir)
-        attempt("python %s -e %s" %
+        attempt('pylint', "python %s -e %s" %
                 (pftool.tool_path('lint.py'), pftool.app_dir))
 
     if 'pep8' in options.parts:
-        attempt("pep8 --count --repeat --exclude %s %s" %
+        attempt('PEP8', "pep8 --count --repeat --exclude %s %s" %
                 (','.join(PEP8_EXCLUDE), pftool.root_dir))
 
     if 'unit' in options.parts:
         os.chdir(pftool.tools_dir)
-        attempt("python %s test -v0" %
+        attempt('ae-unit', "python %s test -v0" %
                 os.path.join(pftool.app_dir, 'manage.py'))
 
     # Add newline after ...
     if not options.verbose:
         print
+
+    print("Total time: %1.1fs" % total_time)
 
 
 if __name__ == '__main__':

@@ -14,8 +14,10 @@ global_namespace.define('com.pageforest.registration', function(ns) {
         var fields = {"username": "username", "email": "email",
                       "password": "password", "repeat": "__all__"};
         for (var name in fields) {
-            $("#validate_" + name).html(
-                html_message(name, message[fields[name]]));
+            if (ns.isOwn(fields, name)) {
+                $("#validate_" + name).html(
+                    html_message(name, message[fields[name]]));
+            }
         }
     }
 
