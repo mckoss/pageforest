@@ -1,5 +1,3 @@
-/*global window, console */
-
 /* Namespace.js
 
    Version 1.0, June 2009
@@ -147,6 +145,7 @@ if (!window.console) {
             return nsCur;
         },
 
+        // TODO: Reserved word!
         'import': function (sPath) {
             return window[sGlobal].define(sPath);
         },
@@ -154,6 +153,10 @@ if (!window.console) {
         'nameOf': function (sInNamespace) {
             sInNamespace = sInNamespace.replace(/-/g, '_');
             return sGlobal + '.' + this._sPath + '.' + sInNamespace;
+        },
+
+        'isOwn': function (object, name) {
+            return Object.prototype.hasOwnProperty.call(object, name);
         }
     });
 }());
