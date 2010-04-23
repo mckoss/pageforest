@@ -75,6 +75,9 @@ def main():
         if options.verbose:
             print("checking %s" % filename)
         errors += check(filename)
+        if options.halt and errors:
+            break
+
     if errors:
         sys.exit('%d errors' % errors)
 
