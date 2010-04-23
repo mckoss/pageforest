@@ -40,6 +40,8 @@ def main():
         make_option('-v', '--verbose', action='store_true'),
         make_option('-s', '--halt', action='store_true',
                     help="stop on error"),
+        make_option('-q', '--quiet', action='store_true',
+                    help="just display error summary"),
         make_option('-i', '--ignore', action='append',
                     dest='ignored', metavar="FILENAME",
                     help="ignore files with this name"),
@@ -58,7 +60,7 @@ def main():
                'org.mozilla.javascript.tools.shell.Main',
                'jslint-cl.js']
 
-    errors = 0
+    total_errors = 0
     for filename in filenames:
         os.chdir(pftool.tools_dir)
         command.append(filename)
@@ -72,19 +74,23 @@ def main():
         os.chdir(save_dir)
 
         # Filter error messages and count errors.
+        errors = 0
         stdout += stderr
         for line in stdout.splitlines():
             line = line.rstrip()
             if line == '' or ignore(line):
                 continue
-            print line
+            if not options.quiet:
+                print line
             errors += 1
+        total_errors += errors
         if options.halt and errors:
             break
-        if options.verbose:
-            print("total errors: %d" % errors)
+        if options.verbose or options.quiet:
+            print("%s errors: %d" % (filename, errors))
 
-    sys.exit("found %d errors" % errors)
+    if total_errors:
+        sys.exit("found %d errors" % total_errors)
 
 
 if __name__ == '__main__':
