@@ -106,16 +106,16 @@ class LoginTest(TestCase):
         """Test challenge and login."""
         # Get a challenge from the server.
         response = self.auth.get('/challenge')
-        self.assertContains(response, '$201')
+        self.assertContains(response, '/201')
         challenge = response.content
         self.assertEqual(len(challenge), 94)
         # Sign the challenge and attempt login.
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username.lower(), signed)
         response = self.auth.get('/login/' + data)
-        self.assertContains(response, 'myapp$peter$201')
+        self.assertContains(response, 'myapp/peter/201')
         cookie = response['Set-Cookie']
-        self.assertTrue(cookie.startswith('reauth=myapp$peter$201'))
+        self.assertTrue(cookie.startswith('reauth=myapp/peter/201'))
         self.assertTrue(cookie.endswith(' GMT'))
         self.assertTrue('; path=/; expires=' in cookie)
 
@@ -145,7 +145,7 @@ class LoginTest(TestCase):
         data = crypto.join(self.peter.username.lower(), signed)
         # First login should be successful.
         response = self.auth.get('/login/' + data)
-        self.assertContains(response, 'myapp$peter$201')
+        self.assertContains(response, 'myapp/peter/201')
         # Replay should fail with 403 Forbidden.
         response = self.auth.get('/login/' + data)
         self.assertContains(response, 'The challenge is unknown.',
