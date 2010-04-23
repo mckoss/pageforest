@@ -93,7 +93,7 @@ ReplaceKeys: function(st, keys)
     return st;
     }
 
-})
+});
 
 //--------------------------------------------------------------------------
 // Some extensions to built-in JavaScript objects (sorry!)

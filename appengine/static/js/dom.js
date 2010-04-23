@@ -146,12 +146,13 @@ ScrollToBottom: function(elt)
 BindIDs: function(aIDs)
         {
         var mParts = {};
+        var i;
 
         // If no array of id's is given, return all ids defined in the document
         if (aIDs === undefined)
                 {
                 var aAll = document.getElementsByTagName("*");
-                for (var i = 0; i < aAll.length; i++)
+                for (i = 0; i < aAll.length; i++)
                         {
                         var elt = aAll[i];
                         if (elt.id && elt.id[0] != '_')
@@ -160,7 +161,7 @@ BindIDs: function(aIDs)
                 return mParts;
                 }
 
-        for (var i = 0; i < aIDs.length; i++)
+        for (i = 0; i < aIDs.length; i++)
                 {
                 var sID = aIDs[i];
                 mParts[sID] = document.getElementById(sID);
@@ -243,7 +244,7 @@ GetElementsByTagClassName: function(oElm, strTagName, strClassName)
                         arrReturnElements.push(oElement);
                         }
                 }
-        return (arrReturnElements)
+        return (arrReturnElements);
         },
 
 GetText: function(elt)

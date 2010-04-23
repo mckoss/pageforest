@@ -15,6 +15,7 @@ load("fulljslint.js");
             devel: true,
             forin: true,
             laxbreak: true,
+            maxerr: 500,
             predef: ['global_namespace', '$', 'console', 'window']
         },
         'strong': {
@@ -22,6 +23,7 @@ load("fulljslint.js");
             debug: true,
             devel: true,
             immed: true,
+            maxerr: 500,
             maxlen: 80,
             newcap: true,
             nomen: true,
@@ -34,6 +36,7 @@ load("fulljslint.js");
             browser: true,
             eqeqeq: true,
             immed: true,
+            maxerr: 500,
             maxlen: 80,
             newcap: true,
             nomen: true,

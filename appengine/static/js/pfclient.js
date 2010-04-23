@@ -30,7 +30,7 @@ HeadScript: function(url)
     //var txt = document.createTextNode("if (console) console.log('" + url + " loaded: ', PF);");
     //script.appendChild(txt);
     //head.appendChild(script);
-    document.write("<script>if (console) console.log('" + url + " loaded: ', PF);</script>")
+    document.write("<script>if (console) console.log('" + url + " loaded: ', PF);</script>");
     },
 
 // Add stylesheet like: <link rel="stylesheet" type="text/css" href="blocks.css"/>
@@ -47,7 +47,7 @@ HeadStyle: function(url)
 
 // Use global, pfroot, as pageforest server location if set
 var pfroot;
-var console;
+
 (function (root)
 {
     var scripts = [
@@ -71,5 +71,5 @@ var console;
         PF.HeadScript(root + scripts[i]);
         }
 
-    PF.HeadStyle(root + "styles/page.css")
+    PF.HeadStyle(root + "styles/page.css");
 })(pfroot || "http://test.pageforest.com/");
