@@ -8,6 +8,12 @@ load("fulljslint.js");
 
 (function (a) {
     var e, i, input;
+    var options = {
+        'strong': {eqeqeq: false, immed: true, newcap: true, nomen: true,
+                   regexp: false, rhino: true, undef: true, white: true,
+                   maxlen: 80, browser: true}
+    };
+
     if (!a[0]) {
         print("Usage: jslint.js file.js ...");
         quit(1);
@@ -20,10 +26,7 @@ load("fulljslint.js");
             print("jslint: Couldn't read " + filename + "");
             quit(1);
         }
-        var options = {eqeqeq: false, immed: true, newcap: true, nomen: true,
-                       regexp: false, rhino: true, undef: true, white: true,
-                       maxlen: 80, browser: true};
-        if (!JSLINT(input, options)) {
+        if (!JSLINT(input, options.strong)) {
             for (i = 0; i < JSLINT.errors.length; i += 1) {
                 e = JSLINT.errors[i];
                 if (e) {

@@ -26,7 +26,11 @@ def attempt(command):
     """
     global options
 
-    print command
+    if options.verbose:
+        print command
+    else:
+        sys.stdout.write('.')
+        sys.stdout.flush()
     logfile = open(LOGFILENAME, 'w')
     returncode = subprocess.call(command.split(), stderr=logfile)
     logfile.close()
@@ -44,14 +48,28 @@ def attempt(command):
         os.unlink(LOGFILENAME)
 
 
+def part_callback(option, opt_str, value, parser, *args, **kwargs):
+    if not hasattr(parser.values, 'parts'):
+        parser.values.parts = []
+    parser.values.parts.append(opt_str[2:])
+
+
 def main():
     global options
+
+    all_parts = ('whitespace', 'jslint', 'pep8', 'pylint', 'unit')
 
     parser = OptionParser(
         usage="%prog [options]")
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-p', '--prompt', action='store_true')
+    for part in all_parts:
+        parser.add_option('--' + part, action='callback',
+                          callback=part_callback,
+                          help="run the %s test (not all checks)" % part)
     (options, args) = parser.parse_args()
+    if not hasattr(options, 'parts'):
+        options.parts = list(all_parts)
 
     if options.prompt:
         yesno = raw_input("Do you want to run check.py? [Y/n] ")
@@ -59,25 +77,31 @@ def main():
             return
 
     os.chdir(pftool.tools_dir)
-    attempt("python whitespace.py")
-    attempt("python settingsparser.py")
 
-    attempt("python jslint.py " + ' '.join(JSLINT_FILES))
+    if 'whitespace' in options.parts:
+        attempt("python whitespace.py")
+    if 'unit' in options.parts:
+        attempt("python settingsparser.py")
+    if 'jslint' in options.parts:
+        attempt("python jslint.py " + ' '.join(JSLINT_FILES))
 
-    # TODO: pylint must be chdir to parent of appengine dir?
-    # reports bug with main.py not found in sys.path
-    os.chdir(pftool.app_dir)
-    attempt("python %s -e %s" %
-            (pftool.tool_path('lint.py'), pftool.app_dir))
+    if 'pylint' in options.parts:
+        os.chdir(pftool.app_dir)
+        attempt("python %s -e %s" %
+                (pftool.tool_path('lint.py'), pftool.app_dir))
 
-    attempt("pep8 --count --repeat --exclude %s %s" %
-            (','.join(PEP8_EXCLUDE), pftool.root_dir))
+    if 'pep8' in options.parts:
+        attempt("pep8 --count --repeat --exclude %s %s" %
+                (','.join(PEP8_EXCLUDE), pftool.root_dir))
 
-    os.chdir(pftool.tools_dir)
-    attempt("python %s test -v0" %
-            os.path.join(pftool.app_dir, 'manage.py'))
+    if 'unit' in options.parts:
+        os.chdir(pftool.tools_dir)
+        attempt("python %s test -v0" %
+                os.path.join(pftool.app_dir, 'manage.py'))
+
+    # Add newline after ...
     if not options.verbose:
-        print  # Newline after .....
+        print
 
 
 if __name__ == '__main__':
