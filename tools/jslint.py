@@ -49,7 +49,6 @@ def main():
     (options, args) = parser.parse_args()
 
     save_dir = os.getcwd()
-    print("save: %r" % save_dir)
 
     filenames = pftool.walk_files(args,
                                   extensions=('js', 'json'),
