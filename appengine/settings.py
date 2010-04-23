@@ -59,6 +59,7 @@ USE_ETAGS = False
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
 DOMAINS = 'pageforest.com pgfrst.com'.split()
+ANALYTICS_CODE = "UA-2072869-6"
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -87,14 +88,15 @@ everybody anybody nobody
 
 # Prevent app registration with some special app names.
 RESERVED_APPS = """
-www meta ssl static auth login
+www meta ssl static auth oauth login
 doc docs document documents
 blog list note comment
 test tester testclient testserver
 pageforest pgfrst page
 app apps application applications app_id appid
-css img images js javascript
+css img images js javascript lib
 google microsoft twitter yahoo facebook fb
+profile
 """.split()
 
 # Name of the session cookie for simple request authentication.
