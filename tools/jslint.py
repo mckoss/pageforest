@@ -46,7 +46,7 @@ def main():
     save_dir = os.getcwd()
 
     filenames = pftool.walk_files(args,
-                                  extensions=('js', 'json'),
+                                  matches=('*.js', '*.json'),
                                   ignored=options.ignored)
 
     command = ['java',
