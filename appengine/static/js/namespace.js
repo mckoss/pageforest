@@ -115,7 +115,7 @@ if (!window.console) {
     var ns = window[sGlobal] = new Namespace(null);
 
     ns.extend(Namespace.prototype, {
-        'define': function (sPath, fnCallback) {
+        define: function (sPath, fnCallback) {
             sPath = sPath.replace(/-/g, '_');
 
             var aPath = sPath.split('.');
@@ -145,17 +145,16 @@ if (!window.console) {
             return nsCur;
         },
 
-        // TODO: Reserved word!
-        'import': function (sPath) {
+        lookup: function (sPath) {
             return window[sGlobal].define(sPath);
         },
 
-        'nameOf': function (sInNamespace) {
+        nameOf: function (sInNamespace) {
             sInNamespace = sInNamespace.replace(/-/g, '_');
             return sGlobal + '.' + this._sPath + '.' + sInNamespace;
         },
 
-        'isOwn': function (object, name) {
+        isOwn: function (object, name) {
             return Object.prototype.hasOwnProperty.call(object, name);
         }
     });

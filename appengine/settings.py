@@ -71,6 +71,7 @@ MEDIA_VERSION = 1
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 # See settingsauto.py for MEDIA_VERSION
 MEDIA_URL = '/static/'
+LIB_URL = '/lib/'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'

@@ -15,8 +15,9 @@ sys.path.insert(0, pftool.app_dir)
 
 import settings
 
-STATIC_DIR = os.path.join(pftool.app_dir, "static")
-SETTINGS_AUTO = os.path.join(pftool.app_dir, "settingsauto.py")
+STATIC_DIR = os.path.join(pftool.app_dir, 'static')
+LIB_DIR = os.path.join(pftool.app_dir, 'lib')
+SETTINGS_AUTO = os.path.join(pftool.app_dir, 'settingsauto.py')
 
 
 def combine_files(settings_dict, overwrite=False, verbose=False):
@@ -26,9 +27,11 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
     """
     for file_type in settings.FILE_GROUPS.keys():
         type_dir = os.path.join(STATIC_DIR, file_type)
+        output_dir = LIB_DIR if file_type == 'js' else type_dir
+        file_ext = '.min.js' if file_type == 'js' else '.' + file_type
 
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
-            output_name = "%s.%s" % (alias, file_type)
+            output_name = alias + file_ext
             alias_key = "%s_%s" % (alias.upper(), file_type.upper())
             digest_key = "%s_DIGEST" % alias_key
             version_key = "%s_VERSION" % alias_key
@@ -40,7 +43,8 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                 settings_dict[version_key] = 0
                 settings_dict[digest_key] = None
 
-            output_file = open(os.path.join(type_dir, output_name), 'w')
+            output_file = open(os.path.join(output_dir, output_name), 'w')
+
             digest = md5()
             for filename in file_list:
                 input_file = open(
@@ -48,24 +52,27 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                     'r')
                 comment = "/* Begin file: %s.%s */\n" % (filename, file_type)
                 content = input_file.read()
+                input_file.close()
                 if file_type == 'js':
                     content = jsmin.jsmin(content) + '\n'
-                input_file.close()
                 content = comment + content
                 digest.update(content)
                 output_file.write(content)
             output_file.close()
             digest = digest.hexdigest()
+
             if overwrite or digest != settings_dict[digest_key]:
                 settings_dict[digest_key] = digest
                 if not overwrite:
                     settings_dict[version_key] += 1
-                versioned_name = "%s-%s.%s" % (alias,
-                                               settings_dict[version_key],
-                                               file_type)
+                versioned_name = "%s-%s%s.%s" % \
+                    (alias,
+                     settings_dict[version_key],
+                     '.min' if file_type == 'js' else '',
+                     file_type)
                 print "Building file: %s" % versioned_name
-                shutil.copyfile(os.path.join(type_dir, output_name),
-                                os.path.join(type_dir, versioned_name))
+                shutil.copyfile(os.path.join(output_dir, output_name),
+                                os.path.join(output_dir, versioned_name))
 
 
 def trim(docstring):

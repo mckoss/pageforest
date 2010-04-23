@@ -15,7 +15,7 @@
 // back Assert's on the unit test object.
 
 global_namespace.define('org.startpad.unit', function (UT) {
-    Timer = UT.import('org.startpad.timer');
+    Timer = UT.lookup('org.startpad.timer');
 
 UT.extend(UT, {
 DW: function(st)

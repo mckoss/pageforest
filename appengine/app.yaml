@@ -17,7 +17,7 @@ handlers:
   static_dir: static
 
 - url: /lib
-  static_dir: static
+  static_dir: lib
 
 - url: /.*
   script: main.py
