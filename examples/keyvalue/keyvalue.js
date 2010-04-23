@@ -4,8 +4,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
     function formatResult(xhr, status, message) {
         return xhr.status + ' ' + xhr.statusText + ' ' +
-            status + ' ' + message + ' ' +
-            xhr.getResponseHeader("X-Echo");
+            status + ' ' + message;
     }
 
     function successCallback(message, status, xhr) {
@@ -28,7 +27,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         var options = {
             type: method,
             url: '/docs/doc/' + $("#id_key").val(),
-            beforeSend: beforeSend,
+            // beforeSend: beforeSend,
             success: successCallback,
             error: errorCallback
         };
@@ -64,11 +63,13 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
             success: function (message) {
                 $('#results').prepend('<div>' + message + '</div>');
                 ns.sessionKey = message;
+                document.cookie = "sessionkey=" + ns.sessionKey;
             }
         });
     };
 
     ns.logout = function () {
+        document.cookie = "sessionkey=expired";
         delete ns.sessionKey;
         $('#results').prepend('<div>deleted session key</div>');
     };
