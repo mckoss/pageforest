@@ -22,9 +22,9 @@ Sample.prototype.Double = function()
 <h1><script>document.write(document.title);</script></h1>
 Note: Be sure pop-ups are not blocked while running this test.
 <script>
-var UT = global_namespace.import("org.startpad.unit");
-var Timer = global_namespace.import("org.startpad.timer");
-var Base = global_namespace.import("org.startpad.base");
+var UT = global_namespace.lookup("org.startpad.unit");
+var Timer = global_namespace.lookup("org.startpad.timer");
+var Base = global_namespace.lookup("org.startpad.base");
 ts = new UT.TestSuite();
 ts.DWOutputDiv();
 </script>

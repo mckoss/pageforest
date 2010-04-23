@@ -10,11 +10,11 @@
 <body>
 <h1><script>document.write(document.title);</script></h1>
 <script>
-var unit = global_namespace.import('org.startpad.unit');
+var unit = global_namespace.lookup('org.startpad.unit');
 var ts = new unit.TestSuite();
 ts.DWOutputDiv();
 
-var vector = global_namespace.import('org.startpad.vector');
+var vector = global_namespace.lookup('org.startpad.vector');
 
 ts.AddTest("Copy", function(ut) {
     a = [1,2,3]

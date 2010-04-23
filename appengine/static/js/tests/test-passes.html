@@ -9,7 +9,7 @@
 <body>
 <h1><script>document.write(document.title);</script></h1>
 <script>
-var UT = global_namespace.import("org.startpad.unit");
+var UT = global_namespace.lookup("org.startpad.unit");
 var ts = new UT.TestSuite();
 ts.DWOutputDiv();
 ts.AddTest("Assert(true)", function (ut) {ut.Assert(true, "Never false");});

@@ -14,6 +14,8 @@ IGNORED_MESSAGES = {
 Unexpected dangling '_' in '_
 Missing space after '
 Use '===' to compare with
+Missing radix parameter.
+Expected '{'
 """.strip().splitlines(),
 
     'strong': """

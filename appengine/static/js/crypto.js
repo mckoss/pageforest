@@ -14,7 +14,7 @@ global_namespace.define("com.googlecode.crypto-js", function () {});
 var base64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 // Global Crypto object
-var Crypto = global_namespace.import("com.googlecode.crypto-js");
+var Crypto = global_namespace.lookup("com.googlecode.crypto-js");
 
 
 // Crypto utilities
@@ -170,7 +170,7 @@ var Binary = charenc.Binary = {
 (function(){
 
 // Shortcuts
-var C = global_namespace.import("com.googlecode.crypto-js"),
+var C = global_namespace.lookup("com.googlecode.crypto-js"),
     util = C.util,
     charenc = C.charenc,
     UTF8 = charenc.UTF8,
@@ -256,7 +256,7 @@ SHA1._blocksize = 16;
 (function(){
 
 // Shortcuts
-var C = global_namespace.import("com.googlecode.crypto-js"),
+var C = global_namespace.lookup("com.googlecode.crypto-js"),
     util = C.util,
     charenc = C.charenc,
     UTF8 = charenc.UTF8,
@@ -295,7 +295,7 @@ C.HMAC = function (hasher, message, key, options) {
 
 (function(){
 
-    var C = global_namespace.import("com.googlecode.crypto-js");
+    var C = global_namespace.lookup("com.googlecode.crypto-js");
 
     // ATTENTION: This uses standard argument order
     // (key first) even though C.HMAC has it wrong.
