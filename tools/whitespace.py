@@ -7,7 +7,6 @@ from optparse import OptionParser, make_option
 
 import pftool
 
-IGNORE_EXT = '~ .pyc .gif .png .log .orig'.split()
 IGNORE_FILES = '*jquery-*.js .#*'.split()
 
 
@@ -47,15 +46,6 @@ def check(path):
     return errors
 
 
-def file_ignored(filename):
-    for ext in IGNORE_EXT:
-        if filename.endswith(ext):
-            return True
-    for pattern in IGNORE_FILES:
-        if fnmatch(filename, pattern):
-            return True
-
-
 def main():
     option_list = (
         make_option('-v', '--verbose', action='store_true'),
@@ -69,9 +59,7 @@ def main():
         usage="%prog [options] files_or_directories")
     (options, args) = parser.parse_args()
     errors = 0
-    for filename in pftool.walk_files(args):
-        if file_ignored(filename):
-            continue
+    for filename in pftool.walk_files(args, ignored=IGNORE_FILES):
         if options.verbose:
             print("checking %s" % filename)
         errors += check(filename)
