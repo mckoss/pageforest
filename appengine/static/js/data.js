@@ -13,7 +13,7 @@ NS.extend(NS, {
     afn: [],
     ifn: 1,
     mMessages: {
-        errBusy: "Call made while another call is in progress.",
+        errBusy: "Call made while another call is in progress."
         },
 
 SetSiteName: function(sName)
@@ -187,7 +187,7 @@ Call: function(objParams, fnCallback)
 
 CallbackName: function()
     {
-    return NS.SGlobalName("afn") + "[" + this.rid + "].Callback"
+    return NS.SGlobalName("afn") + "[" + this.rid + "].Callback";
     },
 
 Callback: function()
@@ -242,7 +242,7 @@ NS.PostData = function(stURL, fnCallback)
     this.stURL = stURL;
     this.fnCallback = fnCallback;
     return this;
-}
+};
 
 NS.PostData.prototype = {
     constructor: NS.PostData,
@@ -281,7 +281,7 @@ Call: function(objParams, fnCallback)
 
     var stb = new Base.StBuf();
     stb.Append("<html><body><form name=\"PostData\" action=\"" + this.stURL + "\" method=\"post\">");
-    for (prop in objParams)
+    for (var prop in objParams)
         {
         var sValue;
         if (!objParams.hasOwnProperty(prop))
@@ -335,7 +335,7 @@ Timeout: function()
 Cancel: function()
     {
     this.sd.Cancel();
-    this.tm.Active(false)
+    this.tm.Active(false);
     }
 }; // NS.PostData
 

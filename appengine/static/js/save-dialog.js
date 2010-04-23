@@ -189,8 +189,8 @@ PostSave: function(info)
 PF.DialogBox = function()
 {
         var stHTML =
-'<div class="pf-pos"><div class="pf-box top"></div><div class="pf-box middle"></div><div class="pf-box bottom">\
-<div></div><div class="pf-buttons"></div><div class="pf-stem"></div></div></div>';
+        '<div class="pf-pos"><div class="pf-box top"></div><div class="pf-box middle"></div><div class="pf-box bottom">'+
+        '<div></div><div class="pf-buttons"></div><div class="pf-stem"></div></div></div>';
 
         // Background for lightbox transparency
         this.divScreen = document.createElement("div");

@@ -76,7 +76,7 @@ Run: function(ts)
         fCaught = true;
         this.fStopFail = false;     // Avoid recursive asserts
         this.e = e;
-        this.Async(0)
+        this.Async(0);
         this.AssertException(this.e, this.stThrows, this.fThrows);
         }
 
@@ -137,7 +137,7 @@ Async: function(dc, msTimeout)
         this.cAsync += dc;
     if (this.cAsync < 0)
         {
-        this.Assert(false, "Test error: unbalanced calls to Async")
+        this.Assert(false, "Test error: unbalanced calls to Async");
         this.cAsync = 0;
         }
 
@@ -260,7 +260,7 @@ AssertEq: function(v1, v2, stNote)
                 {
                 if (v1[i] != v2[i])
                     {
-                    pos += "@" + i + " x" + v1.charCodeAt(i).toString(16) + " != x" + v2.charCodeAt(i).toString(16) + ", "
+                    pos += "@" + i + " x" + v1.charCodeAt(i).toString(16) + " != x" + v2.charCodeAt(i).toString(16) + ", ";
                         break;
                     }
                 }
@@ -320,13 +320,15 @@ AssertTypes: function(obj, mTypes)
         {
         if (!mTypes.hasOwnProperty(prop))
             continue;
-        this.AssertType(obj[prop], mTypes[prop], prop + " should be type " + mTypes[prop])
+        this.AssertType(obj[prop], mTypes[prop], prop + " should be type " + mTypes[prop]);
         }
     },
 
 // Assert that objAll contains all the (top level) properties of objSome
 AssertContains: function(objAll, objSome)
     {
+    var prop;
+
     if (typeof objAll != "object" || typeof objSome != "object")
         {
         this.Assert(false, "AssertContains expects objects: " + typeof objAll + " ~ " + typeof objSome);
@@ -342,8 +344,8 @@ AssertContains: function(objAll, objSome)
             return;
             }
 
-        var map1 = {}
-        for (var prop in objAll)
+        var map1 = {};
+        for (prop in objAll)
             {
             if (!objAll.hasOwnProperty(prop))
                 continue;
@@ -352,7 +354,7 @@ AssertContains: function(objAll, objSome)
                 map1[objAll[prop]] = true;
             }
 
-        for (var prop in objSome)
+        for (prop in objSome)
             {
             if (!objSome.hasOwnProperty(prop))
                 continue;
@@ -371,7 +373,7 @@ AssertContains: function(objAll, objSome)
         return;
         }
 
-    for (var prop in objSome)
+    for (prop in objSome)
         {
         if (!objSome.hasOwnProperty(prop))
             continue;
@@ -474,7 +476,7 @@ NextFn: function()
         }
     catch (e)
         {
-        this.AssertException(e, "", false)
+        this.AssertException(e, "", false);
         }
     },
 
@@ -534,7 +536,7 @@ AddTest: function(stName, fn)
 
     // Global setting - stop all unit tests on first failure.
     if (this.fStopFail)
-        ut.StopFail(true)
+        ut.StopFail(true);
 
     return ut;
     },

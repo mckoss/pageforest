@@ -34,7 +34,7 @@ str_hmac_sha1: function(key, data){ return binb2str(core_hmac_sha1(key, data));}
 NS.sha1_vm_test = function()
 {
   return NS.hex_sha1("abc") == "a9993e364706816aba3e25717850c26c9cd0d89d";
-}
+};
 
 /*
  * Calculate the SHA-1 of an array of big-endian words, and a bit length

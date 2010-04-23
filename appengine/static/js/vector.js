@@ -284,9 +284,11 @@ iRegClosest: function(pt, rc)
 // Others resize one or more edges of the rectangle
 rectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
     {
+    var rcT;
+
     if (iReg == 4)
         {
-        var rcT = ns.add(rc, dpt);
+        rcT = ns.add(rc, dpt);
         if (rcBounds)
             ns.keepInRect(rcT, rcBounds);
         return rcT;
@@ -310,7 +312,7 @@ rectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
         return ns.add(rc, rcDelta);
         }
 
-    var rcT = ApplyDelta(rc, dpt);
+    rcT = ApplyDelta(rc, dpt);
 
     // Ensure the rectangle is not less than the minimum size
     if (!ptSizeMin)
@@ -334,9 +336,10 @@ rectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
 // Returns [i, pt] result
 iPtClosest: function(pt)
     {
-    var d2Min = undefined;
-    var ptClosest = undefined;
-    var iClosest = undefined;
+    var d2Min;
+    var ptClosest;
+    var iClosest;
+    var d2;
 
     var iPt = 0;
     for (var iarg = 1; iarg < arguments.length; iarg++)
@@ -345,7 +348,7 @@ iPtClosest: function(pt)
         // Looks like a single point
         if (typeof v[0] == "number")
             {
-            var d2 = ns.Distance2(pt, v);
+            d2 = ns.Distance2(pt, v);
             if (d2Min == undefined || d2 < d2Min)
                 {
                 d2Min = d2;
@@ -360,7 +363,7 @@ iPtClosest: function(pt)
             for (var i = 0; i < v.length; i++)
                 {
                 vT = v[i];
-                var d2 = ns.Distance2(pt, vT);
+                d2 = ns.Distance2(pt, vT);
                 if (d2Min == undefined || d2 < d2Min)
                     {
                     d2Min = d2;

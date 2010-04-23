@@ -14,8 +14,15 @@ IGNORED_MESSAGES = {
 Unexpected dangling '_' in '_
 Missing space after '
 Use '===' to compare with
-Missing radix parameter.
+Missing radix parameter
 Expected '{'
+Use '!==' to compare with
+Unescaped '-'.
+Use the array literal notation []
+document.write can be a form of eval
+eval is evil
+Expected a 'break' statement before 'case'
+Bad assignment
 """.strip().splitlines(),
 
     'strong': """
