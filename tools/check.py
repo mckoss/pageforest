@@ -10,6 +10,15 @@ import pftool
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
 PEP8_EXCLUDE = '.hg jsmin.py'.split()
 
+JSLINT_FILES = """
+tools/jslint-cl.js
+appengine/static/js/namespace.js
+appengine/static/js/json2.js
+appengine/static/js/registration.js
+""".split()
+JSLINT_FILES = [os.path.join(pftool.root_dir, *line.split('/')) \
+                for line in JSLINT_FILES]
+
 
 def attempt(command):
     """
@@ -17,11 +26,7 @@ def attempt(command):
     """
     global options
 
-    if options.verbose:
-        print command
-    else:
-        sys.stdout.write('.')
-        sys.stdout.flush()
+    print command
     logfile = open(LOGFILENAME, 'w')
     returncode = subprocess.call(command.split(), stderr=logfile)
     logfile.close()
@@ -54,22 +59,22 @@ def main():
             return
 
     os.chdir(pftool.tools_dir)
-    attempt('python whitespace.py')
-    attempt('python settingsparser.py')
-    attempt('python jslint.py')
+    attempt("python whitespace.py")
+    attempt("python settingsparser.py")
+
+    attempt("python jslint.py " + ' '.join(JSLINT_FILES))
 
     # TODO: pylint must be chdir to parent of appengine dir?
     # reports bug with main.py not found in sys.path
     os.chdir(pftool.app_dir)
-    attempt('python %s -e %s' %
-            (os.path.join(pftool.tools_dir, 'lint.py'),
-             pftool.app_dir))
+    attempt("python %s -e %s" %
+            (pftool.tool_path('lint.py'), pftool.app_dir))
 
-    attempt('pep8 --count --repeat --exclude %s %s' %
+    attempt("pep8 --count --repeat --exclude %s %s" %
             (','.join(PEP8_EXCLUDE), pftool.root_dir))
 
     os.chdir(pftool.tools_dir)
-    attempt('python %s test -v0' %
+    attempt("python %s test -v0" %
             os.path.join(pftool.app_dir, 'manage.py'))
     if not options.verbose:
         print  # Newline after .....
