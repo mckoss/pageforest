@@ -9,13 +9,6 @@ import re
 
 import pftool
 
-CHECK_FILES = """
-tools/jslint-cl.js
-appengine/static/js/namespace.js
-appengine/static/js/json2.js
-appengine/static/js/registration.js
-""".split()
-
 IGNORE_MESSAGES = """
 Unexpected dangling '_' in '_
 Missing space after 'function'.
@@ -26,11 +19,11 @@ The body of a for in should be wrapped in an if statement
 """.strip().splitlines()
 
 
-
 def ignore(line):
     for message in IGNORE_MESSAGES:
         if message.rstrip() in line:
             return True
+
 
 def main():
     option_list = (

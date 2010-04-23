@@ -13,6 +13,7 @@ app_dir = os.path.abspath(os.path.join(root_dir, 'appengine'))
 
 reg_ext = re.compile(r".*\.([^\.]+)$")
 
+
 def walk_files(args, extensions=None, ignored=None):
     """ Generator for files listed in args.
 
@@ -45,6 +46,10 @@ def walk_files(args, extensions=None, ignored=None):
                     if ext and ext.group(1) not in extensions:
                         continue
                 yield os.path.join(dirpath, filename)
+
+
+def tool_path(filename):
+    return os.path.join(tools_dir, filename)
 
 
 if __name__ == '__main__':
