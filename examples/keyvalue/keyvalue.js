@@ -53,9 +53,9 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         if (days) {
             var date = new Date();
             date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-            expires = '; expires=' + date.tomGMTString();
+            expires = '; expires=' + date.toGMTString();
         }
-        path = '; path=' + path ? path : '/';
+        path = '; path=' + (path || '/');
         document.cookie = name + '=' + value + expires + path;
     };
 
@@ -67,21 +67,23 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         var password = $('#id_password').val();
         var userpass = crypto.HMAC_SHA1(password, username.toLowerCase());
         var signature = crypto.HMAC_SHA1(userpass, ns.challenge);
-        var reply = username + '/' + ns.challenge + '/' + signature;
         $.ajax({
             dataType: 'jsonp',
-            url: 'http://auth.' + location.host + '/login/' + reply,
+            url: 'http://auth.' + location.host + '/login/' +
+                username + '/' + ns.challenge + '/' + signature,
             success: function (message) {
                 $('#results').prepend('<div>' + message + '</div>');
                 ns.sessionKey = message;
-                ns.setCookie('sessionkey', ns.sessionKey);
+                ns.setCookie('sessionkey', message);
+                console.log(document.cookie);
             }
         });
     };
 
     ns.logout = function () {
-        ns.setCookie('sessionkey', 'expired', -1);
         delete ns.sessionKey;
+        ns.setCookie('sessionkey', 'expired', -1);
+        console.log(document.cookie);
         $('#results').prepend('<div>deleted session key</div>');
     };
 
