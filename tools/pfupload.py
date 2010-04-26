@@ -24,13 +24,13 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login(username, password, hostname):
-    url = 'http://auth.%s/challenge' % hostname
+def login(options):
+    url = 'http://auth.%s/challenge' % options.server
     challenge = urllib2.urlopen(url).read()
-    userpass = hmac_sha1(password, username.lower())
+    userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
-    response = '/'.join((username, challenge, signature))
-    url = 'http://auth.%s/login/%s' % (hostname, response)
+    reply = '/'.join((options.username, challenge, signature))
+    url = 'http://auth.%s/verify/%s' % (options.server, reply)
     return urllib2.urlopen(url).read()
 
 
@@ -42,61 +42,81 @@ def upload(session_key, url, filename):
     print urllib2.urlopen(request).read()
 
 
-def config():
-    username = password = hostname = ''
-    if os.path.exists(CONFIG_FILENAME):
-        parts = open(CONFIG_FILENAME).readline().split('/')
-        if len(parts) > 2 and parts[0] == 'http:' and parts[1] == '':
-            hostname = parts[2]
+def load_config(options):
+    hostname = username = password = ''
+    parts = open(CONFIG_FILENAME).readline().split('/')
+    if len(parts) > 2 and parts[0] == 'http:' and parts[1] == '':
+        hostname = parts[2]
     if '@' in hostname:
         username, hostname = hostname.split('@', 1)
     if ':' in username:
         username, password = username.split(':', 1)
-    if not hostname:
-        hostname = raw_input("Hostname: ")
-    if not username:
-        username = raw_input("Username: ")
-    if not password:
-        from getpass import getpass
-        password = getpass("Password: ")
-    return username, password, hostname
+    options.username = username
+    options.password = password
+    if not options.server:
+        options.server = hostname
 
 
-def save_config(username, password, hostname):
+def save_config(options):
     yesno = raw_input("Save %s file (Y/n)? " % CONFIG_FILENAME) or 'y'
     if yesno.lower().startswith('y'):
         open(CONFIG_FILENAME, 'w').write('http://%s:%s@%s/\n' % (
-                username, password, hostname))
+                options.username, options.password, options.server))
 
 
-def main():
-    usage = "usage: %prog [app.pageforest.com]"
+def config():
+    usage = "usage: %prog [options] [filename] ..."
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
-        help="deploy to this server (default from .url file)")
-    (options, args) = parser.parse_args()
-    username, password, hostname = config()
-    if len(args) == 1 and '.' in args[0]:
-        hostname = args[0]
-    if options.server:
-        hostname = options.server
-    if not os.path.exists(META_FILENAME):
-        sys.exit('Could not find ' + META_FILENAME)
-    session_key = login(username, password, hostname)
-    for dirpath, dirnames, filenames in os.walk('.'):
+        help="deploy to this server (default: read from .url file)")
+    options, args = parser.parse_args()
+    options.username = None
+    options.password = None
+    if os.path.exists(CONFIG_FILENAME):
+        load_config(options)
+    if not options.server:
+        options.server = raw_input("Hostname: ")
+    if not options.username:
+        options.username = raw_input("Username: ")
+    if not options.password:
+        from getpass import getpass
+        options.password = getpass("Password: ")
+    return options, args
+
+
+def upload_file(options, filename):
+    if filename.startswith('.') or filename in IGNORE_FILENAMES:
+        return
+    urlpath = filename.replace('\\', '/')
+    if urlpath.startswith('./'):
+        urlpath = urlpath[2:]
+    url = 'http://%s/%s' % (options.server, urlpath)
+    upload(options.session_key, url, filename)
+
+
+def upload_dir(options, path):
+    for dirpath, dirnames, filenames in os.walk(path):
         for dirname in dirnames:
             if dirname.startswith('.'):
                 dirnames.remove(dirname)
-        urlpath = dirpath.replace('\\', '/') + '/'
-        if urlpath.startswith('./'):
-            urlpath = urlpath[2:]
         for filename in filenames:
-            if filename.startswith('.') or filename in IGNORE_FILENAMES:
-                continue
-            url = 'http://%s/%s%s' % (hostname, urlpath, filename)
-            upload(session_key, url, filename)
+            upload_file(options, dirpath + '/' + filename)
+
+
+def main():
+    options, args = config()
+    if not os.path.exists(META_FILENAME):
+        sys.exit('Could not find ' + META_FILENAME)
+    options.session_key = login(options)
+    if not args:
+        args = ['.']
+    for path in args:
+        if os.path.isdir(path):
+            upload_dir(options, path)
+        elif os.path.isfile(path):
+            upload_file(options, path)
     if not os.path.exists(CONFIG_FILENAME):
-        save_config(username, password, hostname)
+        save_config(options)
 
 
 if __name__ == '__main__':
