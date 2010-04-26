@@ -164,7 +164,7 @@ COMBINE_FILES = not DEBUG
 FILE_GROUPS = {
     'js': {
         'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
-        'widget': ['namespace', 'data', 'widget-ui'],
+        'widget': ['namespace', 'data'],
         },
 
     'css': {
