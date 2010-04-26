@@ -6,6 +6,7 @@ import sys
 import hmac
 import hashlib
 import urllib2
+from optparse import OptionParser
 
 META_FILENAME = 'app.json'
 CONFIG_FILENAME = '.url'
@@ -69,10 +70,19 @@ def save_config(username, password, hostname):
 
 
 def main():
+    usage = "usage: %prog [app.pageforest.com]"
+    parser = OptionParser(usage=usage)
+    parser.add_option('-s', '--server', metavar='<hostname>',
+        help="deploy to this server (default from .url file)")
+    (options, args) = parser.parse_args()
     username, password, hostname = config()
-    session_key = login(username, password, hostname)
+    if len(args) == 1 and '.' in args[0]:
+        hostname = args[0]
+    if options.server:
+        hostname = options.server
     if not os.path.exists(META_FILENAME):
         sys.exit('Could not find ' + META_FILENAME)
+    session_key = login(username, password, hostname)
     for dirpath, dirnames, filenames in os.walk('.'):
         for dirname in dirnames:
             if dirname.startswith('.'):
