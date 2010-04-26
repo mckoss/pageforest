@@ -42,9 +42,11 @@ def combined_files(request):
     for file_type in settings.FILE_GROUPS.keys():
         template_key = "%s_files" % file_type
         result[template_key] = {}
-        combined_path = settings.LIB_URL if file_type == 'js' else \
-            settings.MEDIA_URL + file_type + '/'
-        file_ext = '.min.js' if file_type == 'js' else '.' + file_type
+        combined_path = settings.MEDIA_URL + file_type + '/'
+        file_ext = '.' + file_type
+        if file_type == 'js':
+            combined_path = settings.LIB_URL
+            file_ext = '.min.js'
 
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
             result[template_key][alias] = []
