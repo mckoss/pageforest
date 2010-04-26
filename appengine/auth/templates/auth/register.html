@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block extra-head %}
+<script type="text/javascript" src="{{MEDIA_URL}}js/registration.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+  var registration = global_namespace.import("com.pageforest.registration");
+  registration.document_ready();
+});
+</script>
+{% endblock %}
+
+{% block title %}Registration{% endblock %}
+
+{% block content %}
+<form method="post">
+<table>
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td id="validate_{{ field.html_name }}">{{ field.errors.0 }}</td>
+</tr>
+{% endfor %}
+<tr><td></td><td><input type="submit" /></td></tr>
+</table>
+</form>
+{% endblock %}

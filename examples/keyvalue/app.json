@@ -1,0 +1,6 @@
+{
+"title": "Key-Value Storage API Demo",
+"domains": ["keyvalue.pageforest.com", "keyvalue.localhost"],
+"writers": ["jcrocholl"],
+"readers": ["anybody"]
+}
