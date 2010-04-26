@@ -10,7 +10,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         if (status) {
             result += status + ' ';
         }
-        result += JSON.stringify(message);
+        result += message;
         return result;
     }
 
