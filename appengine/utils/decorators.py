@@ -1,5 +1,6 @@
 import time
 import email
+import httplib
 
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.utils import simplejson as json
@@ -45,15 +46,28 @@ def jsonp(func):
     """
     def wrapper(request, *args, **kwargs):
         response = func(request, *args, **kwargs)
+        # Check if the query string contains a callback parameter.
         callback = request.GET.get('callback', None)
-        if callback and response.status_code == 200:
-            content = response.content
-            if response['Content-Type'] != 'application/json':
-                content = content.rstrip('\n')  # Remove trailing newlines.
-                content = json.dumps(content)   # Encode to valid JSON string.
-            # Add the requested callback function.
-            response.content = callback + '(' + content + ')'
-            response['Content-Type'] = 'application/javascript'
+        if not callback:
+            return response
+        content = response.content
+        # Tunnel HTTP errors using status code 200.
+        if response.status_code / 100 != 2:
+            content = json.dumps({
+                "__class__": "Error",
+                "status": response.status_code,
+                "statusText": httplib.responses[response.status_code],
+                "message": content,
+                }, sort_keys=True, indent=0)
+            response.status_code = 200
+            response['Content-Type'] = 'application/json'
+        # Encode arbitrary strings as valid JSON.
+        if response['Content-Type'] != 'application/json':
+            content = content.rstrip('\n')  # Remove trailing newlines.
+            content = json.dumps(content)   # Encode to valid JSON string.
+        # Add the requested callback function.
+        response.content = callback + '(' + content + ')'
+        response['Content-Type'] = 'application/javascript'
         return response
     return wrapper
 
