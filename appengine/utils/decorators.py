@@ -2,10 +2,9 @@ import time
 import email
 
 from django.http import HttpResponse, HttpResponseNotAllowed
+from django.utils import simplejson as json
 
 from google.appengine.ext import db
-
-from utils.json import probably_valid_json
 
 
 def run_in_transaction(func):
@@ -49,11 +48,9 @@ def jsonp(func):
         callback = request.GET.get('callback', None)
         if callback and response.status_code == 200:
             content = response.content
-            if not probably_valid_json(content):
-                # Remove or escape newlines.
-                content = content.rstrip('\n').replace('\n', r'\n')
-                # Force valid JSON by adding double quotes.
-                content = '"' + content + '"'
+            if response['Content-Type'] != 'application/json':
+                content = content.rstrip('\n')  # Remove trailing newlines.
+                content = json.dumps(content)   # Encode to valid JSON string.
             # Add the requested callback function.
             response.content = callback + '(' + content + ')'
             response['Content-Type'] = 'application/javascript'
