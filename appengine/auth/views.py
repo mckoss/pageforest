@@ -46,8 +46,11 @@ def challenge(request):
 
 @jsonp
 @method_required('GET')
-def login(request, signature):
-    """User login after challenge."""
+def verify(request, signature):
+    """
+    Check the challenge signature with the shared user secret.
+    If successful, return a session key and re-auth cookie.
+    """
     parts = signature.split(crypto.SEPARATOR)
     # Check that the request data contains five parts.
     if len(parts) != 5:
