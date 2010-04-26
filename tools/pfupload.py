@@ -34,14 +34,6 @@ def login(options):
     return urllib2.urlopen(url).read()
 
 
-def upload(session_key, url, filename):
-    data = open(filename).read()
-    request = PutRequest(url, data)
-    request.add_header('Cookie', 'sessionkey=' + session_key)
-    print url
-    print urllib2.urlopen(request).read()
-
-
 def load_config(options):
     hostname = username = password = ''
     parts = open(CONFIG_FILENAME).readline().split('/')
@@ -85,13 +77,15 @@ def config():
 
 
 def upload_file(options, filename):
-    if filename.startswith('.') or filename in IGNORE_FILENAMES:
-        return
     urlpath = filename.replace('\\', '/')
     if urlpath.startswith('./'):
         urlpath = urlpath[2:]
     url = 'http://%s/%s' % (options.server, urlpath)
-    upload(options.session_key, url, filename)
+    data = open(filename).read()
+    request = PutRequest(url, data)
+    request.add_header('Cookie', 'sessionkey=' + options.session_key)
+    print url
+    print urllib2.urlopen(request).read()
 
 
 def upload_dir(options, path):
@@ -100,6 +94,10 @@ def upload_dir(options, path):
             if dirname.startswith('.'):
                 dirnames.remove(dirname)
         for filename in filenames:
+            if filename.startswith('.'):
+                continue
+            if filename in IGNORE_FILENAMES:
+                continue
             upload_file(options, dirpath + '/' + filename)
 
 
