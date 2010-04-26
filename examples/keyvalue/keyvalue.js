@@ -3,24 +3,43 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     var crypto = ns.lookup("com.googlecode.crypto-js");
 
     function formatResult(xhr, status, message) {
-        return xhr.status + ' ' + xhr.statusText + ' ' +
-            status + ' ' + JSON.stringify(message);
+        var result = '';
+        if (xhr) {
+            result += xhr.status + ' ' + xhr.statusText + ' ';
+        }
+        if (status) {
+            result += status + ' ';
+        }
+        result += JSON.stringify(message);
+        return result;
     }
 
     function successCallback(message, status, xhr) {
         $('#results').prepend('<div style="color:#080">' +
-                              formatResult(xhr, status, message) + '</div>');
+                              formatResult(xhr, status, message) +
+                              '</div>');
     }
 
     function errorCallback(xhr, status, error) {
         $('#results').prepend('<div style="color:#800">' +
-                              formatResult(xhr, status, error) + '</div>');
+                              formatResult(xhr, status, error) +
+                              '</div>');
+    }
+
+    function verifyCallback(message) {
+        if (message.__class__ == 'Error') {
+            errorCallback(message, 'Error', message.message);
+            return;
+        }
+        ns.sessionKey = message;
+        ns.setCookie('sessionkey', message);
+        successCallback(message);
     }
 
     ns.ajax = function (method) {
         var options = {
             type: method,
-            dataType: 'json',
+            dataType: 'text',
             url: '/docs/doc/' + $("#id_key").val(),
             success: successCallback,
             error: errorCallback
@@ -36,9 +55,8 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
             dataType: 'jsonp',
             url: 'http://auth.' + location.host + '/challenge',
             success: function (message) {
-                $('#results').prepend('<div style="color:#080">' +
-                                      message + '</div>');
                 ns.challenge = message;
+                successCallback(message);
             }
         });
     };
@@ -55,26 +73,14 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
             dataType: 'jsonp',
             url: 'http://auth.' + location.host + '/verify/' +
                 username + '/' + ns.challenge + '/' + signature,
-            success: function (message) {
-                if (message.__class__ == 'Error') {
-                    errorCallback(message, 'Error', message.message);
-                    return;
-                }
-                ns.sessionKey = message;
-                ns.setCookie('sessionkey', message);
-                // console.log(document.cookie);
-                $('#results').prepend('<div style="color:#080">' +
-                                      message + '</div>');
-            }
+            success: verifyCallback
         });
     };
 
     ns.forget = function () {
         delete ns.sessionKey;
         ns.setCookie('sessionkey', 'expired', -1);
-        // console.log(document.cookie);
-        $('#results').prepend('<div style="color:#080">' +
-                              'deleted session key</div>');
+        successCallback('deleted session key');
     };
 
     ns.setCookie = function (name, value, days, path) {
