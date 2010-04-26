@@ -17,17 +17,11 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
                               formatResult(xhr, status, error) + '</div>');
     }
 
-    function beforeSend(xhr) {
-        if (ns.sessionKey) {
-            xhr.setRequestHeader("Cookie", "sessionkey=" + ns.sessionKey);
-        }
-    }
-
     ns.ajax = function (method) {
         var options = {
             type: method,
+            dataType: 'text',
             url: '/docs/doc/' + $("#id_key").val(),
-            // beforeSend: beforeSend,
             success: successCallback,
             error: errorCallback
         };
@@ -72,10 +66,10 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
             url: 'http://auth.' + location.host + '/login/' +
                 username + '/' + ns.challenge + '/' + signature,
             success: function (message) {
-                $('#results').prepend('<div>' + message + '</div>');
                 ns.sessionKey = message;
                 ns.setCookie('sessionkey', message);
-                console.log(document.cookie);
+                // console.log(document.cookie);
+                $('#results').prepend('<div>' + message + '</div>');
             }
         });
     };
@@ -83,7 +77,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     ns.logout = function () {
         delete ns.sessionKey;
         ns.setCookie('sessionkey', 'expired', -1);
-        console.log(document.cookie);
+        // console.log(document.cookie);
         $('#results').prepend('<div>deleted session key</div>');
     };
 
