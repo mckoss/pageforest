@@ -151,7 +151,6 @@ INSTALLED_APPS = (
     # 'django.contrib.sites',
     'auth',
     'apps',
-    'demo',
     'documents',
     'storage',
     'dashboard',

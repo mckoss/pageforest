@@ -7,7 +7,6 @@ urlpatterns = patterns('',
     (r'^terms-of-service$', direct_to_template, {'template': 'tos.html'}),
 
     (r'^auth/', include('auth.urls')),
-    (r'^demo/', include('demo.urls')),
     (r'^dashboard/', include('dashboard.urls')),
 
     # Pageforest applications on subdomains.
