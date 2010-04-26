@@ -55,10 +55,11 @@ def main():
         help="ignore errors from check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
     dash_v = options.verbose and '-v' or ''
-    # Check coding style and unit tests.
     os.chdir(pftool.tools_dir)
+    # Update auto-generated files (combined and minified JS and CSS).
     if os.system('python build.py ' + dash_v):
         sys.exit('build failed')
+    # Check coding style and unit tests.
     if not options.ignore and os.system('python check.py ' + dash_v):
         sys.exit('check failed')
     # Load app.yaml from disk.
