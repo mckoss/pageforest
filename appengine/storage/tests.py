@@ -28,7 +28,7 @@ class AppTestCase(TestCase):
         challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
-        session_key = self.auth.get('/login/' + data).content
+        session_key = self.auth.get('/verify/' + data).content
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
 
@@ -137,7 +137,7 @@ class HostTest(AppTestCase):
         challenge = self.auth.get('/challenge').content
         signed = crypto.sign(challenge, self.peter.password)
         data = crypto.join(self.peter.username, signed)
-        session_key = self.other_auth.get('/login/' + data).content
+        session_key = self.other_auth.get('/verify/' + data).content
         self.other_client = Client(HTTP_HOST=self.other.domains[0])
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
 
