@@ -64,7 +64,6 @@ ANALYTICS_CODE = "UA-2072869-6"
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = ''
-MEDIA_VERSION = 1
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
@@ -159,7 +158,7 @@ INSTALLED_APPS = (
 
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
-#COMBINE_FILES = True
+COMBINE_FILES = True
 FILE_GROUPS = {
     'js': {
         'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],

@@ -5,7 +5,6 @@ import sys
 from optparse import OptionParser
 import subprocess
 import shutil
-from hashlib import md5
 
 import pftool
 import jsmin
@@ -27,25 +26,26 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
     """
     for file_type in settings.FILE_GROUPS.keys():
         type_dir = os.path.join(STATIC_DIR, file_type)
-        output_dir = LIB_DIR if file_type == 'js' else type_dir
-        file_ext = '.min.js' if file_type == 'js' else '.' + file_type
+        if file_type == 'js':
+            version = settings_dict['JS_VERSION']
+            file_ext = '.min.js'
+            output_root = LIB_DIR
+        else:
+            version = settings_dict['MEDIA_VERSION']
+            file_ext = '.' + file_type
+            output_root = STATIC_DIR
+
+        output_dir = os.path.join(output_root, version)
+        levels = version.split('.')
 
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
             output_name = alias + file_ext
-            alias_key = "%s_%s" % (alias.upper(), file_type.upper())
-            digest_key = "%s_DIGEST" % alias_key
-            version_key = "%s_VERSION" % alias_key
 
             if verbose:
                 print "Processing %s." % output_name
 
-            if version_key not in settings_dict:
-                settings_dict[version_key] = 0
-                settings_dict[digest_key] = None
-
             output_file = open(os.path.join(output_dir, output_name), 'w')
 
-            digest = md5()
             for filename in file_list:
                 input_file = open(
                     os.path.join(type_dir, "%s.%s" % (filename, file_type)),
@@ -56,23 +56,18 @@ def combine_files(settings_dict, overwrite=False, verbose=False):
                 if file_type == 'js':
                     content = jsmin.jsmin(content) + '\n'
                 content = comment + content
-                digest.update(content)
                 output_file.write(content)
             output_file.close()
-            digest = digest.hexdigest()
 
-            if overwrite or digest != settings_dict[digest_key]:
-                settings_dict[digest_key] = digest
-                if not overwrite:
-                    settings_dict[version_key] += 1
-                versioned_name = "%s-%s%s.%s" % \
-                    (alias,
-                     settings_dict[version_key],
-                     '.min' if file_type == 'js' else '',
-                     file_type)
-                print "Building file: %s" % versioned_name
+            # Copy latest version in each of the parent version folders
+            for level in range(1, len(levels)):
+                copy_path = os.path.join(output_root,
+                                         '.'.join(levels[:level]),
+                                         output_name)
+                if verbose:
+                    print("Copying file to %s" % copy_path)
                 shutil.copyfile(os.path.join(output_dir, output_name),
-                                os.path.join(output_dir, versioned_name))
+                                copy_path)
 
 
 def trim(docstring):
@@ -106,6 +101,41 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 
+def ensure_version_dirs(root, name, max_depth, options, settings_dict):
+    """Make sure the versioned directories exists.
+
+    e.g., ensure_dir(root, '1.0.5', 3)
+
+    will ensure that all directories:
+
+        root/1
+        root/1.0
+        root/1.0.5
+
+    all exist or are created.
+    """
+    version = getattr(options, name + '_version', None)
+    if version is None:
+        version = settings_dict.get(name.upper() + "_VERSION", None)
+    if version is None:
+        levels = []
+    else:
+        levels = version.split('.')
+    levels.extend(['0' for i in range(max_depth - len(levels))])
+    if len(levels) > max_depth:
+        sys.exit("Version number too long: %s", version)
+
+    for level in range(1, max_depth + 1):
+        path = os.path.join(root, '.'.join(levels[:level]))
+        print("path: %s" % path)
+        if not os.path.isdir(path):
+            if options.verbose:
+                print("Creating directory: %s" % path)
+            os.mkdir(path)
+
+    settings_dict[name.upper() + "_VERSION"] = '.'.join(levels)
+
+
 def main():
     """
     Builds deployment files for pageforest.com.
@@ -119,6 +149,10 @@ def main():
         description=trim(main.__doc__))
     parser.add_option('-o', '--overwrite', action='store_true',
         help="overwrite the current file version regardless of digest hash")
+    parser.add_option('--js_version', action='store',
+        help="set the current json version number - format: n.n.n")
+    parser.add_option('--media_version', action='store',
+        help="set the current media version number - format: n.n")
     parser.add_option('-v', '--verbose', action='store_true')
     (options, args) = parser.parse_args()
 
@@ -127,6 +161,9 @@ def main():
     settings_auto = open(SETTINGS_AUTO, 'r')
     settings_dict = settingsparser.load(settings_auto.read())
     settings_auto.close()
+
+    ensure_version_dirs(LIB_DIR, 'js', 3, options, settings_dict)
+    ensure_version_dirs(STATIC_DIR, 'media', 1, options, settings_dict)
 
     combine_files(settings_dict,
                   overwrite=options.overwrite,

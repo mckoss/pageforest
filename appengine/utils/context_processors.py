@@ -42,22 +42,21 @@ def combined_files(request):
     for file_type in settings.FILE_GROUPS.keys():
         template_key = "%s_files" % file_type
         result[template_key] = {}
-        combined_path = settings.MEDIA_URL + file_type + '/'
-        file_ext = '.' + file_type
         if file_type == 'js':
-            combined_path = settings.LIB_URL
+            combined_path = settings.LIB_URL + settingsauto.JS_VERSION + '/'
             file_ext = '.min.js'
+        else:
+            combined_path = settings.MEDIA_URL + settingsauto.MEDIA_VERSION + \
+                '/' + file_type + '/'
+            file_ext = '.' + file_type
 
         for alias, file_list in settings.FILE_GROUPS[file_type].items():
             result[template_key][alias] = []
-            # TODO: MEDIA_VERSION is wrong - use settingsauto...
             if settings.COMBINE_FILES:
-                version_key = alias.upper() + '_' + file_type.upper() + \
-                    '_VERSION'
-                file_version = getattr(settingsauto, version_key)
-                result[template_key][alias].append("%s%s-%s%s" %
-                   (combined_path, alias, file_version, file_ext))
+                result[template_key][alias].append("%s%s%s" %
+                   (combined_path, alias, file_ext))
             else:
+                # Return list of raw files in the source location
                 for filename in file_list:
                     result[template_key][alias].append("%s%s/%s.%s" %
                        (settings.MEDIA_URL, file_type, filename, file_type))
