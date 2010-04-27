@@ -28,16 +28,19 @@ $(document).ready(function() { $("input.focus:last").focus(); });
 </tr>
 <tr>
 <th><label for="id_doc">Doc:</label></th>
-<td><input id="id_doc" type="text" name="doc" class="focus" /></td>
+<td><input id="id_doc" type="text" name="doc" value="doc" class="focus" /></td>
 </tr>
 <tr>
 <th><label for="id_key">Key:</label></th>
-<td><input id="id_key" type="text" name="key" /></td>
+<td><input id="id_key" type="text" name="key" value="key" /></td>
 </tr>
 <tr>
 <th><label for="id_value">Value:</label></th>
-<td><textarea id="id_value" name="value"
-style="width:400px; height:100px"></textarea></td>
+<td><textarea id="id_value" name="value" style="width:400px; height:100px">
+{
+"value": 123
+}
+</textarea></td>
 </tr>
 <tr>
 <th></th>
