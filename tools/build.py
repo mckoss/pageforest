@@ -40,11 +40,15 @@ def combine_files(file_dict, output_root, version, verbose=False):
         for alias, file_list in file_dict[file_type].items():
             output_name = alias + file_ext
             output_path = os.path.join(output_dir, output_name)
+            if file_type == 'js':
+                raw_output_path = os.path.join(output_dir, alias + '.js')
 
             if verbose:
-                print "Building %s." % output_path
+                print("Building %s" % output_path)
 
             output_file = open(output_path, 'w')
+            if file_type == 'js':
+                raw_output_file = open(raw_output_path, 'w')
 
             for filename in file_list:
                 input_file = open(
@@ -54,22 +58,27 @@ def combine_files(file_dict, output_root, version, verbose=False):
                 content = input_file.read()
                 input_file.close()
                 if file_type == 'js':
+                    raw_output_file.write(comment + content)
                     content = jsmin.jsmin(content) + '\n'
-                content = comment + content
-                output_file.write(content)
+                output_file.write(comment + content)
 
             output_file.close()
+            if file_type == 'js':
+                raw_output_file.close()
 
             # Copy latest version in each of the parent version folders
             for level in range(1, len(levels)):
-                copy_path = os.path.join(output_root,
+                copy_dir = os.path.join(output_root,
                                          '.'.join(levels[:level]),
-                                         file_type,
-                                         output_name)
+                                         file_type)
                 if verbose:
-                    print("Copying to %s" % copy_path)
+                    print("Copying to %s" % copy_dir)
                 shutil.copyfile(os.path.join(output_dir, output_name),
-                                copy_path)
+                                os.path.join(copy_dir, output_name))
+
+                if file_type == 'js':
+                    shutil.copyfile(os.path.join(output_dir, alias + '.js'),
+                                    os.path.join(copy_dir, alias + '.js'))
 
 
 def trim(docstring):
