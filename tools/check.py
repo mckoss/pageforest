@@ -103,7 +103,7 @@ def main():
                 "--ignore beautify* --ignore fulljslint.js")
     if 'jslint' in options.parts:
         attempt('jslint', "python jslint.py --weak " +
-                os.path.join(pftool.app_dir, 'static', 'js'))
+                os.path.join(pftool.app_dir, 'static', 'src', 'js'))
 
     if 'pylint' in options.parts:
         os.chdir(pftool.app_dir)
