@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.shortcuts import redirect
 from django.http import HttpResponse, HttpResponseForbidden, Http404
+from django.utils import simplejson as json
 
-from google.appengine.api import memcache
+from google.appengine.api import memcache, quota
 from google.appengine.runtime import DeadlineExceededError
 
 from utils.decorators import jsonp, method_required
@@ -109,12 +110,19 @@ def poll(request, token):
     Get the session key for this token, wait up to 30 seconds until it
     becomes available.
     """
+    started = time.time()
+    seconds = int(request.GET.get('seconds', '30'))
     memcache_key = 'auth.poll~' + token
     try:
-        for attempt in xrange(20):
+        for attempt in xrange(seconds + 1):
+            if attempt:
+                time.sleep(1)  # One second.
             session_key = memcache.get(memcache_key)
             if session_key:
                 return HttpResponse(session_key, mimetype="text/plain")
-            time.sleep(3)  # Three seconds.
     except DeadlineExceededError:
-        raise Http404("Timeout, please try again.")
+        pass
+    return HttpResponse(json.dumps({
+                "seconds": time.time() - started,
+                "megacycles": quota.get_request_cpu_usage(),
+                }), mimetype='application/json')
