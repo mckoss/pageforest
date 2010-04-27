@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from optparse import OptionParser
+from datetime import datetime
 
 import pftool
 
@@ -39,29 +40,36 @@ def update_app_yaml(lines, **kwargs):
 
 
 def main():
-    usage = "usage: %prog [options]"
+    usage = 'usage: %prog [options] [version | "today"]'
     parser = OptionParser(usage=usage)
     parser.add_option('-a', '--application',
         default='pageforest', metavar='<name>',
         help="override app name in app.yaml (default: pageforest)")
-    parser.add_option('-V', '--version',
-        default='dev', metavar='<string>',
+    parser.add_option('-V', '--version', metavar='<string>',
         help="override version in app.yaml (default: dev)")
     parser.add_option('-v', '--verbose', action='store_true',
         help="show more output")
-    parser.add_option('-c', '--check', action='store_true',
-        help="run tests but don't deploy to Google App Engine")
-    parser.add_option('-i', '--ignore', action='store_true',
-        help="ignore errors from check.py - USE WITH CAUTION")
+    parser.add_option('-n', '--nocheck', action='store_true',
+        help="deploy without running check.py - USE WITH CAUTION")
     (options, args) = parser.parse_args()
+    # Accept deployment version on command line without -V option.
+    if len(args) == 1 and not options.version:
+        options.version = args[0]
+    elif args:
+        parser.error("Unexpected command line arguments.")
+    if not options.version:
+        options.version = 'dev'
+    elif options.version == 'today':
+        options.version = datetime.now().strftime('%Y-%m-%d')
     dash_v = options.verbose and '-v' or ''
     os.chdir(pftool.tools_dir)
     # Update auto-generated files (combined and minified JS and CSS).
     if os.system('python build.py ' + dash_v):
         sys.exit('build failed')
     # Check coding style and unit tests.
-    if not options.ignore and os.system('python check.py ' + dash_v):
-        sys.exit('check failed')
+    if not options.nocheck:
+        if os.system('python check.py ' + dash_v):
+            sys.exit('check failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
     # Temporarily adjust application and version in app.yaml.
