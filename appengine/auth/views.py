@@ -110,6 +110,19 @@ def verify(request, signature):
 
 @jsonp
 @method_required('GET')
+def reauth(request):
+    return HttpResponseForbidden('No reauth cookie', mimetype="text/plain")
+    return HttpResponse('Reauthenticated', mimetype="text/plain")
+
+
+@jsonp
+@method_required('GET')
+def sign_in(request):
+    return HttpResponse('Signed in', mimetype="text/plain")
+
+
+@jsonp
+@method_required('GET')
 def poll(request, token):
     """
     Get the session key for this token, wait up to 30 seconds until it

@@ -8,6 +8,8 @@ urlpatterns = patterns(
     (r'^sign-out$', 'sign_out'),
 
     # API's
+    (r'^reauth$', 'reauth'),
+    (r'^sign-in$', 'sign_in'),
     (r'^validate$', 'validate'),
     (r'^challenge$', 'challenge'),
     (r'^verify/(.+)$', 'verify'),
