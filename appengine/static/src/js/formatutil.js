@@ -1,4 +1,4 @@
-global_namespace.define('startpad.format-util', function(NS) {
+global_namespace.define('org.startpad.format-util', function(NS) {
 
 NS.extend(NS, {
 // Convert and digits in d to thousand-separated digits

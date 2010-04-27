@@ -1,7 +1,6 @@
-{% extends "base.html" %}
+{% extends "page.html" %}
 
 {% block extra-head %}
-<script type="text/javascript" src="{{MEDIA_URL}}js/registration.js"></script>
 <script type="text/javascript">
 $(document).ready(function() {
   var registration = global_namespace.import("com.pageforest.registration");
@@ -12,7 +11,7 @@ $(document).ready(function() {
 
 {% block title %}Registration{% endblock %}
 
-{% block content %}
+{% block left-column %}
 <form method="post">
 <table>
 {% for field in form %}

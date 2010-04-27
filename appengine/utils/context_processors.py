@@ -30,6 +30,15 @@ def safe_settings(request):
     result = {}
     for name in SAFE_SETTINGS:
         result[name] = getattr(settings, name)
+
+    domain = request.get_host()
+    parts = domain.split('.')
+    if parts[-1] == '.com':
+        domain = '.'.join(parts[-2:])
+    else:
+        domain = parts[-1]
+    result['DOMAIN'] = domain
+
     return result
 
 

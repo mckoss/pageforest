@@ -20,19 +20,24 @@ from auth.models import User
 CHALLENGE_EXPIRATION = 60  # Seconds.
 
 
-def register(request, ajax=None):
+def register(request):
     """Create a user account on PageForest."""
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
-        if ajax:
-            return HttpResponse(form.errors_json(),
-                                mimetype='application/json')
         if form.is_valid():
             form.save()
             return redirect('/auth/welcome/')
     else:
         form = RegistrationForm()
     return render_to_response(request, 'auth/register.html', locals())
+
+
+@method_required('POST')
+def validate(request, ajax=None):
+    """Interactive registration form validation."""
+    form = RegistrationForm(request.POST)
+    return HttpResponse(form.errors_json(),
+                        mimetype='application/json')
 
 
 @jsonp

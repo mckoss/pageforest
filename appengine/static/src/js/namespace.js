@@ -28,8 +28,8 @@
 
    Usage example:
 
-   global_namespace.define('startpad.base', function(ns) {
-       var Other = ns.Import('startpad.other');
+   global_namespace.define('org.startpad.base', function(ns) {
+       var Other = ns.Import('org.startpad.other');
 
        ns.extend(ns, {
            var1: value1,
