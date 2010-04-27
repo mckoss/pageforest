@@ -1,10 +1,10 @@
-global_namespace.define('startpad.data', function(NS) {
-    var DateUtil = NS.lookup('startpad.date-util');
-    var Timer = NS.lookup('startpad.timer');
-    var JSON = NS.lookup('JSON');
-    var Base = NS.lookup('startpad.base');
-    var Event = NS.lookup('startpad.events');
-    var Format = NS.lookup('startpad.format-util');
+global_namespace.define('org.startpad.data', function(NS) {
+    var DateUtil = NS.lookup('org.startpad.date-util');
+    var Timer = NS.lookup('org.startpad.timer');
+    var JSON = NS.lookup('org.json.json2');
+    var Base = NS.lookup('org.startpad.base');
+    var Event = NS.lookup('org.startpad.events');
+    var Format = NS.lookup('org.startpad.format-util');
 
 NS.extend(NS, {
     sSiteName: "web",

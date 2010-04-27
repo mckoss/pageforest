@@ -1,28 +1,28 @@
 body {
-    font-family: Arial, san-serif;
-    font-size: 12px;
+    font-family: Verdana, Arial, san-serif;
+    font-size: 16px;
     margin: 0;
     padding: 0;
     background-color: #E2E2E2;
 }
 
 div.topbar {
+    font-size: 12px;
     float: right;
     width: 220px;
+    height: 35px;
 }
 
 div.topbarLeft {
     background: url(../../images/nav/topbar-left.png) no-repeat scroll;
     float: left;
     width: 10px;
-    height: 35px;
     margin: 0px;
 }
 
 div.topbarMid {
     background: url(../../images/nav/topbar-center.png) repeat-x scroll top;
     float: left;
-    height: 35px;
     margin: 0px;
 }
 
@@ -30,7 +30,6 @@ div.topbarRight {
     background: url(../../images/nav/topbar-right.png) no-repeat top right scroll;
     float: left;
     width: 10px;
-    height: 35px;
     margin: 0px;
 }
 

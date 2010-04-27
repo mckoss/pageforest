@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <!-- Top of Page, Logo, Navigation, and Search -->
+<!-- TODO: Move all inline styles to page.css -->
 <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/grass.png) repeat-x left bottom white;">
     <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/bush.png) no-repeat left bottom;">
         <div style="margin:auto;width:890px;height:200px;background:url({{MEDIA_URL}}images/nav/logo.png) no-repeat left bottom scroll;">
@@ -8,7 +9,7 @@
                 <!-- Signin Widget -->
                 <div class="topbar">
                 <div class="topbarLeft"></div>
-                <div class="topbarMid"><a href="#">Sign In</a><a href="#">Join Now</a><a href="#">Our Blog</a></div>
+                <div class="topbarMid"><a href="http://auth.{{DOMAIN}}/sign-in">Sign In</a><a href="http://auth.{{DOMAIN}}/register">Join Now</a><a href="http://blog.pageforest.com">Our Blog</a></div>
                 <div class="topbarRight"></div>
                 </div>
 
@@ -22,12 +23,12 @@
 
                     <!-- Folder Tabs -->
                     <div class="tabLeftSelect"></div>
-                    <div class="tabMiddleSelect"><a href="/">Home</a></div>
+                    <div class="tabMiddleSelect"><a href="http://{{DOMAIN}}/">Home</a></div>
                     <div class="tabRightSelect"></div>
                     <div class="tabSpacer"></div>
 
                     <div class="tabLeft"></div>
-                    <div class="tabMiddle"><a href="/docs">My Pages</a></div>
+                    <div class="tabMiddle"><a href="http://{{DOMAIN}}/docs">My Pages</a></div>
                     <div class="tabRight"></div>
 
                 </div>

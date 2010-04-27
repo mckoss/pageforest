@@ -2,7 +2,7 @@ application: pageforest
 version: dev
 runtime: python
 api_version: 1
-default_expiration: 30d
+default_expiration: 1d
 
 handlers:
 - url: /.remote_api
