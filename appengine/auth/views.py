@@ -28,7 +28,7 @@ def register(request):
         form = RegistrationForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/auth/welcome/')
+            return redirect('/welcome/')
     else:
         form = RegistrationForm()
     return render_to_response(request, 'auth/register.html', locals())

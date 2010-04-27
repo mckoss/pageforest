@@ -4,8 +4,8 @@
 <!-- TODO: Move all inline styles to page.css -->
 <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/grass.png) repeat-x left bottom white;">
     <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/bush.png) no-repeat left bottom;">
-        <div style="margin:auto;width:890px;height:200px;background:url({{MEDIA_URL}}images/nav/logo.png) no-repeat left bottom scroll;">
-            <div style="position:relative;width:890px;height:200px;background:url({{MEDIA_URL}}images/nav/flowers.png) no-repeat right bottom scroll;">
+        <div style="margin:auto;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/logo.png) no-repeat left bottom scroll;">
+            <div style="position:relative;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/flowers.png) no-repeat right bottom scroll;">
                 <!-- Signin Widget -->
                 <div class="topbar">
                 <div class="topbarLeft"></div>
@@ -39,24 +39,31 @@
 
 <!-- Page Content -->
 <div class="Content" style="width:100%;">
-    <div style="margin:auto;width:890px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
-        <div class="breadcrumb"><a href="#">Home</a><img style="position:relative;top:-1px;"src="{{MEDIA_URL}}images/nav/breadcrumb.gif"/>Widget</div>
-        <!-- Left Column -->
-        <div id="left-column" style="float:left;margin-left:125px;padding-right:15px;width:515px;background:url({{MEDIA_URL}}images/nav/rule-vert.gif) repeat-y scroll top right;">
-            {% block left-column %}{% endblock %}
+    <div style="margin:auto;width:960px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
+        <div class="breadcrumb">
+          <a href="#">Home</a>
+          <img style="width:25px;position:relative;top:-1px;" src="{{MEDIA_URL}}images/nav/breadcrumb.gif"/>
+          <a href="#">Widget</a>
         </div>
 
-        <!-- Right Column -->
-        <div id="right-column" style="float:right;width:220px;">
-            {% block right-column %}{% endblock %}
-            <div style="clear:both" class="spacer"></div>
+        <div style="float:left;margin-left:125px;width:835px;">
+        {% block both-columns %}
+            <!-- Left Column -->
+            <div id="left-column" style="float:left;padding-right:15px;width:585px;background:url({{MEDIA_URL}}images/nav/rule-vert.gif) repeat-y scroll top right;">
+              {% block left-column %}{% endblock %}
+            </div>
+
+            <!-- Right Column -->
+            <div id="right-column" style="float:right;width:220px;">
+              {% block right-column %}{% endblock %}
+              <div style="clear:both" class="spacer"></div>
+            </div>
+        {% endblock %}
         </div>
 
         <div style="margin-left:110px;width:780px;clear:both;" class="spacer2"></div>
 
-        <div class="spacer2"></div>
-
-        <div class="footer" style="margin-left:125px;width:765px;background:url({{MEDIA_URL}}images/nav/rule-horiz.gif) repeat-x top left scroll;">
+        <div class="footer" style="margin-left:125px;width:855px;background:url({{MEDIA_URL}}images/nav/rule-horiz.gif) repeat-x top left scroll;">
             <a href="/about-us">About Us</a> |
             <a href="http://blog.pageforest.com">Blog</a> |
             <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
