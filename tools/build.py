@@ -15,7 +15,7 @@ sys.path.insert(0, pftool.app_dir)
 import settings
 
 MEDIA_DIR = os.path.join(pftool.app_dir, 'static')
-SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src' )
+SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src')
 LIB_DIR = os.path.join(pftool.app_dir, 'lib')
 SETTINGS_AUTO = os.path.join(pftool.app_dir, 'settingsauto.py')
 
@@ -141,7 +141,7 @@ def ensure_version_dirs(root, version, file_types, verbose):
     all exist or are created.
     """
     levels = version.split('.')
-    for level in range(1, len(levels)+1):
+    for level in range(1, len(levels) + 1):
         version_path = os.path.join(root, '.'.join(levels[:level]))
         if not os.path.isdir(version_path):
             if verbose:
@@ -167,9 +167,9 @@ def main():
     parser.add_option('-o', '--overwrite', action='store_true',
         help="overwrite the current file version regardless of digest hash")
     parser.add_option('--lib_version', action='store',
-        help="set the current lib (published files) version number - format: n.n.n")
+        help="set the current lib (published files) version - format: n.n.n")
     parser.add_option('--media_version', action='store',
-        help="set the current media version number - format: n")
+        help="set the current media version string")
     parser.add_option('-v', '--verbose', action='store_true')
     (options, args) = parser.parse_args()
 
@@ -182,8 +182,10 @@ def main():
     for (name, depth, output_dir, file_dict) in \
             (('lib', 3, LIB_DIR, settings.LIB_FILES),
              ('media', 1, MEDIA_DIR, settings.MEDIA_FILES)):
-        version = get_version(name, depth, options, settings_dict, options.verbose)
-        ensure_version_dirs(output_dir, version, ('css', 'js'), options.verbose)
+        version = get_version(name, depth, options,
+                              settings_dict, options.verbose)
+        ensure_version_dirs(output_dir, version, ('css', 'js'),
+                            options.verbose)
         combine_files(file_dict, output_dir, version, options.verbose)
 
     settings_auto = open(SETTINGS_AUTO, 'w')
