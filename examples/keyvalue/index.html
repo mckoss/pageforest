@@ -8,9 +8,7 @@
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript"
-        src="http://www.pageforest.com/static/js/namespace.js"></script>
-<script type="text/javascript"
-        src="http://www.pageforest.com/static/js/crypto.js"></script>
+src="http://www.pageforest.com/lib/0.5/js/widget.js"></script>
 <script type="text/javascript" src="keyvalue.js"></script>
 <script type="text/javascript">
 var keyvalue = global_namespace.lookup("com.pageforest.keyvalue");
@@ -20,33 +18,26 @@ $(document).ready(function() { $("input.focus:last").focus(); });
 <body>
 <h1>REST API Demo</h1>
 
-<table style="float:left">
-<tr>
-<th><label for="id_username">Username:</label></th>
-<td><input id="id_username" type="text" name="key" class="focus" /></td>
-</tr>
-<tr>
-<th><label for="id_password">Password:</label></th>
-<td><input id="id_password" type="password" name="value" /></td>
-</tr>
+<table>
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="keyvalue.getChallenge()" value="Challenge" />
-<input type="button" onclick="keyvalue.verify()" value="Verify" />
-<input type="button" onclick="keyvalue.forget()" value="Forget" />
+<input type="button" onclick="keyvalue.signIn()" value="Sign In" />
+<input type="button" onclick="keyvalue.signOut()" value="Sign Out" />
 </td>
 </tr>
-</table>
-
-<table style="float:left">
+<tr>
+<th><label for="id_doc">Doc:</label></th>
+<td><input id="id_doc" type="text" name="doc" class="focus" /></td>
+</tr>
 <tr>
 <th><label for="id_key">Key:</label></th>
 <td><input id="id_key" type="text" name="key" /></td>
 </tr>
 <tr>
 <th><label for="id_value">Value:</label></th>
-<td><input id="id_value" type="text" name="value" /></td>
+<td><textarea id="id_value" name="value"
+style="width:400px; height:100px"></textarea></td>
 </tr>
 <tr>
 <th></th>

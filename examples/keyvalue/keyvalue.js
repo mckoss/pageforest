@@ -50,34 +50,10 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         $.ajax(options);
     };
 
-    ns.getChallenge = function () {
-        $.ajax({
-            dataType: 'jsonp',
-            url: 'http://auth.' + location.host + '/challenge',
-            success: function (message) {
-                ns.challenge = message;
-                successCallback(message);
-            }
-        });
+    ns.signIn = function () {
     };
 
-    ns.verify = function () {
-        if (!ns.challenge) {
-            return;
-        }
-        var username = $('#id_username').val();
-        var password = $('#id_password').val();
-        var userpass = crypto.HMAC_SHA1(password, username.toLowerCase());
-        var signature = crypto.HMAC_SHA1(userpass, ns.challenge);
-        $.ajax({
-            dataType: 'jsonp',
-            url: 'http://auth.' + location.host + '/verify/' +
-                username + '/' + ns.challenge + '/' + signature,
-            success: verifyCallback
-        });
-    };
-
-    ns.forget = function () {
+    ns.signOut = function () {
         delete ns.sessionKey;
         ns.setCookie('sessionkey', 'expired', -1);
         successCallback('deleted session key');
