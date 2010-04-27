@@ -1,0 +1,198 @@
+/* Begin file: widget.css */
+body {
+margin-top: 39px;
+}
+
+div.PF_topbar {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 100%;
+    height: 35px;
+}
+
+div.PF_savebar {
+    font-family: Verdana, Arial, san-serif;
+    font-size: 14px;
+    float: right;
+    margin-right: 16px;
+    left: 600px;
+    top: 0px;
+    width: 310px;
+    height: 35px;
+}
+
+div.PF_savebar div.PF_left {
+    background: url(/images/appbar/green-left.png) no-repeat scroll;
+    float: left;
+    width: 5px;
+    height: 35px;
+    margin: 0px;
+}
+
+div.PF_savebar div.PF_center {
+    background: url(/images/appbar/green-center.png) repeat-x scroll top;
+    float: left;
+    height: 35px;
+    width: 300px;
+    margin: 0px;
+}
+
+div.PF_savebar div.PF_right {
+    background: url(/images/appbar/green-right.png) no-repeat top right scroll;
+    float: left;
+    width: 5px;
+    height: 35px;
+    margin: 0px;
+}
+
+div.PF_savebar a {
+    text-decoration: none;
+    color: #464646;
+    line-height: 35px;
+    padding: 4px;
+}
+
+div.PF_savebar a:hover {
+    color: #000000;
+    background-color: #D2E6B3;
+}
+
+div.PF_savebar div.logo {
+    background: url(/images/appbar/logo.png) no-repeat top right scroll;
+    border: 0;
+    float: right;
+    width: 124px;
+    height: 35px;
+}
+
+div.PF_savebar div.logo:hover {
+    background: url(/images/appbar/logo-highlight.png) no-repeat top right scroll;
+    cursor: pointer;
+}
+
+/* === Dialog Box Styles === */
+
+div.pf-screen {
+    position: absolute;
+    display: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #c4df9c;
+    opacity: 0.5;
+}
+
+div.pf-clip {
+    position: absolute;
+    overflow: hidden;
+    display: none;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+div.pf-pos {
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+}
+
+div.pf-box {
+    font-family: Verdana, Arial, san-serif;
+    font-size: 12px;
+    width: 328px;
+    border: 0;
+}
+
+div.pf-box.top {
+    background: url(/images/box/green-top.png) no-repeat top left scroll;
+    height: 38px;
+    cursor: move;
+}
+
+div.pf-box.top h1 {
+    font-size: 14px;
+    padding: 7px 10px;
+}
+
+div.pf-box.middle {
+    background: url(/images/box/green-middle.png) repeat-y top left scroll;
+    height: 400px;
+}
+
+div.pf-box label {
+    display: block;
+    padding: 0px 4px 1px 10px;
+    width: 298px;
+}
+
+div.pf-box span {
+    display: block;
+    padding: 0px 4px 5px 10px;
+    width: 298px;
+    color: white;
+    font-style: italic;
+    font-weight: bold;
+    text-align: center;
+}
+
+div.pf-box label.checkbox, div.pf-box input[type=checkbox] {
+    cursor: pointer;
+}
+
+div.pf-box.middle input[type=text], div.pf-box.middle input[type=password] {
+    display: block;
+    font-size: 14px;
+    margin: 0 4px 5px 10px;
+    width: 298px;
+    padding: 0;
+}
+
+div.pf-box textarea {
+    display: block;
+    font-size: 14px;
+    margin: 0 4px 5px 10px;
+    padding: 0;
+    width: 298px;
+    line-height: 18px;
+}
+
+div.pf-box.bottom {
+    background: url(/images/box/green-bottom.png) no-repeat top left scroll;
+    height: 141px;
+    position: relative;
+}
+
+div.pf-box.bottom input[type=text] {
+    font-size: 14px;
+    margin: 4px 4px 1px 4px;
+    width: 100px;
+}
+
+div.pf-box.bottom div.pf-buttons {
+    position: absolute;
+    top: 55px;
+    left: 10px;
+    width: 165px;
+    height: 30px;
+}
+
+div.pf-box.bottom input[type=button] {
+    font-size: 14px;
+    width: 85px;
+    margin: 3px;
+    cursor: pointer;
+}
+
+div.pf-box.bottom div.pf-stem {
+    background: url(/images/box/green-stem.png) repeat-x top left scroll;
+    position:absolute;
+    top: 113px;
+    left: 328px;
+    height: 28px;
+    width: 100px;
+}

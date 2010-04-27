@@ -1,3 +1,3 @@
 # AUTO-GENERATED FILE - see build.py
-JS_VERSION = '0.5.0'
+LIB_VERSION = '0.5.0'
 MEDIA_VERSION = '1'

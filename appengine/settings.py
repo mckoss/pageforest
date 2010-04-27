@@ -158,8 +158,8 @@ INSTALLED_APPS = (
 
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
-COMBINE_FILES = True
-FILE_GROUPS = {
+#COMBINE_FILES = True
+MEDIA_FILES = {
     'js': {
         'pageforest': ['namespace', 'json2', 'formatutil', 'dateutil', 'data'],
         'widget': ['namespace', 'data'],
@@ -167,5 +167,16 @@ FILE_GROUPS = {
 
     'css': {
         'default': ['main', 'home'],
+        },
+    }
+
+# Exported files - used by external developers
+LIB_FILES = {
+    'js': {
+        'widget': ['namespace', 'data'],
+        },
+
+    'css': {
+        'widget': ['widget'],
         },
     }
