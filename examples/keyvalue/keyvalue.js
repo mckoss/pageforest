@@ -14,49 +14,76 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         return result;
     }
 
-    function successCallback(message, status, xhr) {
+    function showSuccess(message, status, xhr) {
         $('#results').prepend('<div style="color:#080">' +
                               formatResult(xhr, status, message) +
                               '</div>');
     }
 
-    function errorCallback(xhr, status, error) {
+    function showError(xhr, status, error) {
         $('#results').prepend('<div style="color:#800">' +
                               formatResult(xhr, status, error) +
                               '</div>');
     }
 
-    function verifyCallback(message) {
-        if (message.__class__ == 'Error') {
-            errorCallback(message, 'Error', message.message);
-            return;
-        }
+    function signInSuccess(message, status, xhr) {
+        // Authentication was successful, we got a new session key.
+        showSuccess(message, status, xhr);
         ns.sessionKey = message;
         ns.setCookie('sessionkey', message);
-        successCallback(message);
     }
+
+    function reAuthError(xhr, status, message) {
+        if (xhr.status != 403) {
+            showError(xhr, status, message);
+            return;
+        }
+        // Attempt to sign in with a new browser tab.
+        ns.authToken = message.token;
+        var url = "http://auth.pageforest.com/sign-in/" + ns.authToken;
+        var win = window.open(url, '_blank');
+        if (win && win.focus) {
+            win.focus();
+        }
+        // Poll the server for the session key.
+        pollError(xhr, status, message);
+    }
+
+    function pollError(xhr, status, message) {
+        showError(xhr, status, message);
+        $.ajax({
+            url: "/auth/poll/" + ns.authToken,
+            error: pollError,
+            success: signInSuccess
+        });
+    }
+
+    ns.signIn = function () {
+        $.ajax({
+            url: "/auth/reauth",
+            success: signInSuccess,
+            error: reAuthError,
+        });
+    };
+
+    ns.signOut = function () {
+        delete ns.sessionKey;
+        ns.setCookie('sessionkey', 'expired', -1);
+        showSuccess('deleted session key');
+    };
 
     ns.ajax = function (method) {
         var options = {
             type: method,
             dataType: 'text',
             url: '/docs/doc/' + $("#id_key").val(),
-            success: successCallback,
-            error: errorCallback
+            success: showSuccess,
+            error: showError
         };
         if (method == "PUT") {
             options.data = $("#id_value").val();
         }
         $.ajax(options);
-    };
-
-    ns.signIn = function () {
-    };
-
-    ns.signOut = function () {
-        delete ns.sessionKey;
-        ns.setCookie('sessionkey', 'expired', -1);
-        successCallback('deleted session key');
     };
 
     ns.setCookie = function (name, value, days, path) {
