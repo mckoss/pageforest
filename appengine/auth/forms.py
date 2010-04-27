@@ -16,12 +16,12 @@ yxcvbnm,.-
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=r'^[A-Za-z0-9]+$', max_length=30,
+        regex=r'^[A-Za-z0-9]+$', max_length=30, label="User name",
         error_messages={'invalid': "Username must be alphanumeric."})
-    email = forms.EmailField(max_length=75)
+    email = forms.EmailField(max_length=75, label="Email address")
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
-    repeat = forms.CharField(max_length=40,
+    repeat = forms.CharField(max_length=40, label="Repeat password",
         widget=forms.PasswordInput(render_value=False))
     tos = forms.BooleanField(
         label="Terms of Service",

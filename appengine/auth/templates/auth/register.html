@@ -11,14 +11,14 @@ $(document).ready(function() {
 
 {% block title %}Registration{% endblock %}
 
-{% block left-column %}
+{% block both-columns %}
 <form method="post">
 <table>
 {% for field in form %}
 <tr>
 <td>{{ field.label_tag }}:</td>
 <td>{{ field }}</td>
-<td id="validate_{{ field.html_name }}">{{ field.errors.0 }}</td>
+<td class="form-error" id="validate_{{ field.html_name }}">{{ field.errors.0 }}</td>
 </tr>
 {% endfor %}
 <tr><td></td><td><input type="submit" /></td></tr>
