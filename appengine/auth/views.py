@@ -114,12 +114,13 @@ def poll(request, token):
     seconds = int(request.GET.get('seconds', '30'))
     memcache_key = 'auth.poll~' + token
     try:
-        for attempt in xrange(seconds + 1):
-            if attempt:
-                time.sleep(1)  # One second.
+        while True:
             session_key = memcache.get(memcache_key)
             if session_key:
                 return HttpResponse(session_key, mimetype="text/plain")
+            if time.time() > started + seconds:
+                break
+            time.sleep(3)  # Seconds.
     except DeadlineExceededError:
         pass
     return HttpResponse(json.dumps({
