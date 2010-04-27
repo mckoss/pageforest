@@ -4,5 +4,5 @@ urlpatterns = patterns('auth.views',
     (r'^register(|/validate)$', 'register'),
     (r'^challenge$', 'challenge'),
     (r'^verify/(.+)$', 'verify'),
-    (r'^logout$', 'logout'),
+    (r'^poll/(.+)$', 'poll'),
 )
