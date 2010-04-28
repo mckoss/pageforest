@@ -35,9 +35,8 @@ class LabeledCheckbox(forms.CheckboxInput):
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
         regex=r'^[A-Za-z0-9]+$', min_length=2, max_length=30,
-        label="User name",
         error_messages={'invalid':
-                        "User name can only contain letters and numbers."})
+                        "Username can only contain letters and numbers."})
     email = forms.EmailField(max_length=75, label="Email address")
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
