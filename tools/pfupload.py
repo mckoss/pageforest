@@ -25,12 +25,12 @@ def hmac_sha1(key, message):
 
 
 def login(options):
-    url = 'http://auth.%s/challenge' % options.server
+    url = 'http://%s/auth/challenge' % options.server
     challenge = urllib2.urlopen(url).read()
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
     reply = '/'.join((options.username, challenge, signature))
-    url = 'http://auth.%s/verify/%s' % (options.server, reply)
+    url = 'http://%s/auth/verify/%s' % (options.server, reply)
     return urllib2.urlopen(url).read()
 
 

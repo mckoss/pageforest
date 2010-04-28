@@ -19,9 +19,6 @@ class AppMiddleware(object):
             if request.path_info.startswith('/app/'):
                 raise Http404
             return  # Front-end (www.pageforest.com).
-        if hostname.startswith('auth.'):
-            request.path_info = '/auth' + request.path_info
-            hostname = hostname[5:]
         request.app = App.get_by_hostname(hostname)
         request.app_id = request.app.key().name()
         # Rewrite / to default HTML page.
