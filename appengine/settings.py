@@ -58,7 +58,16 @@ USE_ETAGS = False
 
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
-DOMAINS = 'pageforest.com pgfrst.com'.split()
+
+# Trusted domains (for app_id.domain.tld lookup).
+DOMAINS = [
+    'pageforest.com',
+    'pageforest.appspot.com',
+    'pgfrst.com',
+    'pgfr.st',
+    'localhost',
+]
+
 ANALYTICS_CODE = "UA-2072869-6"
 
 # Absolute path to the directory that holds media.

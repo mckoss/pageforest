@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
 from django.conf import settings
 
@@ -42,24 +43,36 @@ class App(Cacheable, Migratable, Timestamped):
     def get_by_hostname(cls, hostname):
         """
         Find the app that serves a given domain. The matching is case
-        insensitive and ignores ports like :8080.
+        insensitive and ignores ports like :8080. Results are stored
+        in memcache for future requests.
 
         Possible matches are checked in this order:
-        * hostname in domains
         * hostname == key_name + '.' + one of settings.DOMAINS
+        * hostname in domains
         * create dummy app
         """
         hostname = hostname.lower().split(':')[0]
-        app = cls.all().filter('domains', hostname).get()
-        if app:
-            return app
+        # Try get_by_key_name, using Cacheable mixin for memcache.
+        key_name = hostname.split('.')[0]
         for domain in settings.DOMAINS:
             if hostname.endswith('.' + domain):
-                app = cls.get_by_key_name(hostname[:-len(domain) - 1])
+                app = cls.get_by_key_name(key_name)
                 if app:
                     return app
-        app_id = hostname.split('.')[0]
-        return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')
+        # That didn't work, try hostname lookup in memcache.
+        memcache_key = 'GBH~' + hostname
+        key_name = memcache.get(memcache_key)
+        if key_name is None:  # Try to find app by domain index.
+            app = cls.all().filter('domains', hostname).get()
+            if app:
+                memcache.set(memcache_key, app.key().name())
+                return app
+        else:  # The key_name was found in memcache, use Cacheable mixin.
+            app = cls.get_by_key_name(key_name)
+            if app:
+                return app
+        # No app for this hostname (yet), create a dummy app.
+        return App(key_name=key_name, domains=[hostname], secret='SecreT!1')
 
     def generate_session_key(self, user, seconds=None):
         """
