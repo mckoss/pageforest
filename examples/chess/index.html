@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Chess - PageForest</title>
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript"
+src="http://www.pageforest.com/lib/0.5/js/widget.js"></script>
+<script type="text/javascript" src="chess.js"></script>
+<style type="text/css">
+body { font-family: sans-serif; }
+th { text-align: left; }
+div.light { background: white; }
+div.dark { background: #ccc; }
+div.light.legal { background: #afb; }
+div.dark.legal { background: #7d8; }
+div.light.illegal { background: #f9a; }
+div.dark.illegal { background: #d78; }
+</style>
+</head>
+<body>
+<div id="board"></div>
+<div id="buttons">
+<input type="button" onclick="Chess.undo()" value="Undo" />
+</div>
+<table id="moves">
+<tfoot>
+<tr>
+<th style="width:3ex"></th>
+<th style="width:7ex">White</th>
+<th style="width:7ex">Black</th>
+</tr>
+</tfoot>
+<tbody></tbody>
+</table>
+<div id="debug"></div>
+</body>
+</html>
