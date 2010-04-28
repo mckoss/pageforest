@@ -2,9 +2,10 @@ import threading
 
 
 class RequestMiddleware(object):
-    thread_local = threading.local()
+    thread_local = None
 
     def process_request(self, request):
+        self.thread_local = threading.local()
         self.thread_local.request = request
 
     @classmethod
