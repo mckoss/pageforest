@@ -31,7 +31,7 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             email: $("#id_email").val(),
             password: $("#id_password").val(),
             repeat: $("#id_repeat").val(),
-            tos: true
+            tos: $("#id_tos").attr('checked') ? 'checked' : ''
         };
         var oneline = [data.username, data.email,
                        data.password, data.repeat];
@@ -40,10 +40,10 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             return;
         }
         ns.previous = oneline;
-        console.log(oneline);
+        console.log('validating: ' + oneline);
         $.ajax({
             type: "POST",
-            url: "/auth/register/validate/",
+            url: "/validate",
             data: data,
             dataType: "json",
             success: validate_success,
@@ -53,7 +53,11 @@ global_namespace.define('com.pageforest.registration', function(ns) {
 
     ns.document_ready = function () {
         ns.previous = '~~~';
-        setInterval(validate_if_changed, 1000);  // Once per second.
+        // Validate in the background
+        setInterval(validate_if_changed, 3000);
+        $("#id_tos").click(function() {
+            $("#validate_tos").html('');
+        });
     };
 
 }); // com.pageforest.registration
