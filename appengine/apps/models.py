@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
+
 from google.appengine.ext import db
 
 from django.conf import settings
 
 from utils.mixins import Cacheable, Migratable, Timestamped
+from utils import crypto
 
 
 class App(Cacheable, Migratable, Timestamped):
@@ -57,3 +60,12 @@ class App(Cacheable, Migratable, Timestamped):
                     return app
         app_id = hostname.split('.')[0]
         return App(key_name=app_id, domain=hostname, secret='AppSecreT!1')
+
+    def generate_session_key(self, user, seconds=None):
+        """
+        Generate a signed session key for this app and user.
+        """
+        seconds = seconds or settings.SESSION_COOKIE_AGE
+        expires = datetime.now() + timedelta(seconds=seconds)
+        secret = crypto.join(user.password, self.secret)
+        return crypto.sign(self.key().name(), user.username, expires, secret)

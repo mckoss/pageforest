@@ -23,14 +23,9 @@ class AppTestCase(TestCase):
                        domains=['app.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
-        # Authenticate.
-        self.auth = Client(HTTP_HOST='auth.' + self.app.domains[0])
-        challenge = self.auth.get('/challenge').content
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username, signed)
-        session_key = self.auth.get('/verify/' + data).content
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.app.generate_session_key(self.peter)
 
 
 class KeyValueTest(AppTestCase):
@@ -132,14 +127,9 @@ class HostTest(AppTestCase):
                          domains=['other.pageforest.com'],
                          secret='OtherSecreT')
         self.other.put()
-        # Authenticate.
-        self.other_auth = Client(HTTP_HOST='auth.' + self.other.domains[0])
-        challenge = self.auth.get('/challenge').content
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username, signed)
-        session_key = self.other_auth.get('/verify/' + data).content
         self.other_client = Client(HTTP_HOST=self.other.domains[0])
-        self.other_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.other.generate_session_key(self.peter)
 
     def test_host(self):
         """Test namespace isolation with Host header."""
