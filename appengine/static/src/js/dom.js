@@ -3,10 +3,10 @@
 // Points (pt) are [x,y]
 // Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
 //--------------------------------------------------------------------------
-global_namespace.Define('startpad.DOM', function(NS) {
-        var Vector = NS.Import('startpad.vector');
+global_namespace.define('org.startpad.DOM', function(NS) {
+        var Vector = NS.lookup('org.startpad.vector');
 
-NS.Extend(NS, {
+NS.extend(NS, {
         x:0, y:1,
         x2:2, y2:3,
 

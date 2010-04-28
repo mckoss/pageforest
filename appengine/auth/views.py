@@ -37,6 +37,8 @@ def register(request):
 @method_required('POST')
 def validate(request, ajax=None):
     """Interactive registration form validation."""
+    import logging
+    logging.info("validating")
     form = RegistrationForm(request.POST)
     return HttpResponse(form.errors_json(),
                         mimetype='application/json')

@@ -1,8 +1,11 @@
 from django import forms
 from django.conf import settings
 from django.utils import simplejson as json
+from django.utils.safestring import mark_safe
 
 from auth.models import User
+
+import settings
 
 KEYBOARD_ROWS = """
 `1234567890-=
@@ -14,10 +17,27 @@ yxcvbnm,.-
 """.split()
 
 
+class LabeledCheckbox(forms.CheckboxInput):
+    def __init__(self, attrs=None, label=None, id=None):
+        super(LabeledCheckbox, self).__init__(attrs)
+        self.label = label
+        self.id = id
+
+    def render(self, name, value, attrs=None):
+        check_string = super(LabeledCheckbox, self).render(name, value, attrs)
+        import logging
+        logging.info('self %r' % dir(self))
+        check_string += '&nbsp;<label for="id_%s">%s</label>' % \
+            (self.id, self.label)
+        return mark_safe(check_string)
+
+
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=r'^[A-Za-z0-9]+$', max_length=30, label="User name",
-        error_messages={'invalid': "Username must be alphanumeric."})
+        regex=r'^[A-Za-z0-9]+$', min_length=2, max_length=30,
+        label="User name",
+        error_messages={'invalid':
+                        "User name can only contain letters and numbers."})
     email = forms.EmailField(max_length=75, label="Email address")
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
@@ -25,7 +45,11 @@ class RegistrationForm(forms.Form):
         widget=forms.PasswordInput(render_value=False))
     tos = forms.BooleanField(
         label="Terms of Service",
-        error_messages={'required': "You must agree to the Terms of Service."})
+        widget=LabeledCheckbox(label="I agree", id='tos'),
+        error_messages={'required':
+          mark_safe('You must agree to the <a href="http://' +
+                    settings.DEFAULT_DOMAIN + '/' + 'terms-of-service">' +
+                    'Terms of Service</a>.')})
 
     def clean_username(self):
         """
