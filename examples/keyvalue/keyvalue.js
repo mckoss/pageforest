@@ -39,64 +39,29 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
                               '</div>');
     }
 
-    function reAuthSuccess(xhr, status, message) {
-        if (message.__class__ == 'Error') {
-            showError(xhr, status, message.message);
-            return;
-        }
-        // Attempt to sign in with a new browser tab.
-        ns.authToken = message.token;
-        var url = "http://auth.pageforest.com/sign-in/" + ns.authToken;
-        ns.newTab(url);
-        // Poll the server for the session key.
-        pollError(xhr, status, message);
-    }
-
-    function poll() {
-        $.ajax({
-            url: "/auth/poll/" + ns.token + "?seconds=5",
-            error: pollError,
-            success: signInSuccess
-        });
-    }
-
-    function pollError(xhr, status, message) {
-        if (ns.timeout) {
-            // Remove pending timeout to prevent parallel polling.
-            clearTimeout(ns.timeout);
-            ns.timeout = false;
-        }
-        if (ns.pollCounter >= 20) {
-            // Stop polling after 20 unsuccessful attempts.
-            showError(xhr, status,
-                "Could not get session key. Please try again later.");
-        } else {
-            // Poll again after 5 seconds.
-            ns.timeout = setTimeout(poll, 5000);
-            ns.pollCounter += 1;
-        }
-    }
-
     function signInSuccess(message, status, xhr) {
-        if (xhr.status == 204) {
-            // Session key not yet available, try again.
-            return pollError(xhr, status, message);
-        }
         // Authentication was successful, we got a new session key.
         showSuccess(message, status, xhr);
         ns.sessionKey = message;
         ns.setCookie('sessionkey', message);
     }
 
+    function pollCookie() {
+        console.log(document.cookie);
+    }
+
     ns.signIn = function () {
+        // Open a new tab for the sign-in page.
         ns.token = randomString(base64url, 20);
         var domain = location.host;
         domain = "www" + domain.substr(domain.indexOf('.'));
         var url = "http://" + domain + "/auth/sign-in/" + ns.token;
         ns.newTab(url);
-        // Start polling for the session key.
-        ns.pollCounter = 0;
-        pollError();
+        // Start polling for the session key cookie.
+        if (ns.polling) {
+            clearInterval(ns.polling);
+        }
+        ns.polling = setInterval(pollCookie, 1000);
     };
 
     ns.signOut = function () {
