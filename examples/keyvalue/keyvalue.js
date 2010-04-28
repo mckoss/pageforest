@@ -62,7 +62,10 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
     function pollError(xhr, status, message) {
         showError(xhr, status, message);
-        setTimeout(poll, 5000); // Poll again after 5 seconds.
+        if (ns.timeout) {
+            clearTimeout(ns.timeout);
+        }
+        ns.timeout = setTimeout(poll, 5000); // Poll again after 5 seconds.
     }
 
     function signInSuccess(message, status, xhr) {
