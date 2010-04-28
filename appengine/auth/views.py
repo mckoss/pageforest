@@ -22,7 +22,24 @@ from auth.models import User
 CHALLENGE_EXPIRATION = 60  # Seconds.
 
 
+@method_required('GET', 'POST')
 def register(request):
+    """Create a user account on PageForest."""
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if 'validate' in request.POST:
+            return HttpResponse(form.errors_json(),
+                                mimetype='application/json')
+        if form.is_valid():
+            form.save()
+            return redirect('/welcome/')
+    else:
+        form = RegistrationForm()
+    return render_to_response(request, 'auth/register.html', locals())
+
+
+@method_required('GET')
+def sign_in(request, token):
     """Create a user account on PageForest."""
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
@@ -32,16 +49,6 @@ def register(request):
     else:
         form = RegistrationForm()
     return render_to_response(request, 'auth/register.html', locals())
-
-
-@method_required('POST')
-def validate(request, ajax=None):
-    """Interactive registration form validation."""
-    import logging
-    logging.info("validating")
-    form = RegistrationForm(request.POST)
-    return HttpResponse(form.errors_json(),
-                        mimetype='application/json')
 
 
 @jsonp
@@ -117,12 +124,6 @@ def verify(request, signature):
 def reauth(request):
     return HttpResponseForbidden("No reauth cookie.", mimetype="text/plain")
     # return HttpResponse(session_key, mimetype="text/plain")
-
-
-@jsonp
-@method_required('GET')
-def sign_in(request, token):
-    return HttpResponse(token, mimetype="text/plain")
 
 
 @jsonp

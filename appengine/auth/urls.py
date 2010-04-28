@@ -3,12 +3,14 @@ from django.views.generic.simple import direct_to_template
 
 urlpatterns = patterns('auth.views',
     # User interface
-    (r'^register$', 'register'),
-    (r'^validate$', 'validate'),  # AJAX validator for user registration.
-    (r'^sign-in/(.+)$', 'sign_in'),  # With token.
-    (r'^welcome$', 'welcome', direct_to_template,
-     {'template': 'welcome.html'}),
+    (r'^sign-up$', 'register'),
+    # AJAX validator for user registration.
+    (r'^welcome$', direct_to_template, {'template': 'welcome.html'}),
+
+    # Optional token.
+    (r'^sign-in(?:/(.+))?$', 'sign_in'),
     (r'^sign-out$', 'sign_out'),
+
     # Auth API for http://app_id.pageforest.com/auth
     (r'^reauth$', 'reauth'),
     (r'^challenge$', 'challenge'),

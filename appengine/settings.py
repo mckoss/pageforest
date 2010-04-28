@@ -18,13 +18,13 @@ DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('Mike Koss', 'mckoss@startpad.org'),
+    ('Mike Koss', 'mckoss@pageforest.com'),
     ('Johann C. Rocholl', 'johann@rocholl.net'),
 )
 
 MANAGERS = ADMINS
 
-SITE_NAME = "pageforest.com"
+SITE_NAME = "Pageforest.com"
 
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.

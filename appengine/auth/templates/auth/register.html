@@ -9,9 +9,10 @@ $(document).ready(function() {
 </script>
 {% endblock %}
 
-{% block title %}Registration{% endblock %}
+{% block title %}Sign Up{% endblock %}
 
 {% block both-columns %}
+<h2>Create a user account on {{SITE_NAME}}</h2>
 <form method="post">
 <table>
 {% for field in form %}
@@ -21,7 +22,8 @@ $(document).ready(function() {
 <td class="form-message" id="validate_{{ field.html_name }}"><span class="error">{{ field.errors.0 }}</span></td>
 </tr>
 {% endfor %}
-<tr><td></td><td><input type="submit" /></td></tr>
+<tr><td></td><td><input type="submit" value="Join Now" /></td></tr>
 </table>
 </form>
+<p>Already have an account?  <a href="/auth/sign-in">Sign In</a>.</p>
 {% endblock %}
