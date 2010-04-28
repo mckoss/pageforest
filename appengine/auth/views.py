@@ -1,10 +1,12 @@
+import logging
 import time
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.shortcuts import redirect
-from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.utils import simplejson as json
+from django.http import \
+    HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 
 from google.appengine.api import memcache, quota
 from google.appengine.runtime import DeadlineExceededError
@@ -42,83 +44,20 @@ def validate(request, ajax=None):
 
 @jsonp
 @method_required('GET')
-def challenge(request):
-    """Generate a random signed challenge for login."""
-    random_key = crypto.random64url(32)
-    expires = datetime.now() + timedelta(seconds=CHALLENGE_EXPIRATION)
-    challenge = crypto.sign(random_key, expires, request.app.secret)
-    ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    memcache.set(challenge, ip, CHALLENGE_EXPIRATION)
-    return HttpResponse(challenge, mimetype='text/plain')
-
-
-@jsonp
-@method_required('GET')
-def verify(request, signature):
-    """
-    Check the challenge signature with the shared user secret.
-    If successful, return a session key and re-auth cookie.
-    """
-    parts = signature.split(crypto.SEPARATOR)
-    # Check that the request data contains five parts.
-    if len(parts) != 5:
-        return HttpResponseForbidden("Authentication must have five parts.",
-                                     content_type='text/plain')
-    # Check that the expiration time is in the future.
-    expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
-    if expires < datetime.now():
-        return HttpResponseForbidden("The challenge is expired.",
-                                     content_type='text/plain')
-    # Check that the challenge is unused and was generated recently.
-    challenge = crypto.join(parts[1:4])
-    challenge_ip = memcache.get(challenge)
-    if challenge_ip is None:
-        return HttpResponseForbidden("The challenge is unknown.",
-                                     content_type='text/plain')
-    memcache.delete(challenge)
-    # Check that the IP address matches.
-    request_ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    if request_ip != challenge_ip:
-        return HttpResponseForbidden(
-            "The challenge was issued to a different IP.",
-            content_type='text/plain')
-    # Check that the username exists.
-    username = parts[0]
-    user = User.get_by_key_name(username.lower())
-    if user is None:
-        return HttpResponseForbidden(
-            "The username '%s' is unknown." % username,
-            content_type='text/plain')
-    # Check the password signature.
-    signed = crypto.sign(challenge, user.password)
-    joined = crypto.join(username, signed)
-    if signature != joined:
-        return HttpResponseForbidden(
-            "The password signature is incorrect.",
-            content_type='text/plain')
-    # Generate a session key for the next 24 hours.
-    key = crypto.join(user.password, request.app.secret)
-    expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
-    session_key = crypto.sign(request.app_id, username, expires, key)
-    expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
-    reauth_cookie = crypto.sign(request.app_id, username, expires, key)
-    response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
-        settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
-    return response
-
-
-@jsonp
-@method_required('GET')
 def reauth(request):
-    return HttpResponseForbidden('No reauth cookie', mimetype="text/plain")
+    return HttpResponse(json.dumps({
+            "__class__": "Error",
+            "status": 403,
+            "statusText": "Forbidden",
+            "message": "No reauth cookie.",
+            }), mimetype="application/json")
     return HttpResponse('Reauthenticated', mimetype="text/plain")
 
 
 @jsonp
 @method_required('GET')
-def sign_in(request):
-    return HttpResponse('Signed in', mimetype="text/plain")
+def sign_in(request, token):
+    return HttpResponse(token, mimetype="text/plain")
 
 
 @jsonp
@@ -133,6 +72,8 @@ def poll(request, token):
     memcache_key = 'auth.poll~' + token
     try:
         while True:
+            if settings.DEBUG:
+                logging.info("polling memcache for " + memcache_key)
             session_key = memcache.get(memcache_key)
             if session_key:
                 return HttpResponse(session_key, mimetype="text/plain")
@@ -141,7 +82,6 @@ def poll(request, token):
             time.sleep(3)  # Seconds.
     except DeadlineExceededError:
         pass
-    return HttpResponse(json.dumps({
-                "seconds": time.time() - started,
-                "megacycles": quota.get_request_cpu_usage(),
-                }), mimetype='application/json')
+    return HttpResponseNotFound(
+        'This token is not authenticated yet, please try again.',
+        mimetype="text/plain")
