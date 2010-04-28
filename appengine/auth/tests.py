@@ -65,30 +65,31 @@ class RegistrationTest(TestCase):
         """Test that invalid usernames are rejected."""
         for name in '_name a-b 0.5'.split():
             response = self.www.post('/auth/register', {'username': name})
-            self.assertContains(response, 'Username must be alphanumeric.')
+            self.assertContains(response,
+                "Username can only contain letters and numbers.")
 
     def test_username_too_long(self):
         """Test that excessively long usernames are rejected."""
         response = self.www.post('/auth/register', {'username': 'a' * 31})
         self.assertContains(response,
-            'Ensure this value has at most 30 characters (it has 31).')
+            "Ensure this value has at most 30 characters (it has 31).")
 
     def test_username_reserved(self):
         """Test that reserved usernames are enforced."""
         for name in 'root admin test'.split():
             response = self.www.post('/auth/register', {'username': name})
-            self.assertContains(response, 'This username is reserved.')
+            self.assertContains(response, "This username is reserved.")
 
     def test_password_silly(self):
         """Test that silly passwords are rejected."""
         for pw in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
             response = self.www.post('/auth/register', {'password': pw})
-            self.assertContains(response, 'This password is too simple.')
+            self.assertContains(response, "This password is too simple.")
 
     def test_username_taken(self):
         """Test that existing usernames are reserved."""
         response = self.www.post('/auth/register', {'username': 'peter'})
-        self.assertContains(response, 'This username is already taken.')
+        self.assertContains(response, "This username is already taken.")
 
 
 class ChallengeVerifyTest(TestCase):
