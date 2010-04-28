@@ -102,9 +102,9 @@ def upload_dir(options, path):
 
 
 def main():
-    options, args = config()
     if not os.path.exists(META_FILENAME):
         sys.exit('Could not find ' + META_FILENAME)
+    options, args = config()
     options.session_key = login(options)
     if not args:
         args = ['.']
