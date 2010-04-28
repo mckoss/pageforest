@@ -1,10 +1,12 @@
+import logging
 import time
 from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.shortcuts import redirect
-from django.http import HttpResponse, HttpResponseForbidden, Http404
 from django.utils import simplejson as json
+from django.http import \
+    HttpResponse, HttpResponseForbidden, HttpResponseNotFound
 
 from google.appengine.api import memcache, quota
 from google.appengine.runtime import DeadlineExceededError
@@ -111,14 +113,14 @@ def verify(request, signature):
 @jsonp
 @method_required('GET')
 def reauth(request):
-    return HttpResponseForbidden('No reauth cookie', mimetype="text/plain")
-    return HttpResponse('Reauthenticated', mimetype="text/plain")
+    return HttpResponseForbidden("No reauth cookie.", mimetype="text/plain")
+    # return HttpResponse(session_key, mimetype="text/plain")
 
 
 @jsonp
 @method_required('GET')
-def sign_in(request):
-    return HttpResponse('Signed in', mimetype="text/plain")
+def sign_in(request, token):
+    return HttpResponse(token, mimetype="text/plain")
 
 
 @jsonp
@@ -133,6 +135,8 @@ def poll(request, token):
     memcache_key = 'auth.poll~' + token
     try:
         while True:
+            if settings.DEBUG:
+                logging.info("polling memcache for " + memcache_key)
             session_key = memcache.get(memcache_key)
             if session_key:
                 return HttpResponse(session_key, mimetype="text/plain")
@@ -141,7 +145,6 @@ def poll(request, token):
             time.sleep(3)  # Seconds.
     except DeadlineExceededError:
         pass
-    return HttpResponse(json.dumps({
-                "seconds": time.time() - started,
-                "megacycles": quota.get_request_cpu_usage(),
-                }), mimetype='application/json')
+    return HttpResponseNotFound(
+        'This token is not authenticated yet, please try again.',
+        mimetype="text/plain")
