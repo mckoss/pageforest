@@ -53,11 +53,14 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     }
 
     function poll() {
-        $.ajax({
-            url: "/auth/poll/" + ns.token + "?seconds=5",
-            error: pollError,
-            success: signInSuccess
-        });
+        if (ns.pollCounter < 20) {
+            ns.pollCounter += 1;
+            $.ajax({
+                url: "/auth/poll/" + ns.token + "?seconds=5",
+                error: pollError,
+                success: signInSuccess
+            });
+        }
     }
 
     function pollError(xhr, status, message) {
@@ -81,7 +84,9 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         domain = "www" + domain.substr(domain.indexOf('.'));
         var url = "http://" + domain + "/auth/sign-in/" + ns.token;
         ns.newTab(url);
-        pollError(); // Start polling for the session key.
+        // Start polling for the session key.
+        ns.pollCounter = 0;
+        pollError();
     };
 
     ns.signOut = function () {
