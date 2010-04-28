@@ -28,7 +28,7 @@ def end_timer(nick):
     if options.verbose:
         print("=== %s time: %1.1fs ===" % (nick, t))
     else:
-        sys.stdout.write("(%1.1fs) " % t)
+        sys.stdout.write(":%1.1fs " % t)
         sys.stdout.flush()
 
 
@@ -76,20 +76,24 @@ def main():
         ('doctest', "python settingsparser.py"),
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
-        ('unit', "python %s test -v0" %
+        ('unittest', "python %s test -v0" %
          os.path.join(pftool.app_dir, 'manage.py')),
         ('pylint', "python %s -e %s" %
          (pftool.tool_path('lint.py'), pftool.app_dir)),
-        ('jslint', "python jslint.py --weak " +
+        ('jslint-weak', "python jslint.py --weak " +
          os.path.join(pftool.app_dir, 'static', 'src', 'js')),
-        ('jslint-tools', "python jslint.py --strong " +
+        ('jslint', "python jslint.py --strong " +
          "--ignore beautify* --ignore fulljslint.js"),
         ]
 
     parser = OptionParser(
         usage="%prog [options]")
-    parser.add_option('-v', '--verbose', action='store_true')
-    parser.add_option('-p', '--prompt', action='store_true')
+    parser.add_option('-v', '--verbose', action='store_true',
+        help="run all checks with more output")
+    parser.add_option('-p', '--prompt', action='store_true',
+        help="ask before running any checks")
+    parser.add_option('-q', '--quick', action='store_true',
+        help="skip tests that take longer than 10 seconds")
     for name, command in all_checks:
         parser.add_option('--' + name, action='callback',
                           callback=part_callback,
@@ -109,11 +113,10 @@ def main():
                 os.chdir(pftool.app_dir)
             else:
                 os.chdir(pftool.tools_dir)
+            if options.quick and name == 'jslint-weak':
+                continue
             attempt(name, command)
-
-    if not options.verbose:
-        print  # Add newline after short output
-    print("Total time: %1.1fs" % total_time)
+    print("total:%1.1fs" % total_time)
 
 
 if __name__ == '__main__':
