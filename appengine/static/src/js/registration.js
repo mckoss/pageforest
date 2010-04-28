@@ -31,7 +31,8 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             email: $("#id_email").val(),
             password: $("#id_password").val(),
             repeat: $("#id_repeat").val(),
-            tos: $("#id_tos").attr('checked') ? 'checked' : ''
+            tos: $("#id_tos").attr('checked') ? 'checked' : '',
+            validate: true
         };
         var oneline = [data.username, data.email,
                        data.password, data.repeat];
@@ -43,7 +44,7 @@ global_namespace.define('com.pageforest.registration', function(ns) {
         console.log('validating: ' + oneline);
         $.ajax({
             type: "POST",
-            url: "/auth/validate",
+            url: "",
             data: data,
             dataType: "json",
             success: validate_success,
