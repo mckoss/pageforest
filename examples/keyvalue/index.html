@@ -1,0 +1,58 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>REST API Demo - PageForest</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript"
+src="http://www.pageforest.com/lib/0.5/js/widget.js"></script>
+<script type="text/javascript" src="keyvalue.js"></script>
+<script type="text/javascript">
+var keyvalue = global_namespace.lookup("com.pageforest.keyvalue");
+$(document).ready(function() { $("input.focus:last").focus(); });
+</script>
+</head>
+<body>
+<h1>REST API Demo</h1>
+
+<table>
+<tr>
+<th></th>
+<td>
+<input type="button" onclick="keyvalue.signIn()" value="Sign In" />
+<input type="button" onclick="keyvalue.signOut()" value="Sign Out" />
+</td>
+</tr>
+<tr>
+<th><label for="id_doc">Doc:</label></th>
+<td><input id="id_doc" type="text" name="doc" value="doc" class="focus" /></td>
+</tr>
+<tr>
+<th><label for="id_key">Key:</label></th>
+<td><input id="id_key" type="text" name="key" value="key" /></td>
+</tr>
+<tr>
+<th><label for="id_value">Value:</label></th>
+<td><textarea id="id_value" name="value" style="width:400px; height:100px">
+{
+"value": 123
+}
+</textarea></td>
+</tr>
+<tr>
+<th></th>
+<td>
+<input type="button" onclick="keyvalue.ajax('PUT')" value="Put" />
+<input type="button" onclick="keyvalue.ajax('GET')" value="Get" />
+<input type="button" onclick="keyvalue.ajax('DELETE')" value="Delete" />
+<input type="button" onclick="keyvalue.ajax('HEAD')" value="Head" />
+</td>
+</tr>
+</table>
+
+<div id="results" style="clear:both"></div>
+</body>
+</html>
