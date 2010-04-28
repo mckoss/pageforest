@@ -53,29 +53,39 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     }
 
     function poll() {
-        if (ns.pollCounter < 20) {
-            ns.pollCounter += 1;
-            $.ajax({
-                url: "/auth/poll/" + ns.token + "?seconds=5",
-                error: pollError,
-                success: signInSuccess
-            });
-        }
+        $.ajax({
+            url: "/auth/poll/" + ns.token + "?seconds=5",
+            error: pollError,
+            success: signInSuccess
+        });
     }
 
     function pollError(xhr, status, message) {
-        showError(xhr, status, message);
         if (ns.timeout) {
+            // Remove pending timeout to prevent parallel polling.
             clearTimeout(ns.timeout);
+            ns.timeout = false;
         }
-        ns.timeout = setTimeout(poll, 5000); // Poll again after 5 seconds.
+        if (ns.pollCounter >= 20) {
+            // Stop polling after 20 unsuccessful attempts.
+            showError(xhr, status,
+                "Could not get session key. Please try again later.");
+        } else {
+            // Poll again after 5 seconds.
+            ns.timeout = setTimeout(poll, 5000);
+            ns.pollCounter += 1;
+        }
     }
 
     function signInSuccess(message, status, xhr) {
+        if (xhr.status == 204) {
+            // Session key not yet available, try again.
+            return pollError(xhr, status, message);
+        }
         // Authentication was successful, we got a new session key.
         showSuccess(message, status, xhr);
         ns.sessionKey = message;
-        // ns.setCookie('sessionkey', message);
+        ns.setCookie('sessionkey', message);
     }
 
     ns.signIn = function () {
