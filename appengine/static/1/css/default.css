@@ -1,7 +1,7 @@
 /* Begin file: main.css */
 body {
     font-family: Verdana, Arial, san-serif;
-    font-size: 16px;
+    font-size: 14px;
     margin: 0;
     padding: 0;
     background-color: #E2E2E2;
@@ -263,4 +263,16 @@ img.homeScreenLeft {
 img.homeScreenRight {
     float:right;
     margin-left:15px;
+}
+/* Begin file: form.css */
+.form-message {
+font-style: italic;
+}
+
+.error {
+color: red;
+}
+
+.success {
+color: green;
 }
