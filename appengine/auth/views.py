@@ -147,6 +147,4 @@ def poll(request, token):
             time.sleep(3)  # Seconds.
     except DeadlineExceededError:
         pass
-    return HttpResponseNotFound(
-        'This token is not authenticated yet, please try again.',
-        mimetype="text/plain")
+    return HttpResponse(status=204)
