@@ -24,22 +24,6 @@ class App(Cacheable, Migratable, Timestamped):
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
     @classmethod
-    def get_by_key_name(cls, app_id, parent=None):
-        """
-        Get app instance from one of these sources:
-        * App.cache (dict in the current process)
-        * Memcache (using Cacheable.get_by_key_name)
-        * Datastore (using db.Model.get_by_key_name)
-        """
-        if not hasattr(App, 'cache'):
-            App.cache = {}
-        if app_id in App.cache:
-            return App.cache[app_id]
-        app = super(App, cls).get_by_key_name(app_id, parent)
-        App.cache[app_id] = app
-        return app
-
-    @classmethod
     def get_by_hostname(cls, hostname):
         """
         Find the app that serves a given domain. The matching is case
@@ -72,7 +56,10 @@ class App(Cacheable, Migratable, Timestamped):
             if app:
                 return app
         # No app for this hostname (yet), create a dummy app.
-        return App(key_name=key_name, domains=[hostname], secret='SecreT!1')
+        key_name = hostname.split('.')[0]
+        title = key_name.capitalize()
+        return App(key_name=key_name, title=title, domains=[hostname],
+                   secret='SecreT!1')
 
     def generate_session_key(self, user, seconds=None):
         """
