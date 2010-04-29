@@ -7,6 +7,31 @@ import sys
 
 from settingsauto import *
 
+SAFE_SETTINGS = """
+APPLICATION_ID
+CURRENT_VERSION_ID
+SERVER_SOFTWARE
+AUTH_DOMAIN
+ANALYTICS_CODE
+
+SITE_NAME
+SITE_OWNER
+SITE_CONTACT_INFO
+
+DEV_APPSERVER
+DEBUG
+TEMPLATE_DEBUG
+
+ADMINS
+MANAGERS
+DEFAULT_DOMAIN
+DOMAINS
+
+MEDIA_URL
+COMBINE_FILES
+""".split()
+
+
 # App Engine specific environment variables.
 APPLICATION_ID = os.environ.get('APPLICATION_ID', '')
 CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID', '')
@@ -24,7 +49,9 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-SITE_NAME = "Pageforest.com"
+SITE_NAME = "Pageforest"
+SITE_OWNER = "StartPad"
+SITE_CONTACT_INFO = "811 First Ave, Suite 480, Seattle, WA 98104"
 
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.
