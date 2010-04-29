@@ -40,9 +40,10 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
     ns.signIn = function () {
         // Open a new tab for the sign-in page.
         ns.token = crypto.random(20);
-        var domain = location.host;
-        domain = "www" + domain.substr(domain.indexOf('.'));
-        var url = "http://" + domain + "/auth/sign-in/" + ns.token;
+        var dot = location.host.indexOf('.');
+        var www = "www" + location.host.substr(dot);
+        var url = "http://" + www + "/auth/sign-in";
+        url += "?app=keyvalue&token=" + ns.token;
         ns.newTab(url);
         // Start polling for the session key cookie.
         if (ns.polling) {
