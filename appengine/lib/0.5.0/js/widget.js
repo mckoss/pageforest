@@ -659,11 +659,16 @@ global_namespace.define("com.googlecode.crypto-js", function () {});
 
 (function(){
 
-var base64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var lower = 'abcdefghijklmnopqrstuvwxyz';
+var digits = '0123456789';
+var base64map = upper + lower + digits + '+/';
+var base64url = upper + lower + digits + '-_';
 
 // Global Crypto object
 var Crypto = global_namespace.lookup("com.googlecode.crypto-js");
-
+Crypto.base64map = base64map;
+Crypto.base64url = base64url;
 
 // Crypto utilities
 var util = Crypto.util = {
@@ -949,6 +954,18 @@ C.HMAC = function (hasher, message, key, options) {
     // (key first) even though C.HMAC has it wrong.
     C.HMAC_SHA1 = function (key, message, options) {
         return C.HMAC(C.SHA1, message, key, options);
+    };
+
+    C.random = function (len, chars) {
+        if (typeof chars == 'undefined') {
+            chars = C.base64url;
+        }
+        var radix = chars.length;
+        var uuid = [];
+        for (var i = 0; i < len; i++) {
+            uuid[i] = chars[0 | Math.random() * radix];
+        }
+        return uuid.join('');
     };
 
 })();

@@ -1,19 +1,6 @@
 global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
-    var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var lower = 'abcdefghijklmnopqrstuvwxyz';
-    var digits = '0123456789';
-    var base64 = upper + lower + digits + '+/';
-    var base64url = upper + lower + digits + '-_';
-
-    function randomString(chars, len) {
-        var radix = chars.length;
-        var uuid = [];
-        for (var i = 0; i < len; i++) {
-            uuid[i] = chars[0 | Math.random() * radix];
-        }
-        return uuid.join('');
-    };
+    var crypto = ns.lookup('com.googlecode.crypto-js');
 
     function formatResult(xhr, status, message) {
         var result = '';
@@ -52,7 +39,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
     ns.signIn = function () {
         // Open a new tab for the sign-in page.
-        ns.token = randomString(base64url, 20);
+        ns.token = crypto.random(20);
         var domain = location.host;
         domain = "www" + domain.substr(domain.indexOf('.'));
         var url = "http://" + domain + "/auth/sign-in/" + ns.token;
@@ -100,6 +87,6 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         if (win && win.focus) {
             win.focus();
         }
-    }
+    };
 
 }); // com.pageforest.keyvalue
