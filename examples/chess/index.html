@@ -10,9 +10,7 @@ src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="chess.js"></script>
 <script type="text/javascript">
 var Chess = global_namespace.lookup("com.pageforest.chess");
-$(document).ready(function () {
-    Chess.ready();
-});
+$(document).ready(Chess.ready);
 </script>
 <style type="text/css">
 body { font-family: sans-serif; }
