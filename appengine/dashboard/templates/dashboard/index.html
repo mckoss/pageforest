@@ -16,26 +16,21 @@ td.number { text-align: center; }
 
 {% block content %}
 <table>
-<tr><th></th><th>24h</th><th>7d</th><th>30d</th></tr>
 <tr>
-<td>New users</td>
-{% for n in user_joined %}<td class="number">{{ n }}</td>{%endfor%}
+  <th style="color:#00FF00">New users</th>
+  <td><img src="{{ users_chart }}" /></td>
 </tr>
 <tr>
-<td>New apps</td>
-{% for n in app_created %}<td class="number">{{ n }}</td>{%endfor%}
+  <th style="color:#0000FF">New apps</th>
+  <td><img src="{{ apps_chart }}" /></td>
 </tr>
 <tr>
-<td>New documents</td>
-{% for n in document_created %}<td class="number">{{ n }}</td>{%endfor%}
+  <th style="color:#FFFF00">New docs</th>
+  <td><img src="{{ documents_chart }}" /></td>
 </tr>
 <tr>
-<td>KeyValue created</td>
-{% for n in keyvalue_created %}<td class="number">{{ n }}</td>{%endfor%}
-</tr>
-<tr>
-<td>KeyValue modified</td>
-{% for n in keyvalue_modified %}<td class="number">{{ n }}</td>{%endfor%}
+  <th style="color:#FF0000">New keys</th>
+  <td><img src="{{ keyvalues_chart }}" /></td>
 </tr>
 </table>
 

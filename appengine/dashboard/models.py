@@ -40,7 +40,7 @@ class StatsHour(Cacheable, Migratable):
     def update(self):
         start = self.start_time()
         stop = start + timedelta(hours=1)
-        self.users = count(User, 'date_joined', start, stop)
+        self.users = count(User, 'created', start, stop)
         self.apps = count(App, 'created', start, stop)
         self.documents = count(Document, 'created', start, stop)
         self.keyvalues = count(KeyValue, 'created', start, stop)
