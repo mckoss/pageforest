@@ -41,6 +41,14 @@ def ignore(line, level):
             return True
 
 
+def shorten_path(line):
+    parts = line.split(':')
+    if len(parts) >= 4 and parts[1].isdigit() and parts[2].isdigit():
+        if len(parts[0]) > 30:
+            parts[0] = os.path.basename(parts[0])
+    return ':'.join(parts)
+
+
 def main():
     levels = ('weak', 'strong', 'strict')
     option_list = (
@@ -67,9 +75,8 @@ def main():
 
     save_dir = os.getcwd()
 
-    filenames = pftool.walk_files(args,
-                                  matches=('*.js', '*.json'),
-                                  ignored=options.ignored)
+    filenames = pftool.walk_files(
+        args, matches=('*.js', '*.json'), ignored=options.ignored)
 
     command = ['java',
                'org.mozilla.javascript.tools.shell.Main',
@@ -97,7 +104,7 @@ def main():
             if line == '' or ignore(line, options.level):
                 continue
             if not options.quiet:
-                print line
+                print shorten_path(line)
             errors += 1
         total_errors += errors
         if options.halt and errors:
