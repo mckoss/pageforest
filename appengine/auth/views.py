@@ -24,7 +24,9 @@ CHALLENGE_EXPIRATION = 60  # Seconds.
 
 @method_required('GET', 'POST')
 def register(request):
-    """Create a user account on PageForest."""
+    """
+    Create a user account on PageForest.
+    """
     form = RegistrationForm(request.POST or None)
     if request.method == 'POST':
         if 'validate' in request.POST:
@@ -33,30 +35,40 @@ def register(request):
         if form.is_valid():
             form.save(request)
             return redirect('/welcome/')
-    return render_to_response(request, 'auth/register.html', locals())
+    return render_to_response(request, 'auth/register.html', {'form': form})
 
 
 @method_required('GET', 'POST')
 def sign_in(request):
-    """Create a user account on PageForest."""
+    """
+    Check credentials and generate a session key.
+    """
     form = SignInForm(request.POST or None)
     if request.method == 'POST':
         if form.is_valid():
             return redirect('/')
     logging.info("errors: %r" % form.errors)
-    return render_to_response(request, 'auth/sign-in.html', locals())
+    return render_to_response(request, 'auth/sign-in.html', {'form': form})
 
 
-@method_required('GET', 'POST')
+@method_required('GET')
 def sign_out(request, token):
-    # TODO: Clean sign-in cookie
-    return redirect('/')
+    """
+    Expire the session key cookie.
+    """
+    response = redirect('/')
+    expires = http_datetime(datetime.now() - timedelta(days=1))
+    response['Set-Cookie'] = '%s=; expires=%s; path=/' % (
+        settings.SESSION_COOKIE_NAME, expires)
+    return response
 
 
 @jsonp
 @method_required('GET')
 def challenge(request):
-    """Generate a random signed challenge for login."""
+    """
+    Generate a random signed challenge for login.
+    """
     random_key = crypto.random64url(32)
     expires = datetime.now() + timedelta(seconds=CHALLENGE_EXPIRATION)
     challenge = crypto.sign(random_key, expires, request.app.secret)
@@ -124,6 +136,9 @@ def verify(request, signature):
 @jsonp
 @method_required('GET')
 def reauth(request):
+    """
+    Attempt to authenticate with a long-lived reauth cookie.
+    """
     return HttpResponseForbidden("No reauth cookie.", mimetype="text/plain")
     # return HttpResponse(session_key, mimetype="text/plain")
 
