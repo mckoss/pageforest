@@ -25,6 +25,14 @@ class User(db.Expando, Migratable, Cacheable):
         """
         self.password = crypto.hmac_sha1(self.username.lower(), password)
 
+    def check_password(self, password):
+        """
+        Returns a boolean of whether the (plaintext) password was correct.
+        Handles encryption formats behind the scenes.
+        """
+        return crypto.hmac_sha1(self.username.lower(),
+                                password) == self.password
+
     def migrate(self, next_schema):
         """
         Migrate from one model schema to the next.

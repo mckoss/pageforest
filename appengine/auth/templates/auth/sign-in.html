@@ -1,0 +1,25 @@
+{% extends "page.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block both-columns %}
+<h2>Sign in to {{SITE_NAME}}</h2>
+{% if form.non_field_errors %}
+<p class="error">{{ form.non_field_errors.0 }}</p>
+{% endif %}
+<form method="post">
+<table>
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td class="form-message" id="validate_{{ field.html_name }}">
+  <span class="error">{{ field.errors.0 }}</span>
+</td>
+</tr>
+{% endfor %}
+<tr><td></td><td><input type="submit" value="Join Now" /></td></tr>
+</table>
+</form>
+<p>Need to create account?  <a href="/auth/sign-up">Join Now</a>.</p>
+{% endblock %}

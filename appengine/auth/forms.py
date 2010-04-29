@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.conf import settings
 from django.utils import simplejson as json
@@ -17,6 +19,11 @@ yxcvbnm,.-
 """.split()
 
 
+regex_username = re.compile(r"^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$")
+username_error = "Username must begin with a letter and contain only " + \
+    "numbers, letters and dashes."
+
+
 class LabeledCheckbox(forms.CheckboxInput):
     def __init__(self, attrs=None, label=None, id=None):
         super(LabeledCheckbox, self).__init__(attrs)
@@ -34,9 +41,8 @@ class LabeledCheckbox(forms.CheckboxInput):
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=r'^[A-Za-z0-9]+$', min_length=2, max_length=30,
-        error_messages={'invalid':
-                        "Username can only contain letters and numbers."})
+        regex=regex_username, min_length=2, max_length=30,
+        error_messages={'invalid': username_error})
     email = forms.EmailField(max_length=75, label="Email address")
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
@@ -110,3 +116,36 @@ class RegistrationForm(forms.Form):
         for key, val in self.errors.iteritems():
             errors[key] = [unicode(msg) for msg in val]
         return json.dumps(errors)
+
+
+class SignInForm(forms.Form):
+    username = forms.RegexField(
+        regex=regex_username, min_length=2, max_length=30,
+        error_messages={'invalid': username_error})
+    password = forms.CharField(
+        widget=forms.PasswordInput(render_value=False))
+
+    def clean_username(self):
+        """
+        Validate that the username is available.
+        """
+        username = self.cleaned_data['username']
+        key_name = username.lower()
+        if key_name in settings.RESERVED_USERNAMES:
+            raise forms.ValidationError("This username is reserved.")
+        if User.get_by_key_name(key_name) is None:
+            raise forms.ValidationError("No account for %s." % username)
+        return username
+
+    def clean(self):
+        """
+        Raise an error if the user does not exist OR the password for that
+        user does not match - but don't reveal the reason to the user.
+        """
+        if 'username' in self.cleaned_data and 'password' in self.cleaned_data:
+            key_name = self.cleaned_data['username'].lower()
+            user = User.get_by_key_name(key_name)
+            if user is None or \
+                not user.check_password(self.cleaned_data['password']):
+                raise forms.ValidationError("Invalid username or password.")
+        return self.cleaned_data
