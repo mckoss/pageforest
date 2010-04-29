@@ -9,6 +9,8 @@ from apps.models import App
 from documents.models import Document
 from storage.models import KeyValue
 
+PROPERTIES = ['users', 'apps', 'documents', 'keyvalues']
+
 
 def count(model, property, start, stop):
     query = model.all(keys_only=True)
@@ -17,7 +19,7 @@ def count(model, property, start, stop):
     return query.count()
 
 
-class Hour(Cacheable, Migratable):
+class StatsHour(Cacheable, Migratable):
     """
     Collect statistics for one hour.
     The key name is YYYYMMDDHH.
@@ -43,8 +45,14 @@ class Hour(Cacheable, Migratable):
         self.documents = count(Document, 'created', start, stop)
         self.keyvalues = count(KeyValue, 'created', start, stop)
 
+    def __unicode__(self):
+        result = []
+        for property in PROPERTIES:
+            result.append('%d %s' % (getattr(self, property), property))
+        return ', '.join(result)
 
-class Day(Hour):
+
+class StatsDay(StatsHour):
     """
     Collect statistics for one day (UTC).
     The key name is YYYYMMDD.
@@ -52,13 +60,13 @@ class Day(Hour):
 
     def get_parts(self):
         key_name = self.key().name()
-        keys = [db.Key.from_path('Hour', key_name + '%02d' % hour)
+        keys = [db.Key.from_path('StatsHour', key_name + '%02d' % hour)
                 for hour in range(24)]
         return db.get(keys)
 
     def update(self):
         parts = self.get_parts()
-        for property in self.properties():
+        for property in PROPERTIES:
             count = 0
             for part in parts:
                 if part:
@@ -66,7 +74,7 @@ class Day(Hour):
             setattr(self, property, count)
 
 
-class Month(Day):
+class StatsMonth(StatsDay):
     """
     Collect statistics for one month (UTC).
     The key name is YYYYMM.
@@ -74,6 +82,6 @@ class Month(Day):
 
     def get_parts(self):
         key_name = self.key().name()
-        keys = [db.Key.from_path('Day', key_name + '%02d' % day)
+        keys = [db.Key.from_path('StatsDay', key_name + '%02d' % day)
                 for day in range(1, 32)]
         return db.get(keys)
