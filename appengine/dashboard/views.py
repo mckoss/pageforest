@@ -6,6 +6,7 @@ from auth.models import User
 from apps.models import App
 from documents.models import Document
 from storage.models import KeyValue
+from dashboard.models import StatsHour, StatsDay, StatsMonth
 
 
 def count_recent(model, property, start_times):
@@ -35,3 +36,24 @@ def index(request):
         'keyvalue_modified': keyvalue_modified,
         }
     return render_to_response(request, 'dashboard/index.html', dictionary)
+
+
+def cron(request):
+    """
+    Update statistics for the current hour, day, month.
+    """
+    now = datetime.now() - timedelta(minutes=5)
+    # Update current hour.
+    hour = StatsHour(key_name=now.strftime('%Y%m%d%H'))
+    hour.update()
+    hour.put()
+    # Update current day.
+    day = StatsDay(key_name=now.strftime('%Y%m%d'))
+    day.update()
+    day.put()
+    # Update current month.
+    month = StatsMonth(key_name=now.strftime('%Y%m'))
+    month.update()
+    month.put()
+    return render_to_response(request, 'dashboard/cron.html', {
+            'hour': hour, 'day': day, 'month': month})
