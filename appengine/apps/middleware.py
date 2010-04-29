@@ -13,7 +13,9 @@ class AppMiddleware(object):
         hostname = request.META.get('HTTP_HOST', 'testserver').split(':')[0]
         if hostname.startswith('www.'):
             hostname = hostname[4:]
-        if hostname in (settings.DEFAULT_DOMAIN,
+        first_part = hostname.split('.')[0]
+        appspot_version = first_part + '.latest.pageforest.appspot.com'
+        if hostname in (settings.DEFAULT_DOMAIN, appspot_version,
                         'localhost', 'pageforest', 'testserver'):
             # Don't allow references to internal re-written uri's
             if request.path_info.startswith('/app/'):
