@@ -86,6 +86,8 @@ def sign(*args, **kwargs):
     >>> sign('a', 'b', 'c', separator=',')
     'a,b,35f2e8a17d82aa42e207df72ac786c84b98a220f'
     """
+    # BUG: This seems dangerous (error prone) to pass unspecified
+    # kwargs around like this
     args = list(args)
     args[-1] = hmac_sha1(*args, **kwargs)
     return join(*args, **kwargs)

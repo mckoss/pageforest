@@ -5,7 +5,8 @@ urlpatterns = patterns('auth.views',
     # User interface
     (r'^sign-up$', 'register'),
     # AJAX validator for user registration.
-    (r'^welcome$', direct_to_template, {'template': 'welcome.html'}),
+    (r'^welcome$', direct_to_template,
+        {'template': 'auth/welcome.html'}),
 
     # Optional token.
     (r'^sign-in$', 'sign_in'),

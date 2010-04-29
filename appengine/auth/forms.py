@@ -94,7 +94,7 @@ class RegistrationForm(forms.Form):
                     "The two password fields are not the same.")
         return self.cleaned_data
 
-    def save(self):
+    def save(self, request):
         """
         Create a new user with the form data.
         """
@@ -104,6 +104,7 @@ class RegistrationForm(forms.Form):
                     email=self.cleaned_data['email'])
         user.set_password(self.cleaned_data['password'])
         user.put()
+        user.send_email_verification(request)
         return user
 
     def errors_json(self):
