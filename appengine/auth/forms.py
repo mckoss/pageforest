@@ -43,11 +43,11 @@ class RegistrationForm(forms.Form):
     username = forms.RegexField(
         regex=regex_username, min_length=2, max_length=30,
         error_messages={'invalid': username_error})
-    email = forms.EmailField(max_length=75, label="Email address")
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
     repeat = forms.CharField(max_length=40, label="Repeat password",
         widget=forms.PasswordInput(render_value=False))
+    email = forms.EmailField(max_length=75, label="Email address")
     tos = forms.BooleanField(
         label="Terms of Service",
         widget=LabeledCheckbox(label="I agree", id='tos'),
