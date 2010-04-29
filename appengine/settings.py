@@ -71,6 +71,10 @@ USE_I18N = False
 # decorate our view functions with @last_modified instead.
 USE_ETAGS = False
 
+# We don't let CommonMiddleware redirect to add www or slashes.
+PREPEND_WWW = False
+APPEND_SLASH = False
+
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
 
@@ -149,10 +153,11 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
-    'django.middleware.common.CommonMiddleware',
+    # 'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
     'utils.middleware.RequestMiddleware',  # Put request in threading.local().
+    'utils.middleware.SlashMiddleware',    # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',       # Get the app for this request.
     'documents.middleware.DocMiddleware',  # Get the document for this request.
     'auth.middleware.AuthMiddleware',      # Authenticate with session key.
