@@ -4,8 +4,6 @@ def safe_settings(request):
     """
     from django.conf import settings
     result = {}
-    import logging
-    logging.info("ss: %r" % settings.SAFE_SETTINGS)
     for name in settings.SAFE_SETTINGS:
         result[name] = getattr(settings, name)
 
