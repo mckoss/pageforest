@@ -53,8 +53,6 @@ def main():
     levels = ('weak', 'strong', 'strict')
     option_list = (
         make_option('-v', '--verbose', action='store_true'),
-        make_option('-s', '--halt', action='store_true',
-                    help="stop on error"),
         make_option('-q', '--quiet', action='store_true',
                     help="just display error summary"),
         make_option('-i', '--ignore', action='append',
@@ -73,47 +71,36 @@ def main():
     if not hasattr(options, 'level'):
         options.level = 'strong'
 
-    save_dir = os.getcwd()
-
     filenames = pftool.walk_files(
         args, matches=('*.js', '*.json'), ignored=options.ignored)
 
-    command = ['java',
-               'org.mozilla.javascript.tools.shell.Main',
-               'jslint-cl.js',
-               '--' + options.level]
+    command = 'java org.mozilla.javascript.tools.shell.Main ' + \
+        'jslint-cl.js --' + options.level + \
+        ' ' + ' '.join(filenames)
 
-    total_errors = 0
-    for filename in filenames:
-        os.chdir(pftool.tools_dir)
-        command.append(filename)
-        if options.verbose:
-            print(' '.join(command))
-        jslint = subprocess.Popen(' '.join(command), shell=True,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
-        stdout, stderr = jslint.communicate()
-        command.pop()
-        os.chdir(save_dir)
+    if options.verbose:
+        print(command)
 
-        # Filter error messages and count errors.
-        errors = 0
-        stdout += stderr
-        for line in stdout.splitlines():
-            line = line.rstrip()
-            if line == '' or ignore(line, options.level):
-                continue
-            if not options.quiet:
-                print shorten_path(line)
-            errors += 1
-        total_errors += errors
-        if options.halt and errors:
-            break
-        if options.verbose or options.quiet and errors > 0:
-            print("%s errors: %d" % (filename, errors))
+    os.chdir(pftool.tools_dir)
+    jslint = subprocess.Popen(command,
+                              shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE)
+    stdout, stderr = jslint.communicate()
 
-    if total_errors:
-        sys.exit("found %d errors" % total_errors)
+    # Filter error messages and count errors.
+    errors = 0
+    stdout += stderr
+    for line in stdout.splitlines():
+        line = line.rstrip()
+        if line == '' or ignore(line, options.level):
+            continue
+        if not options.quiet:
+            print shorten_path(line)
+        errors += 1
+
+    if errors:
+        sys.exit("found %d errors" % errors)
 
 
 if __name__ == '__main__':
