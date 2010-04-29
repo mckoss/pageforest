@@ -62,11 +62,17 @@ def index(request):
     return render_to_response(request, 'dashboard/index.html', dictionary)
 
 
-def cron(request):
+def cron(request, date=None):
     """
     Update statistics for the current hour, day, month.
     """
-    now = datetime.now() - timedelta(minutes=5)
+    if date is None:
+        now = datetime.now() - timedelta(minutes=5)
+    else:
+        date = date.strip('/')
+        while len(date) < 10:
+            date += '01'
+        now = datetime.strptime(date, '%Y%m%d%H')
     # Update current hour.
     hour = StatsHour(key_name=now.strftime('%Y%m%d%H'))
     hour.update()
