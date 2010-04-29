@@ -58,7 +58,7 @@ def walk_files(args, matches=None, ignored=None):
             continue
 
         if not os.path.isdir(arg):
-            print("File does not exist: %s" % arg)
+            print("Not a file or directory: %s" % arg)
             continue
 
         for dirpath, dirnames, filenames in os.walk(arg):
