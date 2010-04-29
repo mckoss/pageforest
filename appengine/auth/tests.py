@@ -63,10 +63,14 @@ class RegistrationTest(TestCase):
 
     def test_username_invalid(self):
         """Test that invalid usernames are rejected."""
-        for name in '_name a-b 0.5'.split():
+        for name in '_name 1x a- a_b a.b'.split():
             response = self.www.post('/auth/sign-up', {'username': name})
-            self.assertContains(response,
-                "Username can only contain letters and numbers.")
+            self.assertContains(response, "Username must")
+
+    def test_username_too_short(self):
+        """Test that excessively short usernames are rejected."""
+        response = self.www.post('/auth/sign-up', {'username': 'a'})
+        self.assertContains(response, "at least 2 characters")
 
     def test_username_too_long(self):
         """Test that excessively long usernames are rejected."""

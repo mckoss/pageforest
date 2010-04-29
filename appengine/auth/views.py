@@ -16,7 +16,7 @@ from utils.shortcuts import render_to_response
 from utils.http import http_datetime
 from utils import crypto
 
-from auth.forms import RegistrationForm
+from auth.forms import RegistrationForm, SignInForm
 from auth.models import User
 
 CHALLENGE_EXPIRATION = 60  # Seconds.
@@ -25,30 +25,32 @@ CHALLENGE_EXPIRATION = 60  # Seconds.
 @method_required('GET', 'POST')
 def register(request):
     """Create a user account on PageForest."""
+    form = RegistrationForm(request.POST or None)
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
         if 'validate' in request.POST:
             return HttpResponse(form.errors_json(),
                                 mimetype='application/json')
         if form.is_valid():
             form.save()
             return redirect('/welcome/')
-    else:
-        form = RegistrationForm()
     return render_to_response(request, 'auth/register.html', locals())
 
 
-@method_required('GET')
-def sign_in(request, token):
+@method_required('GET', 'POST')
+def sign_in(request):
     """Create a user account on PageForest."""
+    form = SignInForm(request.POST or None)
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('/welcome/')
-    else:
-        form = RegistrationForm()
-    return render_to_response(request, 'auth/register.html', locals())
+            return redirect('/')
+    logging.info("errors: %r" % form.errors)
+    return render_to_response(request, 'auth/sign-in.html', locals())
+
+
+@method_required('GET', 'POST')
+def sign_out(request, token):
+    # TODO: Clean sign-in cookie
+    return redirect('/')
 
 
 @jsonp

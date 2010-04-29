@@ -8,7 +8,7 @@ urlpatterns = patterns('auth.views',
     (r'^welcome$', direct_to_template, {'template': 'welcome.html'}),
 
     # Optional token.
-    (r'^sign-in(?:/(.+))?$', 'sign_in'),
+    (r'^sign-in$', 'sign_in'),
     (r'^sign-out$', 'sign_out'),
 
     # Auth API for http://app_id.pageforest.com/auth
