@@ -33,15 +33,15 @@ def random64url(length=32):
     return random64(length, BASE64URL)
 
 
-def join(*args, **kwargs):
+def join(*args):
     """
     Join arguments with separator. Special types are converted to
     canonical string representation.
 
     >>> join('a', 'b', 'c')
     'a/b/c'
-    >>> join(1, 2, 3, separator=',')
-    '1,2,3'
+    >>> join(1, 2, 3)
+    '1/2/3'
     >>> join(['a', 'b', 'c'], 'd')
     'a/b/c/d'
     >>> join(datetime(2010, 4, 19, 9, 24, 56, 123456))
@@ -51,7 +51,6 @@ def join(*args, **kwargs):
     >>> join(1.0 / 9.0)
     '0.1111111'
     """
-    separator = kwargs.get('separator', SEPARATOR)
     parts = []
     for arg in args:
         if isinstance(arg, datetime):
@@ -63,34 +62,32 @@ def join(*args, **kwargs):
         else:
             arg = str(arg)
         parts.append(arg)
-    return separator.join(parts)
+    return SEPARATOR.join(parts)
 
 
-def hmac_sha1(*args, **kwargs):
+def hmac_sha1(*args):
     """
     The last item in args is the secret key for HMAC.
 
-    >>> hmac_sha1('a', 'b', 'c', separator=',')
-    '35f2e8a17d82aa42e207df72ac786c84b98a220f'
+    >>> hmac_sha1('a', 'b', 'c')
+    '353b2e5fb7afb93637bc22480a0fd6365127970b'
     """
     args = list(args)
     key = args.pop()
-    msg = join(*args, **kwargs)
+    msg = join(*args)
     return hmac.new(key, msg, hashlib.sha1).hexdigest()
 
 
-def sign(*args, **kwargs):
+def sign(*args):
     """
     The last item in args is the secret key for HMAC.
 
-    >>> sign('a', 'b', 'c', separator=',')
-    'a,b,35f2e8a17d82aa42e207df72ac786c84b98a220f'
+    >>> sign('a', 'b', 'c')
+    'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b'
     """
-    # BUG: This seems dangerous (error prone) to pass unspecified
-    # kwargs around like this
     args = list(args)
-    args[-1] = hmac_sha1(*args, **kwargs)
-    return join(*args, **kwargs)
+    args[-1] = hmac_sha1(*args)
+    return join(*args)
 
 
 if __name__ == '__main__':
