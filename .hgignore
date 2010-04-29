@@ -4,5 +4,6 @@ syntax: glob
 .svn/*
 check.log
 *~
+#*#
 *.orig
 .url
