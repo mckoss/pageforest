@@ -31,7 +31,7 @@ def register(request):
             return HttpResponse(form.errors_json(),
                                 mimetype='application/json')
         if form.is_valid():
-            form.save()
+            form.save(request)
             return redirect('/welcome/')
     return render_to_response(request, 'auth/register.html', locals())
 
