@@ -1,34 +1,12 @@
-import settingsauto
-
-SAFE_SETTINGS = """
-APPLICATION_ID
-CURRENT_VERSION_ID
-SERVER_SOFTWARE
-AUTH_DOMAIN
-SITE_NAME
-ANALYTICS_CODE
-
-DEV_APPSERVER
-DEBUG
-TEMPLATE_DEBUG
-
-ADMINS
-MANAGERS
-DEFAULT_DOMAIN
-DOMAINS
-
-MEDIA_URL
-COMBINE_FILES
-""".split()
-
-
 def safe_settings(request):
     """
     Make some of the application settings available as template variables.
     """
     from django.conf import settings
     result = {}
-    for name in SAFE_SETTINGS:
+    import logging
+    logging.info("ss: %r" % settings.SAFE_SETTINGS)
+    for name in settings.SAFE_SETTINGS:
         result[name] = getattr(settings, name)
 
     domain = request.get_host()
@@ -51,7 +29,7 @@ def combined_files(request):
     for file_type in settings.MEDIA_FILES.keys():
         template_key = "%s_files" % file_type
         result[template_key] = {}
-        combined_path = settings.MEDIA_URL + settingsauto.MEDIA_VERSION + \
+        combined_path = settings.MEDIA_URL + settings.MEDIA_VERSION + \
             '/' + file_type + '/'
         if file_type == 'js':
             file_ext = '.min.js'
