@@ -29,9 +29,9 @@ class UserTest(TestCase):
 
     def test_timestamps(self):
         """Test that the timestamps are properly set."""
-        self.assertTrue(self.peter.date_joined >= self.start_time)
+        self.assertTrue(self.peter.created >= self.start_time)
         self.assertTrue(self.peter.last_login >= self.start_time)
-        self.assertTrue(self.paul.date_joined >= self.peter.date_joined)
+        self.assertTrue(self.paul.created >= self.peter.created)
 
     def test_migratable(self):
         """Test schema migration for User model."""

@@ -4,24 +4,22 @@ from google.appengine.api import mail
 from django.template.loader import render_to_string
 from django.template import RequestContext
 
-from utils.mixins import Migratable, Cacheable
+from utils.mixins import Migratable, Cacheable, Timestamped
 from utils import crypto
 
 import settings
 
 
-class User(db.Expando, Migratable, Cacheable):
+class User(db.Expando, Migratable, Cacheable, Timestamped):
     """
     The entity key name is username.lower() for case-insensitive matching.
     The password is hmac_sha1(key=raw_password, message=username.lower()).
     """
     username = db.StringProperty()  # May include capital letters.
-    email = db.EmailProperty()
     password = db.StringProperty()
-    # TODO: Not updated for each login?
     last_login = db.DateTimeProperty(auto_now_add=True)
-    date_joined = db.DateTimeProperty(auto_now_add=True)
-    date_verified = db.DateTimeProperty()
+    email = db.EmailProperty()
+    email_verified = db.DateTimeProperty()
 
     def __unicode__(self):
         return self.username
