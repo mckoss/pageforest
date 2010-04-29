@@ -2,9 +2,9 @@ syntax: glob
 
 *.pyc
 .svn/*
-check.log
+*.log
 *~
-*#
+\#*\#
 *.orig
 .url
 TAGS
