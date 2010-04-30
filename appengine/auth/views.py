@@ -18,6 +18,8 @@ from utils import crypto
 from auth.forms import RegistrationForm, SignInForm
 from auth.models import User
 
+from apps.models import App
+
 CHALLENGE_EXPIRATION = 60  # Seconds.
 CACHE_PREFIX = 'CR1'
 
@@ -44,11 +46,14 @@ def sign_in(request):
     Check credentials and generate a session key.
     """
     form = SignInForm(request.POST or None)
+    app_id = request.GET.get('app', None)
+    app = app_id and App.lookup(app_id)
     if request.method == 'POST':
         if form.is_valid():
             return redirect('/')
     logging.info("errors: %r" % form.errors)
-    return render_to_response(request, 'auth/sign-in.html', {'form': form})
+    return render_to_response(request, 'auth/sign-in.html',
+                              {'form': form, 'app': app})
 
 
 @method_required('GET')
