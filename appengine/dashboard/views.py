@@ -67,7 +67,7 @@ def cron(request, date=None):
     Update statistics for the current hour, day, month.
     """
     if date is None:
-        now = datetime.now() - timedelta(minutes=5)
+        now = datetime.now() - timedelta(minutes=30)
     else:
         date = date.strip('/')
         while len(date) < 10:
