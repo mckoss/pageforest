@@ -16,8 +16,9 @@ class AppMiddleware(object):
         first_part = hostname.split('.')[0]
         appspot_version = first_part + '.latest.pageforest.appspot.com'
         if hostname in (settings.DEFAULT_DOMAIN, appspot_version,
-                        'localhost', 'pageforest', 'testserver'):
-            # Don't allow references to internal re-written uri's
+                        'pageforest.appspot.com', 'pageforest',
+                        '127.0.0.1', 'localhost', 'testserver'):
+            # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
                 raise Http404
             return  # Front-end (www.pageforest.com).
