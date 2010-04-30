@@ -99,7 +99,9 @@ def verify(signed, key):
     >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
     ['a', 'b']
     >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
-    Exception("Invalid signature")
+    Traceback (most recent call last):
+    ...
+    Exception: Invalid signature.
     """
     if type(signed) == str:
         parts = signed.split(SEPARATOR)
@@ -108,7 +110,6 @@ def verify(signed, key):
         signed = SEPARATOR.join(parts)
     parts[-1] = key
     if sign(*parts) != signed:
-        print("%r, %r" % (parts, sign(*parts)))
         raise Exception("Invalid signature.")
     return parts[:-1]
 
