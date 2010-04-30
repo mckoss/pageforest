@@ -124,6 +124,26 @@ class ChallengeVerifyTest(TestCase):
         self.assertTrue(cookie.endswith(' GMT'))
         self.assertTrue('; path=/; expires=' in cookie)
 
+    def test_invalid_challenge_sig(self):
+        """The challenge must have a valid HMAC."""
+        # Get a challenge from the server.
+        response = self.app_client.get('/auth/challenge')
+        self.assertContains(response, '/201')
+        challenge = response.content
+        self.assertEqual(len(challenge), 94)
+        # Alter the last letter of the challenge HMAC
+        challenge = challenge[:-1] + 'x'
+        # Sign the challenge and attempt login.
+        signed = crypto.sign(challenge, self.peter.password)
+        data = crypto.join(self.peter.username.lower(), signed)
+        response = self.app_client.get('/auth/verify/' + data)
+        print("resp: %s" % response)
+        self.assertContains(response, 'myapp/peter/201')
+        cookie = response['Set-Cookie']
+        self.assertTrue(cookie.startswith('reauth=myapp/peter/201'))
+        self.assertTrue(cookie.endswith(' GMT'))
+        self.assertTrue('; path=/; expires=' in cookie)
+
     def test_bogus_login(self):
         """Test that a bogus authentication string cannot login."""
         response = self.app_client.get('/auth/verify/x')

@@ -73,7 +73,7 @@ def hmac_sha1(*args):
     '353b2e5fb7afb93637bc22480a0fd6365127970b'
     """
     args = list(args)
-    key = args.pop()
+    key = str(args.pop())
     msg = join(*args)
     return hmac.new(key, msg, hashlib.sha1).hexdigest()
 
@@ -88,6 +88,29 @@ def sign(*args):
     args = list(args)
     args[-1] = hmac_sha1(*args)
     return join(*args)
+
+
+def verify(signed, key):
+    """
+    Verify a properly signed string - the last argument is the HMAC.
+
+    If valid - return the parts in a list, else None.
+
+    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    ['a', 'b']
+    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    Exception("Invalid signature")
+    """
+    if type(signed) == str:
+        parts = signed.split(SEPARATOR)
+    else:
+        parts = list(signed)
+        signed = SEPARATOR.join(parts)
+    parts[-1] = key
+    if sign(*parts) != signed:
+        print("%r, %r" % (parts, sign(*parts)))
+        raise Exception("Invalid signature.")
+    return parts[:-1]
 
 
 if __name__ == '__main__':

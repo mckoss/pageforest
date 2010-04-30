@@ -15,7 +15,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
     The entity key name is username.lower() for case-insensitive matching.
     The password is hmac_sha1(key=raw_password, message=username.lower()).
     """
-    username = db.StringProperty()  # May include capital letters.
+    username = db.StringProperty(required=True)  # May include capital letters.
     password = db.StringProperty()
     last_login = db.DateTimeProperty(auto_now_add=True)
     email = db.EmailProperty()
@@ -46,9 +46,8 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         pass
 
     def send_email_verification(self, request):
-        return
         message = render_to_string('auth/verify-email.txt',
-                                   RequestContext(request, locals()))
+                                   RequestContext(request, {'user': self}))
         mail.send_mail(sender=settings.SITE_EMAIL_FROM,
                        to=self.email,
                        subject=settings.SITE_NAME + " account verification.",
