@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timedelta
 
 from google.appengine.api import memcache
@@ -107,102 +108,92 @@ class ChallengeVerifyTest(TestCase):
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
+    def response_from_verify(self, challenge,
+                             username=None, password=None, **kwargs):
+        # Helper: sign the challenge and attempt login.
+        username = username or self.peter.username
+        password = password or self.peter.password
+        signed = crypto.sign(challenge, password)
+        data = crypto.join(username.lower(), signed)
+        response = self.app_client.get('/auth/verify/' + data, **kwargs)
+        return response
+
     def test_login(self):
-        """Test challenge and login."""
+        """Test challenge and verify."""
         # Get a challenge from the server.
         response = self.app_client.get('/auth/challenge')
-        self.assertContains(response, '/201')
+        self.assertEquals(response.status_code, 201)
         challenge = response.content
-        self.assertEqual(len(challenge), 94)
-        # Sign the challenge and attempt login.
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, 'myapp/peter/201')
+        response = self.response_from_verify(challenge)
+        self.assertContains(response, 'myapp/peter/', status_code=201)
         cookie = response['Set-Cookie']
-        self.assertTrue(cookie.startswith('reauth=myapp/peter/201'))
+        self.assertTrue(cookie.startswith('reauth=myapp/peter/'))
         self.assertTrue(cookie.endswith(' GMT'))
         self.assertTrue('; path=/; expires=' in cookie)
 
     def test_invalid_challenge_sig(self):
         """The challenge must have a valid HMAC."""
         # Get a challenge from the server.
-        response = self.app_client.get('/auth/challenge')
-        self.assertContains(response, '/201')
-        challenge = response.content
-        self.assertEqual(len(challenge), 94)
+        challenge = self.app_client.get('/auth/challenge').content
         # Alter the last letter of the challenge HMAC
         challenge = challenge[:-1] + 'x'
-        # Sign the challenge and attempt login.
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.app_client.get('/auth/verify/' + data)
-        print("resp: %s" % response)
-        self.assertContains(response, 'myapp/peter/201')
-        cookie = response['Set-Cookie']
-        self.assertTrue(cookie.startswith('reauth=myapp/peter/201'))
-        self.assertTrue(cookie.endswith(' GMT'))
-        self.assertTrue('; path=/; expires=' in cookie)
+        response = self.response_from_verify(challenge)
+        self.assertContains(response, 'Invalid signature.', status_code=403)
 
     def test_bogus_login(self):
         """Test that a bogus authentication string cannot login."""
         response = self.app_client.get('/auth/verify/x')
-        self.assertContains(response, 'Authentication must have five parts.',
+        self.assertContains(response, 'Challenge response failed',
                             status_code=403)
 
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
+        # Mock up a 61 second delayed system time.
+        real_time = time.time
+
+        def mock_time():
+            return real_time() - 61
+
+        time.time = mock_time
+
         challenge = self.app_client.get('/auth/challenge').content
-        parts = challenge.split(crypto.SEPARATOR)
-        parts[1] = datetime.strptime(parts[1], "%Y-%m-%dT%H:%M:%SZ")
-        parts[1] -= timedelta(seconds=61)
-        challenge = crypto.join(parts)
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, 'The challenge is expired.',
+        time.time = real_time
+        response = self.response_from_verify(challenge)
+        self.assertContains(response, 'Challenge expired.',
                             status_code=403)
 
     def test_replay(self):
         """Test that a replay attack cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join(self.peter.username.lower(), signed)
         # First login should be successful.
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, 'myapp/peter/201')
+        response = self.response_from_verify(challenge)
+        self.assertContains(response, 'myapp/peter/', status_code=201)
         # Replay should fail with 403 Forbidden.
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, 'The challenge is unknown.',
-                            status_code=403)
+        response = self.response_from_verify(challenge)
+        self.assertContains(response, 'Already used.', status_code=403)
 
     def test_different_ip(self):
         """Test that different IP address cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        memcache.set(challenge, '10.4.5.6', 60)
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join('unknown', signed)
-        response = self.app_client.get('/auth/verify/' + data)
+        response = self.response_from_verify(challenge,
+                                             REMOTE_ADDR='1.1.1.1')
         self.assertContains(response,
-                            "The challenge was issued to a different IP.",
+                            "IP address changed.",
                             status_code=403)
 
     def test_unknown_user(self):
         """Test that unknown user cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        signed = crypto.sign(challenge, self.peter.password)
-        data = crypto.join('unknown', signed)
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, "The username 'unknown' is unknown.",
-                            status_code=403)
+        response = self.response_from_verify(challenge, username='unknown')
+        self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_wrong_password(self):
         """Test that incorrect password cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        signed = crypto.sign(challenge, self.peter.password[::-1])
-        data = crypto.join(self.peter.username.lower(), signed)
-        response = self.app_client.get('/auth/verify/' + data)
-        self.assertContains(response, 'The password signature is incorrect.',
+        response = self.response_from_verify(
+            challenge,
+            password=self.peter.password[::-1])
+        self.assertContains(response, 'Invalid signature.',
                             status_code=403)
 
 
