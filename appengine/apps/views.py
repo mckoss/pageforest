@@ -5,6 +5,7 @@ from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
 
 
+# TODO: @jsonp?
 @method_required('GET', 'PUT')
 def app_json(request):
     """Read and write application info with REST API."""
@@ -15,6 +16,7 @@ def app_json(request):
         return app_json_put(request)
 
 
+# TODO: @jsonp?
 def app_json_put(request):
     try:
         parsed = json.loads(request.raw_post_data)
@@ -27,9 +29,11 @@ def app_json_put(request):
                 assert_string_list(key, parsed[key])
                 setattr(request.app, key, parsed[key])
     except ValueError, e:
+        # REVIEW: Why is unicode wrapper needed?
         return HttpResponse(unicode(e), mimetype='text/plain', status=400)
+    # REVIEW: No access control or quota checks here?
     request.app.put()
-    return HttpResponse('{"status": 200, "statusText": "Saved"}',
+    return HttpResponse("""{'status': 200, 'statusText': "Saved"}""",
                         mimetype='application/json')
 
 
