@@ -39,7 +39,7 @@ MANAGERS = ADMINS
 SITE_NAME = "Pageforest"
 SITE_OWNER = "StartPad"
 SITE_CONTACT_INFO = "811 First Ave, Suite 480, Seattle, WA 98104"
-SITE_EMAIL_FROM = "admin@pageforest.com"
+SITE_EMAIL_FROM = "support@pageforest.com"
 
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.
