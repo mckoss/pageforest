@@ -1,5 +1,5 @@
 cron:
 - description: collect statistics for the dashboard
   url: /dashboard/cron/
-  schedule: every 10 minutes
+  schedule: every 20 minutes
   timezone: America/Los_Angeles
