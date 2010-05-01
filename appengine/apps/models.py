@@ -33,6 +33,9 @@ class App(Cacheable, Migratable, Timestamped):
         Find the app that serves a given domain. The matching is case
         insensitive and ignores ports like :8080. Results are stored
         in memcache for future requests.
+
+        If the app does not exist, an (in-memory) one will be created
+        (but not saved to storage).
         """
         # Check for cached hostname
         (app_id, hostname) = cls.parse_hostname(hostname)
@@ -60,9 +63,11 @@ class App(Cacheable, Migratable, Timestamped):
             if app:
                 memcache.set(memcache_key, app.app_id())
                 return app
+        # No identifiable app.
+        else:
+            return None
 
-        # No identifiable app - return the default PF app.
-        return cls.lookup('www')
+        return cls.create(app_id, hostname)
 
     @classmethod
     def parse_hostname(cls, hostname):
@@ -127,6 +132,8 @@ class App(Cacheable, Migratable, Timestamped):
         """
         if app_id in settings.RESERVED_APPS:
             raise Exception("Application %s is RESERVED." % app_id)
+        if hostname is None:
+            hostname = app_id + '.' + settigns_DEFAULT_DOMAIN
         title = app_id.capitalize()
         # TODO: generate real app secret, check creating user's permissions
         # and quota to do so.
