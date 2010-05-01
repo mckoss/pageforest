@@ -85,6 +85,7 @@ DOMAINS = [
     'pageforest.appspot.com',
     'pgfrst.com',
     'pgfr.st',
+    'pageforest',
     'localhost',
 ]
 
@@ -112,7 +113,7 @@ www www-data webmaster postmaster
 test tester testuser testclient
 friends family public private
 authenticated anonymous unknown noname
-everybody anybody nobody
+everybody anybody nobody public private
 """.split()
 
 # Prevent app registration with some special app names.
