@@ -1,3 +1,5 @@
+import re
+
 from google.appengine.ext import db
 from google.appengine.api import mail
 
@@ -8,6 +10,8 @@ from utils.mixins import Migratable, Cacheable, Timestamped
 from utils import crypto
 
 import settings
+
+regex_username = re.compile(r"^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$")
 
 
 class User(db.Expando, Migratable, Cacheable, Timestamped):

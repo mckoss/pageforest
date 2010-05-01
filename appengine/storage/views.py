@@ -20,9 +20,13 @@ def key_value(request, doc_id, key):
     Dispatch requests to the key-value storage interface.
     """
     if doc_id:
-        request.key_name = '/'.join((request.app_id, doc_id.lower(), key))
+        request.key_name = '/'.join((request.app.app_id(),
+                                     doc_id.lower(),
+                                     key))
     else:  # Static resources for this application.
-        request.key_name = '/'.join(('meta', request.app_id, key))
+        request.key_name = '/'.join(('meta',
+                                     request.app.app_id(),
+                                     key))
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():

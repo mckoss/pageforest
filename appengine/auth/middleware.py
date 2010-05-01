@@ -23,7 +23,7 @@ class AuthMiddleware(object):
             return HttpResponseForbidden("Session key is expired.")
         # Check the app id.
         app_id = parts[0]
-        if hasattr(request, 'app_id') and request.app_id != app_id:
+        if hasattr(request, 'app') and request.app.app_id() != app_id:
             return HttpResponseForbidden("Session key is for a different app.")
         # Check the username.
         username = parts[1]
