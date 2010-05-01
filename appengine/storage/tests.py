@@ -199,38 +199,38 @@ class MimeTest(AppTestCase):
 
     def test_html(self):
         """Test that the mime type is guessed correctly for HTML."""
-        response = self.put_and_get('/doc/index.html')
+        response = self.put_and_get('/index.html')
         self.assertContains(response, 'data')
         self.assertEqual(response['Content-Type'], 'text/html')
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
-        response = self.put_and_get('/doc/css/style.css')
+        response = self.put_and_get('/styles/css/style.css')
         self.assertEqual(response['Content-Type'], 'text/css')
 
     def test_js(self):
         """Test that the mime type is guessed correctly for JS."""
-        response = self.put_and_get('/doc/js/test.js')
+        response = self.put_and_get('/scripts/test.js')
         self.assertEqual(response['Content-Type'], 'application/javascript')
 
     def test_json(self):
         """Test that the mime type is guessed correctly for JSON."""
-        response = self.put_and_get('/data/test.json')
+        response = self.put_and_get('/extra/test.json')
         self.assertEqual(response['Content-Type'], 'application/json')
 
     def test_jpg(self):
         """Test that the mime type is guessed correctly for JPG."""
-        response = self.put_and_get('/doc/images/test.jpg')
+        response = self.put_and_get('/images/test.jpg')
         self.assertEqual(response['Content-Type'], 'image/jpeg')
 
     def test_png(self):
         """Test that the mime type is guessed correctly for PNG."""
-        response = self.put_and_get('/doc/images/test.png')
+        response = self.put_and_get('/images/test.png')
         self.assertEqual(response['Content-Type'], 'image/png')
 
     def test_ico(self):
         """Test that the mime type is guessed correctly for ICO."""
-        response = self.put_and_get('/doc/favicon.ico')
+        response = self.put_and_get('/favicon.ico')
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
 
 
@@ -239,19 +239,20 @@ class JsonArrayTest(AppTestCase):
     def setUp(self):
         """Prepare a simple chat array."""
         super(JsonArrayTest, self).setUp()
-        self.chat = KeyValue(key_name='app/doc/chat',
+        self.chat = KeyValue(key_name='/docs/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
 
     def assertContent(self, url, content):
         """Get array content and compare with expected value."""
         response = self.app_client.get(url)
+        print response.content
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, content)
 
     def test_last(self):
         """Test that the end of the array can be retrieved."""
-        url = '/docs/doc/chat'
+        url = '/docs/chat'
         self.assertContent(url + '?method=SLICE', '["hello", "hi", "howdy"]')
         self.assertContent(url + '?method=SLICE&start=-1', '["howdy"]')
         self.assertContent(url + '?method=SLICE&start=-2', '["hi", "howdy"]')
@@ -265,13 +266,13 @@ class JsonArrayTest(AppTestCase):
     def test_push(self):
         """Test that push appends to the end af the array."""
         started = datetime.now()
-        response = self.app_client.post('/docs/doc/chat?method=PUSH',
+        response = self.app_client.post('/docs/docs/chat?method=PUSH',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 4')
-        self.assertContent('/docs/doc/chat?method=SLICE&start=-2',
+        self.assertContent('/docs/docs/chat?method=SLICE&start=-2',
                            '["howdy", "bye"]')
-        chat = KeyValue.get_by_key_name('app/doc/chat')
+        chat = KeyValue.get_by_key_name('app/docs/chat')
         self.assertTrue(chat.created <= started)
         self.assertTrue(chat.modified >= started)
 
@@ -289,8 +290,8 @@ class JsonArrayTest(AppTestCase):
 
     def test_push_max(self):
         """Test that push appends to the end af the array."""
-        response = self.app_client.post('/docs/doc/chat?method=PUSH&max=3',
+        response = self.app_client.post('/docs/docs/chat?method=PUSH&max=3',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
-        self.assertContent('/docs/doc/chat', '["hi", "howdy", "bye"]')
+        self.assertContent('/docs/docs/chat', '["hi", "howdy", "bye"]')

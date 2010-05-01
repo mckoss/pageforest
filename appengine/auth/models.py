@@ -28,6 +28,10 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
     def __unicode__(self):
         return self.username
 
+    @classmethod
+    def lookup(cls, username):
+        return User.get_by_key_name(username.lower())
+
     def set_password(self, password):
         """
         Generate HMAC of the username, using the password as secret key.

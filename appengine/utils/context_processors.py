@@ -7,6 +7,7 @@ def safe_settings(request):
     for name in settings.SAFE_SETTINGS:
         result[name] = getattr(settings, name)
 
+    # DOMAIN - either 'pageforest.com' or 'localhost'
     domain = request.get_host()
     parts = domain.split('.')
     if parts[-1] == '.com':
@@ -20,7 +21,7 @@ def safe_settings(request):
 
 def combined_files(request):
     """
-    Return a dictionary of static js and css files across all applications.
+    Return a dictionary of static js and css files.
     """
     from django.conf import settings
     result = {}

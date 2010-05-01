@@ -147,11 +147,30 @@ class App(Cacheable, Migratable, Timestamped):
     def generate_session_key(self, user, seconds=None):
         """
         Generate a signed session key for this app and user.
+
+            app_id/user/expires/HMAC(user_password, app_secret)
+
+        This routine can generate a reauth cookie by passing in
+        seconds=settings.REAUTH_COOKIE_AGE.
+
+        We use the user.password in the key, so when a user changes his password
+        all of his existing session keys are invalidated.
         """
         seconds = seconds or settings.SESSION_COOKIE_AGE
+        # REVIEW: Why an ISO expires instead of epoch seconds?
         expires = datetime.now() + timedelta(seconds=seconds)
         secret = crypto.join(user.password, self.secret)
-        return crypto.sign(self.key().name(), user.username, expires, secret)
+        return crypto.sign(self.app_id(), user.username.lower(), expires, secret)
+
+    def user_from_session_key(self, key):
+        try:
+            (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
+            user = User.lookup(username)
+            secret = crypto.join(user.password, self.secret)
+            crypto.verify(key, secret)
+            return user
+        except:
+            return None
 
 
 if __name__ == '__main__':
