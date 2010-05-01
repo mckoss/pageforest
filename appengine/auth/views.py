@@ -78,7 +78,7 @@ def challenge(request):
     expires = int(time.time()) + CHALLENGE_EXPIRATION
     ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
     challenge = crypto.sign(random_key, expires, ip, request.app.secret)
-    return HttpResponse(challenge, mimetype='text/plain', status=201)
+    return HttpResponse(challenge, mimetype='text/plain')
 
 
 @jsonp
@@ -132,7 +132,7 @@ def verify(request, signature):
     session_key = crypto.sign(request.app.app_id(), username, expires, key)
     expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
     reauth_cookie = crypto.sign(request.app.app_id(), username, expires, key)
-    response = HttpResponse(session_key, content_type='text/plain', status=201)
+    response = HttpResponse(session_key, content_type='text/plain')
     response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
         settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
     return response

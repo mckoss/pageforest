@@ -122,10 +122,10 @@ class ChallengeVerifyTest(TestCase):
         """Test challenge and verify."""
         # Get a challenge from the server.
         response = self.app_client.get('/auth/challenge')
-        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.status_code, 200)
         challenge = response.content
         response = self.response_from_verify(challenge)
-        self.assertContains(response, 'myapp/peter/', status_code=201)
+        self.assertContains(response, 'myapp/peter/', status_code=200)
         cookie = response['Set-Cookie']
         self.assertTrue(cookie.startswith('reauth=myapp/peter/'))
         self.assertTrue(cookie.endswith(' GMT'))
@@ -167,7 +167,7 @@ class ChallengeVerifyTest(TestCase):
         challenge = self.app_client.get('/auth/challenge').content
         # First login should be successful.
         response = self.response_from_verify(challenge)
-        self.assertContains(response, 'myapp/peter/', status_code=201)
+        self.assertContains(response, 'myapp/peter/', status_code=200)
         # Replay should fail with 403 Forbidden.
         response = self.response_from_verify(challenge)
         self.assertContains(response, 'Already used.', status_code=403)
