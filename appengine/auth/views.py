@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from django.conf import settings
 from django.shortcuts import redirect
 from django.http import \
-    HttpResponse, HttpResponseForbidden, HttpResponseNotFound
+    HttpResponse, HttpResponseForbidden, HttpResponseNotFound, \
+    HttpResponseRedirect
 
 from google.appengine.api import memcache, quota
 from google.appengine.runtime import DeadlineExceededError
@@ -49,7 +50,10 @@ def sign_in(request, app_id=None):
     app = app_id and App.lookup(app_id)
     if request.method == 'POST':
         if form.is_valid():
-            return redirect('/')
+            response = HttpResponseRedirect('')
+            response.set_cookie(settings.SESSION_COOKIE_NAME,
+                                max_age=settings.SESSION_COOKIE_AGE)
+            return response
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form, 'app': app})
 
@@ -59,10 +63,8 @@ def sign_out(request, token):
     """
     Expire the session key cookie.
     """
-    response = redirect('/')
-    expires = http_datetime(datetime.now() - timedelta(days=1))
-    response['Set-Cookie'] = '%s=; expires=%s; path=/' % (
-        settings.SESSION_COOKIE_NAME, expires)
+    response = HttpResponseRedirect('/')
+    response.delete_cookie(settings.SESSION_COOKIE_NAME)
     return response
 
 
@@ -125,16 +127,11 @@ def verify(request, signature):
     # Mark the challenge as used until it expires
     memcache.set(CACHE_PREFIX + random, True, time=expires - now)
 
-    # Generate a session key for the next 24 hours.
-    key = crypto.join(user.password, request.app.secret)
-    # REVIEW: Why an ISO expires instead of epoch seconds?
-    expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
-    session_key = crypto.sign(request.app.app_id(), username, expires, key)
-    expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
-    reauth_cookie = crypto.sign(request.app.app_id(), username, expires, key)
+    session_key = request.app.generate_session_key(user)
+    reauth_cookie = request.app.generate_session_key(user, settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
-        settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
+    response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
+                        max_age=settings.REAUTH_COOKIE_AGE)
     return response
 
 

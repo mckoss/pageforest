@@ -23,6 +23,7 @@ class SlashMiddleware(object):
     """
 
     def process_request(self, request):
+        # REVIEW: shouldn't hard code /docs here
         if request.path_info.startswith('/docs/'):
             if request.path_info.count('/') >= 3:
                 return  # Don't mess with the key-value namespace.
@@ -35,3 +36,12 @@ class SlashMiddleware(object):
             request.path_info += '/'
             request.META['PATH_INFO'] = request.path_info
             request.path = request.META['SCRIPT_NAME'] + request.path_info
+
+
+class ExceptionMiddleware(object):
+    """
+    Stash information about any thrown exceptions into the request
+    object so it can be used by the 404, 500, and json templates.
+    """
+    def process_exception(self, request, exception):
+        request.exception = exception

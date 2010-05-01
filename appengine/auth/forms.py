@@ -126,14 +126,11 @@ class SignInForm(forms.Form):
         widget=forms.PasswordInput(render_value=False))
 
     def clean_username(self):
-        """
-        Validate that the username is available.
-        """
         username = self.cleaned_data['username']
-        key_name = username.lower()
-        if key_name in settings.RESERVED_USERNAMES:
+        username = username.lower()
+        if username in settings.RESERVED_USERNAMES:
             raise forms.ValidationError("This username is reserved.")
-        if User.get_by_key_name(key_name) is None:
+        if User.get_by_key_name(username) is None:
             raise forms.ValidationError("No account for %s." % username)
         return username
 
@@ -143,8 +140,9 @@ class SignInForm(forms.Form):
         user does not match - but don't reveal the reason to the user.
         """
         if 'username' in self.cleaned_data and 'password' in self.cleaned_data:
-            key_name = self.cleaned_data['username'].lower()
-            user = User.get_by_key_name(key_name)
+            username = self.cleaned_data['username'].lower()
+            user = User.get_by_key_name(username)
+            # OPT: user should already be validated by clean_username
             if user is None or \
                 not user.check_password(self.cleaned_data['password']):
                 raise forms.ValidationError("Invalid username or password.")

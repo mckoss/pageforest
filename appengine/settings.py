@@ -28,6 +28,7 @@ AUTH_DOMAIN = os.environ.get('AUTH_DOMAIN', '')
 DEV_APPSERVER = SERVER_SOFTWARE.startswith("Development")
 DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
+#DEBUG = False
 
 ADMINS = (
     ('Mike Koss', 'mckoss@pageforest.com'),
@@ -131,12 +132,28 @@ flickr
 profile
 """.split()
 
+# Reserved key prefixes in the application namespace.
+# http://app_id.pageforest.com/_key_/...
+# Internally, these are mapped to:
+# /app/_key_/...
+RESERVED_APP_KEYS = (
+    'docs',          # Saved application documents
+    'auth',          # Authentication urls
+    'static',        # Mirror of pf.com/static
+    'lib',           # Mirror of pf.com/lib
+    'app.json',      # Application metadata
+
+    # Reserved for future use
+    'data',
+    )
+
 # Name of the session cookie for simple request authentication.
 SESSION_COOKIE_NAME = 'sessionkey'
 SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
 
-# Name of the reauth cookie on auth.app_id.pageforest.com.
+# Name of the reauth cookie on app_id.pageforest.com
 REAUTH_COOKIE_NAME = 'reauth'
+REAUTH_COOKIE_PATH = '/auth/reauth'
 REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 
 # List of callables that know how to import templates from various sources.
@@ -160,11 +177,12 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'utils.middleware.RequestMiddleware',  # Put request in threading.local().
-    'utils.middleware.SlashMiddleware',    # Add trailing slash if needed.
-    'apps.middleware.AppMiddleware',       # Get the app for this request.
-    'documents.middleware.DocMiddleware',  # Get the document for this request.
-    'auth.middleware.AuthMiddleware',      # Authenticate with session key.
+    'utils.middleware.RequestMiddleware',    # Put request in threading.local().
+    'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
+    'utils.middleware.ExceptionMiddleware',  # Pass exception info to templates.
+    'apps.middleware.AppMiddleware',         # Get the app for this request.
+    'auth.middleware.AuthMiddleware',        # Get the signed in user for this request.
+    'documents.middleware.DocMiddleware',    # Get the document for this request.
 )
 
 ROOT_URLCONF = 'urls'
