@@ -69,21 +69,32 @@ def part_callback(option, opt_str, value, parser, *args, **kwargs):
 
 
 def main():
+    """
+    Order of tests for optimal use of developer time:
+
+    - Static anaysis tests (lint) - fix typos, undefined vars, etc.
+    - Unit tests
+    - Formatting and stylistic problems (pep8, and whitespace)
+
+    TODO: Optimize lint and pep8 by skipping files that have not
+    been modified since the last check.
+    """
+
     global options
 
     all_checks = [
-        ('whitespace', "python whitespace.py"),
-        ('doctest', "python settingsparser.py"),
-        ('pep8', "pep8 --count --repeat --exclude %s %s" %
-         (','.join(PEP8_EXCLUDE), pftool.root_dir)),
-        ('unittest', "python %s test -v0" %
-         os.path.join(pftool.app_dir, 'manage.py')),
         ('pylint', "python %s -e %s" %
          (pftool.tool_path('lint.py'), pftool.app_dir)),
-        ('jslint-weak', "python jslint.py --weak " +
-         os.path.join(pftool.app_dir, 'static', 'src', 'js')),
         ('jslint', "python jslint.py --strong " +
          "--ignore beautify* --ignore fulljslint.js"),
+        ('jslint-weak', "python jslint.py --weak " +
+         os.path.join(pftool.app_dir, 'static', 'src', 'js')),
+        ('doctest', "python settingsparser.py"),
+        ('unittest', "python %s test -v0" %
+         os.path.join(pftool.app_dir, 'manage.py')),
+        ('pep8', "pep8 --count --repeat --exclude %s %s" %
+         (','.join(PEP8_EXCLUDE), pftool.root_dir)),
+        ('whitespace', "python whitespace.py"),
         ]
 
     parser = OptionParser(
