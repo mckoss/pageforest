@@ -33,6 +33,7 @@ class HostnameTest(TestCase):
         self.assertEqual(app.title, 'Unknown')
         self.assertEqual(app.domains, ['unknown.pageforest.com'])
 
+
 class DocTest(TestCase):
 
     def has_doctest_testmod(self, filename):
