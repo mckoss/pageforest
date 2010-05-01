@@ -239,20 +239,22 @@ class JsonArrayTest(AppTestCase):
     def setUp(self):
         """Prepare a simple chat array."""
         super(JsonArrayTest, self).setUp()
-        self.chat = KeyValue(key_name='/docs/chat',
+        # REVIEW: Are these the right URLS we want to test?
+        # Why is 'app' in the key name?
+        self.chat = KeyValue(key_name='app/doc/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
 
     def assertContent(self, url, content):
         """Get array content and compare with expected value."""
         response = self.app_client.get(url)
-        print response.content
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, content)
 
     def test_last(self):
         """Test that the end of the array can be retrieved."""
-        url = '/docs/chat'
+        # REVIEW: Is this the right URL?  Why different from setUp?
+        url = '/docs/doc/chat'
         self.assertContent(url + '?method=SLICE', '["hello", "hi", "howdy"]')
         self.assertContent(url + '?method=SLICE&start=-1', '["howdy"]')
         self.assertContent(url + '?method=SLICE&start=-2', '["hi", "howdy"]')
@@ -266,13 +268,13 @@ class JsonArrayTest(AppTestCase):
     def test_push(self):
         """Test that push appends to the end af the array."""
         started = datetime.now()
-        response = self.app_client.post('/docs/docs/chat?method=PUSH',
+        response = self.app_client.post('/docs/doc/chat?method=PUSH',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 4')
-        self.assertContent('/docs/docs/chat?method=SLICE&start=-2',
+        self.assertContent('/docs/doc/chat?method=SLICE&start=-2',
                            '["howdy", "bye"]')
-        chat = KeyValue.get_by_key_name('app/docs/chat')
+        chat = KeyValue.get_by_key_name('app/doc/chat')
         self.assertTrue(chat.created <= started)
         self.assertTrue(chat.modified >= started)
 
@@ -290,8 +292,8 @@ class JsonArrayTest(AppTestCase):
 
     def test_push_max(self):
         """Test that push appends to the end af the array."""
-        response = self.app_client.post('/docs/docs/chat?method=PUSH&max=3',
+        response = self.app_client.post('/docs/doc/chat?method=PUSH&max=3',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
-        self.assertContent('/docs/docs/chat', '["hi", "howdy", "bye"]')
+        self.assertContent('/docs/doc/chat', '["hi", "howdy", "bye"]')

@@ -128,7 +128,8 @@ def verify(request, signature):
     memcache.set(CACHE_PREFIX + random, True, time=expires - now)
 
     session_key = request.app.generate_session_key(user)
-    reauth_cookie = request.app.generate_session_key(user, settings.REAUTH_COOKIE_AGE)
+    reauth_cookie = request.app.generate_session_key(user,
+            settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
                         max_age=settings.REAUTH_COOKIE_AGE)
