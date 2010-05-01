@@ -133,7 +133,7 @@ class App(Cacheable, Migratable, Timestamped):
         if app_id in settings.RESERVED_APPS:
             raise Exception("Application %s is RESERVED." % app_id)
         if hostname is None:
-            hostname = app_id + '.' + settigns_DEFAULT_DOMAIN
+            hostname = app_id + '.' + settings.DEFAULT_DOMAIN
         title = app_id.capitalize()
         # TODO: generate real app secret, check creating user's permissions
         # and quota to do so.
