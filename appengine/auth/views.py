@@ -41,17 +41,15 @@ def register(request):
 
 
 @method_required('GET', 'POST')
-def sign_in(request):
+def sign_in(request, app_id=None):
     """
     Check credentials and generate a session key.
     """
     form = SignInForm(request.POST or None)
-    app_id = request.GET.get('app', None)
     app = app_id and App.lookup(app_id)
     if request.method == 'POST':
         if form.is_valid():
             return redirect('/')
-    logging.info("errors: %r" % form.errors)
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form, 'app': app})
 
@@ -131,9 +129,9 @@ def verify(request, signature):
     key = crypto.join(user.password, request.app.secret)
     # REVIEW: Why an ISO expires instead of epoch seconds?
     expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
-    session_key = crypto.sign(request.app_id, username, expires, key)
+    session_key = crypto.sign(request.app.app_id(), username, expires, key)
     expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
-    reauth_cookie = crypto.sign(request.app_id, username, expires, key)
+    reauth_cookie = crypto.sign(request.app.app_id(), username, expires, key)
     response = HttpResponse(session_key, content_type='text/plain', status=201)
     response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
         settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))

@@ -23,9 +23,6 @@ class AppMiddleware(object):
                 raise Http404
             return  # Front-end (www.pageforest.com).
         request.app = App.get_by_hostname(hostname)
-        # REVIEW: Why not use app.name() - less risk that app_id and
-        # app are out of sync.
-        request.app_id = request.app.key().name()
         # Rewrite / to default HTML page.
         logging.info(" original URL: http://" +
                      request.META.get('HTTP_HOST', '') +

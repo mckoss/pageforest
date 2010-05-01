@@ -15,7 +15,7 @@ def document(request, doc_id):
     """
     Get document metadata.
     """
-    request.key_name = '/'.join((request.app_id, doc_id.lower()))
+    request.key_name = '/'.join((request.app.app_id(), doc_id.lower()))
     if request.doc is None:
         raise Http404("Could not find document " + request.key_name)
     extra = None

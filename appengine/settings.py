@@ -72,6 +72,7 @@ USE_I18N = False
 USE_ETAGS = False
 
 # We don't let CommonMiddleware redirect to add www or slashes.
+# REVIEW: Remove CommonMiddleware - not using it for anything?
 PREPEND_WWW = False
 APPEND_SLASH = False
 
@@ -115,8 +116,9 @@ everybody anybody nobody
 """.split()
 
 # Prevent app registration with some special app names.
+# Note that 'www' is the default PF app - always available.
 RESERVED_APPS = """
-www meta ssl static auth oauth login
+meta ssl static auth oauth login
 doc docs document documents
 blog list note comment
 test tester testclient testserver
@@ -124,6 +126,7 @@ pageforest pgfrst page
 app apps application applications app_id appid
 css img images js javascript lib
 google microsoft twitter yahoo facebook fb
+flickr
 profile
 """.split()
 

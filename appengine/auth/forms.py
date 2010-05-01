@@ -1,11 +1,10 @@
-import re
-
 from django import forms
 from django.conf import settings
 from django.utils import simplejson as json
 from django.utils.safestring import mark_safe
 
-from auth.models import User
+import auth.models
+User = auth.models.User
 
 import settings
 
@@ -18,8 +17,6 @@ zxcvbnm,./
 yxcvbnm,.-
 """.split()
 
-
-regex_username = re.compile(r"^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$")
 username_error = "Username must begin with a letter and contain only " + \
     "numbers, letters and dashes."
 
@@ -41,7 +38,7 @@ class LabeledCheckbox(forms.CheckboxInput):
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=regex_username, min_length=2, max_length=30,
+        regex=auth.models.regex_username, min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
@@ -72,6 +69,8 @@ class RegistrationForm(forms.Form):
         """
         Check that the password is not too silly.
         """
+        # TODO: Move this to client-side checks - and don't send password in
+        # clear - send the HMAC, directly.
         password = self.cleaned_data['password']
         if password.isdigit() or password == len(password) * password[0]:
             raise forms.ValidationError("This password is too simple.")
@@ -121,7 +120,7 @@ class RegistrationForm(forms.Form):
 
 class SignInForm(forms.Form):
     username = forms.RegexField(
-        regex=regex_username, min_length=2, max_length=30,
+        regex=auth.models.regex_username, min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(
         widget=forms.PasswordInput(render_value=False))

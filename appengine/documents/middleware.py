@@ -14,6 +14,6 @@ class DocMiddleware(object):
             return
         request.doc_id = parts[3]
         request.doc = Document.get_by_key_name(
-            '/'.join((request.app_id, request.doc_id.lower())))
+            '/'.join((request.app.app_id(), request.doc_id.lower())))
         if request.doc is None and settings.DEBUG:
             request.doc = Document(key_name=request.doc_id)
