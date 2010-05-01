@@ -122,7 +122,7 @@ class ChallengeVerifyTest(TestCase):
         """Test challenge and verify."""
         # Get a challenge from the server.
         response = self.app_client.get('/auth/challenge')
-        self.assertEquals(response.status_code, 201)
+        self.assertEqual(response.status_code, 201)
         challenge = response.content
         response = self.response_from_verify(challenge)
         self.assertContains(response, 'myapp/peter/', status_code=201)
