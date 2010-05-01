@@ -33,7 +33,7 @@ def app_json_put(request):
         return HttpResponse(unicode(e), mimetype='text/plain', status=400)
     # REVIEW: No access control or quota checks here?
     request.app.put()
-    return HttpResponse("""{'status': 200, 'statusText': "Saved"}""",
+    return HttpResponse("""{"status": 200, "statusText": "Saved"}""",
                         mimetype='application/json')
 
 
