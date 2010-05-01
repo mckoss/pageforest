@@ -1,7 +1,5 @@
 global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
-    var crypto = ns.lookup('com.googlecode.crypto-js');
-
     function formatResult(xhr, status, message) {
         var result = '';
         if (xhr) {
@@ -37,14 +35,19 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         console.log(document.cookie);
     }
 
+    function newTab(url) {
+        var win = window.open(url, '_blank');
+        if (win && win.focus) {
+            win.focus();
+        }
+    }
+
     ns.signIn = function () {
         // Open a new tab for the sign-in page.
-        ns.token = crypto.random(20);
         var dot = location.host.indexOf('.');
         var www = "www" + location.host.substr(dot);
-        var url = "http://" + www + "/auth/sign-in";
-        url += "?app=keyvalue&token=" + ns.token;
-        ns.newTab(url);
+        var url = "http://" + www + "/auth/sign-in/keyvalue";
+        newTab(url);
         // Start polling for the session key cookie.
         if (ns.polling) {
             clearInterval(ns.polling);
@@ -81,13 +84,6 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         }
         path = '; path=' + (path || '/');
         document.cookie = name + '=' + value + expires + path;
-    };
-
-    ns.newTab = function (url) {
-        var win = window.open(url, '_blank');
-        if (win && win.focus) {
-            win.focus();
-        }
     };
 
 }); // com.pageforest.keyvalue
