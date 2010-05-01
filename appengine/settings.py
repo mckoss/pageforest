@@ -177,12 +177,12 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.common.CommonMiddleware',
     # 'django.contrib.sessions.middleware.SessionMiddleware',
     # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'utils.middleware.RequestMiddleware',    # Put request in threading.local().
+    'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
-    'utils.middleware.ExceptionMiddleware',  # Pass exception info to templates.
-    'apps.middleware.AppMiddleware',         # Get the app for this request.
-    'auth.middleware.AuthMiddleware',        # Get the signed in user for this request.
-    'documents.middleware.DocMiddleware',    # Get the document for this request.
+    'apps.middleware.AppMiddleware',         # Get the app.
+    'auth.middleware.AuthMiddleware',        # Get the signed in user.
+    'documents.middleware.DocMiddleware',    # Get the document.
+    'utils.middleware.ExceptionMiddleware',  # Get exception info.
 )
 
 ROOT_URLCONF = 'urls'

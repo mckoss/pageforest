@@ -1,7 +1,9 @@
 import logging
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotFound
+from django.http import HttpResponseNotFound
+
+from utils.decorators import method_required
 
 
 @method_required('GET')

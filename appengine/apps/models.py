@@ -10,6 +10,8 @@ from django.conf import settings
 from utils.mixins import Cacheable, Migratable, Timestamped
 from utils import crypto
 
+from auth.models import User
+
 CACHE_PREFIX = 'GBH1~'
 
 
@@ -153,14 +155,15 @@ class App(Cacheable, Migratable, Timestamped):
         This routine can generate a reauth cookie by passing in
         seconds=settings.REAUTH_COOKIE_AGE.
 
-        We use the user.password in the key, so when a user changes his password
-        all of his existing session keys are invalidated.
+        We use the user.password in the key, so when a user changes his
+        password all of his existing session keys are invalidated.
         """
         seconds = seconds or settings.SESSION_COOKIE_AGE
         # REVIEW: Why an ISO expires instead of epoch seconds?
         expires = datetime.now() + timedelta(seconds=seconds)
         secret = crypto.join(user.password, self.secret)
-        return crypto.sign(self.app_id(), user.username.lower(), expires, secret)
+        return crypto.sign(self.app_id(), user.username.lower(), expires,
+                           secret)
 
     def user_from_session_key(self, key):
         try:
