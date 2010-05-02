@@ -2299,8 +2299,13 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
 
         // Use JSONP to read the username from the cross-site application.
         getString: function(url, fn) {
-            console.log("getString: " + url);
-            $.getJSON('http://' + url + '?callback=?', fn);
+            url = "http://" + url;
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "jsonp",
+                success: fn
+            });
         },
 
         // Display success, and close window in 5 seconds.
