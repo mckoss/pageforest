@@ -2,7 +2,8 @@ import time
 import email
 import httplib
 
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed, Http404, \
+    HttpResponseNotFound, HttpResponseServerError
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
@@ -45,11 +46,20 @@ def jsonp(func):
     callback for JSONP.
     """
     def wrapper(request, *args, **kwargs):
-        response = func(request, *args, **kwargs)
+        try:
+            response = func(request, *args, **kwargs)
+        except Http404, e:
+            response = HttpResponseNotFound(str(e))
+        except Exception, e:
+            response = HttpResponseServerError(str(e))
+
         # Check if the query string contains a callback parameter.
         callback = request.GET.get('callback', None)
         if not callback:
             return response
+
+        # REVIEW: These could be a handfull if we return formatted 400 and
+        # 500 pages back to the user.
         content = response.content
         # Tunnel HTTP errors using status code 200.
         if response.status_code / 100 != 2:
@@ -58,13 +68,16 @@ def jsonp(func):
                 "status": response.status_code,
                 "statusText": httplib.responses[response.status_code],
                 "message": content,
-                }, sort_keys=True, indent=0)
+                }, sort_keys=True, indent=4)
             response.status_code = 200
             response['Content-Type'] = 'application/json'
+
         # Encode arbitrary strings as valid JSON.
         if response['Content-Type'] != 'application/json':
-            content = content.rstrip('\n')  # Remove trailing newlines.
-            content = json.dumps(content)   # Encode to valid JSON string.
+            # Remove trailing newlines.
+            content = content.rstrip('\n')
+            content = json.dumps(content, indent=4)
+
         # Add the requested callback function.
         response.content = callback + '(' + content + ')'
         response['Content-Type'] = 'application/javascript'

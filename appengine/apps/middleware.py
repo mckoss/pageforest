@@ -16,7 +16,7 @@ class AppMiddleware(object):
         if request.app.app_id() == 'www':
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
-                raise Http404
+                raise Http404()
             return
 
         # Rewrite / to default HTML page.
