@@ -40,7 +40,8 @@ class App(Cacheable, Migratable, Timestamped):
         (but not saved to storage).
         """
         # Check for cached hostname
-        (app_id, hostname) = cls.parse_hostname(hostname)
+        app_id = cls.app_id_from_hostname(hostname)
+        hostname = app_id + '.' + settings.DEFAULT_DOMAIN
         memcache_key = CACHE_PREFIX + hostname
         cached_app_id = memcache.get(memcache_key)
         if cached_app_id:
@@ -57,61 +58,75 @@ class App(Cacheable, Migratable, Timestamped):
             memcache.set(memcache_key, app.app_id())
             return app
 
-        # Check for app_id.pageforest.com (et. al.)
-        # REVIEW: Is this necessary or will  hostnames always have the
-        # canonical hostname in it?
-        if app_id:
-            app = cls.lookup(app_id)
-            if app:
-                memcache.set(memcache_key, app.app_id())
-                return app
-        # No identifiable app.
-        else:
-            return None
+        app = cls.lookup(app_id)
+        if app:
+            memcache.set(memcache_key, app.app_id())
+            return app
 
+        # REVIEW: Don't like creating (but not persisting) a temporary app
+        # like this.  We should be falling back to 'www', I think. -mck
         return cls.create(app_id, hostname)
 
     @classmethod
-    def parse_hostname(cls, hostname):
+    def app_id_from_hostname(cls, hostname):
         """
-        Return (app_id, canonical_hostname)
-
-        All primary domains are converted to the default domain name.
+        Return app_id (or 'www').  Canonical hostname is then
+        app_id.pageforest.com.
 
         A reference to a naked PF domain is treated as a reference to the
         www.pageforest.com domain with app_id == 'www'.
 
-        >>> App.parse_hostname('app.pageforest.com')
-        ('app', 'app.pageforest.com')
-        >>> App.parse_hostname('app.pgfrst.com')
-        ('app', 'app.pageforest.com')
-        >>> App.parse_hostname('app.localhost')
-        ('app', 'app.pageforest.com')
-        >>> App.parse_hostname('pageforest.com')
-        ('www', 'www.pageforest.com')
-        >>> App.parse_hostname('a.random.domain')
-        (None, 'a.random.domain')
-        >>> App.parse_hostname('app.any.number.of.pageforest.appspot.com')
-        ('app', 'app.pageforest.com')
+        >>> App.app_id_from_hostname('app.pageforest.com')
+        'app'
+        >>> App.app_id_from_hostname('app.pgfrst.com')
+        'app'
+        >>> App.app_id_from_hostname('localhost')
+        'www'
+        >>> App.app_id_from_hostname('app.localhost')
+        'app'
+        >>> App.app_id_from_hostname('pageforest.com')
+        'www'
+        >>> App.app_id_from_hostname('pageforest.com:8080')
+        'www'
+        >>> App.app_id_from_hostname('a.random.domain')
+        'www'
+        >>> App.app_id_from_hostname('pageforest.appspot.com')
+        'www'
+        >>> App.app_id_from_hostname('latest.pageforest.appspot.com')
+        'www'
+        >>> App.app_id_from_hostname('dev.latest.pageforest.appspot.com')
+        'www'
+        >>> App.app_id_from_hostname('app.dev.latest.pageforest.appspot.com')
+        'app'
+        >>> App.app_id_from_hostname('2010-04-29.latest.pageforest.'+
+        ... 'appspot.com')
+        'www'
+        >>> App.app_id_from_hostname('app.2010-04-29.latest.pageforest.'+
+        ... 'appspot.com')
+        'app'
+        >>> App.app_id_from_hostname('app.more.dev.latest.pageforest.'+
+        ... 'appspot.com')
+        'www'
         """
+        # Remove port
         hostname = hostname.lower().split(':')[0]
 
-        # "Naked" domain same as 'www.pageforest.com'
-        if hostname in settings.DOMAINS:
-            return ('www', 'www.' + settings.DEFAULT_DOMAIN)
+        # Fast exit for normal cases
+        if hostname in settings.DOMAINS or \
+                hostname in ['www.' + host for host in settings.DOMAINS]:
+            return 'www'
 
-        (app_id, dot, sub_domain) = hostname.partition('.')
+        # XXX.latest.pageforest.com or app.XXX.latest.pageforest.com
+        m = settings.STAGING_DOMAIN_REGEX.match(hostname)
+        if m:
+            return m.group(2) or 'www'
 
-        # Map all intranet domains to 'www.pageforest.com'
-        if sub_domain == '':
-            return ('www', 'www.' + settings.DEFAULT_DOMAIN)
+        (app, dot, sub_domain) = hostname.partition('.')
 
-        # We treat anything ending in a PF domain as valid
-        for domain in settings.DOMAINS:
-            if hostname.endswith('.' + domain):
-                return (app_id, app_id + '.' + settings.DEFAULT_DOMAIN)
+        if sub_domain in settings.DOMAINS:
+            return app
 
-        return (None, hostname)
+        return 'www'
 
     @classmethod
     def lookup(cls, app_id):

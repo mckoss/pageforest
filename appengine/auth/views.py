@@ -44,16 +44,37 @@ def register(request):
 @method_required('GET', 'POST')
 def sign_in(request, app_id=None):
     """
-    Check credentials and generate a session key.
+    Check credentials and generate session key(s).
+
+    Sign in to:
+
+    - www.pageforest.com
+    - app_id.pageforest.com (if given)
+
+    Note: return the application session key to the client via
+    ajax, so they can request the cookie on the proper domain.
+
+    TODO: Generate long-term reauthorization cookies on
+    path=/auth/reauth so clients can upate their shorter
+    session keys.
     """
     form = SignInForm(request.POST or None)
-    app = app_id and App.lookup(app_id)
+    app = request.app
+    if app_id:
+        app = App.lookup(app_id)
+        if app is None or app.app_id() == 'www':
+            # REVIEW: Not DRY
+            return HttpResponseRedirect('/auth/sign-in')
+
     if request.method == 'POST':
         if form.is_valid():
             response = HttpResponseRedirect('')
             response.set_cookie(settings.SESSION_COOKIE_NAME,
+                                app.generate_session_key(form.user),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
+    if app.app_id() == 'www':
+        app = None
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form, 'app': app})
 

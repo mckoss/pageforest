@@ -38,7 +38,8 @@ class LabeledCheckbox(forms.CheckboxInput):
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=auth.models.regex_username, min_length=2, max_length=30,
+        regex=auth.models.settings.USERNAME_REGEX,
+        min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
@@ -120,17 +121,23 @@ class RegistrationForm(forms.Form):
 
 class SignInForm(forms.Form):
     username = forms.RegexField(
-        regex=auth.models.regex_username, min_length=2, max_length=30,
+        regex=auth.models.settings.USERNAME_REGEX,
+        min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(
         widget=forms.PasswordInput(render_value=False))
+
+    # REVIEW: Is it proper to stash data in the form for callers
+    # to use (when form is_valid)?
+    user = None
 
     def clean_username(self):
         username = self.cleaned_data['username']
         username = username.lower()
         if username in settings.RESERVED_USERNAMES:
             raise forms.ValidationError("This username is reserved.")
-        if User.get_by_key_name(username) is None:
+        self.user = User.lookup(username)
+        if self.user is None:
             raise forms.ValidationError("No account for %s." % username)
         return username
 
@@ -141,9 +148,7 @@ class SignInForm(forms.Form):
         """
         if 'username' in self.cleaned_data and 'password' in self.cleaned_data:
             username = self.cleaned_data['username'].lower()
-            user = User.get_by_key_name(username)
-            # OPT: user should already be validated by clean_username
-            if user is None or \
-                not user.check_password(self.cleaned_data['password']):
+            if self.user is None or \
+                not self.user.check_password(self.cleaned_data['password']):
                 raise forms.ValidationError("Invalid username or password.")
         return self.cleaned_data

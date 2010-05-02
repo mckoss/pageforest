@@ -5,6 +5,7 @@
 {% block both-columns %}
 <h2>Sign in to {{SITE_NAME}}</h2>
 
+<p>Hello, {{ request.user.username }}.</p>
 {% if app %}
 <p>The application, {{ app.title }}, is requesting permission to
 access your {{ SITE_NAME }} storage on your behalf.

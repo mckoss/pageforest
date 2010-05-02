@@ -11,8 +11,6 @@ from utils import crypto
 
 import settings
 
-regex_username = re.compile(r"^[A-Za-z][A-Za-z0-9-]*[A-Za-z0-9]$")
-
 
 class User(db.Expando, Migratable, Cacheable, Timestamped):
     """
@@ -30,6 +28,9 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
 
     @classmethod
     def lookup(cls, username):
+        """
+        Prefer this accessor over direct calls to get_by_key_name.
+        """
         return User.get_by_key_name(username.lower())
 
     def set_password(self, password):

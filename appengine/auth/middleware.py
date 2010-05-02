@@ -17,8 +17,7 @@ class AuthMiddleware(object):
         If fails for any reason, request.user is set to None (fails silently).
         """
         request.user = None
-        if settings.SESSION_COOKIE_NAME not in request.COOKIES or \
-                not hasattr(request, 'app'):
+        if settings.SESSION_COOKIE_NAME not in request.COOKIES:
             return
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
         request.user = request.app.user_from_session_key(session_key)
