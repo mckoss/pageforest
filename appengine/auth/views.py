@@ -6,7 +6,7 @@ from django.conf import settings
 from django.shortcuts import redirect
 from django.http import \
     HttpResponse, HttpResponseForbidden, HttpResponseNotFound, \
-    HttpResponseRedirect
+    HttpResponseRedirect, Http404
 
 from google.appengine.api import memcache, quota
 from google.appengine.runtime import DeadlineExceededError
@@ -83,6 +83,16 @@ def sign_in(request, app_id=None):
         app = None
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form, 'cross_app': app})
+
+
+# REVIEW: Does the mimetype get converted to application/x-javascript
+# so it loads properly for cross-site requests?
+@jsonp
+@method_required('GET', 'POST')
+def get_username(request):
+    if request.user is None:
+        raise Http404("The user is not logged in.")
+    return HttpResponse(request.user.username, mimetype='text/plain')
 
 
 @method_required('GET')
