@@ -133,8 +133,8 @@ if (!window.console) {
                 if (!nsCur._fDefined) {
                     nsCur._fDefined = true;
                     fnCallback(nsCur);
-                    // console.info("Namespace '" + nsCur._sPath +
-                    //              "' defined.");
+                     console.info("Namespace '" + nsCur._sPath +
+                                  "' defined.");
                 } else {
                     console.warn("WARNING: Namespace '" + nsCur._sPath +
                                  "' redefinition.");
