@@ -41,7 +41,6 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             return;
         }
         ns.previous = oneline;
-        console.log('validating: ' + oneline);
         $.ajax({
             type: "POST",
             url: "",
