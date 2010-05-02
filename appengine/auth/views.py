@@ -62,9 +62,15 @@ def sign_in(request, app_id=None):
     app = request.app
     if app_id:
         app = App.lookup(app_id)
-        if app is None or app.app_id() == 'www':
+        if app is None or app.is_pf():
             # REVIEW: Not DRY
             return HttpResponseRedirect('/auth/sign-in')
+
+    if app.is_pf():
+        # REVIEW: Is this OK to just yank a field from the form?
+        del form.fields['app_auth']
+    else:
+        form.fields['app_auth'].label = app_id.title()
 
     if request.method == 'POST':
         if form.is_valid():
@@ -73,10 +79,10 @@ def sign_in(request, app_id=None):
                                 app.generate_session_key(form.user),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
-    if app.app_id() == 'www':
+    if app.is_pf():
         app = None
     return render_to_response(request, 'auth/sign-in.html',
-                              {'form': form, 'app': app})
+                              {'form': form, 'cross_app': app})
 
 
 @method_required('GET')

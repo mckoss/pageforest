@@ -34,3 +34,14 @@ class AppMiddleware(object):
                      request.META.get('HTTP_HOST', '') +
                      request.get_full_path())
         # print request.get_full_path()
+
+
+def app_context(request):
+    """
+    Expose the app as {{ application }} to templates (but only for
+    3rd party apps - not for 'www'.
+    """
+    logging.info("App Context")
+    if not request.app.is_pf():
+        return {'application': request.app}
+    return {}

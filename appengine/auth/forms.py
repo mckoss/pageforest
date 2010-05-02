@@ -126,6 +126,9 @@ class SignInForm(forms.Form):
         error_messages={'invalid': username_error})
     password = forms.CharField(
         widget=forms.PasswordInput(render_value=False))
+    app_auth = forms.BooleanField(
+        label="Application",
+        widget=LabeledCheckbox(label="Allow access", id='app_auth'))
 
     # REVIEW: Is it proper to stash data in the form for callers
     # to use (when form is_valid)?

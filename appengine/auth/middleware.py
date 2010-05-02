@@ -21,3 +21,10 @@ class AuthMiddleware(object):
             return
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
         request.user = request.app.user_from_session_key(session_key)
+
+
+def user_context(request):
+    """
+    Make the logged in user available as {{ user }} in templates.
+    """
+    return {'user': request.user}

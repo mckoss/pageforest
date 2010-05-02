@@ -161,6 +161,10 @@ class App(Cacheable, Migratable, Timestamped):
     def app_id(self):
         return self.key().name()
 
+    def is_pf(self):
+        """ Is this app the special pafeforest app? """
+        return self.app_id() == 'www'
+
     def generate_session_key(self, user, seconds=None):
         """
         Generate a signed session key for this app and user.
