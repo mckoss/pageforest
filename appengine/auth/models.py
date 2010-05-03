@@ -1,5 +1,3 @@
-import re
-
 from google.appengine.ext import db
 from google.appengine.api import mail
 
@@ -55,6 +53,9 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         pass
 
     def send_email_verification(self, request):
+        """
+        Send email to this user.
+        """
         message = render_to_string('auth/verify-email.txt',
                                    RequestContext(request, {'user': self}))
         mail.send_mail(sender=settings.SITE_EMAIL_FROM,

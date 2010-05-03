@@ -5,8 +5,6 @@ from google.appengine.api import memcache
 from django.conf import settings
 from django.test import TestCase, Client
 
-from utils import crypto
-
 from auth.models import User
 from apps.models import App
 from storage.models import KeyValue

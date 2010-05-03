@@ -8,7 +8,6 @@ from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.shortcuts import get_int
 
-from apps.models import App
 from storage.models import KeyValue
 
 JSON_MIME_TYPE = 'application/json'

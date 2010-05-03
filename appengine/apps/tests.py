@@ -1,7 +1,3 @@
-import os
-import imp
-import doctest
-
 from django.test import TestCase
 
 from apps.models import App
