@@ -19,13 +19,12 @@ urlpatterns = patterns(
     (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/$', 'documents.views.document'),
     (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/(?P<key>.+)$',
      'storage.views.key_value'),
-    (r'^app/docs/.*$', 'reserved'),
 
     # Static hosting for Pageforest apps.
     (r'^app/app.json$', 'apps.views.app_json'),
 
     # Application keyspace reserved for future use
-    (r'^app/data/.*$', 'reserved'),
+    (r'^app/(docs|data)/', 'utils.views.reserved'),
 
     # REVIEW: What's the empty pattern for?
     (r'^app/()([A-Za-z0-9\._/-]*)', 'storage.views.key_value'),
