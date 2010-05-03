@@ -27,6 +27,8 @@ SERVER_SOFTWARE = os.environ.get('SERVER_SOFTWARE', '')
 AUTH_DOMAIN = os.environ.get('AUTH_DOMAIN', '')
 
 DEV_APPSERVER = SERVER_SOFTWARE.startswith("Development")
+RUNNING_ON_GAE = SERVER_SOFTWARE.startswith("Google App Engine")
+
 DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
 #DEBUG = False
@@ -223,6 +225,10 @@ INSTALLED_APPS = (
     'dashboard',
     'utils',
 )
+
+if not RUNNING_ON_GAE:
+    INSTALLED_APPS = INSTALLED_APPS + ('django_nose', )
+    TEST_RUNNER = 'django_nose.run_tests'
 
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
