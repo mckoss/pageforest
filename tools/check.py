@@ -9,6 +9,7 @@ from time import time
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
+UNITTEST_OPTIONS = '--nologcapture --with-xunit --with-doctest'
 PEP8_EXCLUDE = 'jsmin.py'.split()
 
 total_time = 0.0
@@ -43,8 +44,8 @@ def attempt(nick, command):
     else:
         sys.stdout.write(nick)
         sys.stdout.flush()
-    start_timer()
     logfile = open(LOGFILENAME, 'w')
+    start_timer()
     returncode = subprocess.call(command.split(), stderr=logfile)
     end_timer(nick)
     logfile.close()
@@ -58,8 +59,6 @@ def attempt(nick, command):
         elif size != 0:
             message += ' and %d bytes in %s' % (size, LOGFILENAME)
         sys.exit(message)
-    else:
-        os.unlink(LOGFILENAME)
 
 
 def part_callback(option, opt_str, value, parser, *args, **kwargs):
@@ -90,8 +89,8 @@ def main():
         ('jslint-weak', "python jslint.py --weak " +
          os.path.join(pftool.app_dir, 'static', 'src', 'js')),
         ('doctest', "python settingsparser.py"),
-        ('unittest', "python %s test -v0" %
-         os.path.join(pftool.app_dir, 'manage.py')),
+        ('unittest', "python %s test %s" %
+         (os.path.join(pftool.app_dir, 'manage.py'), UNITTEST_OPTIONS)),
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
         ('whitespace', "python whitespace.py"),
