@@ -171,8 +171,7 @@ class ChallengeVerifyTest(TestCase):
         challenge = self.app_client.get('/auth/challenge').content
         time.time = real_time
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'Challenge expired.',
-                            status_code=403)
+        self.assertContains(response, 'Challenge expired.', status_code=403)
 
     def test_replay(self):
         """Test that a replay attack cannot login."""
@@ -187,11 +186,8 @@ class ChallengeVerifyTest(TestCase):
     def test_different_ip(self):
         """Test that different IP address cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        response = self.sign_and_verify(challenge,
-                                             REMOTE_ADDR='1.1.1.1')
-        self.assertContains(response,
-                            "IP address changed.",
-                            status_code=403)
+        response = self.sign_and_verify(challenge, REMOTE_ADDR='1.1.1.1')
+        self.assertContains(response, "IP address changed.", status_code=403)
 
     def test_unknown_user(self):
         """Test that unknown user cannot login."""
@@ -203,8 +199,7 @@ class ChallengeVerifyTest(TestCase):
         """Test that incorrect password cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         response = self.sign_and_verify(
-            challenge,
-            password=self.peter.password[::-1])
+            challenge, password=self.peter.password[::-1])
         self.assertContains(response, 'Invalid signature.',
                             status_code=403)
 
