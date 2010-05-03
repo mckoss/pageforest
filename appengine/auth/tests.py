@@ -124,15 +124,14 @@ class ChallengeVerifyTest(TestCase):
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
-    def response_from_verify(self, challenge,
-                             username=None, password=None, **kwargs):
-        """Helper method to sign the challenge and attempt login."""
+    def sign_and_verify(self, challenge, username=None, password=None,
+                        **kwargs):
+        """Helper method to sign the challenge and attempt sign-in."""
         username = username or self.peter.username
         password = password or self.peter.password
         signed = crypto.sign(challenge, password)
         data = crypto.join(username.lower(), signed)
-        response = self.app_client.get('/auth/verify/' + data, **kwargs)
-        return response
+        return self.app_client.get('/auth/verify/' + data, **kwargs)
 
     def test_login(self):
         """Test challenge and verify."""
@@ -140,7 +139,7 @@ class ChallengeVerifyTest(TestCase):
         response = self.app_client.get('/auth/challenge')
         self.assertEqual(response.status_code, 200)
         challenge = response.content
-        response = self.response_from_verify(challenge)
+        response = self.sign_and_verify(challenge)
         self.assertContains(response, 'myapp/peter/', status_code=200)
         cookie = response.cookies['reauth'].value
         self.assertTrue(cookie.startswith('myapp/peter/'))
@@ -151,7 +150,7 @@ class ChallengeVerifyTest(TestCase):
         challenge = self.app_client.get('/auth/challenge').content
         # Alter the last letter of the challenge HMAC
         challenge = challenge[:-1] + 'x'
-        response = self.response_from_verify(challenge)
+        response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Invalid signature.', status_code=403)
 
     def test_bogus_login(self):
@@ -171,7 +170,7 @@ class ChallengeVerifyTest(TestCase):
         time.time = mock_time
         challenge = self.app_client.get('/auth/challenge').content
         time.time = real_time
-        response = self.response_from_verify(challenge)
+        response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Challenge expired.',
                             status_code=403)
 
@@ -179,16 +178,16 @@ class ChallengeVerifyTest(TestCase):
         """Test that a replay attack cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         # First login should be successful.
-        response = self.response_from_verify(challenge)
+        response = self.sign_and_verify(challenge)
         self.assertContains(response, 'myapp/peter/', status_code=200)
         # Replay should fail with 403 Forbidden.
-        response = self.response_from_verify(challenge)
+        response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Already used.', status_code=403)
 
     def test_different_ip(self):
         """Test that different IP address cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        response = self.response_from_verify(challenge,
+        response = self.sign_and_verify(challenge,
                                              REMOTE_ADDR='1.1.1.1')
         self.assertContains(response,
                             "IP address changed.",
@@ -197,13 +196,13 @@ class ChallengeVerifyTest(TestCase):
     def test_unknown_user(self):
         """Test that unknown user cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        response = self.response_from_verify(challenge, username='unknown')
+        response = self.sign_and_verify(challenge, username='unknown')
         self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_wrong_password(self):
         """Test that incorrect password cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
-        response = self.response_from_verify(
+        response = self.sign_and_verify(
             challenge,
             password=self.peter.password[::-1])
         self.assertContains(response, 'Invalid signature.',
