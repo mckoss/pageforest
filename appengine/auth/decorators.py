@@ -7,7 +7,7 @@ def login_required(func):
     user account.
     """
     def wrapper(request, *args, **kwargs):
-        if not hasattr(request, 'user'):
+        if request.user is None:
             return HttpResponseForbidden("Login is required.")
         return func(request, *args, **kwargs)
     return wrapper

@@ -11,12 +11,11 @@ urlpatterns = patterns(
 
     # Include separate urls.py for Django apps.
     (r'^auth/', include('auth.urls')),
+    (r'^auth/', include('auth.urlsapp')),
     (r'^dashboard/', include('dashboard.urls')),
 
     # Pageforest applications on subdomains.
-    # REVIEW: I don't think we want the same urls in pf.com/auth and in
-    # app.pf.com/auth -- JCR: I agree.
-    (r'^app/auth/', include('auth.urls')),
+    (r'^app/auth/', include('auth.urlsapp')),
 
     # REVIEW: Don't repeat settings.DOC_ID_RE here (DRY).
     (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/$', 'documents.views.document'),

@@ -50,6 +50,7 @@ def jsonp(func):
         # when callback is not specified.
         try:
             response = func(request, *args, **kwargs)
+        # BUG: re-raise if not a jsonp callback!
         except Http404, e:
             response = HttpResponseNotFound(str(e))
         except Exception, e:

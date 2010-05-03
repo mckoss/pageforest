@@ -61,7 +61,7 @@ def sign_in(request, app_id=None):
         app = App.lookup(app_id)
         if app is None or app.is_www():
             # REVIEW: Not DRY
-            return HttpResponseRedirect('/auth/sign-in')
+            return HttpResponseRedirect('/auth/sign-in/')
 
     if app.is_www():
         # REVIEW: Is this OK to just yank a field from the form?
@@ -71,21 +71,23 @@ def sign_in(request, app_id=None):
 
     if request.method == 'POST':
         if form.is_valid():
-            response = HttpResponseRedirect('')
+            response = HttpResponseRedirect('/auth/sign-in/%s' % app_id)
             response.set_cookie(settings.SESSION_COOKIE_NAME,
                                 app.generate_session_key(form.user),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
+
+    app_session_key = None
     if app.is_www():
         app = None
+    elif request.user:
+        app_session_key = app.generate_session_key(request.user)
     return render_to_response(request, 'auth/sign-in.html',
-                              {'form': form, 'cross_app': app})
+                              {'form': form,
+                               'cross_app': app,
+                               'session_key': app_session_key})
 
 
-# REVIEW: Does the mimetype get converted to application/x-javascript
-# so it loads properly for cross-site requests?
-# ANSWER: Yes, the @jsonp decorator sets the Content-Type header to
-# settings.JSON_MIMETYPE which is currently application/json
 @jsonp
 @method_required('GET', 'POST')
 def get_username(request):
@@ -97,12 +99,28 @@ def get_username(request):
     return HttpResponse(request.user.username, mimetype='text/plain')
 
 
+@jsonp
+@method_required('GET', 'POST')
+def set_session_cookie(request, session_key):
+    """
+    When passed a valid session key for the current application,
+    set the cookie for the session key.
+    """
+    user = request.app.user_from_session_key(session_key)
+    if user is None:
+        raise Http404("Invalid session key.")
+    response = HttpResponse(session_key, content_type='text/plain')
+    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                        max_age=settings.SESSION_COOKIE_AGE)
+    return response
+
+
 @method_required('GET')
 def sign_out(request):
     """
     Expire the session key cookie.
     """
-    response = HttpResponseRedirect('/')
+    response = HttpResponseRedirect('/auth/sign-in/')
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
     return response
 

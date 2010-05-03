@@ -4,11 +4,11 @@
 
 {% block extra-head %}
 <script type="text/javascript">
+var signIn = global_namespace.lookup("com.pageforest.auth.sign-in-form");
 $(document).ready(function() {
-    var ns = global_namespace.lookup("com.pageforest.auth.sign-in-form");
     var username = "{{user.username}}";
     var appId = "{{cross_app.app_id}}";
-    ns.documentReady(username, appId);
+    signIn.documentReady(username, appId);
 });
 </script>
 {% endblock %}
@@ -18,7 +18,7 @@ $(document).ready(function() {
 <h2>
 {% if user %}
     {{ user.username }}, you are signed in to {{SITE_NAME}}
-    <span style="display:none;" class="have_app">and {{ cross_app.title}}</span>.
+    <span style="display:none;" class="have_app">and {{cross_app.title}}</span>.
 {% else %}
     Sign in to {{SITE_NAME}}
     {% if cross_app %} and {{ cross_app.title }}{% endif %}.
@@ -38,21 +38,29 @@ $(document).ready(function() {
 <form method="post">
     {{ csrf_token }}
     <table>
-    {% for field in form %}
     {% if user %}
+        {% if cross_app %}
+        <input class="want_app"
+               type="button"
+               onClick='signIn.transferSession("{{session_key}}");return false;'
+               value = "Sign In">
+        {% endif %}
     {% else %}
-    <tr>
-      <td>{{ field.label_tag }}:</td>
-      <td>{{ field }}</td>
-      <td class="form-message" id="validate_{{ field.html_name }}">
-         <span class="error">{{ field.errors.0 }}</span>
-      </td>
-    </tr>
-    {% endif %}
-    {% endfor %}
-    {% if cross_app or not user %}
-    <tr><td></td><td><input class="want_app" type="submit" value="Sign In" />
-      </td><td></td></tr>
+        {% for field in form %}
+            <tr>
+              <td>{{ field.label_tag }}:</td>
+              <td>{{ field }}</td>
+              <td class="form-message" id="validate_{{ field.html_name }}">
+                 <span class="error">{{ field.errors.0 }}</span>
+              </td>
+            </tr>
+        {% endfor %}
+        <tr><td></td>
+          <td><input class="want_app"
+                     type="submit"
+                     value="Sign In" /></td>
+          <td></td>
+        </tr>
     {% endif %}
     </table>
 </form>
