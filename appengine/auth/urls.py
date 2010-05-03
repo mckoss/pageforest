@@ -14,6 +14,4 @@ urlpatterns = patterns(
     (r'^challenge/$', 'challenge'),
     (r'^verify/(.+)/$', 'verify'),
     (r'^username/$', 'get_username'),
-    # With token.
-    (r'^poll/(.+)/$', 'poll'),
 )

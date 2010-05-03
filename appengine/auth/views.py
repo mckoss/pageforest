@@ -1,19 +1,16 @@
 import logging
 import time
-from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.shortcuts import redirect
 from django.http import \
-    HttpResponse, HttpResponseForbidden, HttpResponseNotFound, \
-    HttpResponseRedirect, Http404
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
-from google.appengine.api import memcache, quota
+from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
-from utils.http import http_datetime
 from utils import crypto
 
 from auth.forms import RegistrationForm, SignInForm
@@ -90,13 +87,16 @@ def sign_in(request, app_id=None):
 @jsonp
 @method_required('GET', 'POST')
 def get_username(request):
+    """
+    Get the username that is currently signed in.
+    """
     if request.user is None:
-        raise Http404("The user is not logged in.")
+        raise Http404("The user is not signed in.")
     return HttpResponse(request.user.username, mimetype='text/plain')
 
 
 @method_required('GET')
-def sign_out(request, token):
+def sign_out(request):
     """
     Expire the session key cookie.
     """
@@ -116,8 +116,8 @@ def challenge(request):
     random_key = crypto.random64url(32)
     expires = int(time.time()) + CHALLENGE_EXPIRATION
     ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    challenge = crypto.sign(random_key, expires, ip, request.app.secret)
-    return HttpResponse(challenge, mimetype='text/plain')
+    challenge_string = crypto.sign(random_key, expires, ip, request.app.secret)
+    return HttpResponse(challenge_string, mimetype='text/plain')
 
 
 @jsonp
