@@ -14,10 +14,11 @@ urlpatterns = patterns(
     # REVIEW: I don't think we want the same urls in pf.com/auth and in
     # app.pf.com/auth
     (r'^app/auth/', include('auth.urls')),
-    # BUG: Allows for app/docs// same as app/docs/
-    # TODO: use ?P for keyword based args - better documentation
-    (r'^app/docs/([A-Za-z0-9\._-]*)/$', 'documents.views.document'),
-    (r'^app/docs/([A-Za-z0-9\._-]+)/(.+)$', 'storage.views.key_value'),
+
+    # REVIEW: Don't repeat settings.DOC_ID_RE here (DRY).
+    (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/$', 'documents.views.document'),
+    (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/(?P<key>.+)$',
+     'storage.views.key_value'),
     (r'^app/docs/.*$', 'reserved'),
 
     # Static hosting for Pageforest apps.
