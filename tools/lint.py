@@ -70,6 +70,7 @@ def main():
     command.append('--output-format=parseable')
     command.append('--include-ids=yes')
     command.append('--reports=no')
+    command.append('--notes=FIXME,XXX,TODO,REVIEW')
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
         command.append('-e')
