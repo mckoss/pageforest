@@ -9,7 +9,7 @@ from time import time
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
-UNITTEST_OPTIONS = '--nologcapture --with-xunit --with-doctest'
+UNITTEST_OPTIONS = '-v0 --nologcapture --with-xunit --with-doctest'
 PEP8_EXCLUDE = 'jsmin.py'.split()
 
 total_time = 0.0
