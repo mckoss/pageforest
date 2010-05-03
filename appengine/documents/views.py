@@ -4,8 +4,6 @@ from django.utils import simplejson as json
 from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
 
-from apps.models import App
-from documents.models import Document
 from storage.models import KeyValue
 
 

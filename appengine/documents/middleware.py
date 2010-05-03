@@ -1,7 +1,4 @@
-import logging
-
 from django.conf import settings
-from django.http import HttpResponseNotFound
 
 from documents.models import Document
 
