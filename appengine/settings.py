@@ -230,12 +230,14 @@ INSTALLED_APPS = (
 )
 
 if not RUNNING_ON_GAE:
+    import imp
     try:
-        import django_nose
+        imp.find_module('django_nose')
         INSTALLED_APPS = INSTALLED_APPS + ('django_nose', )
         TEST_RUNNER = 'django_nose.run_tests'
+        DJANGO_NOSE_INSTALLED = True
     except ImportError:
-        pass
+        DJANGO_NOSE_INSTALLED = False
 
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
