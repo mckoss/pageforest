@@ -89,12 +89,6 @@ class CacheableTest(TestCase):
 
 class DocTest(TestCase):
 
-    def has_doctest_testmod(self, filename):
-        """Check if doctest.testmod() appears in the file."""
-        for line in file(filename):
-            if line.strip() == 'doctest.testmod()':
-                return True
-
     def test_utils(self):
         """Run doctest on utils modules that support it."""
         dir = os.path.dirname(__file__)
@@ -102,10 +96,17 @@ class DocTest(TestCase):
             if not filename.endswith('.py'):
                 continue
             full_path = os.path.join(dir, filename)
-            if not self.has_doctest_testmod(full_path):
+            if not has_doctest_testmod(full_path):
                 continue
             base, ext = os.path.splitext(filename)
             file, pathname, desc = imp.find_module(base, [dir])
             mod = imp.load_module('utils.' + base, file, pathname, desc)
             failures, tests = doctest.testmod(mod)
             self.assertEqual(failures, 0)
+
+
+def has_doctest_testmod(filename):
+    """Check if doctest.testmod() appears in the file."""
+    for line in file(filename):
+        if line.strip() == 'doctest.testmod()':
+            return True
