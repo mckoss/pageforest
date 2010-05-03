@@ -1,8 +1,6 @@
 import time
 from datetime import datetime, timedelta
 
-from google.appengine.api import memcache
-
 from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
@@ -87,8 +85,8 @@ class RegistrationTest(TestCase):
 
     def test_password_silly(self):
         """Test that silly passwords are rejected."""
-        for pw in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.www.post('/auth/sign-up', {'password': pw})
+        for password in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
+            response = self.www.post('/auth/sign-up', {'password': password})
             self.assertContains(response, "This password is too simple.")
 
     def test_username_taken(self):
@@ -110,7 +108,7 @@ class ChallengeVerifyTest(TestCase):
 
     def response_from_verify(self, challenge,
                              username=None, password=None, **kwargs):
-        # Helper: sign the challenge and attempt login.
+        """Helper method to sign the challenge and attempt login."""
         username = username or self.peter.username
         password = password or self.peter.password
         signed = crypto.sign(challenge, password)
@@ -148,7 +146,7 @@ class ChallengeVerifyTest(TestCase):
         """Test that an expired challenge stops working."""
 
         def mock_time():
-            # Mock up a 61 second delayed system time.
+            """Mock up a 61 second delayed system time."""
             return real_time() - 61
 
         real_time = time.time
