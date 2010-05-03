@@ -34,6 +34,7 @@ def app_json_put(request):
                 setattr(request.app, key, parsed[key])
     except ValueError, e:
         # REVIEW: Why is unicode wrapper needed?
+        # ANSWER: To get the string representation of the error.
         return HttpResponse(unicode(e), mimetype='text/plain', status=400)
     # REVIEW: No access control or quota checks here?
     request.app.put()

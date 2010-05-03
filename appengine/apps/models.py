@@ -183,7 +183,7 @@ class App(Cacheable, Migratable, Timestamped):
         """
         seconds = seconds or settings.SESSION_COOKIE_AGE
         # REVIEW: Why an ISO expires instead of epoch seconds?
-        # Answer: Because it's human-readable for testing and debugging.
+        # ANSWER: Because it's human-readable for testing and debugging.
         expires = datetime.now() + timedelta(seconds=seconds)
         secret = crypto.join(user.password, self.secret)
         return crypto.sign(self.app_id(), user.username.lower(), expires,
@@ -201,7 +201,7 @@ class App(Cacheable, Migratable, Timestamped):
             return user
         except:
             # REVIEW: Specify which exceptions you want to catch.
-            # Otherwise, this will silently swallow all exceptions
+            # Otherwise, this will silently swallow all exceptions,
             # even things like DeadlineExceededError or
             # KeyboardInterrupt.
             return None
