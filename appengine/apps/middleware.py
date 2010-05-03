@@ -1,17 +1,19 @@
 import logging
 
-from django.conf import settings
 from django.http import Http404
 
 from apps.models import App
 
 
 class AppMiddleware(object):
+    """
+    Hostname lookup to find the Pageforest app for each request.
+    """
 
     def process_request(self, request):
         # Get the app by hostname.
-        request.app = App.get_by_hostname(request.META.get('HTTP_HOST',
-                                                           'testserver'))
+        request.app = App.get_by_hostname(
+            request.META.get('HTTP_HOST', 'testserver'))
 
         if request.app.app_id() == 'www':
             # Don't allow references to internal re-written URIs.
@@ -42,6 +44,6 @@ def app_context(request):
     3rd party apps - not for 'www'.
     """
     logging.info("App Context")
-    if not request.app.is_pf():
+    if not request.app.is_www():
         return {'application': request.app}
     return {}

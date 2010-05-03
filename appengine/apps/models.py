@@ -116,10 +116,10 @@ class App(Cacheable, Migratable, Timestamped):
                 hostname in ['www.' + host for host in settings.DOMAINS]:
             return 'www'
 
-        # XXX.latest.pageforest.com or app.XXX.latest.pageforest.com
-        m = settings.STAGING_DOMAIN_REGEX.match(hostname)
-        if m:
-            return m.group(2) or 'www'
+        # version.latest.pageforest.com or app.version.latest.pageforest.com
+        match = settings.STAGING_DOMAIN_REGEX.match(hostname)
+        if match:
+            return match.group(2) or 'www'
 
         (app, dot, sub_domain) = hostname.partition('.')
 
@@ -159,10 +159,11 @@ class App(Cacheable, Migratable, Timestamped):
                    secret='SecreT!1')
 
     def app_id(self):
+        """Return the key name which contains the app id."""
         return self.key().name()
 
-    def is_pf(self):
-        """ Is this app the special pafeforest app? """
+    def is_www(self):
+        """Is this app the special pafeforest app?"""
         return self.app_id() == 'www'
 
     def generate_session_key(self, user, seconds=None):
@@ -186,6 +187,9 @@ class App(Cacheable, Migratable, Timestamped):
                            secret)
 
     def user_from_session_key(self, key):
+        """
+        Verify the session key and return the user object.
+        """
         try:
             (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
             user = User.lookup(username)
@@ -193,4 +197,8 @@ class App(Cacheable, Migratable, Timestamped):
             crypto.verify(key, secret)
             return user
         except:
+            # REVIEW: Specify which exceptions you want to catch.
+            # Otherwise, this will silently swallow all exceptions
+            # even things like DeadlineExceededError or
+            # KeyboardInterrupt.
             return None
