@@ -12,10 +12,14 @@ from storage.models import KeyValue
 PROPERTIES = ['users', 'apps', 'documents', 'keyvalues']
 
 
-def count(model, property, start, stop):
+def count_entities(model, property_name, start, stop):
+    """
+    Count all entities of this model with a DatetimeProperty between
+    start (inclusive) and stop (exclusive).
+    """
     query = model.all(keys_only=True)
-    query.filter(property + ' >=', start)
-    query.filter(property + ' <', stop)
+    query.filter(property_name + ' >=', start)
+    query.filter(property_name + ' <', stop)
     return query.count()
 
 
@@ -40,15 +44,16 @@ class StatsHour(Cacheable, Migratable):
     def update(self):
         start = self.start_time()
         stop = start + timedelta(hours=1)
-        self.users = count(User, 'created', start, stop)
-        self.apps = count(App, 'created', start, stop)
-        self.documents = count(Document, 'created', start, stop)
-        self.keyvalues = count(KeyValue, 'created', start, stop)
+        self.users = count_entities(User, 'created', start, stop)
+        self.apps = count_entities(App, 'created', start, stop)
+        self.documents = count_entities(Document, 'created', start, stop)
+        self.keyvalues = count_entities(KeyValue, 'created', start, stop)
 
     def __unicode__(self):
         result = []
-        for property in PROPERTIES:
-            result.append('%d %s' % (getattr(self, property), property))
+        for property_name in PROPERTIES:
+            result.append('%d %s' % (
+                    getattr(self, property_name), property_name))
         return ', '.join(result)
 
 
@@ -66,12 +71,12 @@ class StatsDay(StatsHour):
 
     def update(self):
         parts = self.get_parts()
-        for property in PROPERTIES:
+        for property_name in PROPERTIES:
             count = 0
             for part in parts:
                 if part:
-                    count += getattr(part, property)
-            setattr(self, property, count)
+                    count += getattr(part, property_name)
+            setattr(self, property_name, count)
 
 
 class StatsMonth(StatsDay):

@@ -5,20 +5,16 @@ from google.appengine.ext import db
 from utils.shortcuts import render_to_response
 from utils.crypto import BASE62
 
-from auth.models import User
-from apps.models import App
-from documents.models import Document
-from storage.models import KeyValue
 from dashboard.models import StatsHour, StatsDay, StatsMonth
 
 
-def sparkline(hours, property):
+def sparkline(hours, property_name):
     values = []
     for hour in hours:
         if hour is None:
             values.append(None)
         else:
-            values.append(getattr(hour, property, None))
+            values.append(getattr(hour, property_name, None))
     maximum = max(1, max(values))
     scale = 61 / maximum  # Rescale for single-letter encoding.
     chars = []
@@ -30,14 +26,14 @@ def sparkline(hours, property):
     return ''.join(chars)
 
 
-def chart(hours, property, color):
+def chart(hours, property_name, color):
     return '&'.join([
             'http://chart.apis.google.com/chart?cht=ls',
             'chs=400x40',       # Size in pixels.
             'chf=bg,s,000000',  # Black background.
             'chco=' + color,    # Foreground.
             'chls=3',           # Line width in pixels.
-            'chd=s:' + sparkline(hours, property),
+            'chd=s:' + sparkline(hours, property_name),
             ])
 
 
