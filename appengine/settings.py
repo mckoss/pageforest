@@ -80,6 +80,9 @@ USE_ETAGS = False
 PREPEND_WWW = False
 APPEND_SLASH = False
 
+# Content-Type header for JSON data.
+JSON_MIMETYPE = 'application/json'
+
 # Allowed dormats for pageforest identifiers:
 USERNAME_RE = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
 USERNAME_REGEX = re.compile(r"^" + USERNAME_RE + r"$")
