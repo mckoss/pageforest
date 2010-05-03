@@ -25,6 +25,7 @@ manage.py:35: [W0403] Relative import 'settings'
 Wildcard import settingsauto
 from wildcard import
 [E0611] No name 'Utils' in module 'email'
+[W0402] Uses of a deprecated module 'string'
 :1: [C0111] Missing docstring
 Test] Missing docstring
 .setUp] Missing docstring
