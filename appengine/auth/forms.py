@@ -3,10 +3,7 @@ from django.conf import settings
 from django.utils import simplejson as json
 from django.utils.safestring import mark_safe
 
-import auth.models
-User = auth.models.User
-
-import settings
+from auth.models import User
 
 KEYBOARD_ROWS = """
 `1234567890-=
@@ -22,6 +19,7 @@ username_error = "Username must begin with a letter and contain only " + \
 
 
 class LabeledCheckbox(forms.CheckboxInput):
+
     def __init__(self, attrs=None, label=None, id=None):
         super(LabeledCheckbox, self).__init__(attrs)
         self.label = label
@@ -38,7 +36,7 @@ class LabeledCheckbox(forms.CheckboxInput):
 
 class RegistrationForm(forms.Form):
     username = forms.RegexField(
-        regex=auth.models.settings.USERNAME_REGEX,
+        regex=settings.USERNAME_REGEX,
         min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(min_length=6, max_length=40,
@@ -121,7 +119,7 @@ class RegistrationForm(forms.Form):
 
 class SignInForm(forms.Form):
     username = forms.RegexField(
-        regex=auth.models.settings.USERNAME_REGEX,
+        regex=settings.USERNAME_REGEX,
         min_length=2, max_length=30,
         error_messages={'invalid': username_error})
     password = forms.CharField(
@@ -150,7 +148,6 @@ class SignInForm(forms.Form):
         user does not match - but don't reveal the reason to the user.
         """
         if 'username' in self.cleaned_data and 'password' in self.cleaned_data:
-            username = self.cleaned_data['username'].lower()
             if self.user is None or \
                 not self.user.check_password(self.cleaned_data['password']):
                 raise forms.ValidationError("Invalid username or password.")
