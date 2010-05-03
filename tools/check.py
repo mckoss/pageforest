@@ -9,7 +9,8 @@ from time import time
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
-UNITTEST_OPTIONS = '-v0 --nologcapture --with-xunit --with-doctest'
+UNITTEST_OPTIONS = '-v0'
+NOSETEST_OPTIONS = '--nologcapture --with-xunit --with-doctest'
 PEP8_EXCLUDE = 'jsmin.py'.split()
 
 total_time = 0.0
@@ -80,6 +81,7 @@ def main():
     """
 
     global options
+    global UNITTEST_OPTIONS
 
     all_checks = [
         ('pylint', "python %s -e %s" %
@@ -104,6 +106,8 @@ def main():
         help="ask before running any checks")
     parser.add_option('-q', '--quick', action='store_true',
         help="skip tests that take longer than 10 seconds")
+    parser.add_option('--nose', action='store_true',
+        help="use django_nose for unit testing (for Hudson support)")
     for name, command in all_checks:
         parser.add_option('--' + name, action='callback',
                           callback=part_callback,
@@ -116,6 +120,14 @@ def main():
         yesno = raw_input("Do you want to run check.py? [Y/n] ")
         if yesno.lower().startswith('n'):
             return
+
+    try:
+        import django_nose
+    except ImportError:
+        pass
+
+    if options.nose or 'django_nose' in locals():
+        UNITTEST_OPTIONS += ' ' + NOSETEST_OPTIONS
 
     for name, command in all_checks:
         if name in options.checks:
