@@ -23,14 +23,10 @@ class AppMiddleware(object):
                 raise Http404()
             return
 
-        # Rewrite / to default HTML page.
+        # Prefix path with /app for matching with urls.py.
         logging.info(" original URL: http://" +
                      request.META.get('HTTP_HOST', '') +
                      request.get_full_path())
-        # REVIEW: Seems an odd place to do this mapping? - key_value()?
-        if request.path_info == '/':
-            request.path_info = '/index.html'
-        # Prefix path with /app for matching with urls.py.
         request.path_info = '/app' + request.path_info
         request.META['PATH_INFO'] = request.path_info
         request.path = request.META['SCRIPT_NAME'] + request.path_info

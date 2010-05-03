@@ -23,7 +23,8 @@ def key_value(request, doc_id, key):
     else:
         # Static resources for this application.
         request.key_name = '/'.join(
-            ('meta', request.app.app_id(), key))
+            ('meta', request.app.app_id(), key or 'index.html'))
+
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():

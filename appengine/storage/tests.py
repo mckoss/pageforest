@@ -200,6 +200,10 @@ class MimeTest(AppTestCase):
         response = self.put_and_get('/index.html')
         self.assertContains(response, 'data')
         self.assertEqual(response['Content-Type'], 'text/html')
+        # Try again with the top-level alias for index.html.
+        response = self.app_client.get('/')
+        self.assertContains(response, 'data')
+        self.assertEqual(response['Content-Type'], 'text/html')
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
