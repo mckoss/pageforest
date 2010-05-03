@@ -23,10 +23,10 @@ class LabeledCheckbox(forms.CheckboxInput):
     """
 
     # REVIEW: The name "id" shadows a built-in Python function.
-    def __init__(self, attrs=None, label=None, id=None):
+    def __init__(self, attrs=None, label=None, field_id=None):
         super(LabeledCheckbox, self).__init__(attrs)
         self.label = label
-        self.id = id
+        self.field_id = field_id
 
     def render(self, name, value, attrs=None):
         """
@@ -35,8 +35,8 @@ class LabeledCheckbox(forms.CheckboxInput):
         check_string = super(LabeledCheckbox, self).render(name, value, attrs)
         import logging
         logging.info('self %r' % dir(self))
-        check_string += '&nbsp;<label for="id_%s">%s</label>' % \
-            (self.id, self.label)
+        check_string += '&nbsp;<label for="id_%s">%s</label>' % (
+            self.field_id, self.label)
         return mark_safe(check_string)
 
 
@@ -105,7 +105,7 @@ class RegistrationForm(UsernamePasswordForm):
     email = forms.EmailField(max_length=75, label="Email address")
     tos = forms.BooleanField(
         label="Terms of Service",
-        widget=LabeledCheckbox(label="I agree", id='tos'),
+        widget=LabeledCheckbox(label="I agree", field_id='tos'),
         error_messages={'required':
           mark_safe('You must agree to the <a href="http://' +
                     settings.DEFAULT_DOMAIN + '/' + 'terms-of-service">' +
@@ -152,7 +152,7 @@ class SignInForm(UsernamePasswordForm):
     """
     app_auth = forms.BooleanField(
         label="Application",
-        widget=LabeledCheckbox(label="Allow access", id='app_auth'))
+        widget=LabeledCheckbox(label="Allow access", field_id='app_auth'))
 
     # REVIEW: Is it proper to stash data in the form for callers
     # to use (when form is_valid)?
