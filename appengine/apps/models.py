@@ -193,15 +193,19 @@ class App(Cacheable, Migratable, Timestamped):
         """
         Verify the session key and return the user object.
         """
+        logging.info("ufs(%s): %r" % (self.app_id(), key))
         try:
             (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
             user = User.lookup(username)
             secret = crypto.join(user.password, self.secret)
             crypto.verify(key, secret)
+            logging.info("ufs2: %s" % user)
             return user
-        except:
+        except Exception, e:
             # REVIEW: Specify which exceptions you want to catch.
             # Otherwise, this will silently swallow all exceptions,
             # even things like DeadlineExceededError or
             # KeyboardInterrupt.
+            # ValueError, Exception(invalid signature)??
+            logging.info("%s: %s" % (type(e), str(e)))
             return None

@@ -37,6 +37,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
     function newTab(url) {
         var win = window.open(url, '_blank');
+        // REVIEW: Why is this needed here?
         if (win && win.focus) {
             win.focus();
         }
