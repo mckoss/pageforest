@@ -51,13 +51,16 @@ def key_value_get(request):
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404("Could not find entity " + request.key_name)
+    etag = '"%s"' % entity.sha1
+    if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
+        return HttpResponseNotModified()
     last_modified = http_datetime(entity.modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     mimetype = guess_mimetype(request.key_name)
     response = HttpResponse(entity.value, mimetype=mimetype)
-    if last_modified:
-        response['Last-Modified'] = last_modified
+    response['Last-Modified'] = last_modified
+    response['ETag'] = etag
     return response
 
 
