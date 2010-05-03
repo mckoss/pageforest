@@ -11,7 +11,9 @@ class AppMiddleware(object):
     """
 
     def process_request(self, request):
-        # Get the app by hostname.
+        """
+        Get the app by hostname.
+        """
         request.app = App.get_by_hostname(
             request.META.get('HTTP_HOST', 'testserver'))
 
