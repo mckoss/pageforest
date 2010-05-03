@@ -141,9 +141,13 @@ def verify(request, signature):
     """
     try:
         parts = signature.split(crypto.SEPARATOR)
+        if len(parts) != 6:
+            raise Exception("Expected 6 parts.")
         username = parts.pop(0)
         # Check the inner challenge first
-        (random, expires, ip) = crypto.verify(parts[:-1], request.app.secret)
+        if not crypto.verify(parts[:-1], request.app.secret):
+            raise Exception("Challenge invalid.")
+        random, expires, ip = parts[:3]
         expires = int(expires)
         now = int(time.time())
         if expires < now:
@@ -154,7 +158,8 @@ def verify(request, signature):
         if user is None:
             raise Exception("Unknown user.")
         # Check the user authentication
-        crypto.verify(parts, user.password)
+        if not crypto.verify(parts, user.password):
+            raise Exception("Password incorrect.")
         # Ensure this challenge not already used.
         if memcache.get(CACHE_PREFIX + random):
             raise Exception("Already used.")

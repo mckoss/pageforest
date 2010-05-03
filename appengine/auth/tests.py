@@ -126,7 +126,7 @@ class ChallengeVerifyTest(TestCase):
 
     def sign_and_verify(self, challenge, username=None, password=None,
                         **kwargs):
-        """Helper method to sign the challenge and attempt sign-in."""
+        """Helper method to sign the challenge and attempt to sign in."""
         username = username or self.peter.username
         password = password or self.peter.password
         signed = crypto.sign(challenge, password)
@@ -144,20 +144,19 @@ class ChallengeVerifyTest(TestCase):
         cookie = response.cookies['reauth'].value
         self.assertTrue(cookie.startswith('myapp/peter/'))
 
-    def test_invalid_challenge_sig(self):
+    def test_invalid_challenge(self):
         """The challenge must have a valid HMAC."""
         # Get a challenge from the server.
         challenge = self.app_client.get('/auth/challenge').content
         # Alter the last letter of the challenge HMAC
         challenge = challenge[:-1] + 'x'
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'Invalid signature.', status_code=403)
+        self.assertContains(response, 'Challenge invalid.', status_code=403)
 
     def test_bogus_login(self):
         """Test that a bogus authentication string cannot login."""
         response = self.app_client.get('/auth/verify/x')
-        self.assertContains(response, 'Challenge response failed',
-                            status_code=403)
+        self.assertContains(response, 'Expected 6 parts.', status_code=403)
 
     def test_expired_challenge(self):
         """Test that an expired challenge stops working."""
@@ -200,7 +199,7 @@ class ChallengeVerifyTest(TestCase):
         challenge = self.app_client.get('/auth/challenge').content
         response = self.sign_and_verify(
             challenge, password=self.peter.password[::-1])
-        self.assertContains(response, 'Invalid signature.',
+        self.assertContains(response, 'Password incorrect.',
                             status_code=403)
 
 
