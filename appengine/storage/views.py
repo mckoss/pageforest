@@ -58,6 +58,8 @@ def key_value_get(request):
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     mimetype = guess_mimetype(request.key_name)
+    if mimetype == 'text/plain' and entity.valid_json:
+        mimetype = settings.JSON_MIMETYPE
     response = HttpResponse(entity.value, mimetype=mimetype)
     response['Last-Modified'] = last_modified
     response['ETag'] = etag
