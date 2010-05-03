@@ -76,7 +76,6 @@ USE_I18N = False
 USE_ETAGS = False
 
 # We don't let CommonMiddleware redirect to add www or slashes.
-# REVIEW: Remove CommonMiddleware - not using it for anything?
 PREPEND_WWW = False
 APPEND_SLASH = False
 
@@ -196,9 +195,6 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = (
     'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
-    # 'django.middleware.common.CommonMiddleware',
-    # 'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
