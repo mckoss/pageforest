@@ -46,6 +46,8 @@ def jsonp(func):
     callback for JSONP.
     """
     def wrapper(request, *args, **kwargs):
+        # FIXME: Don't swallow exceptions for non-JSONP requests,
+        # when callback is not specified.
         try:
             response = func(request, *args, **kwargs)
         except Http404, e:
