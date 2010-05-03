@@ -1,20 +1,16 @@
-from datetime import datetime
-
 from django.conf import settings
-from django.http import HttpResponseForbidden
-
-from utils import crypto
-
-from auth.models import User
 
 
 class AuthMiddleware(object):
+    """
+    Check authentication for each request.
+    """
 
     def process_request(self, request):
         """
-        Attempt to extract the user from the session cookie into request.user.
-
-        If fails for any reason, request.user is set to None (fails silently).
+        Attempt to extract the user from the session cookie into
+        request.user. If it fails for any reason, request.user is set
+        to None (fails silently).
         """
         request.user = None
         if settings.SESSION_COOKIE_NAME not in request.COOKIES:
