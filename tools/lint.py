@@ -26,6 +26,7 @@ Wildcard import settingsauto
 from wildcard import
 [E0611] No name 'Utils' in module 'email'
 [W0402] Uses of a deprecated module 'string'
+[W0403] Relative import 'settingsauto'
 :1: [C0111] Missing docstring
 Test] Missing docstring
 .setUp] Missing docstring
@@ -71,6 +72,7 @@ def main():
     command.append('--include-ids=yes')
     command.append('--reports=no')
     command.append('--notes=FIXME,XXX,TODO,REVIEW')
+    command.append('--good-names=ip')
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
         command.append('-e')
