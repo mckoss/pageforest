@@ -84,6 +84,8 @@ def sign_in(request, app_id=None):
 
 # REVIEW: Does the mimetype get converted to application/x-javascript
 # so it loads properly for cross-site requests?
+# ANSWER: Yes, the @jsonp decorator sets the Content-Type header to
+# settings.JSON_MIMETYPE which is currently application/json
 @jsonp
 @method_required('GET', 'POST')
 def get_username(request):

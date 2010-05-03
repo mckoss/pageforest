@@ -29,6 +29,9 @@ class LabeledCheckbox(forms.CheckboxInput):
         self.id = id
 
     def render(self, name, value, attrs=None):
+        """
+        Generate HTML for a checkbox with a label.
+        """
         check_string = super(LabeledCheckbox, self).render(name, value, attrs)
         import logging
         logging.info('self %r' % dir(self))
@@ -153,7 +156,7 @@ class SignInForm(UsernamePasswordForm):
 
     # REVIEW: Is it proper to stash data in the form for callers
     # to use (when form is_valid)?
-    # TODO: I usually put data in self.cleaned_data['user'] rather
+    # ANSWER: I usually put data in self.cleaned_data['user'] rather
     # than directly into the form instance.
     user = None
 
