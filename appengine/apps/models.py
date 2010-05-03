@@ -121,6 +121,9 @@ class App(Cacheable, Migratable, Timestamped):
         if match:
             return match.group(2) or 'www'
 
+        # REVIEW: Is it better to omit tuple parens?
+        # REVIEW: Why not use hostname.split('.', 1) and get rid of
+        # the unused dot variable?
         (app, dot, sub_domain) = hostname.partition('.')
 
         if sub_domain in settings.DOMAINS:
