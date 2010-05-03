@@ -21,6 +21,8 @@ def guess_mimetype(filename):
     'image/png'
     >>> guess_mimetype('photo.jpg')
     'image/jpeg'
+    >>> guess_mimetype('foo')
+    'text/plain'
     """
     name, ext = os.path.splitext(filename.lower())
     if ext in MIMETYPES:
