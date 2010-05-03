@@ -94,24 +94,26 @@ def verify(signed, key):
     """
     Verify a properly signed string - the last argument is the HMAC.
 
-    If valid - return the parts in a list, else None.
-
     >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
-    ['a', 'b']
+    True
+    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    True
+    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'c')
+    True
     >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
-    Traceback (most recent call last):
-    ...
-    Exception: Invalid signature.
+    False
+    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    False
+    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'd')
+    False
     """
-    if type(signed) == str:
+    if isinstance(signed, basestring):
         parts = signed.split(SEPARATOR)
     else:
         parts = list(signed)
         signed = SEPARATOR.join(parts)
     parts[-1] = key
-    if sign(*parts) != signed:
-        raise Exception("Invalid signature.")
-    return parts[:-1]
+    return signed == sign(*parts)
 
 
 if __name__ == '__main__':
