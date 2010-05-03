@@ -60,11 +60,29 @@ class RegistrationTest(TestCase):
         self.peter.put()
         self.www = Client(HTTP_HOST='www.pageforest.com')
 
+    def test_username_invalid_first(self):
+        """Test that invalid usernames are rejected."""
+        for char in '012_-.,!?$:@/':
+            response = self.www.post(
+                '/auth/sign-up', {'username': char + 'name'})
+            self.assertContains(
+                response, "Username must start with a letter.")
+
+    def test_username_invalid_last(self):
+        """Test that invalid usernames are rejected."""
+        for char in '_-.,!?$:@/':
+            response = self.www.post(
+                '/auth/sign-up', {'username': 'name' + char})
+            self.assertContains(
+                response, "Username must end with a letter or number.")
+
     def test_username_invalid(self):
         """Test that invalid usernames are rejected."""
-        for name in '_name 1x a- a_b a.b'.split():
-            response = self.www.post('/auth/sign-up', {'username': name})
-            self.assertContains(response, "Username must")
+        for char in '_.,!?$:@/':
+            response = self.www.post(
+                '/auth/sign-up', {'username': 'a' + char + 'b'})
+            self.assertContains(response,
+                "Username must contain only letters, numbers and dashes.")
 
     def test_username_too_short(self):
         """Test that excessively short usernames are rejected."""
