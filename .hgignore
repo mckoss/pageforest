@@ -8,3 +8,4 @@ syntax: glob
 *.orig
 .url
 TAGS
+nosetests.xml
