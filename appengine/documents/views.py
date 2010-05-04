@@ -13,12 +13,12 @@ def document(request, doc_id):
     """
     Get document metadata.
     """
-    request.key_name = '/'.join((request.app.app_id(), doc_id.lower()))
     if request.doc is None:
         raise Http404("Could not find document " + request.key_name)
-    extra = None
-    data = KeyValue.get_by_key_name(request.key_name)
+    data = KeyValue.get_by_key_name(request.doc.key().name())
     if data:
         extra = {"json": json.loads(data.value)}
+    else:
+        extra = None
     result = model_to_json(request.doc, extra)
     return HttpResponse(result, mimetype='application/json')
