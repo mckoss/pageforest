@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from django.conf import settings
 from django.test import TestCase
@@ -211,6 +211,8 @@ class SimpleAuthTest(TestCase):
                           email='peter@example.com')
         self.peter.set_password('password')
         self.peter.put()
+        self.paul = User(key_name='paul', username='Paul')
+        self.paul.put()
         self.doc = Document(key_name='myapp/mydoc', title='My Document',
                             readers=['peter'], writers=['peter'])
         self.doc.put()
@@ -220,52 +222,49 @@ class SimpleAuthTest(TestCase):
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.session_key = self.peter.generate_session_key(self.app)
 
-    # These tests are not correct - if the session key is bad, the behavior
-    # is the same as an anonymous session.  Need to replace these tests
-    # trying to read (or write) something that is locked down to one user.
-    def BAD_bogus_session_key(self):
+    def test_bogus_session_key(self):
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
         response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key must have four parts.",
-                            status_code=403)
+        self.assertContains(response, "Expected 4 parts.", status_code=403)
         session_key = crypto.join(self.session_key, 'bogus')
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key must have four parts.",
-                            status_code=403)
+        self.assertContains(response, "Expected 4 parts.", status_code=403)
 
-    def BAD_session_key_expired(self):
-        parts = self.session_key.split(crypto.SEPARATOR)
-        parts[2] = datetime.now() - timedelta(seconds=10)
-        session_key = crypto.join(parts)
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key is expired.",
-                            status_code=403)
-
-    def BAD_different_app(self):
+    def test_different_app(self):
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[0] = 'other'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key is for a different app.",
-                            status_code=403)
+        self.assertContains(response, "Different app.", status_code=403)
 
-    def BAD_unknown_user(self):
+    def test_session_key_expired(self):
+        parts = self.session_key.split(crypto.SEPARATOR)
+        parts[2] = int(time.time() - 10)
+        session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        response = self.app_client.get('/docs/mydoc/')
+        self.assertContains(response, "Session key expired.", status_code=403)
+
+    def test_unknown_user(self):
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[1] = 'unknown'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key user not found.",
-                            status_code=403)
+        self.assertContains(response, "Unknown user.", status_code=403)
 
-    def BAD_incorrect_session_key(self):
+    def test_incorrect_session_key(self):
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[-1] = parts[-1][::-1]  # Backwards.
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Session key is incorrect.",
-                            status_code=403)
+        self.assertContains(response, "Password incorrect.", status_code=403)
+
+    def test_different_user(self):
+        session_key = self.paul.generate_session_key(self.app)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        response = self.app_client.get('/docs/mydoc/')
+        self.assertContains(response, "Access denied.", status_code=403)

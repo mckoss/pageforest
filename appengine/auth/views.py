@@ -15,7 +15,7 @@ from utils.shortcuts import render_to_response
 from utils import crypto
 
 from auth.forms import RegistrationForm, SignInForm
-from auth.models import User, CHALLENGE_EXPIRATION
+from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
 
 from apps.models import App
 
@@ -156,7 +156,7 @@ def verify(request, signature):
     try:
         user = User.verify_signature(
             signature, request.app, request.META.get('REMOTE_ADDR', '0.0.0.0'))
-    except crypto.SignatureError, error:
+    except SignatureError, error:
         return HttpResponseForbidden(
             "Invalid signature: " + unicode(error), content_type='text/plain')
     # Return fresh session key and reauth cookie.

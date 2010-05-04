@@ -15,6 +15,10 @@ CHALLENGE_EXPIRATION = 60  # Seconds.
 CHALLENGE_CACHE_PREFIX = 'CR1~'
 
 
+class SignatureError(Exception):
+    pass
+
+
 class User(db.Expando, Migratable, Cacheable, Timestamped):
     """
     The entity key name is username.lower() for case-insensitive matching.
@@ -72,34 +76,34 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
     def verify_signature(cls, signature, app, remote_ip):
         """
         Check a challenge signature and return the user. If the
-        signature is invalid, raise crypto.SignatureError with
-        explanation message.
+        signature is invalid, raise SignatureError with explanation
+        message.
         """
         parts = signature.split(crypto.SEPARATOR)
         if len(parts) != 6:
-            raise crypto.SignatureError("Expected 6 parts.")
+            raise SignatureError("Expected 6 parts.")
         (username, random, expires, ip) = parts[:4]
         # Check the inner challenge first.
         if not crypto.verify(parts[1:5], app.secret):
-            raise crypto.SignatureError("Challenge invalid.")
+            raise SignatureError("Challenge invalid.")
         # Check expiration time.
         expires = int(expires)
         now = int(time.time())
         if expires < now:
-            raise crypto.SignatureError("Challenge expired.")
+            raise SignatureError("Challenge expired.")
         # Check IP address.
         if ip != remote_ip:
-            raise crypto.SignatureError("IP address changed.")
+            raise SignatureError("IP address changed.")
         # Check that the same challenge wasn't used before.
         if memcache.get(CHALLENGE_CACHE_PREFIX + random):
-            raise crypto.SignatureError("Already used.")
+            raise SignatureError("Already used.")
         # Check that the user exists.
         user = cls.get_by_key_name(username.lower())
         if user is None:
-            raise crypto.SignatureError("Unknown user.")
+            raise SignatureError("Unknown user.")
         # Check the user's password.
         if not crypto.verify(parts[1:], user.password):
-            raise crypto.SignatureError("Password incorrect.")
+            raise SignatureError("Password incorrect.")
         # Mark the challenge as used until it expires.
         memcache.set(CHALLENGE_CACHE_PREFIX + random, 'used',
                      time=expires - now + 10)
@@ -131,22 +135,46 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         """
         parts = session_key.split(crypto.SEPARATOR)
         if len(parts) != 4:
-            raise crypto.SignatureError("Expected 4 parts.")
+            raise SignatureError("Expected 4 parts.")
         (app_id, username, expires, hmac) = parts
         # Check that the session key is for the same app.
         if app_id != app.get_app_id():
-            raise crypto.SignatureError("Different app.")
+            raise SignatureError("Different app.")
         # Check expiration time.
         expires = int(expires)
         now = int(time.time())
         if expires < now:
-            raise crypto.SignatureError("Session key expired.")
+            raise SignatureError("Session key expired.")
         # Check if the user exists.
         user = cls.lookup(username)
         if user is None:
-            raise crypto.SignatureError("Unknown user.")
+            raise SignatureError("Unknown user.")
         # Check the user's password and app secret.
         secret = crypto.join(user.password, app.secret)
         if not crypto.verify(session_key, secret):
-            raise crypto.SignatureError("Password incorrect.")
+            raise SignatureError("Password incorrect.")
         return user
+
+    def is_member(self, usernames):
+        """
+        Case-insensitive username match against a list of usernames.
+
+        >>> paul = User(username='Paul')
+        >>> paul.is_member([])
+        False
+        >>> paul.is_member(['anybody'])
+        False
+        >>> paul.is_member(['authenticated'])
+        False
+        >>> paul.is_member(['anybody', 'authenticated', 'paul'])
+        True
+        >>> paul.is_member(['Peter', 'Paul', 'Mary'])
+        True
+        >>> paul.is_member(['George', 'Dieter'])
+        False
+        """
+        self_lower = self.username.lower()
+        for username in usernames:
+            if username.lower() == self_lower:
+                return True
+        return False
