@@ -2272,16 +2272,24 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
             }
 
             // Check (once) if we're also currently logged in @ appId
-            ns.getString(ns.appDomain + "/auth/username", function() {
-                // We're logged in, clean up and get out.
-                ns.closeForm();
+            // without having to sign-in again.
+            ns.getString(ns.appDomain + "/auth/username", function(username) {
+                // We're already logged in!
+                if (typeof(username) == 'string') {
+                    ns.closeForm();
+                    return;
+                }
             });
         },
 
-        // Send a valid appId sessionKey to the app domain
-        // to get it installed on a cookie.
         transferSession: function(sessionKey) {
-            ns.getString(ns.appDomain + "/auth/session/" + sessionKey, function () {
+            // Send a valid appId sessionKey to the app domain
+            // to get it installed on a cookie.
+            ns.getString(ns.appDomain + "/auth/set-session/" + sessionKey, function (s) {
+                if (typeof(s) != 'string') {
+                    alert(s.message);
+                    return;
+                }
                 ns.closeForm();
             });
         },
@@ -2304,18 +2312,22 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
                 type: "GET",
                 url: url,
                 dataType: "jsonp",
-                success: fn
+                success: fn,
+                error: function() {
+                    fn({status:500});
+                }
             });
         },
 
         // Display success, and close window in 5 seconds.
         closeForm: function() {
             function closeFinal() {
+                // Close the window if we were opened by a cross-site script
                 window.close();
             }
             if (ns.appId)
-                $(".have_app").show('slow');
-            $(".want_app").hide('slow');
+                $(".have_app").show();
+            $(".want_app").hide();
             setTimeout(closeFinal, 5000);
         }
 
