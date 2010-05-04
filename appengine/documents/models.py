@@ -25,6 +25,32 @@ class Document(Cacheable, Migratable, Timestamped):
     readers = db.StringListProperty()  # Usernames that have read access.
 
     def get_absolute_url(self):
-        """Get the absolute URL for this model instance."""
+        """
+        Get the absolute URL for this model instance.
+        """
         app = App.get_by_key_name(self.app_id)
         return '/'.join(('http:/', app.domains[0], 'docs', self.doc_id))
+
+    def is_readable(self, user):
+        """
+        Does this user have read permissions on this document?
+        """
+        if 'anybody' in self.readers:
+            return True
+        if 'authenticated' in self.readers and user:
+            return True
+        if user is None:
+            return False
+        return user.is_member(self.readers)
+
+    def is_writable(self, user):
+        """
+        Does this user have write permissions on this document?
+        """
+        if 'anybody' in self.writers:
+            return True
+        if 'authenticated' in self.writers and user:
+            return True
+        if user is None:
+            return False
+        return user.is_member(self.writers)

@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from auth.models import User
+from auth.models import User, SignatureError
 
 
 class AuthMiddleware(object):
@@ -18,7 +18,11 @@ class AuthMiddleware(object):
         if settings.SESSION_COOKIE_NAME not in request.COOKIES:
             return
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-        request.user = User.verify_session_key(session_key, request.app)
+        try:
+            request.user = User.verify_session_key(session_key, request.app)
+        except SignatureError, error:
+            request.session_key_error = unicode(error)
+            request.user = None
 
 
 def user_context(request):
