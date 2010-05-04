@@ -1,3 +1,4 @@
+import re
 import string
 
 from django import forms
@@ -16,13 +17,14 @@ zxcvbnm,./
 yxcvbnm,.-
 """.split()
 
+USERNAME_REGEX_MATCH = re.compile(settings.USERNAME_REGEX).match
+
 
 class LabeledCheckbox(forms.CheckboxInput):
     """
     Checkbox with a label.
     """
 
-    # REVIEW: The name "id" shadows a built-in Python function.
     def __init__(self, attrs=None, label=None, field_id=None):
         super(LabeledCheckbox, self).__init__(attrs)
         self.label = label
@@ -61,7 +63,7 @@ class UsernamePasswordForm(forms.Form):
         if username[-1] not in string.ascii_letters + string.digits:
             raise forms.ValidationError(
                 "Username must end with a letter or number.")
-        if not settings.USERNAME_REGEX.match(username):
+        if not USERNAME_REGEX_MATCH(username):
             raise forms.ValidationError(
                 "Username must contain only letters, numbers and dashes.")
         if key_name in settings.RESERVED_USERNAMES:
@@ -154,30 +156,23 @@ class SignInForm(UsernamePasswordForm):
         label="Application",
         widget=LabeledCheckbox(label="Allow access", field_id='app_auth'))
 
-    # REVIEW: Is it proper to stash data in the form for callers
-    # to use (when form is_valid)?
-    # ANSWER: I usually put data in self.cleaned_data['user'] rather
-    # than directly into the form instance.
-    user = None
-
     def clean_username(self):
         """
         Check that the user exists.
         """
         username = super(SignInForm, self).clean_username()
-        self.user = User.lookup(username)
-        if self.user is None:
+        user = User.lookup(username)
+        if user is None:
             raise forms.ValidationError("No account for %s." % username)
+        self.cleaned_data['user'] = user
         return username
 
     def clean(self):
         """
-        Raise an error if the user does not exist OR the password for that
-        user does not match - but don't reveal the reason to the user.
+        Raise an error if the password does not match.
         """
-        # REVIEW: The information hiding here conflicts with clean_username.
-        if 'username' in self.cleaned_data and 'password' in self.cleaned_data:
-            if self.user is None or \
-                not self.user.check_password(self.cleaned_data['password']):
-                raise forms.ValidationError("Invalid username or password.")
+        user = self.cleaned_data.get('user', None)
+        password = self.cleaned_data.get('password', None)
+        if user and password and not user.check_password(password):
+            raise forms.ValidationError("Invalid password.")
         return self.cleaned_data
