@@ -1,5 +1,7 @@
 from django.conf import settings
 
+from auth.models import User
+
 
 class AuthMiddleware(object):
     """
@@ -16,7 +18,7 @@ class AuthMiddleware(object):
         if settings.SESSION_COOKIE_NAME not in request.COOKIES:
             return
         session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-        request.user = request.app.verify_session_key(session_key)
+        request.user = User.verify_session_key(session_key, request.app)
 
 
 def user_context(request):

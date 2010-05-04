@@ -69,7 +69,7 @@ def sign_in(request, app_id=None):
         if form.is_valid():
             response = HttpResponseRedirect('/auth/sign-in/%s' % app_id)
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                app.generate_session_key(form.user),
+                                form.user.generate_session_key(app),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
 
@@ -77,7 +77,7 @@ def sign_in(request, app_id=None):
     if app.is_www():
         app = None
     elif request.user:
-        app_session_key = app.generate_session_key(request.user)
+        app_session_key = request.user.generate_session_key(app)
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form,
                                'cross_app': app,
@@ -102,7 +102,7 @@ def set_session_cookie(request, session_key):
     When passed a valid session key for the current application,
     set the cookie for the session key.
     """
-    user = request.app.verify_session_key(session_key)
+    user = User.verify_session_key(session_key, request.app)
     if user is None:
         raise Http404("Invalid session key.")
     response = HttpResponse(session_key, content_type='text/plain')
@@ -155,14 +155,13 @@ def verify(request, signature):
     """
     try:
         user = User.verify_signature(
-            signature, request.app.secret,
-            request.META.get('REMOTE_ADDR', '0.0.0.0'))
+            signature, request.app, request.META.get('REMOTE_ADDR', '0.0.0.0'))
     except crypto.SignatureError, error:
         return HttpResponseForbidden(
             "Invalid signature: " + unicode(error), content_type='text/plain')
     # Return fresh session key and reauth cookie.
-    session_key = request.app.generate_session_key(user)
-    reauth_cookie = request.app.generate_session_key(user,
+    session_key = user.generate_session_key(request.app)
+    reauth_cookie = user.generate_session_key(request.app,
             settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,

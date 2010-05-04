@@ -218,7 +218,7 @@ class SimpleAuthTest(TestCase):
                        secret=crypto.random64())
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
-        self.session_key = self.app.generate_session_key(self.peter)
+        self.session_key = self.peter.generate_session_key(self.app)
 
     # These tests are not correct - if the session key is bad, the behavior
     # is the same as an anonymous session.  Need to replace these tests

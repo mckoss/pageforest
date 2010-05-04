@@ -23,7 +23,7 @@ class AppTestCase(TestCase):
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.app.generate_session_key(self.peter)
+            self.peter.generate_session_key(self.app)
 
 
 class KeyValueTest(AppTestCase):
@@ -127,7 +127,7 @@ class HostTest(AppTestCase):
         self.other.put()
         self.other_client = Client(HTTP_HOST=self.other.domains[0])
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.other.generate_session_key(self.peter)
+            self.peter.generate_session_key(self.other)
 
     def test_host(self):
         """Test namespace isolation with Host header."""
