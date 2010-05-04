@@ -8,6 +8,10 @@ BASE64 = BASE62 + '+/'
 BASE64URL = BASE62 + '-_'
 
 
+class SignatureError(Exception):
+    pass
+
+
 def random64(length=32, chars=BASE64):
     """
     >>> len(random64())

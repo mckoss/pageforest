@@ -105,7 +105,7 @@ def set_session_cookie(request, session_key):
     When passed a valid session key for the current application,
     set the cookie for the session key.
     """
-    user = request.app.verify_user(session_key)
+    user = request.app.verify_session_key(session_key)
     if user is None:
         raise Http404("Invalid session key.")
     response = HttpResponse(session_key, content_type='text/plain')
@@ -164,7 +164,7 @@ def verify(request, signature):
     parts = signature.split(crypto.SEPARATOR)
     if len(parts) != 6:
         return forbidden("Expected 6 parts.")
-    username, random, expires, ip = parts[:4]
+    (username, random, expires, ip) = parts[:4]
     # Check the inner challenge first.
     if not crypto.verify(parts[1:5], request.app.secret):
         return forbidden("Challenge invalid.")
