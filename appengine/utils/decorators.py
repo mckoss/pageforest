@@ -1,3 +1,4 @@
+import logging
 import time
 import email
 import httplib
@@ -46,24 +47,21 @@ def jsonp(func):
     callback for JSONP.
     """
     def wrapper(request, *args, **kwargs):
-        # FIXME: Don't swallow exceptions for non-JSONP requests,
-        # when callback is not specified.
-        try:
-            response = func(request, *args, **kwargs)
-        # BUG: re-raise if not a jsonp callback!
-        except Http404, e:
-            response = HttpResponseNotFound(str(e))
-        except Exception, e:
-            response = HttpResponseServerError(str(e))
-
         # Check if the query string contains a callback parameter.
         callback = request.GET.get('callback', None)
-        if not callback:
-            return response
+        if callback is None:
+            return func(request, *args, **kwargs)
 
-        # REVIEW: These could be a handfull if we return formatted 400 and
-        # 500 pages back to the user.
+        # Try to generate a response.
+        try:
+            response = func(request, *args, **kwargs)
+        except Http404, error:
+            response = HttpResponseNotFound(unicode(error))
+        except Exception, error:
+            logging.error("JSONP exception handler: " + unicode(error))
+            response = HttpResponseServerError("Application error.")
         content = response.content
+
         # Tunnel HTTP errors using status code 200.
         if response.status_code / 100 != 2:
             content = json.dumps({
@@ -79,7 +77,7 @@ def jsonp(func):
         if response['Content-Type'] != 'application/json':
             # Remove trailing newlines.
             content = content.rstrip('\n')
-            content = json.dumps(content, indent=4)
+            content = json.dumps(content)
 
         # Add the requested callback function.
         response.content = callback + '(' + content + ')'
