@@ -27,6 +27,7 @@ from wildcard import
 [E0611] No name 'Utils' in module 'email'
 [W0402] Uses of a deprecated module 'string'
 [W0403] Relative import 'settingsauto'
+.process_request] Method could be a function
 :1: [C0111] Missing docstring
 Test] Missing docstring
 .setUp] Missing docstring
