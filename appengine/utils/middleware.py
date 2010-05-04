@@ -23,16 +23,17 @@ class SlashMiddleware(object):
     """
 
     def process_request(self, request):
-        # REVIEW: shouldn't hard code /docs here
-        if request.path_info.startswith('/docs/'):
-            if request.path_info.count('/') >= 3:
-                return  # Don't mess with the key-value namespace.
-        filename = os.path.basename(request.path_info)
-        if not filename:
-            return  # URL already ends with a slash.
-        base, ext = os.path.splitext(filename)
-        if base and not ext:
-            # URL ends with /word without file extension, add slash.
+        path = request.path_info
+        if path.endswith('/'):
+            # URL already ends with a slash.
+            return
+        if path.startswith('/docs/') and '/' in path[6:]:
+            # Don't mess with the key-value namespace.
+            return
+        filename = path.split('/')[-1]
+        if filename and '.' not in filename:
+            # URL ends with /word without file extension.
+            # Add a trailing slash (internal redirect).
             request.path_info += '/'
             request.META['PATH_INFO'] = request.path_info
             request.path = request.META['SCRIPT_NAME'] + request.path_info
