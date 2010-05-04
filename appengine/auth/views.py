@@ -15,12 +15,9 @@ from utils.shortcuts import render_to_response
 from utils import crypto
 
 from auth.forms import RegistrationForm, SignInForm
-from auth.models import User
+from auth.models import User, CHALLENGE_EXPIRATION
 
 from apps.models import App
-
-CHALLENGE_EXPIRATION = 60  # Seconds.
-CACHE_PREFIX = 'CR1'
 
 
 @method_required('GET', 'POST')
@@ -139,11 +136,6 @@ def challenge(request):
     return HttpResponse(challenge_string, mimetype='text/plain')
 
 
-def forbidden(reason):
-    """Helper function for verify errors."""
-    return HttpResponseForbidden(reason, content_type='text/plain')
-
-
 @jsonp
 @method_required('GET')
 def verify(request, signature):
@@ -161,33 +153,13 @@ def verify(request, signature):
         username/S(S(random/expires/ip, app.secret), S(user, pass)) =
         username/random/expires/ip/App-Signature/User-Signature
     """
-    parts = signature.split(crypto.SEPARATOR)
-    if len(parts) != 6:
-        return forbidden("Expected 6 parts.")
-    (username, random, expires, ip) = parts[:4]
-    # Check the inner challenge first.
-    if not crypto.verify(parts[1:5], request.app.secret):
-        return forbidden("Challenge invalid.")
-    # Check expiration time.
-    expires = int(expires)
-    now = int(time.time())
-    if expires < now:
-        return forbidden("Challenge expired.")
-    # Check IP address.
-    if ip != request.META.get('REMOTE_ADDR', '0.0.0.0'):
-        return forbidden("IP address changed.")
-    # Check that the same challenge wasn't used before.
-    if memcache.get(CACHE_PREFIX + random):
-        return forbidden("Already used.")
-    # Check that the user exists.
-    user = User.get_by_key_name(username.lower())
-    if user is None:
-        return forbidden("Unknown user.")
-    # Check the user's password.
-    if not crypto.verify(parts[1:], user.password):
-        return forbidden("Password incorrect.")
-    # Mark the challenge as used until it expires.
-    memcache.set(CACHE_PREFIX + random, 'used', time=expires - now + 10)
+    try:
+        user = User.verify_signature(
+            signature, request.app.secret,
+            request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    except crypto.SignatureError, error:
+        return HttpResponseForbidden(
+            "Invalid signature: " + unicode(error), content_type='text/plain')
     # Return fresh session key and reauth cookie.
     session_key = request.app.generate_session_key(user)
     reauth_cookie = request.app.generate_session_key(user,

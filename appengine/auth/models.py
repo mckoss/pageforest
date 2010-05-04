@@ -1,5 +1,7 @@
+import time
+
 from google.appengine.ext import db
-from google.appengine.api import mail
+from google.appengine.api import mail, memcache
 
 from django.template.loader import render_to_string
 from django.template import RequestContext
@@ -8,6 +10,9 @@ from utils.mixins import Migratable, Cacheable, Timestamped
 from utils import crypto
 
 import settings
+
+CHALLENGE_EXPIRATION = 60  # Seconds.
+CHALLENGE_CACHE_PREFIX = 'CR1~'
 
 
 class User(db.Expando, Migratable, Cacheable, Timestamped):
@@ -29,7 +34,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         """
         Prefer this accessor over direct calls to get_by_key_name.
         """
-        return User.get_by_key_name(username.lower())
+        return cls.get_by_key_name(username.lower())
 
     def set_password(self, password):
         """
@@ -62,3 +67,40 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
                        to=self.email,
                        subject=settings.SITE_NAME + " account verification.",
                        body=message)
+
+    @classmethod
+    def verify_signature(cls, signature, app_secret, current_ip):
+        """
+        Check a challenge signature and return the user. If the
+        signature is invalid, raise crypto.SignatureError with
+        explanation message.
+        """
+        parts = signature.split(crypto.SEPARATOR)
+        if len(parts) != 6:
+            raise crypto.SignatureError("Expected 6 parts.")
+        (username, random, expires, ip) = parts[:4]
+        # Check the inner challenge first.
+        if not crypto.verify(parts[1:5], app_secret):
+            raise crypto.SignatureError("Challenge invalid.")
+        # Check expiration time.
+        expires = int(expires)
+        now = int(time.time())
+        if expires < now:
+            raise crypto.SignatureError("Challenge expired.")
+        # Check IP address.
+        if ip != current_ip:
+            raise crypto.SignatureError("IP address changed.")
+        # Check that the same challenge wasn't used before.
+        if memcache.get(CHALLENGE_CACHE_PREFIX + random):
+            raise crypto.SignatureError("Already used.")
+        # Check that the user exists.
+        user = cls.get_by_key_name(username.lower())
+        if user is None:
+            raise crypto.SignatureError("Unknown user.")
+        # Check the user's password.
+        if not crypto.verify(parts[1:], user.password):
+            raise crypto.SignatureError("Password incorrect.")
+        # Mark the challenge as used until it expires.
+        memcache.set(CHALLENGE_CACHE_PREFIX + random, 'used',
+                     time=expires - now + 10)
+        return user
