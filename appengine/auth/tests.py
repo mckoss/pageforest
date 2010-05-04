@@ -7,6 +7,7 @@ from django.test.client import Client
 
 from auth.models import User
 from apps.models import App
+from documents.models import Document
 
 from utils import crypto
 
