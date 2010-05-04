@@ -8,7 +8,6 @@ from google.appengine.api import memcache
 from django.conf import settings
 
 from utils.mixins import Cacheable, Migratable, Timestamped
-from utils.crypto import SignatureError
 from utils import crypto
 
 from auth.models import User
@@ -177,48 +176,3 @@ class App(Cacheable, Migratable, Timestamped):
     def is_www(self):
         """Is this app the special pafeforest app?"""
         return self.get_app_id() == 'www'
-
-    def generate_session_key(self, user, seconds=None):
-        """
-        Generate a signed session key for this app and user.
-
-            app_id/user/expires/HMAC(user_password, app_secret)
-
-        This routine can generate a reauth cookie by passing in
-        seconds=settings.REAUTH_COOKIE_AGE.
-
-        We use the user.password in the key, so when a user changes his
-        password all of his existing session keys are invalidated.
-        """
-        seconds = seconds or settings.SESSION_COOKIE_AGE
-        expires = int(time.time() + seconds)
-        secret = crypto.join(user.password, self.secret)
-        return crypto.sign(
-            self.get_app_id(), user.username.lower(), expires, secret)
-
-    def verify_session_key(self, session_key):
-        """
-        Verify the session key and return the user object. If the
-        session key is invalid, raise SignatureError with explanation.
-        """
-        parts = session_key.split(crypto.SEPARATOR)
-        if len(parts) != 4:
-            raise SignatureError("Expected 4 parts.")
-        (app_id, username, expires, hmac) = parts
-        # Check that the session key is for the same app.
-        if app_id != self.get_app_id():
-            raise SignatureError("Different app.")
-        # Check expiration time.
-        expires = int(expires)
-        now = int(time.time())
-        if expires < now:
-            raise SignatureError("Session key expired.")
-        # Check if the user exists.
-        user = User.lookup(username)
-        if user is None:
-            raise SignatureError("Unknown user.")
-        # Check the user's password and app secret.
-        secret = crypto.join(user.password, self.secret)
-        if not crypto.verify(session_key, secret):
-            raise SignatureError("Password incorrect.")
-        return user

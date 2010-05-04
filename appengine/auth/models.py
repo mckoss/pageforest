@@ -69,7 +69,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
                        body=message)
 
     @classmethod
-    def verify_signature(cls, signature, app_secret, current_ip):
+    def verify_signature(cls, signature, app, remote_ip):
         """
         Check a challenge signature and return the user. If the
         signature is invalid, raise crypto.SignatureError with
@@ -80,7 +80,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
             raise crypto.SignatureError("Expected 6 parts.")
         (username, random, expires, ip) = parts[:4]
         # Check the inner challenge first.
-        if not crypto.verify(parts[1:5], app_secret):
+        if not crypto.verify(parts[1:5], app.secret):
             raise crypto.SignatureError("Challenge invalid.")
         # Check expiration time.
         expires = int(expires)
@@ -88,7 +88,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         if expires < now:
             raise crypto.SignatureError("Challenge expired.")
         # Check IP address.
-        if ip != current_ip:
+        if ip != remote_ip:
             raise crypto.SignatureError("IP address changed.")
         # Check that the same challenge wasn't used before.
         if memcache.get(CHALLENGE_CACHE_PREFIX + random):
@@ -103,4 +103,50 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         # Mark the challenge as used until it expires.
         memcache.set(CHALLENGE_CACHE_PREFIX + random, 'used',
                      time=expires - now + 10)
+        return user
+
+    def generate_session_key(self, app, seconds=None):
+        """
+        Generate a signed session key for this user and app.
+
+            app_id/user/expires/HMAC(user_password, app_secret)
+
+        This routine can generate a reauth cookie by passing in
+        seconds=settings.REAUTH_COOKIE_AGE.
+
+        We use the user.password in the key, so when a user changes his
+        password, all of his existing session keys are invalidated.
+        """
+        seconds = seconds or settings.SESSION_COOKIE_AGE
+        expires = int(time.time() + seconds)
+        secret = crypto.join(self.password, app.secret)
+        return crypto.sign(
+            app.get_app_id(), self.username.lower(), expires, secret)
+
+    @classmethod
+    def verify_session_key(cls, session_key, app):
+        """
+        Verify the session key and return the user object. If the
+        session key is invalid, raise SignatureError with explanation.
+        """
+        parts = session_key.split(crypto.SEPARATOR)
+        if len(parts) != 4:
+            raise crypto.SignatureError("Expected 4 parts.")
+        (app_id, username, expires, hmac) = parts
+        # Check that the session key is for the same app.
+        if app_id != app.get_app_id():
+            raise crypto.SignatureError("Different app.")
+        # Check expiration time.
+        expires = int(expires)
+        now = int(time.time())
+        if expires < now:
+            raise crypto.SignatureError("Session key expired.")
+        # Check if the user exists.
+        user = cls.lookup(username)
+        if user is None:
+            raise crypto.SignatureError("Unknown user.")
+        # Check the user's password and app secret.
+        secret = crypto.join(user.password, app.secret)
+        if not crypto.verify(session_key, secret):
+            raise crypto.SignatureError("Password incorrect.")
         return user
