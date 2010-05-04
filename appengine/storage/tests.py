@@ -241,8 +241,7 @@ class JsonArrayTest(AppTestCase):
     def setUp(self):
         """Prepare a simple chat array."""
         super(JsonArrayTest, self).setUp()
-        # REVIEW: Are these the right URLS we want to test?
-        # Why is 'app' in the key name?
+        # TODO: Replace app with myapp and doc with mydoc.
         self.chat = KeyValue(key_name='app/doc/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
@@ -255,7 +254,6 @@ class JsonArrayTest(AppTestCase):
 
     def test_last(self):
         """Test that the end of the array can be retrieved."""
-        # REVIEW: Is this the right URL?  Why different from setUp?
         url = '/docs/doc/chat'
         self.assertContent(url + '?method=SLICE', '["hello", "hi", "howdy"]')
         self.assertContent(url + '?method=SLICE&start=-1', '["howdy"]')
