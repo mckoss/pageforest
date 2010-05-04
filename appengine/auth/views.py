@@ -3,6 +3,7 @@ import time
 
 from django.conf import settings
 from django.shortcuts import redirect
+from django.core.urlresolvers import reverse
 from django.http import \
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
@@ -60,11 +61,9 @@ def sign_in(request, app_id=None):
     if app_id:
         app = App.lookup(app_id)
         if app is None or app.is_www():
-            # REVIEW: Not DRY
-            return HttpResponseRedirect('/auth/sign-in/')
+            return HttpResponseRedirect(reverse(sign_in))
 
     if app.is_www():
-        # REVIEW: Is this OK to just yank a field from the form?
         del form.fields['app_auth']
     else:
         form.fields['app_auth'].label = app_id.title()
@@ -106,7 +105,7 @@ def set_session_cookie(request, session_key):
     When passed a valid session key for the current application,
     set the cookie for the session key.
     """
-    user = request.app.user_from_session_key(session_key)
+    user = request.app.verify_user(session_key)
     if user is None:
         raise Http404("Invalid session key.")
     response = HttpResponse(session_key, content_type='text/plain')
@@ -140,6 +139,11 @@ def challenge(request):
     return HttpResponse(challenge_string, mimetype='text/plain')
 
 
+def forbidden(reason):
+    """Helper function for verify errors."""
+    return HttpResponseForbidden(reason, content_type='text/plain')
+
+
 @jsonp
 @method_required('GET')
 def verify(request, signature):
@@ -155,40 +159,36 @@ def verify(request, signature):
 
     Signature is:
         username/S(S(random/expires/ip, app.secret), S(user, pass)) =
-        username/random/expires/ip/HMAC-App/HMAC-User
+        username/random/expires/ip/App-Signature/User-Signature
     """
-    try:
-        parts = signature.split(crypto.SEPARATOR)
-        if len(parts) != 6:
-            raise Exception("Expected 6 parts.")
-        username = parts.pop(0)
-        # Check the inner challenge first
-        if not crypto.verify(parts[:-1], request.app.secret):
-            raise Exception("Challenge invalid.")
-        random, expires, ip = parts[:3]
-        expires = int(expires)
-        now = int(time.time())
-        if expires < now:
-            raise Exception("Challenge expired.")
-        if ip != request.META.get('REMOTE_ADDR', '0.0.0.0'):
-            raise Exception("IP address changed.")
-        user = User.get_by_key_name(username.lower())
-        if user is None:
-            raise Exception("Unknown user.")
-        # Check the user authentication
-        if not crypto.verify(parts, user.password):
-            raise Exception("Password incorrect.")
-        # Ensure this challenge not already used.
-        if memcache.get(CACHE_PREFIX + random):
-            raise Exception("Already used.")
-    except Exception, e:
-        return HttpResponseForbidden(
-            "Challenge response failed: %s" % e.message,
-            content_type='text/plain')
-
-    # Mark the challenge as used until it expires
-    memcache.set(CACHE_PREFIX + random, True, time=expires - now)
-
+    parts = signature.split(crypto.SEPARATOR)
+    if len(parts) != 6:
+        return forbidden("Expected 6 parts.")
+    username, random, expires, ip = parts[:4]
+    # Check the inner challenge first.
+    if not crypto.verify(parts[1:5], request.app.secret):
+        return forbidden("Challenge invalid.")
+    # Check expiration time.
+    expires = int(expires)
+    now = int(time.time())
+    if expires < now:
+        return forbidden("Challenge expired.")
+    # Check IP address.
+    if ip != request.META.get('REMOTE_ADDR', '0.0.0.0'):
+        return forbidden("IP address changed.")
+    # Check that the same challenge wasn't used before.
+    if memcache.get(CACHE_PREFIX + random):
+        return forbidden("Already used.")
+    # Check that the user exists.
+    user = User.get_by_key_name(username.lower())
+    if user is None:
+        return forbidden("Unknown user.")
+    # Check the user's password.
+    if not crypto.verify(parts[1:], user.password):
+        return forbidden("Password incorrect.")
+    # Mark the challenge as used until it expires.
+    memcache.set(CACHE_PREFIX + random, 'used', time=expires - now + 10)
+    # Return fresh session key and reauth cookie.
     session_key = request.app.generate_session_key(user)
     reauth_cookie = request.app.generate_session_key(user,
             settings.REAUTH_COOKIE_AGE)
