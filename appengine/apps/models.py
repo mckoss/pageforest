@@ -8,6 +8,7 @@ from google.appengine.api import memcache
 from django.conf import settings
 
 from utils.mixins import Cacheable, Migratable, Timestamped
+from utils.crypto import SignatureError
 from utils import crypto
 
 from auth.models import User
@@ -196,17 +197,29 @@ class App(Cacheable, Migratable, Timestamped):
         return crypto.sign(self.app_id(), user.username.lower(), expires,
                            secret)
 
-    def verify_user(self, key):
+    def verify_session_key(self, session_key):
         """
-        Verify the session key and return the user object.
-        If the session key is invalid, return None.
+        Verify the session key and return the user object. If the
+        session key is invalid, raise SignatureError with explanation.
         """
-        # TODO: Duplicate most of auth.views.verify.
-        (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
+        parts = session_key.split(crypto.SEPARATOR)
+        if len(parts) != 4:
+            raise SignatureError("Expected 4 parts.")
+        (app_id, username, expires, hmac) = parts
+        # Check that the session key is for the same app.
+        if app_id != self.app_id():
+            raise SignatureError("Different app.")
+        # Check expiration time.
+        expires = int(expires)
+        now = int(time.time())
+        if expires < now:
+            raise SignatureError("Session key expired.")
+        # Check if the user exists.
         user = User.lookup(username)
         if user is None:
-            return None
+            raise SignatureError("Unknown user.")
+        # Check the user's password and app secret.
         secret = crypto.join(user.password, self.secret)
-        if not crypto.verify(key, secret):
-            return None
+        if not crypto.verify(session_key, secret):
+            raise SignatureError("Password incorrect.")
         return user
