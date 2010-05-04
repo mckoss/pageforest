@@ -4,7 +4,6 @@ Django settings for appengine project.
 
 import os
 import sys
-import re
 
 from settingsauto import *
 
@@ -83,10 +82,9 @@ APPEND_SLASH = False
 JSON_MIMETYPE = 'application/json'
 
 # Allowed dormats for pageforest identifiers:
-USERNAME_RE = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
-USERNAME_REGEX = re.compile(r"^" + USERNAME_RE + r"$")
-APP_ID_RE = USERNAME_RE
-DOC_ID_RE = r"([a-zA-Z0-9_-][a-zA-Z0-9_\.-]*)"
+USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
+APP_ID_REGEX = USERNAME_REGEX
+DOC_ID_REGEX = r"([a-zA-Z0-9_-][a-zA-Z0-9_\.-]*)"
 
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
@@ -101,11 +99,6 @@ DOMAINS = [
     'pageforest',
     'localhost',
 ]
-
-# re.match.group(2) contains the app_id
-STAGING_DOMAIN_REGEX = re.compile(r"^((" + APP_ID_RE + r")\.)?" +
-                                  r"[^\.]+" +
-                                  r"\.latest\.pageforest\.appspot\.com$")
 
 ANALYTICS_CODE = "UA-2072869-6"
 
@@ -137,14 +130,13 @@ everybody anybody nobody public private
 
 # Prevent app registration with some special app names.
 # Note that 'www' is the default PF app - always available.
-# TODO: Unit tests use reserved app names listed here!  see x-*
 RESERVED_APPS = """
 meta ssl static auth oauth login
 doc docs document documents
 blog list note comment
-x-test tester testclient testserver
+test tester testclient testserver
 pageforest pgfrst page
-x-app apps application applications app_id appid
+app apps application applications app_id appid
 css img images js javascript lib
 google microsoft twitter yahoo facebook fb
 flickr
