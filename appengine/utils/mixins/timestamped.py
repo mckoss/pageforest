@@ -13,6 +13,9 @@ class Timestamped(db.Model):
     modified_ip = db.StringProperty()
 
     def put(self, *args, **kwargs):
+        """
+        Update the timestames before each datastore write.
+        """
         request = RequestMiddleware.get_request()
         if request and 'REMOTE_ADDR' in request.META:
             self.modified_ip = request.META['REMOTE_ADDR']

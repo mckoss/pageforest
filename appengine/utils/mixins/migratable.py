@@ -69,6 +69,9 @@ class Migratable(db.Model):
         return len(models)
 
     def migrate(self, next_schema):
+        """
+        Abstract method, override in subclasses.
+        """
         raise NotImplementedError(
             "Application error - missing migration for %s to version %d" %
             type(self).__name__, next_schema)
