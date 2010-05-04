@@ -133,7 +133,7 @@ def challenge(request):
     Challenge is S(random/expires/ip, app.secret)
     """
     random_key = crypto.random64url(32)
-    expires = int(time.time()) + CHALLENGE_EXPIRATION
+    expires = int(time.time() + CHALLENGE_EXPIRATION)
     ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
     challenge_string = crypto.sign(random_key, expires, ip, request.app.secret)
     return HttpResponse(challenge_string, mimetype='text/plain')

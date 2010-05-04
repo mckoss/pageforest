@@ -191,7 +191,7 @@ class App(Cacheable, Migratable, Timestamped):
         password all of his existing session keys are invalidated.
         """
         seconds = seconds or settings.SESSION_COOKIE_AGE
-        expires = time.time() + seconds
+        expires = int(time.time() + seconds)
         secret = crypto.join(user.password, self.secret)
         return crypto.sign(self.app_id(), user.username.lower(), expires,
                            secret)
