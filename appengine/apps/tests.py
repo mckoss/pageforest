@@ -21,10 +21,8 @@ class HostnameTest(TestCase):
         self.assertEqual(app.key().name(), 'myapp')
         self.assertTrue(app.is_saved())
 
-    def test_dummy_app(self):
-        """Test that get_by_key_name uses memcache."""
+    def test_unknown_app(self):
+        """Test that unknown app is not found."""
         # Create a dummy app if it doesn't exist.
         app = App.get_by_hostname('unknown.pageforest.com')
-        self.assertFalse(app.is_saved())
-        self.assertEqual(app.title, 'Unknown')
-        self.assertEqual(app.domains, ['unknown.pageforest.com'])
+        self.assertEqual(app, None)
