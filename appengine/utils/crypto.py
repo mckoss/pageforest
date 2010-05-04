@@ -1,9 +1,6 @@
-import logging
-
 import random
 import hmac
 import hashlib
-from datetime import datetime
 
 SEPARATOR = '/'
 BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -46,18 +43,12 @@ def join(*args):
     '1/2/3'
     >>> join(['a', 'b', 'c'], 'd')
     'a/b/c/d'
-    >>> join(datetime(2010, 4, 19, 9, 24, 56, 123456))
-    '2010-04-19T09:24:56Z'
-    >>> join(datetime(2010, 4, 19, 9, 24, 56, 987654))
-    '2010-04-19T09:24:56Z'
     >>> join(1.0 / 9.0)
     '0.1111111'
     """
     parts = []
     for arg in args:
-        if isinstance(arg, datetime):
-            arg = arg.isoformat()[:19] + 'Z'
-        elif isinstance(arg, float):
+        if isinstance(arg, float):
             arg = '%.7f' % arg
         elif isinstance(arg, (tuple, list)):
             arg = join(*arg)
@@ -114,6 +105,8 @@ def verify(signed, key):
     else:
         parts = list(signed)
         signed = SEPARATOR.join(parts)
+    if len(parts) < 2:
+        return False
     parts[-1] = key
     return signed == sign(*parts)
 
