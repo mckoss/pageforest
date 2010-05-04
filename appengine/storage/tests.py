@@ -17,8 +17,8 @@ class AppTestCase(TestCase):
         self.peter = User(key_name='peter', username='Peter')
         self.peter.set_password('SecreT!1')
         self.peter.put()
-        self.app = App(key_name='app',
-                       domains=['app.pageforest.com'],
+        self.app = App(key_name='myapp',
+                       domains=['myapp.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
@@ -30,7 +30,7 @@ class KeyValueTest(AppTestCase):
 
     def setUp(self):
         super(KeyValueTest, self).setUp()
-        self.key = 'app/data/key'
+        self.key = 'myapp/mydoc/key'
         self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
         self.data = KeyValue(key_name=self.key, value=self.value)
         self.data.put()
@@ -44,23 +44,23 @@ class KeyValueTest(AppTestCase):
     def test_get_absolute_url(self):
         """Test the get_absolute_url method."""
         self.assertEqual(self.data.get_absolute_url(),
-                         'http://app.pageforest.com/docs/data/key')
+                         'http://myapp.pageforest.com/docs/mydoc/key')
 
 
 class ClientErrorTest(AppTestCase):
 
     def test_get_404(self):
         """Tests that non-existent data returns 404 Not Found."""
-        response = self.app_client.get('/docs/data/does_not_exist/')
+        response = self.app_client.get('/docs/mydoc/does_not_exist/')
         self.assertEqual(response.status_code, 404)
 
     def test_not_allowed(self):
         """Tests that unknown methods return 405 Method Not Allowed."""
-        response = self.app_client.options('/docs/data/key')
+        response = self.app_client.options('/docs/mydoc/key')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
                          'DELETE, GET, HEAD, PUSH, PUT, SLICE')
-        response = self.app_client.get('/docs/data/key?method=FOOBAR')
+        response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
 
 
@@ -68,10 +68,10 @@ class RestApiTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with REST API."""
-        key_name = 'app/doc/key'
+        key_name = 'myapp/mydoc/key'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
-        url = '/docs/doc/key'
+        url = '/docs/mydoc/key'
         response = self.app_client.put(url, 'data',
                                        content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
@@ -95,10 +95,10 @@ class JsonpApiTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with JSONP API."""
-        key_name = 'app/doc/key'
+        key_name = 'myapp/mydoc/key'
         self.assertEqual(KeyValue.get_by_key_name(key_name), None)
         # Create.
-        url = '/docs/doc/key'
+        url = '/docs/mydoc/key'
         response = self.app_client.get(url + '?method=PUT&value=data')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(KeyValue.get_by_key_name(key_name).value, 'data')
@@ -131,14 +131,16 @@ class HostTest(AppTestCase):
 
     def test_host(self):
         """Test namespace isolation with Host header."""
-        url = '/docs/doc/key'
-        response = self.other_client.put(url, 'o', content_type='text/plain')
+        url = '/docs/mydoc/key'
+        response = self.other_client.put(url, 'otherdata',
+                                         content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
-        self.assertEqual(KeyValue.get_by_key_name('other/doc/key').value, 'o')
+        self.assertEqual(KeyValue.get_by_key_name('other/mydoc/key').value,
+                         'otherdata')
         # GET with the same host header should work.
         response = self.other_client.get(url)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, 'o')
+        self.assertEqual(response.content, 'otherdata')
         # GET without host header should fail with 404 Not Found.
         response = self.app_client.get(url)
         self.assertEqual(response.status_code, 404)
@@ -151,7 +153,7 @@ class MemcacheTest(AppTestCase):
         self.assertTrue(binary is not None)
         self.assertEqual(binary.count('pageforest'), 1)
         self.assertEqual(binary.count('KeyValue'), 2)
-        self.assertEqual(binary.count('app/doc/key/with/slashes'), 2)
+        self.assertEqual(binary.count('myapp/mydoc/key/with/slashes'), 2)
         self.assertEqual(binary.count('created'), 2)
         self.assertEqual(binary.count('created_ip'), 1)
         self.assertEqual(binary.count('modified'), 2)
@@ -161,8 +163,8 @@ class MemcacheTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        url = '/docs/doc/key/with/slashes'
-        key_name = 'app/doc/key/with/slashes'
+        url = '/docs/mydoc/key/with/slashes'
+        key_name = 'myapp/mydoc/key/with/slashes'
         cache_key = 'C1~KeyValue~' + key_name
         self.assertEqual(memcache.get(cache_key), None)
         # Create.
@@ -241,8 +243,7 @@ class JsonArrayTest(AppTestCase):
     def setUp(self):
         """Prepare a simple chat array."""
         super(JsonArrayTest, self).setUp()
-        # TODO: Replace app with myapp and doc with mydoc.
-        self.chat = KeyValue(key_name='app/doc/chat',
+        self.chat = KeyValue(key_name='myapp/mydoc/chat',
                              value='["hello", "hi", "howdy"]')
         self.chat.put()
 
@@ -254,7 +255,7 @@ class JsonArrayTest(AppTestCase):
 
     def test_last(self):
         """Test that the end of the array can be retrieved."""
-        url = '/docs/doc/chat'
+        url = '/docs/mydoc/chat'
         self.assertContent(url + '?method=SLICE', '["hello", "hi", "howdy"]')
         self.assertContent(url + '?method=SLICE&start=-1', '["howdy"]')
         self.assertContent(url + '?method=SLICE&start=-2', '["hi", "howdy"]')
@@ -268,32 +269,32 @@ class JsonArrayTest(AppTestCase):
     def test_push(self):
         """Test that push appends to the end af the array."""
         started = datetime.now()
-        response = self.app_client.post('/docs/doc/chat?method=PUSH',
+        response = self.app_client.post('/docs/mydoc/chat?method=PUSH',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 4')
-        self.assertContent('/docs/doc/chat?method=SLICE&start=-2',
+        self.assertContent('/docs/mydoc/chat?method=SLICE&start=-2',
                            '["howdy", "bye"]')
-        chat = KeyValue.get_by_key_name('app/doc/chat')
+        chat = KeyValue.get_by_key_name('myapp/mydoc/chat')
         self.assertTrue(chat.created <= started)
         self.assertTrue(chat.modified >= started)
 
     def test_push_empty(self):
         """Test that push creates the array if it didn't exist."""
         started = datetime.now()
-        response = self.app_client.post('/docs/doc2/chat?method=PUSH',
+        response = self.app_client.post('/docs/mydoc2/chat?method=PUSH',
                                         data='hi', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 1')
-        self.assertContent('/docs/doc2/chat', '["hi"]')
-        newchat = KeyValue.get_by_key_name('app/doc2/chat')
+        self.assertContent('/docs/mydoc2/chat', '["hi"]')
+        newchat = KeyValue.get_by_key_name('myapp/mydoc2/chat')
         self.assertTrue(newchat.created >= started)
         self.assertTrue(newchat.modified >= started)
 
     def test_push_max(self):
         """Test that push appends to the end af the array."""
-        response = self.app_client.post('/docs/doc/chat?method=PUSH&max=3',
+        response = self.app_client.post('/docs/mydoc/chat?method=PUSH&max=3',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
-        self.assertContent('/docs/doc/chat', '["hi", "howdy", "bye"]')
+        self.assertContent('/docs/mydoc/chat', '["hi", "howdy", "bye"]')

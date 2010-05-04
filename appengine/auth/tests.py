@@ -210,6 +210,9 @@ class SimpleAuthTest(TestCase):
                           email='peter@example.com')
         self.peter.set_password('password')
         self.peter.put()
+        self.doc = Document(key_name='myapp/mydoc', title='My Document',
+                            readers=['peter'], writers=['peter'])
+        self.doc.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
                        secret=crypto.random64())
         self.app.put()
@@ -221,12 +224,12 @@ class SimpleAuthTest(TestCase):
     # trying to read (or write) something that is locked down to one user.
     def BAD_bogus_session_key(self):
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key must have four parts.",
                             status_code=403)
         session_key = crypto.join(self.session_key, 'bogus')
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key must have four parts.",
                             status_code=403)
 
@@ -235,7 +238,7 @@ class SimpleAuthTest(TestCase):
         parts[2] = datetime.now() - timedelta(seconds=10)
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key is expired.",
                             status_code=403)
 
@@ -244,7 +247,7 @@ class SimpleAuthTest(TestCase):
         parts[0] = 'other'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key is for a different app.",
                             status_code=403)
 
@@ -253,7 +256,7 @@ class SimpleAuthTest(TestCase):
         parts[1] = 'unknown'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key user not found.",
                             status_code=403)
 
@@ -262,6 +265,6 @@ class SimpleAuthTest(TestCase):
         parts[-1] = parts[-1][::-1]  # Backwards.
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/doc/')
+        response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key is incorrect.",
                             status_code=403)
