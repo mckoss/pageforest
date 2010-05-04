@@ -1,55 +1,56 @@
 #!/usr/bin/env python
 
 import os
+import re
 import sys
+import imp
+import time
 import subprocess
 from optparse import OptionParser
-from time import time
 
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
-UNITTEST_OPTIONS = '-v0'
-NOSETEST_OPTIONS = '--nologcapture --with-xunit --with-doctest'
 PEP8_EXCLUDE = 'jsmin.py'.split()
-
-total_time = 0.0
-
-
-def start_timer():
-    global start_time
-    start_time = time()
+TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
 
 
-def end_timer(nick):
-    global start_time
-    global options
-    global total_time
-    t = time() - start_time
-    total_time += t
+def show_summary(nick):
+    seconds = time.time() - options.job_started
     if options.verbose:
-        print("=== %s time: %1.1fs ===" % (nick, t))
+        print("=== %s time: %1.1fs ===" % (nick, seconds))
     else:
-        sys.stdout.write(":%1.1fs " % t)
+        sys.stdout.write(':%1.1fs ' % seconds)
         sys.stdout.flush()
+
+
+def show_unittest_count():
+    for line in file(LOGFILENAME):
+        match = TEST_COUNT_REGEX.match(line)
+        if match is None:
+            continue
+        if options.verbose:
+            print line.rstrip()
+        else:
+            sys.stdout.write(':%d' % int(match.group(1)))
 
 
 def attempt(nick, command):
     """
     Run a shell command and exit with error message if it fails.
     """
-    global options
-
     if options.verbose:
         print command
     else:
         sys.stdout.write(nick)
         sys.stdout.flush()
+    options.job_started = time.time()
     logfile = open(LOGFILENAME, 'w')
-    start_timer()
     returncode = subprocess.call(command.split(), stderr=logfile)
-    end_timer(nick)
     logfile.close()
+    if nick == 'unittest':
+        show_unittest_count()
+    show_summary(nick)
     if returncode:
         message = "Failed with return code %d" % returncode
         size = os.path.getsize(LOGFILENAME)
@@ -81,8 +82,6 @@ def main():
     """
 
     global options
-    global UNITTEST_OPTIONS
-
     all_checks = [
         ('pylint', "python %s -e %s" %
          (pftool.tool_path('lint.py'), pftool.app_dir)),
@@ -91,8 +90,8 @@ def main():
         ('jslint-weak', "python jslint.py --weak " +
          os.path.join(pftool.app_dir, 'static', 'src', 'js')),
         ('doctest', "python settingsparser.py"),
-        ('unittest', "python %s test %s" %
-         (os.path.join(pftool.app_dir, 'manage.py'), UNITTEST_OPTIONS)),
+        ('unittest', "python %s test -v0" %
+         (os.path.join(pftool.app_dir, 'manage.py'))),
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
         ('whitespace', "python whitespace.py"),
@@ -104,10 +103,6 @@ def main():
         help="run all checks with more output")
     parser.add_option('-p', '--prompt', action='store_true',
         help="ask before running any checks")
-    parser.add_option('-q', '--quick', action='store_true',
-        help="skip tests that take longer than 10 seconds")
-    parser.add_option('--nose', action='store_true',
-        help="use django_nose for unit testing (for Hudson support)")
     for name, command in all_checks:
         parser.add_option('--' + name, action='callback',
                           callback=part_callback,
@@ -121,24 +116,27 @@ def main():
         if yesno.lower().startswith('n'):
             return
 
+    options.extra = {}
     try:
-        import django_nose
+        imp.find_module('django_nose')
+        options.extra['unittest'] = \
+            '--nologcapture --with-xunit --with-doctest'
     except ImportError:
         pass
 
-    if options.nose or 'django_nose' in locals():
-        UNITTEST_OPTIONS += ' ' + NOSETEST_OPTIONS
-
+    options.started = time.time()
     for name, command in all_checks:
         if name in options.checks:
-            if 'pylint' in name:
+            if name == 'unittest':
+                os.chdir(pftool.root_dir)
+            elif name == 'pylint':
                 os.chdir(pftool.app_dir)
             else:
                 os.chdir(pftool.tools_dir)
-            if options.quick and name == 'jslint-weak':
-                continue
+            if name in options.extra:
+                command += ' ' + options.extra[name]
             attempt(name, command)
-    print("total:%1.1fs" % total_time)
+    print("total:%1.1fs" % (time.time() - options.started))
 
 
 if __name__ == '__main__':
