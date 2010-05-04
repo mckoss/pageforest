@@ -71,7 +71,7 @@ class App(Cacheable, Migratable, Timestamped):
 
         if app is not None:
             # Store fast hostname lookup in memcache.
-            memcache.set(memcache_key, app.app_id())
+            memcache.set(memcache_key, app.get_app_id())
             return app
 
     @classmethod
@@ -170,14 +170,13 @@ class App(Cacheable, Migratable, Timestamped):
         return App(key_name=app_id, title=title, domains=[hostname],
                    secret='SecreT!1')
 
-    # TODO: Rename app_id to get_app_id, maybe?
-    def app_id(self):
+    def get_app_id(self):
         """Return the key name which contains the app id."""
         return self.key().name()
 
     def is_www(self):
         """Is this app the special pafeforest app?"""
-        return self.app_id() == 'www'
+        return self.get_app_id() == 'www'
 
     def generate_session_key(self, user, seconds=None):
         """
@@ -194,8 +193,8 @@ class App(Cacheable, Migratable, Timestamped):
         seconds = seconds or settings.SESSION_COOKIE_AGE
         expires = int(time.time() + seconds)
         secret = crypto.join(user.password, self.secret)
-        return crypto.sign(self.app_id(), user.username.lower(), expires,
-                           secret)
+        return crypto.sign(
+            self.get_app_id(), user.username.lower(), expires, secret)
 
     def verify_session_key(self, session_key):
         """
@@ -207,7 +206,7 @@ class App(Cacheable, Migratable, Timestamped):
             raise SignatureError("Expected 4 parts.")
         (app_id, username, expires, hmac) = parts
         # Check that the session key is for the same app.
-        if app_id != self.app_id():
+        if app_id != self.get_app_id():
             raise SignatureError("Different app.")
         # Check expiration time.
         expires = int(expires)
