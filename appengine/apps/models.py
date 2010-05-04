@@ -1,6 +1,6 @@
+import re
+import time
 import logging
-
-from datetime import datetime, timedelta
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -13,6 +13,15 @@ from utils import crypto
 from auth.models import User
 
 CACHE_PREFIX = 'GBH1~'
+
+# 2010-04-29.latest.pageforest.appspot.com
+STAGING_DOMAIN_REGEX = '([^\.]+)\.latest\.pageforest\.appspot\.com$'
+STAGING_DOMAIN_MATCH = re.compile(STAGING_DOMAIN_REGEX).match
+
+# myapp.2010-04-29.latest.pageforest.appspot.com
+APP_STAGING_DOMAIN_REGEX = '(%s)\.%s' % (
+    settings.APP_ID_REGEX, STAGING_DOMAIN_REGEX)
+APP_STAGING_DOMAIN_MATCH = re.compile(APP_STAGING_DOMAIN_REGEX).match
 
 
 class App(Cacheable, Migratable, Timestamped):
@@ -54,18 +63,15 @@ class App(Cacheable, Migratable, Timestamped):
 
         # Check for hostname in allowed domains list
         app = cls.all().filter('domains', hostname).get()
-        if app:
+
+        if app is None:
+            # Get the app directly from datastore (or memcache).
+            app = cls.lookup(app_id)
+
+        if app is not None:
+            # Store fast hostname lookup in memcache.
             memcache.set(memcache_key, app.app_id())
             return app
-
-        app = cls.lookup(app_id)
-        if app:
-            memcache.set(memcache_key, app.app_id())
-            return app
-
-        # REVIEW: Don't like creating (but not persisting) a temporary app
-        # like this.  We should be falling back to 'www', I think. -mck
-        return cls.create(app_id, hostname)
 
     @classmethod
     def app_id_from_hostname(cls, hostname):
@@ -98,36 +104,37 @@ class App(Cacheable, Migratable, Timestamped):
         'www'
         >>> App.app_id_from_hostname('app.dev.latest.pageforest.appspot.com')
         'app'
-        >>> App.app_id_from_hostname('2010-04-29.latest.pageforest.'+
-        ... 'appspot.com')
+        >>> App.app_id_from_hostname('2010-04.latest.pageforest.appspot.com')
         'www'
-        >>> App.app_id_from_hostname('app.2010-04-29.latest.pageforest.'+
-        ... 'appspot.com')
-        'app'
-        >>> App.app_id_from_hostname('app.more.dev.latest.pageforest.'+
-        ... 'appspot.com')
+        >>> App.app_id_from_hostname('a.2010-04.latest.pageforest.appspot.com')
+        'a'
+        >>> App.app_id_from_hostname('a.b.dev.latest.pageforest.appspot.com')
         'www'
         """
         # Remove port
         hostname = hostname.lower().split(':')[0]
 
+        # Remove www
+        if hostname.startswith('www.'):
+            hostname = hostname[4:]
+
         # Fast exit for normal cases
-        if hostname in settings.DOMAINS or \
-                hostname in ['www.' + host for host in settings.DOMAINS]:
+        if hostname in settings.DOMAINS:
             return 'www'
 
-        # version.latest.pageforest.com or app.version.latest.pageforest.com
-        match = settings.STAGING_DOMAIN_REGEX.match(hostname)
+        # version.latest.pageforest.appspot.com
+        if STAGING_DOMAIN_MATCH(hostname):
+            return 'www'
+
+        # app.version.latest.pageforest.appspot.com
+        match = APP_STAGING_DOMAIN_MATCH(hostname)
         if match:
-            return match.group(2) or 'www'
+            return match.group(1)
 
-        # REVIEW: Is it better to omit tuple parens?
-        # REVIEW: Why not use hostname.split('.', 1) and get rid of
-        # the unused dot variable?
-        (app, dot, sub_domain) = hostname.partition('.')
-
-        if sub_domain in settings.DOMAINS:
-            return app
+        # app.pageforest.com, app.pgfr.st, ...
+        parts = hostname.split('.', 1)
+        if len(parts) == 2 and parts[1] in settings.DOMAINS:
+            return parts[0]
 
         return 'www'
 
@@ -141,6 +148,7 @@ class App(Cacheable, Migratable, Timestamped):
 
         app = cls.get_by_key_name(app_id)
         if app is None and app_id == 'www':
+            # First invocation on an empty datastore, create www app.
             app = cls.create('www', settings.DEFAULT_DOMAIN)
             app.put()
         return app
@@ -161,6 +169,7 @@ class App(Cacheable, Migratable, Timestamped):
         return App(key_name=app_id, title=title, domains=[hostname],
                    secret='SecreT!1')
 
+    # TODO: Rename app_id to get_app_id, maybe?
     def app_id(self):
         """Return the key name which contains the app id."""
         return self.key().name()
@@ -182,30 +191,22 @@ class App(Cacheable, Migratable, Timestamped):
         password all of his existing session keys are invalidated.
         """
         seconds = seconds or settings.SESSION_COOKIE_AGE
-        # REVIEW: Why an ISO expires instead of epoch seconds?
-        # ANSWER: Because it's human-readable for testing and debugging.
-        expires = datetime.now() + timedelta(seconds=seconds)
+        expires = time.time() + seconds
         secret = crypto.join(user.password, self.secret)
         return crypto.sign(self.app_id(), user.username.lower(), expires,
                            secret)
 
-    def user_from_session_key(self, key):
+    def verify_user(self, key):
         """
         Verify the session key and return the user object.
+        If the session key is invalid, return None.
         """
-        logging.info("ufs(%s): %r" % (self.app_id(), key))
-        try:
-            (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
-            user = User.lookup(username)
-            secret = crypto.join(user.password, self.secret)
-            crypto.verify(key, secret)
-            logging.info("ufs2: %s" % user)
-            return user
-        except Exception, e:
-            # REVIEW: Specify which exceptions you want to catch.
-            # Otherwise, this will silently swallow all exceptions,
-            # even things like DeadlineExceededError or
-            # KeyboardInterrupt.
-            # ValueError, Exception(invalid signature)??
-            logging.info("%s: %s" % (type(e), str(e)))
+        # TODO: Duplicate most of auth.views.verify.
+        (app_id, username, expires, hmac) = key.split(crypto.SEPARATOR)
+        user = User.lookup(username)
+        if user is None:
             return None
+        secret = crypto.join(user.password, self.secret)
+        if not crypto.verify(key, secret):
+            return None
+        return user
