@@ -32,11 +32,9 @@ def app_json_put(request):
             if key in parsed:
                 assert_string_list(key, parsed[key])
                 setattr(request.app, key, parsed[key])
-    except ValueError, e:
-        # REVIEW: Why is unicode wrapper needed?
-        # ANSWER: To get the string representation of the error.
-        return HttpResponse(unicode(e), mimetype='text/plain', status=400)
-    # REVIEW: No access control or quota checks here?
+    except ValueError, error:
+        return HttpResponse(unicode(error), mimetype='text/plain', status=400)
+    # TODO: Access control and quota checks.
     request.app.put()
     return HttpResponse("""{"status": 200, "statusText": "Saved"}""",
                         mimetype='application/json')
