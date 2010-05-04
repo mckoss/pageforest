@@ -6,6 +6,7 @@ syntax: glob
 *~
 \#*\#
 *.orig
+*.pass
 TAGS
 nosetests.xml
 coverage.xml

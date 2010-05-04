@@ -71,35 +71,39 @@ def main():
     if not hasattr(options, 'level'):
         options.level = 'strong'
 
-    filenames = pftool.walk_files(
-        args, matches=('*.js', '*.json'), ignored=options.ignored)
-
-    command = 'java org.mozilla.javascript.tools.shell.Main ' + \
-        'jslint-cl.js --' + options.level + \
-        ' ' + ' '.join(filenames)
-
-    if options.verbose:
-        print(command)
-
+    walk = pftool.FileWalker(matches=('*.js', '*.json'),
+                             ignored=options.ignored,
+                             pass_key='jslint')
     os.chdir(pftool.tools_dir)
-    jslint = subprocess.Popen(command,
-                              shell=True,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.PIPE)
-    stdout, stderr = jslint.communicate()
+    total_errors = 0
+    for file_name in walk.walk_files(*args):
+        command = 'java org.mozilla.javascript.tools.shell.Main ' + \
+            'jslint-cl.js --' + options.level + ' ' + file_name
+        if options.verbose:
+            print(command)
+        jslint = subprocess.Popen(command,
+                                  shell=True,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        stdout, stderr = jslint.communicate()
 
-    # Filter error messages and count errors.
-    errors = 0
-    stdout += stderr
-    for line in stdout.splitlines():
-        line = line.rstrip()
-        if line == '' or ignore(line, options.level):
-            continue
-        if not options.quiet:
-            print shorten_path(line)
-        errors += 1
+        # Filter error messages and count errors.
+        errors = 0
+        stdout += stderr
+        for line in stdout.splitlines():
+            line = line.rstrip()
+            if line == '' or ignore(line, options.level):
+                continue
+            if not options.quiet:
+                print shorten_path(line)
+            errors += 1
+        if errors == 0:
+            walk.set_passing()
+        total_errors += errors
 
-    if errors:
+    walk.save_pass_dict()
+
+    if total_errors:
         sys.exit("found %d errors" % errors)
 
 
