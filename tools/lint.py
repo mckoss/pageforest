@@ -5,6 +5,8 @@ import sys
 import subprocess
 from optparse import OptionParser
 
+import pftool
+
 DISABLE_MESSAGES = """
 C0121 Missing required attribute "__revision__"
 E1101 Class 'KeyValue' has no 'get_by_key_name' member
@@ -77,23 +79,32 @@ def main():
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
         command.append('-e')
-    command.extend(args)
     command = ' '.join(command)
-    if options.verbose:
-        print "command: %s" % command
-    pylint = subprocess.Popen(command, shell=True,
-                              stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT)
-    stdout, stderr = pylint.communicate()
-    # Filter error messages and count errors.
-    errors = 0
-    for line in stdout.splitlines():
-        line = line.rstrip()
-        if ignore(line) or not line:
-            continue
-        print line
-        errors += 1
-    if errors:
+    walk = pftool.FileWalker(matches=('*.py',),
+                             pass_key='pylint')
+    total_errors = 0
+    for file_name in walk.walk_files(*args):
+        if options.verbose:
+            print "command: %s" % command
+        pylint = subprocess.Popen(command + ' ' + file_name, shell=True,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.STDOUT)
+        stdout, stderr = pylint.communicate()
+        # Filter error messages and count errors.
+        errors = 0
+        for line in stdout.splitlines():
+            line = line.rstrip()
+            if ignore(line) or not line:
+                continue
+            print line
+            errors += 1
+        if errors == 0:
+            walk.set_passing()
+        total_errors += errors
+
+    walk.save_pass_dict()
+
+    if total_errors:
         sys.exit('found %d errors' % errors)
 
 
