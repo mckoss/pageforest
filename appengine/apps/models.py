@@ -106,8 +106,8 @@ class App(Cacheable, Migratable, Timestamped):
         'app'
         >>> App.app_id_from_hostname('2010-04.latest.pageforest.appspot.com')
         'www'
-        >>> App.app_id_from_hostname('a.2010-04.latest.pageforest.appspot.com')
-        'a'
+        >>> App.app_id_from_hostname('app.2010.latest.pageforest.appspot.com')
+        'app'
         >>> App.app_id_from_hostname('a.b.dev.latest.pageforest.appspot.com')
         'www'
         """
