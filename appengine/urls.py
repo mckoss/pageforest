@@ -1,5 +1,6 @@
 from django.conf.urls.defaults import patterns, handler404, handler500, include
 from django.views.generic.simple import direct_to_template
+from django.conf import settings
 
 urlpatterns = patterns(
     '',
@@ -17,9 +18,9 @@ urlpatterns = patterns(
     # Pageforest applications on subdomains.
     (r'^app/auth/', include('auth.urlsapp')),
 
-    # REVIEW: Don't repeat settings.DOC_ID_RE here (DRY).
-    (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/$', 'documents.views.document'),
-    (r'^app/docs/(?P<doc_id>[A-Za-z0-9\._-]+)/(?P<key>.+)$',
+    (r'^app/docs/(?P<doc_id>%s)/$' % settings.DOC_ID_REGEX,
+     'documents.views.document'),
+    (r'^app/docs/(?P<doc_id>%s)/(?P<key>.+)$' % settings.DOC_ID_REGEX,
      'storage.views.key_value'),
 
     # Application keyspace reserved for future use
