@@ -39,6 +39,25 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
     return '{\n' + ',\n'.join(lines) + '\n}'
 
 
+def assert_string(key, value):
+    """
+    Check that the value is a string.
+    """
+    if not isinstance(value, basestring):
+        raise ValueError("Expected string value for %s." % key)
+
+
+def assert_string_list(key, value):
+    """
+    Check that the value is a list of strings.
+    """
+    if not isinstance(value, list):
+        raise ValueError("Expected string list for %s." % key)
+    for item in value:
+        if not isinstance(item, basestring):
+            raise ValueError("Expected string values inside %s list." % key)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
