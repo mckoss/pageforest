@@ -11,6 +11,7 @@ from utils.mixins import Cacheable, Migratable, Timestamped
 from utils import crypto
 
 from auth.models import User
+from documents.supermodels import SuperDoc
 
 CACHE_PREFIX = 'GBH1~'
 
@@ -24,19 +25,30 @@ APP_STAGING_DOMAIN_REGEX = '(%s)\.%s' % (
 APP_STAGING_DOMAIN_MATCH = re.compile(APP_STAGING_DOMAIN_REGEX).match
 
 
-class App(Cacheable, Migratable, Timestamped):
+class App(SuperDoc):
     """
-    The entity key name contains the app_id string,
-    minimum length is 2 characters.
+    The entity key name contains apps/app_id, minimum length of app_id
+    2 characters, and it's always lowercase.
 
     The first entry in domains is the default domain.
     The first entry in developers is the owner.
     """
-    title = db.StringProperty()            # Full unicode.
     domains = db.StringListProperty()      # One or more lowercase FQDN.
-    writers = db.StringListProperty()      # One or more usernames.
-    readers = db.StringListProperty()      # One or more usernames.
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
+
+    def get_absolute_url(self):
+        """
+        Get the absolute URL for this model instance.
+        """
+        return ''.join(('http://', self.domains[0], '/'))
+
+    def get_app_id(self):
+        """Return the key name which contains the app id."""
+        return self.key().name()
+
+    def is_www(self):
+        """Is this app the special pafeforest app?"""
+        return self.get_app_id() == 'www'
 
     @classmethod
     def get_by_hostname(cls, hostname):
@@ -168,11 +180,3 @@ class App(Cacheable, Migratable, Timestamped):
         logging.info("Creating app: %s" % app_id)
         return App(key_name=app_id, title=title, domains=[hostname],
                    secret='SecreT!1')
-
-    def get_app_id(self):
-        """Return the key name which contains the app id."""
-        return self.key().name()
-
-    def is_www(self):
-        """Is this app the special pafeforest app?"""
-        return self.get_app_id() == 'www'
