@@ -67,9 +67,11 @@ def sign_in(request, app_id=None):
 
     if request.method == 'POST':
         if form.is_valid():
-            response = HttpResponseRedirect('/auth/sign-in/%s' % app_id)
+            user = form.cleaned_data['user']
+            response = HttpResponseRedirect('/auth/sign-in/%s' %
+                                            (app_id or ''))
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                form.user.generate_session_key(app),
+                                user.generate_session_key(app),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
 

@@ -113,6 +113,37 @@ class RegistrationTest(TestCase):
         response = self.www.post('/auth/sign-up', {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
+class SignInTest(TestCase):
+    def setUp(self):
+        self.peter = User(key_name='peter',
+                          username='Peter',
+                          email='peter@example.com')
+        self.peter.set_password('password')
+        self.peter.put()
+        self.www = Client(HTTP_HOST='www.pageforest.com')
+
+    def test_errors(self):
+        cases = ({'fields': {'username':'', 'password':''},
+                  'expect': 'This field is required'},
+                 {'fields': {'username': 'peter', 'password':'weak'},
+                  'expect': 'at least 6 characters'},
+                 {'fields': {'username': 'peter', 'password':'wrongpassword'},
+                  'expect': 'Invalid password'},
+                 )
+        for case in cases:
+            response = self.www.post('/auth/sign-in', case['fields'])
+            self.assertContains(response, 'class="error"')
+            self.assertContains(response, case['expect'])
+
+    def test_success(self):
+        response = self.www
+        response = self.www.post('/auth/sign-in',
+                                 {'username':'peter',
+                                  'password':'password'})
+        self.assertEqual(response.status_code, 302)
+        print response['Location']
+        self.assertTrue(response['Location'].endswith('/auth/sign-in/'))
+
 
 class ChallengeVerifyTest(TestCase):
 
