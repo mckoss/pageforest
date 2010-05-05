@@ -2,6 +2,7 @@
 
 import os
 import sys
+from time import time
 import subprocess
 from optparse import OptionParser
 
@@ -99,27 +100,45 @@ def main():
     if options.errors_only:
         command.append('-e')
 
+    walk = pftool.FileWalker(matches=('*.py',),
+                             pass_key='pylint')
+
+    file_count = 0
+    total_errors = 0
+    start = time()
+
     if options.force:
         command.extend(args)
         command = ' '.join(command)
         total_errors = exec_and_filter(command, options)
+
+        # Optimization - mark all the files processed as passed
+        if total_errors == 0:
+            # Walk all the files so we get a total file count of what
+            # was checked.
+            walk.pass_key = None
+            for file_name in walk.walk_files(*args):
+                file_count += 1
+                walk.set_passing('pylint')
     else:
-        # File by file processing is slower and less complete
+        # File by file processing is slower (and less complete)
         # But we capture individual file errors and only
-        # lint the subset that has changed.
+        # re-lint the subset that has changed.
         command = ' '.join(command)
-        walk = pftool.FileWalker(matches=('*.py',),
-                                 pass_key='pylint')
-        total_errors = 0
         for file_name in walk.walk_files(*args):
+            file_count += 1
             errors = exec_and_filter(command + ' ' + file_name, options)
             if errors == 0:
                 walk.set_passing()
             total_errors += errors
-        walk.save_pass_dict()
 
-    if total_errors:
-        sys.exit('found %d errors' % total_errors)
+    walk.save_pass_dict()
+
+    elapsed = time() - start
+
+    if total_errors or options.verbose and file_count:
+        sys.exit('Found %d errors in %d files (in %1.1f seconds ... %1.1f secs per file).' %
+                 (total_errors, file_count, elapsed, elapsed / file_count))
 
 
 if __name__ == '__main__':
