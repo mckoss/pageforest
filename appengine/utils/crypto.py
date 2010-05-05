@@ -1,7 +1,6 @@
 import random
 import hmac
 import hashlib
-from datetime import datetime
 
 SEPARATOR = '/'
 BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -33,62 +32,83 @@ def random64url(length=32):
     return random64(length, BASE64URL)
 
 
-def join(*args, **kwargs):
+def join(*args):
     """
     Join arguments with separator. Special types are converted to
     canonical string representation.
 
     >>> join('a', 'b', 'c')
     'a/b/c'
-    >>> join(1, 2, 3, separator=',')
-    '1,2,3'
+    >>> join(1, 2, 3)
+    '1/2/3'
     >>> join(['a', 'b', 'c'], 'd')
     'a/b/c/d'
-    >>> join(datetime(2010, 4, 19, 9, 24, 56, 123456))
-    '2010-04-19T09:24:56Z'
-    >>> join(datetime(2010, 4, 19, 9, 24, 56, 987654))
-    '2010-04-19T09:24:56Z'
     >>> join(1.0 / 9.0)
     '0.1111111'
     """
-    separator = kwargs.get('separator', SEPARATOR)
     parts = []
     for arg in args:
-        if isinstance(arg, datetime):
-            arg = arg.isoformat()[:19] + 'Z'
-        elif isinstance(arg, float):
+        if isinstance(arg, float):
             arg = '%.7f' % arg
         elif isinstance(arg, (tuple, list)):
             arg = join(*arg)
         else:
             arg = str(arg)
         parts.append(arg)
-    return separator.join(parts)
+    return SEPARATOR.join(parts)
 
 
-def hmac_sha1(*args, **kwargs):
+def hmac_sha1(*args):
     """
     The last item in args is the secret key for HMAC.
 
-    >>> hmac_sha1('a', 'b', 'c', separator=',')
-    '35f2e8a17d82aa42e207df72ac786c84b98a220f'
+    >>> hmac_sha1('a', 'b', 'c')
+    '353b2e5fb7afb93637bc22480a0fd6365127970b'
     """
     args = list(args)
-    key = args.pop()
-    msg = join(*args, **kwargs)
+    key = str(args.pop())
+    msg = join(*args)
     return hmac.new(key, msg, hashlib.sha1).hexdigest()
 
 
-def sign(*args, **kwargs):
+def sign(*args):
     """
     The last item in args is the secret key for HMAC.
 
-    >>> sign('a', 'b', 'c', separator=',')
-    'a,b,35f2e8a17d82aa42e207df72ac786c84b98a220f'
+    >>> sign('a', 'b', 'c')
+    'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b'
     """
     args = list(args)
-    args[-1] = hmac_sha1(*args, **kwargs)
-    return join(*args, **kwargs)
+    args[-1] = hmac_sha1(*args)
+    return join(*args)
+
+
+def verify(signed, key):
+    """
+    Verify a properly signed string - the last argument is the HMAC.
+
+    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    True
+    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    True
+    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'c')
+    True
+    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    False
+    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    False
+    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'd')
+    False
+    """
+    if isinstance(signed, basestring):
+        parts = signed.split(SEPARATOR)
+    else:
+        parts = list(signed)
+        signed = SEPARATOR.join(parts)
+    if len(parts) < 2:
+        return False
+    parts[-1] = key
+    return signed == sign(*parts)
 
 
 if __name__ == '__main__':

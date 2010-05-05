@@ -7,7 +7,7 @@ from optparse import OptionParser, make_option
 
 import pftool
 
-IGNORE_FILES = '*jquery-*.js .#*'.split()
+IGNORE_FILES = '*jquery-*.js *.xml .#* .pass'.split()
 
 
 def short_path(path):
@@ -58,15 +58,21 @@ def main():
     parser = OptionParser(option_list=option_list,
         usage="%prog [options] files_or_directories")
     (options, args) = parser.parse_args()
-    errors = 0
-    for filename in pftool.walk_files(args, ignored=IGNORE_FILES):
+    total_errors = 0
+    walk = pftool.FileWalker(ignored=IGNORE_FILES, pass_key='whitespace')
+    for filename in walk.walk_files(args):
+        errors = 0
         if options.verbose:
             print("checking %s" % filename)
         errors += check(filename)
+        if errors == 0:
+            walk.set_passing()
         if options.halt and errors:
             break
 
-    if errors:
+    walk.save_pass_dict()
+
+    if total_errors:
         sys.exit('%d errors' % errors)
 
 

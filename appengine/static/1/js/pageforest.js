@@ -134,8 +134,8 @@ if (!window.console) {
                 if (!nsCur._fDefined) {
                     nsCur._fDefined = true;
                     fnCallback(nsCur);
-                    // console.info("Namespace '" + nsCur._sPath +
-                    //              "' defined.");
+                     console.info("Namespace '" + nsCur._sPath +
+                                  "' defined.");
                 } else {
                     console.warn("WARNING: Namespace '" + nsCur._sPath +
                                  "' redefinition.");
@@ -161,6 +161,907 @@ if (!window.console) {
         }
     });
 }());
+/* Begin file: base.js */
+global_namespace.define('org.startpad.base', function(NS) {
+
+NS.extend(NS, {
+Browser:
+    {
+    version: parseInt(navigator.appVersion),
+    fIE: navigator.appName.indexOf("Microsoft") !== -1
+    },
+
+ExtendMissing: function(oDest, var_args)
+    {
+    if (oDest == undefined)
+        oDest = {};
+
+    for (var i = 1; i < arguments.length; i++)
+        {
+        var oSource = arguments[i];
+        for (var prop in oSource)
+            {
+            if (oSource.hasOwnProperty(prop) && oDest[prop] == undefined)
+                oDest[prop] = oSource[prop];
+            }
+        }
+
+    return oDest;
+    },
+
+// Javascript Enumeration
+// Build an object whose properties are mapped to successive integers
+// Also allow setting specific values by passing integers instead of strings.
+// e.g. new NS.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2, d:5}
+Enum: function(aEnum)
+    {
+    if (!aEnum)
+        return;
+
+    var j = 0;
+    for (var i = 0; i < aEnum.length; i++)
+        {
+        if (typeof aEnum[i] == "string")
+            this[aEnum[i]] = j++;
+        else
+            j = aEnum[i];
+        }
+    },
+
+/* Return new object with just the listed properties "projected" into the new object */
+Project: function(obj, asProps)
+    {
+    var objT = {};
+
+    for (var i = 0; i < asProps.length; i++)
+        objT[asProps[i]] = obj[asProps[i]];
+
+    return objT;
+    },
+
+DeDupArray: function(a)
+    {
+    if (!a)
+        return;
+
+    a.sort();
+    for (var i = 1; i < a.length; i++)
+        {
+        if (a[i-1] == a[i])
+            a.splice(i, 1);
+        }
+    },
+
+Map: function(a, fn)
+    {
+    var aRes = [];
+    for (var i = 0; i < a.length; i++)
+        aRes.push(fn(a[i]));
+    return aRes;
+    },
+
+Filter: function(a, fn)
+    {
+    var aRes = [];
+    for (var i = 0; i < a.length; i++)
+        {
+        if (fn(a[i]))
+            aRes.push(a[i]);
+        }
+    return aRes;
+    },
+
+Reduce: function(a, fn)
+    {
+    if (a.length < 2)
+        return a[0];
+
+    var res = a[0];
+    for (var i = 1; i < a.length-1; i++)
+        res = fn(res, a[i]);
+
+    return res;
+    }
+});
+
+//--------------------------------------------------------------------------
+// Fast string concatenation buffer
+//--------------------------------------------------------------------------
+NS.StBuf = function()
+{
+    this.rgst = [];
+    this.Append.apply(this, arguments);
+    this.sListSep = ", ";
+};
+
+NS.StBuf.prototype = {
+        constructor: NS.StBuf,
+
+Append: function()
+    {
+    for (var ist = 0; ist < arguments.length; ist++)
+        this.rgst.push(arguments[ist].toString());
+    return this;
+    },
+
+Clear: function ()
+    {
+    this.rgst = [];
+    },
+
+toString: function()
+    {
+    return this.rgst.join("");
+    },
+
+// Build a comma separated list - ignoring undefined, null, empty strings
+AppendList: function()
+    {
+    var sSep = "";
+    for (var ist = 0; ist < arguments.length; ist++)
+        {
+        var sT = arguments[ist];
+        if (sT)
+            {
+            this.Append(sSep + sT);
+            sSep = this.sListSep;
+            }
+        }
+    return this;
+    }
+}; // NS.StBuf
+
+//--------------------------------------------------------------------------
+// Some extensions to built-in JavaScript objects (sorry!)
+//--------------------------------------------------------------------------
+
+// Wrap a method call in a function
+Function.prototype.FnMethod = function(obj)
+{
+    var _fn = this;
+    return function () { return _fn.apply(obj, arguments); };
+};
+
+// Append additional arguments to a function
+Function.prototype.FnArgs = function()
+{
+    var _fn = this;
+    var _args = [];
+    for (var i = 0; i < arguments.length; i++)
+        {
+        _args.push(arguments[i]);
+        }
+
+    return function () {
+        var args = [];
+        // In case this is a method call, preserve the "this" variable
+        var self = this;
+
+        for (var i = 0; i < arguments.length; i++)
+            {
+            args.push(arguments[i]);
+            }
+        for (i = 0; i < _args.length; i++)
+            {
+            args.push(_args[i]);
+            }
+
+        return _fn.apply(self, args);
+    };
+};
+
+}); // startpad.base
+/* Begin file: vector.js */
+// --------------------------------------------------------------------------
+// Vector Functions
+// --------------------------------------------------------------------------
+global_namespace.define('org.startpad.vector', function(ns) {
+
+ns.extend(ns, {
+    x:0, y:1,
+    x2:2, y2:3,
+
+subFrom: function(v1, v2)
+    {
+    for (var i = 0; i < v1.length; i++)
+        {
+        v1[i] = v1[i] - v2[i % v2.length];
+        }
+    return v1;
+    },
+
+sub: function(v1, v2)
+    {
+
+    var vDiff = ns.copy(v1);
+    return ns.subFrom(vDiff, v2);
+    },
+
+// In-place vector addition
+// If smaller arrays are added to larger ones, they wrap around
+// so that points can be added to rects, for example.
+addTo: function(vSum)
+    {
+    for (var iarg = 1; iarg < arguments.length; iarg++)
+        {
+        var v = arguments[iarg];
+        for (var i = 0; i < vSum.length; i++)
+            {
+            vSum[i] += v[i % v.length];
+            }
+        }
+    return vSum;
+    },
+
+// Add corresponding elements of all arguments
+add: function()
+    {
+    var vSum = ns.copy(arguments[0]);
+    var args = ns.copy(arguments);
+    args[0] = vSum;
+    return ns.addTo.apply(undefined, args);
+    },
+
+// Return new vector with element-wise max
+// All arguments must be same dimensioned array
+// TODO: Allow mixing scalars - share code with mult - iterator/callback pattern
+max: function()
+    {
+    var vMax = ns.copy(arguments[0]);
+    for (var iarg = 1; iarg < arguments.length; iarg++)
+        {
+        var v = arguments[iarg];
+        for (var i = 0; i < vMax.length; i++)
+            {
+            if (v[i] > vMax[i])
+                {
+                vMax[i] = v[i];
+                }
+            }
+        }
+    return vMax;
+    },
+
+// Multiply corresponding elements of all arguments (including scalars)
+// All vectors must be the same dimension (length).
+mult: function()
+    {
+    var vProd = 1;
+    var i;
+
+    for (var iarg = 0; iarg < arguments.length; iarg++)
+        {
+        var v = arguments[iarg];
+        if (typeof v === "number")
+            {
+            // mult(scalar, scalar)
+            if (typeof vProd === "number")
+                {
+                vProd *= v;
+                }
+            // mult(vector, scalar)
+            else
+                {
+                for (i = 0; i < vProd.length; i++)
+                    {
+                    vProd[i] *= v;
+                    }
+                }
+            }
+        else
+            {
+            // mult(scalar, vector)
+            if (typeof vProd === "number")
+                {
+                var vT = vProd;
+                vProd = ns.copy(v);
+                for (i = 0; i < vProd.length; i++)
+                    {
+                    vProd[i] *= vT;
+                    }
+                }
+            // mult(vector, vector)
+            else
+                {
+                if (v.length !== vProd.length)
+                    {
+                    throw new Error("Mismatched Vector Size");
+                    }
+                for (i = 0; i < vProd.length; i++)
+                    {
+                    vProd[i] *= v[i];
+                    }
+                }
+            }
+        }
+    return vProd;
+    },
+
+floor: function(v)
+    {
+    var vFloor = [];
+    for (var i = 0; i < v.length; i++)
+        {
+        vFloor[i] = Math.floor(v[i]);
+        }
+    return vFloor;
+    },
+
+dotProduct: function()
+    {
+    var v = ns.mult.apply(undefined, arguments);
+    var s = 0;
+    for (var i = 0; i < v.length; i++)
+        {
+        s += v[i];
+        }
+    return s;
+    },
+
+// Append all arrays into a new array (append(v) is same as copy(v)
+append: function()
+    {
+    var v1 = [].concat.apply([], arguments);
+    return v1;
+    },
+
+// Do a (shallow) comparison of two arrays
+equal: function(v1, v2)
+    {
+    if (typeof v1 != typeof v2)
+        return false;
+    if (typeof v1 == 'undefined')
+        return true;
+    for (var i = 0; i < v1.length; i++)
+        {
+        if (v1[i] !== v2[i])
+            {
+            return false;
+            }
+        }
+    return true;
+    },
+
+// Routines for dealing with Points [x, y] and Rects [left, top, bottom, right]
+
+ul: function(rc)
+    {
+    return rc.slice(0, 2);
+    },
+
+lr: function(rc)
+    {
+    return rc.slice(2, 4);
+    },
+
+size: function(rc)
+    {
+    return ns.sub(ns.lr(rc), ns.ul(rc));
+    },
+
+numInRange: function(num, numMin, numMax)
+    {
+    return num >= numMin && num <= numMax;
+    },
+
+clipToRange: function(num, numMin, numMax)
+    {
+    if (num < numMin)
+        return numMin;
+    if (num > numMax)
+        return numMax;
+    return num;
+    },
+
+ptInRect: function(pt, rc)
+    {
+    return ns.numInRange(pt[ns.x], rc[ns.x], rc[ns.x2]) &&
+        ns.numInRange(pt[ns.y], rc[ns.y], rc[ns.y2]);
+    },
+
+ptClipToRect: function(pt, rc)
+    {
+    return [ns.clipToRange(pt[ns.x], rc[ns.x], rc[ns.x2]),
+        ns.clipToRange(pt[ns.y], rc[ns.y], rc[ns.y2])];
+    },
+
+rcClipToRect: function(rc, rcClip)
+    {
+    return ns.append(ns.ptClipToRect(ns.ul(rc), rcClip),
+                     ns.ptClipToRect(ns.lr(rc), rcClip));
+    },
+
+rcExpand: function(rc, ptSize)
+    {
+    return ns.append(ns.sub(ns.ul(rc), ptSize),
+                     ns.add(ns.lr(rc), ptSize));
+    },
+
+keepInRect: function(rcIn, rcBound)
+    {
+    // First, make sure the rectangle is not bigger than either bound dimension
+    var ptFixSize = ns.max([0,0],ns.sub(ns.size(rcIn), ns.size(rcBound)));
+    rcIn[ns.x2] -= ptFixSize[ns.x];
+    rcIn[ns.y2] -= ptFixSize[ns.y];
+
+    // Now move the rectangle to be totally within the bounds
+    var dx = 0; dy = 0;
+    dx = Math.max(0, rcBound[ns.x] - rcIn[ns.x]);
+    dy = Math.max(0, rcBound[ns.y] - rcIn[ns.y]);
+    if (dx == 0)
+        dx = Math.min(0, rcBound[ns.x2] - rcIn[ns.x2]);
+    if (dy == 0)
+        dy = Math.min(0, rcBound[ns.y2] - rcIn[ns.y2]);
+    ns.addTo(rcIn, [dx, dy]);
+    },
+
+// Return pt (1-scale) * ul + scale * lr
+ptCenter: function(rc, scale)
+    {
+    if (scale === undefined)
+        {
+        scale = 0.5;
+        }
+    if (typeof scale === "number")
+        {
+        scale = [scale, scale];
+        }
+    var pt = ns.mult(scale, ns.lr(rc));
+    scale = ns.sub([1,1], scale);
+    ns.addTo(pt, ns.mult(scale, ns.ul(rc)));
+    return pt;
+    },
+
+// ptRegistration - return one of 9 registration points of a rectangle
+// 0 1 2
+// 3 4 5
+// 6 7 8
+ptRegistration: function(rc, iReg)
+    {
+    var xScale = (iReg % 3) * 0.5;
+    var yScale = Math.floor(iReg/3) * 0.5;
+    return ns.ptCenter(rc, [xScale, yScale]);
+    },
+
+iRegClosest: function(pt, rc)
+    {
+    var aPoints = [];
+    for (var i = 0; i < 9; i++)
+        {
+        aPoints.push(ns.ptRegistration(rc, i));
+        }
+    return ns.IPtClosest(pt, aPoints)[0];
+    },
+
+// rectDeltaReg - Move or resize the rectangle based on the registration
+// point to be modified.  Center (4) moves the whole rect.
+// Others resize one or more edges of the rectangle
+rectDeltaReg: function(rc, dpt, iReg, ptSizeMin, rcBounds)
+    {
+    var rcT;
+
+    if (iReg == 4)
+        {
+        rcT = ns.add(rc, dpt);
+        if (rcBounds)
+            ns.keepInRect(rcT, rcBounds);
+        return rcT;
+        }
+
+    var iX = iReg % 3;
+    if (iX == 1)
+        iX = undefined;
+
+    var iY = Math.floor(iReg/3);
+    if (iY == 1)
+        iY = undefined;
+
+    function ApplyDelta(rc, dpt)
+        {
+        var rcDelta = [0,0,0,0];
+        if (iX != undefined)
+            rcDelta[iX] = dpt[0];
+        if (iY != undefined)
+            rcDelta[iY+1] = dpt[1];
+        return ns.add(rc, rcDelta);
+        }
+
+    rcT = ApplyDelta(rc, dpt);
+
+    // Ensure the rectangle is not less than the minimum size
+    if (!ptSizeMin)
+        ptSizeMin = [0,0];
+    var ptSize = ns.size(rcT);
+    var ptFixSize = ns.max([0,0],ns.sub(ptSizeMin, ptSize));
+    if (iX == 0)
+        ptFixSize[0] *= -1;
+    if (iY == 0)
+        ptFixSize[1] *= -1;
+    rcT = ApplyDelta(rcT, ptFixSize);
+
+    // Ensure rectangle is not outside the bounding box
+    if (rcBounds)
+        ns.keepInRect(rcT, rcBounds);
+    return rcT;
+    },
+
+// Find the closest point to the given point
+// (multiple) arguments can be points, or arrays of points
+// Returns [i, pt] result
+iPtClosest: function(pt)
+    {
+    var d2Min;
+    var ptClosest;
+    var iClosest;
+    var d2;
+
+    var iPt = 0;
+    for (var iarg = 1; iarg < arguments.length; iarg++)
+        {
+        var v = arguments[iarg];
+        // Looks like a single point
+        if (typeof v[0] == "number")
+            {
+            d2 = ns.Distance2(pt, v);
+            if (d2Min == undefined || d2 < d2Min)
+                {
+                d2Min = d2;
+                ptClosest = v;
+                iClosest = iPt;
+                }
+            iPt++;
+            }
+        // Looks like an array of points
+        else
+            {
+            for (var i = 0; i < v.length; i++)
+                {
+                vT = v[i];
+                d2 = ns.Distance2(pt, vT);
+                if (d2Min == undefined || d2 < d2Min)
+                    {
+                    d2Min = d2;
+                    ptClosest = vT;
+                    iClosest = iPt;
+                    }
+                iPt++;
+                }
+            }
+        }
+    return [iClosest, ptClosest];
+    },
+
+// Return square of distance between to "points" (N-dimensional)
+distance2: function (v1, v2)
+    {
+    var d2 = 0;
+    for (var i = 0; i < v1.length; i++)
+        d2 += Math.pow((v2[i]-v1[i]), 2);
+    return d2;
+    },
+
+// Return the bounding box of the collection of pt's and rect's
+boundingBox: function()
+    {
+    var vPoints = ns.append.apply(undefined, arguments);
+    if (vPoints.length % 2 !== 0)
+        {
+        throw Error("Invalid arguments to boundingBox");
+        }
+
+    var ptMin = vPoints.slice(0,2),
+        ptMax = vPoints.slice(0,2);
+
+    for (var ipt = 2; ipt < vPoints.length; ipt += 2)
+        {
+        var pt = vPoints.slice(ipt, ipt+2);
+        if (pt[0] < ptMin[0])
+            {
+            ptMin[0] = pt[0];
+            }
+        if (pt[1] < ptMin[1])
+            {
+            ptMin[1] = pt[1];
+            }
+        if (pt[0] > ptMax[0])
+            {
+            ptMax[0] = pt[0];
+            }
+        if (pt[1] > ptMax[1])
+            {
+            ptMax[1] = pt[1];
+            }
+        }
+
+    return [ptMin[0], ptMin[1], ptMax[0], ptMax[1]];
+    },
+
+// Return json string for numeric array
+json: function(v)
+    {
+    var sRect = "[";
+    var chSep = "";
+    for (i = 0; i < v.length; i++)
+        {
+        sRect += chSep + v[i];
+        chSep = ",";
+        }
+    sRect += "]";
+    return sRect;
+    }
+});
+
+// Synonym - copy(v) is same as append(v)
+ns.copy = ns.append;
+
+}); // startpad.vector
+/* Begin file: dom.js */
+//--------------------------------------------------------------------------
+// DOM Functions
+// Points (pt) are [x,y]
+// Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
+//--------------------------------------------------------------------------
+global_namespace.define('org.startpad.DOM', function(NS) {
+        var Vector = NS.lookup('org.startpad.vector');
+
+NS.extend(NS, {
+        x:0, y:1,
+        x2:2, y2:3,
+
+// Get absolute position on the page for the upper left of the element.
+PtClient: function(elt)
+        {
+        var pt = [0,0];
+
+        while (elt.offsetParent !== null)
+                {
+                pt[0] += elt.offsetLeft;
+                pt[1] += elt.offsetTop;
+                elt = elt.offsetParent;
+                }
+        return pt;
+        },
+
+// Return size of a DOM element in a Point - includes borders, and padding, but not margins
+PtSize: function(elt)
+        {
+        return [elt.offsetWidth, elt.offsetHeight];
+        },
+
+// Return absolute bounding rectangle for a DOM element: [x, y, x+dx, y+dy]
+RcClient: function(elt)
+        {
+        // TODO: Should I use getClientRects or getBoundingClientRect?
+        var rc = NS.PtClient(elt);
+        var ptSize = NS.PtSize(elt);
+        rc.push(rc[NS.x]+ptSize[NS.x], rc[NS.y]+ptSize[NS.y]);
+        return rc;
+        },
+
+// Relative rectangle within containing element
+RcOffset: function(elt)
+        {
+        var rc = [elt.offsetLeft, elt.offsetTop];
+        var ptSize = NS.PtSize(elt);
+        rc.push(rc[NS.x]+ptSize[NS.x], rc[NS.y]+ptSize[NS.y]);
+        return rc;
+        },
+
+PtMouse: function(evt)
+        {
+        var x = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var y = document.documentElement.scrollTop || document.body.scrollTop;
+        return [x+evt.clientX, y+evt.clientY];
+        },
+
+RcWindow: function()
+        {
+        var x = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var y = document.documentElement.scrollTop || document.body.scrollTop;
+        var dx = window.innerWidth || document.documentElement.clientWidth ||   document.body.clientWidth;
+        var dy = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+        return [x, y, x+dx, y+dy];
+        },
+
+SetAbsPosition: function(elt, pt)
+        {
+        elt.style.top = pt[1] + 'px';
+        elt.style.left = pt[0] + 'px';
+        },
+
+SetSize: function(elt, pt)
+        {
+        // Setting the width of an element INSIDE the padding
+        elt.style.width = pt[0] + 'px';
+        elt.style.height = pt[1] + 'px';
+        },
+
+SetRc: function(elt, rc)
+        {
+        this.SetAbsPosition(elt, Vector.UL(rc));
+        this.SetSize(elt, Vector.Size(rc));
+        },
+
+RemoveChildren: function(node)
+        {
+        for (var child = node.firstChild; child; child = node.firstChild)
+                {
+                node.removeChild(child);
+                }
+        },
+
+Ancestors: function(elem)
+        {
+        var aAncestors = [];
+
+        while (elem != document)
+                {
+                aAncestors.push(elem);
+                elem = elem.parentNode;
+                }
+        return aAncestors;
+        },
+
+// Find the height of the nearest common ancestor of elemChild and elemUncle
+CommonAncestorHeight: function(elemChild, elemUncle)
+        {
+        var aChild = NS.Ancestors(elemChild);
+        var aUncle = NS.Ancestors(elemUncle);
+
+        var iChild = aChild.length-1;
+        var iUncle = aUncle.length-1;
+
+        while (aChild[iChild] == aUncle[iUncle] && iChild >= 0)
+                {
+                iChild--;
+                iUncle--;
+                }
+
+        return iChild+1;
+        },
+
+// Set focus() on element, but NOT at the expense of scrolling the window position
+SetFocusIfVisible: function(elt)
+        {
+        if (!elt)
+                return;
+
+        var rcElt = NS.RcClient(elt);
+        var rcWin = NS.RcWindow();
+
+        if (Vector.PtInRect(Vector.UL(rcElt), rcWin) ||
+                Vector.PtInRect(Vector.LR(rcElt), rcWin))
+                {
+                elt.focus();
+                }
+        },
+
+ScrollToBottom: function(elt)
+        {
+        elt.scrollTop = elt.scrollHeight;
+        },
+
+BindIDs: function(aIDs)
+        {
+        var mParts = {};
+        var i;
+
+        // If no array of id's is given, return all ids defined in the document
+        if (aIDs === undefined)
+                {
+                var aAll = document.getElementsByTagName("*");
+                for (i = 0; i < aAll.length; i++)
+                        {
+                        var elt = aAll[i];
+                        if (elt.id && elt.id[0] != '_')
+                                mParts[elt.id] = elt;
+                        }
+                return mParts;
+                }
+
+        for (i = 0; i < aIDs.length; i++)
+                {
+                var sID = aIDs[i];
+                mParts[sID] = document.getElementById(sID);
+                }
+        return mParts;
+        },
+
+InitValues: function(aNames, mpFields, mpValues)
+        {
+        for (var i = 0; i < aNames.length; i++)
+                {
+                if (mpValues[aNames[i]] != undefined)
+                        mpFields[aNames[i]].value = mpValues[aNames[i]];
+                }
+        },
+
+ReadValues: function(aNames, mpFields, mpValues)
+        {
+        for (var i = 0; i < aNames.length; i++)
+                {
+                var field = mpFields[aNames[i]];
+                var value;
+
+                if (field.type == 'checkbox')
+                        value = field.checked;
+                else
+                        value = field.value;
+                mpValues[aNames[i]] = value;
+                }
+        },
+
+/* Poor-man's JQuery compatible selector.
+
+   Excepts simple (single) selectors in one of three formats:
+
+           #id
+           .class
+           tag
+*/
+$: function(sSelector)
+        {
+        var ch = sSelector.substr(0,1);
+        if (ch == '.' || ch == '#')
+                sSelector = sSelector.substr(1);
+
+        if (ch == '#')
+                return document.getElementById(sSelector);
+        if (ch == '.')
+                return NS.GetElementsByClassName(sSelector);
+        return document.getElementsByTagName(sSelector);
+        },
+
+GetElementsByClassName: function(sClassName)
+        {
+        if (document.getElementsByClassName)
+                return document.getElementsByClassName(sClassName);
+
+        return NS.GetElementsByTagClassName(document, "*", sClassName);
+        },
+
+/*
+        GetElementsByTagClassName
+
+        Written by Jonathan Snook, http://www.snook.ca/jonathan
+        Add-ons by Robert Nyman, http://www.robertnyman.com
+*/
+
+GetElementsByTagClassName: function(oElm, strTagName, strClassName)
+        {
+        var arrElements = (strTagName == "*" && oElm.all)? oElm.all : oElm.getElementsByTagName(strTagName);
+        var arrReturnElements = new Array();
+        strClassName = strClassName.replace(/\-/g, "\\-");
+        var oRegExp = new RegExp("(^|\\s)" + strClassName + "(\\s|$)");
+        var oElement;
+        for(var i=0; i<arrElements.length; i++)
+                {
+                oElement = arrElements[i];
+                if(oRegExp.test(oElement.className))
+                        {
+                        arrReturnElements.push(oElement);
+                        }
+                }
+        return (arrReturnElements);
+        },
+
+GetText: function(elt)
+        {
+        // Try FF then IE standard way of getting element text
+        var sText = elt.textContent || elt.innerText || "";
+        return sText.Trim();
+        },
+
+SetText: function(elt, st)
+        {
+        if (elt.textContent != undefined)
+                elt.textContent = st;
+        else
+                elt.innerText = st;
+        }
+});
+
+}); // startpad.DOM
 /* Begin file: json2.js */
 /*
     http://www.JSON.org/json2.js
@@ -659,11 +1560,16 @@ global_namespace.define("com.googlecode.crypto-js", function () {});
 
 (function(){
 
-var base64map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+var lower = 'abcdefghijklmnopqrstuvwxyz';
+var digits = '0123456789';
+var base64map = upper + lower + digits + '+/';
+var base64url = upper + lower + digits + '-_';
 
 // Global Crypto object
 var Crypto = global_namespace.lookup("com.googlecode.crypto-js");
-
+Crypto.base64map = base64map;
+Crypto.base64url = base64url;
 
 // Crypto utilities
 var util = Crypto.util = {
@@ -951,7 +1857,337 @@ C.HMAC = function (hasher, message, key, options) {
         return C.HMAC(C.SHA1, message, key, options);
     };
 
+    C.random = function (len, chars) {
+        if (typeof chars == 'undefined') {
+            chars = C.base64url;
+        }
+        var radix = chars.length;
+        var uuid = [];
+        for (var i = 0; i < len; i++) {
+            uuid[i] = chars[0 | Math.random() * radix];
+        }
+        return uuid.join('');
+    };
+
 })();
+/* Begin file: timer.js */
+//--------------------------------------------------------------------------
+// Timer Functions
+//--------------------------------------------------------------------------
+
+
+global_namespace.define('org.startpad.timer', function(NS) {
+
+NS.extend(NS, {
+MSNow: function()
+        {
+        return new Date().getTime();
+        }
+});
+
+NS.Timer = function(ms, fnCallback)
+{
+        this.ms = ms;
+        this.fnCallback = fnCallback;
+        return this;
+};
+
+NS.Timer.prototype = {
+        constructor: NS.Timer,
+        fActive: false,
+        fRepeat: false,
+        fInCallback: false,
+        fReschedule: false,
+
+Repeat: function(f)
+{
+        if (f === undefined)
+                {
+                f = true;
+                }
+        this.fRepeat = f;
+        return this;
+},
+
+Ping: function()
+{
+        // In case of race condition - don't call function if deactivated
+        if (!this.fActive)
+                {
+                return;
+                }
+
+        // Eliminate re-entrancy - is this possible?
+        if (this.fInCallback)
+                {
+                this.fReschedule = true;
+                return;
+                }
+
+        this.fInCallback = true;
+        try
+                {
+                this.fnCallback();
+                }
+        catch (e)
+                {
+                console.error("Error in timer callback: " + e.message + "(" + e.name + ")");
+                }
+        this.fInCallback = false;
+
+        if (this.fActive && (this.fRepeat || this.fReschedule))
+                {
+                this.Active(true);
+                }
+},
+
+// Calling Active resets the timer so that next call to Ping will be in this.ms milliseconds from NOW
+Active: function(fActive)
+{
+        if (fActive === undefined)
+                {
+                fActive = true;
+                }
+        this.fActive = fActive;
+        this.fReschedule = false;
+
+        if (this.iTimer)
+                {
+                window.clearTimeout(this.iTimer);
+                this.iTimer = undefined;
+                }
+
+        if (fActive)
+                {
+                this.iTimer = window.setTimeout(this.Ping.FnMethod(this), this.ms);
+                }
+
+        return this;
+}
+}; // NS.Timer
+
+}); // startpad.timer
+/* Begin file: events.js */
+// Level 2, IE, or Level 0 event models supported.
+// "this" - points to target object
+// 1st argument is event
+
+global_namespace.define('org.startpad.events', function(NS) {
+        var DOM = NS.lookup('org.startpad.DOM');
+        var Vector = NS.lookup('org.startpad.vector');
+
+NS.extend(NS, {
+fnHandlers: [],
+
+AddEventFn: function(elem, stEvt, fnCallback, fCapture)
+        {
+        if (!fCapture)
+                fCapture = false;
+
+        var fnWrap = function() {
+                arguments[0] = NS.WrapEvent(arguments[0]);
+                return fnCallback.apply(elem, arguments);
+                };
+
+        if (elem.addEventListener)
+                {
+                elem.addEventListener(stEvt, fnWrap, fCapture);
+                }
+        else if (elem.attachEvent)
+                {
+                elem.attachEvent('on' + stEvt, fnWrap);
+                }
+        else
+                {
+                elem['on' + stEvt] = fnWrap;
+                }
+
+        NS.fnHandlers.push({
+                elem:elem,
+                evt:stEvt,
+                fCapture:fCapture,
+                fn:fnWrap
+                }
+        );
+
+        return NS.fnHandlers.length-1;
+        },
+
+RemoveEventFn: function(ifn)
+        {
+        var fnHand = NS.fnHandlers[ifn];
+        if (!fnHand)
+                {
+                return;
+                }
+        NS.fnHandlers[ifn] = undefined;
+
+        var elem = fnHand.elem;
+        if (elem.removeEventListener)
+                {
+                elem.removeEventListener(fnHand.evt, fnHand.fn, fnHand.fCapture);
+                }
+        else if (elem.attachEvent)
+                {
+                elem.detachEvent('on' + fnHand.evt, fnHand.fn);
+                }
+        else
+                {
+                elem['on' + fnHand.evt] = undefined;
+                }
+        },
+
+/* Modify original event object to enable the DOM Level 2 Standard Event model
+   (make IE look like a Standards based event)
+
+   Supports these standard properties of the event:
+
+   preventDefault()
+   stopPropogation()
+   target - original event target (as compared to currentTarget for bubbling events)
+   pageX, pageY - client (document based) coordinates of the mouse
+   keyCode
+*/
+WrapEvent: function(evt)
+        {
+        evt = evt || window.evt || {};
+        if (!evt.preventDefault)
+                {
+                evt.preventDefault = function() {this.returnValue = false;};
+                }
+        if (!evt.stopPropagation)
+                evt.stopPropagation = function() {this.cancelBubble = true;};
+        if (!evt.target)
+                evt.target = evt.srcElement || document;
+        if (evt.pageX == null && evt.clientX != null) {
+                var doc = document.documentElement, body = document.body;
+                evt.pageX = evt.clientX + (doc && doc.scrollLeft || body && body.scrollLeft || 0) - (doc.clientLeft || 0);
+                evt.pageY = evt.clientY + (doc && doc.scrollTop || body && body.scrollTop || 0) - (doc.clientTop || 0);
+                }
+        return evt;
+        },
+
+GetChar: function(evt)
+        {
+        var code = evt.keyCode || evt.which;
+        return String.fromCharCode(code);
+        },
+
+DisableSelection: function(elt)
+        {
+        // Disable selection of text or clicking on a purely visual element
+        elt.style.cursor = "default";
+        NS.AddEventFn(elt, 'mousedown', function(evt) {
+                evt.preventDefault();
+                // If the disabled object is in a draggable element, we want to propogate
+                // the mousedown up....so no stopPropagation call here.
+                return false;
+                });
+        },
+
+/* ------------------------------------------------------------
+        Enable dragging for absolute or relative position elements
+        Callback called at end of drag with change in position of the
+        elemeent (dpt).
+
+        BUG: Mouse can move off of elem, and loose all subsequent events.
+        IE has setCapture, but not in FF.  Also FF allows window.onmousemove,
+        but not in IE!  document.onmousemove does not work as there are areas
+        of the window that are not a part of the document!
+        One solution would be to create a temporary transparent div to overlay
+        the window for the duration of the drag, and then get mousemoves within it.
+
+        Options:
+                fInclusive - capture mouse events - will not enable any internal component to be clicked
+                fResize - allow resizing if clicked near one of the edge control points
+                rcBounds - The bounding box in which the element is constrained
+                    This can be adjusted after the initial call in the bounding rectangle
+                    changes - be careful to make an in-place modification.
+                fnStart - Callback when a drag is started
+                fnMove - High-rate callback whenever element is moved
+                fClip - Clip the rectangle when moving (otherwise pins to bounding rect)
+
+        TODO: Could share a common event handler for the mousemove and mouseup when
+        multiple draggable elements are on screen.
+   ------------------------------------------------------------ */
+aCursors: ['nw-resize', 'n-resize', 'ne-resize',
+           'w-resize', 'move', 'e-resize',
+           'sw-resize', 's-resize', 'se-resize'],
+
+Draggable: function(elem, fnCallback, opt)
+        {
+        var fDragging = false;
+        var ptMouse, ptStart, ptLast;
+        var dResize = 4;
+        var iReg = 4;
+
+        opt = NS.Extend({fInclusive: false,
+                                         fResize: false,
+                                         rcBounds: null,
+                                         fnCallback: null
+                                         },
+                                        opt);
+
+        var rcElem;
+        var rcClient;
+
+        NS.AddEventFn(elem, 'mousedown', function(evt) {
+                // Don't initiate a drag for bubbling up events
+                if (!opt.fInclusive && evt.target != elem)
+                        return;
+                evt.preventDefault();
+                evt.stopPropagation();
+                fDragging = true;
+                ptStart = [evt.pageX, evt.pageY];
+                ptLast = ptStart;
+                if (opt.fnStart)
+                        opt.fnStart();
+                return false;
+                }, false);
+        NS.AddEventFn(document, 'mousemove', function(evt) {
+                var ptNow = [evt.pageX, evt.pageY];
+                if (!fDragging)
+                        {
+                        rcElem = DOM.RcOffset(elem);
+                        rcClient = DOM.RcClient(elem);
+                        if (!Vector.PtInRect(ptNow, rcClient))
+                                return true;
+                        iReg = opt.fResize ? Vector.IRegClosest(ptNow, rcClient) : 4;
+                        elem.style.cursor = NS.aCursors[iReg];
+                        return true;
+                        }
+                evt.preventDefault();
+                evt.stopPropagation();
+
+                if (Vector.Equal(ptNow, ptLast))
+                        return false;
+                ptLast = ptNow;
+
+                // If a move callback is provided, just pass back incremental move values and let the caller
+                // handle the display
+                if (opt.fnMove)
+                        {
+                        opt.fnMove(Vector.Sub(ptNow, ptStart));
+                        return false;
+                        }
+                var dpt = Vector.Sub(ptNow, ptStart);
+                var rcNew = Vector.RectDeltaReg(rcElem, dpt, iReg, [12,12], opt.rcBounds);
+                DOM.SetRc(elem, rcNew);
+                return false;
+                }, false);
+        NS.AddEventFn(document, 'mouseup', function(evt) {
+                if (!fDragging)
+                        return true;
+                fDragging = false;
+                evt.preventDefault();
+                evt.stopPropagation();
+                if (fnCallback)
+                        fnCallback(Vector.Sub(ptLast, ptStart));
+                return false;
+                }, false);
+        }
+
+});}); // startpad.events
 /* Begin file: registration.js */
 global_namespace.define('com.pageforest.registration', function(ns) {
 
@@ -986,7 +2222,8 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             email: $("#id_email").val(),
             password: $("#id_password").val(),
             repeat: $("#id_repeat").val(),
-            tos: true
+            tos: $("#id_tos").attr('checked') ? 'checked' : '',
+            validate: true
         };
         var oneline = [data.username, data.email,
                        data.password, data.repeat];
@@ -995,10 +2232,9 @@ global_namespace.define('com.pageforest.registration', function(ns) {
             return;
         }
         ns.previous = oneline;
-        console.log(oneline);
         $.ajax({
             type: "POST",
-            url: "/auth/register/validate/",
+            url: "",
             data: data,
             dataType: "json",
             success: validate_success,
@@ -1008,10 +2244,96 @@ global_namespace.define('com.pageforest.registration', function(ns) {
 
     ns.document_ready = function () {
         ns.previous = '~~~';
-        setInterval(validate_if_changed, 1000);  // Once per second.
+        // Validate in the background
+        setInterval(validate_if_changed, 3000);
+        $("#id_tos").click(function() {
+            $("#validate_tos").html('');
+        });
     };
 
 }); // com.pageforest.registration
+/* Begin file: sign-in-form.js */
+global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
+    ns.extend(ns, {
+        // Check if user is already logged in.
+        documentReady: function(username, appId) {
+            ns.appId = appId;
+            ns.appDomain = ns.getAppDomain(appId);
+
+            // Nothing to do until the user signs in - page will reload
+            // on form post.
+            if (!username)
+                return;
+
+            // Just logging in to pageforest - done.
+            if (!appId) {
+                ns.closeForm();
+                return;
+            }
+
+            // Check (once) if we're also currently logged in @ appId
+            // without having to sign-in again.
+            ns.getString(ns.appDomain + "/auth/username", function(username) {
+                // We're already logged in!
+                if (typeof(username) == 'string') {
+                    ns.closeForm();
+                    return;
+                }
+            });
+        },
+
+        transferSession: function(sessionKey) {
+            // Send a valid appId sessionKey to the app domain
+            // to get it installed on a cookie.
+            ns.getString(ns.appDomain + "/auth/set-session/" + sessionKey, function (s) {
+                if (typeof(s) != 'string') {
+                    alert(s.message);
+                    return;
+                }
+                ns.closeForm();
+            });
+        },
+
+        // www.pf.com -> app.pf.com
+        // pf.com -> app.pf.com
+        getAppDomain: function(appId) {
+            var parts = window.location.host.split('.');
+            if (parts[0] == 'www')
+                parts[0] = appId;
+            else
+                parts.splice(0, 0, appId);
+            return parts.join('.');
+        },
+
+        // Use JSONP to read the username from the cross-site application.
+        getString: function(url, fn) {
+            url = "http://" + url;
+            $.ajax({
+                type: "GET",
+                url: url,
+                dataType: "jsonp",
+                success: fn,
+                error: function() {
+                    fn({status:500});
+                }
+            });
+        },
+
+        // Display success, and close window in 5 seconds.
+        closeForm: function() {
+            function closeFinal() {
+                // Close the window if we were opened by a cross-site script
+                window.close();
+            }
+            if (ns.appId)
+                $(".have_app").show();
+            $(".want_app").hide();
+            setTimeout(closeFinal, 5000);
+        }
+
+    }); // ns.extend
+
+}); // com.pageforest.sign-in-form
 /* Begin file: formatutil.js */
 global_namespace.define('org.startpad.format-util', function(NS) {
 
@@ -1160,6 +2482,8 @@ global_namespace.define('org.startpad.date-util', function(NS) {
 
 NS.ISO = {
     tz: -(new Date().getTimezoneOffset())/60,  // Default timezone = local timezone
+    // TODO: Should not call Base in namespace definition - won't work for out of order
+    // references.
     enumMatch: new Base.Enum([1, "YYYY", "MM", "DD", 5, "hh", "mm", 8, "ss", 10, "sss", "tz"]),
 
 FromDate: function(dt, fTime)

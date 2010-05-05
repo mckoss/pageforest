@@ -20,21 +20,29 @@ class PutRequest(urllib2.Request):
         return 'PUT'
 
 
-def hmac_sha1(key, message):
+def hmac_sha1(message, key):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
 def login(options):
     url = 'http://%s/auth/challenge' % options.server
     challenge = urllib2.urlopen(url).read()
-    userpass = hmac_sha1(options.password, options.username.lower())
-    signature = hmac_sha1(userpass, challenge)
+    print("Challenge: %s" % challenge)
+    userpass = hmac_sha1(options.username.lower(), options.password)
+    signature = hmac_sha1(challenge, userpass)
     reply = '/'.join((options.username, challenge, signature))
     url = 'http://%s/auth/verify/%s' % (options.server, reply)
-    return urllib2.urlopen(url).read()
+    print("Response: %s" % url)
+    session_key = urllib2.urlopen(url).read()
+    print("Session key: %s" % session_key)
+    return session_key
 
 
 def load_config(options):
+    # Don't use config file if (different) server specified
+    if options.server:
+        return
+
     hostname = username = password = ''
     parts = open(CONFIG_FILENAME).readline().split('/')
     if len(parts) > 2 and parts[0] == 'http:' and parts[1] == '':
@@ -43,10 +51,11 @@ def load_config(options):
         username, hostname = hostname.split('@', 1)
     if ':' in username:
         username, password = username.split(':', 1)
-    options.username = username
-    options.password = password
-    if not options.server:
-        options.server = hostname
+    options.server = hostname
+    if not options.password and not options.username:
+        options.password = password
+    if not options.username:
+        options.username = username
 
 
 def save_config(options):
@@ -61,18 +70,24 @@ def config():
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
         help="deploy to this server (default: read from .url file)")
+    parser.add_option('-u', '--username')
+    parser.add_option('-p', '--password')
     options, args = parser.parse_args()
-    options.username = None
-    options.password = None
+
     if os.path.exists(CONFIG_FILENAME):
         load_config(options)
+
+    options.save = False
     if not options.server:
         options.server = raw_input("Hostname: ")
+        options.save = True
     if not options.username:
         options.username = raw_input("Username: ")
+        options.save = True
     if not options.password:
         from getpass import getpass
         options.password = getpass("Password: ")
+        options.save = True
     return options, args
 
 
@@ -102,9 +117,9 @@ def upload_dir(options, path):
 
 
 def main():
-    options, args = config()
     if not os.path.exists(META_FILENAME):
         sys.exit('Could not find ' + META_FILENAME)
+    options, args = config()
     options.session_key = login(options)
     if not args:
         args = ['.']
@@ -113,7 +128,8 @@ def main():
             upload_dir(options, path)
         elif os.path.isfile(path):
             upload_file(options, path)
-    if not os.path.exists(CONFIG_FILENAME):
+
+    if options.save:
         save_config(options)
 
 

@@ -1,55 +1,139 @@
+import logging
 import time
-from datetime import datetime, timedelta
 
 from django.conf import settings
 from django.shortcuts import redirect
-from django.http import HttpResponse, HttpResponseForbidden, Http404
-from django.utils import simplejson as json
+from django.core.urlresolvers import reverse
+from django.http import \
+    HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
-from google.appengine.api import memcache, quota
+from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
-from utils.http import http_datetime
 from utils import crypto
 
-from auth.forms import RegistrationForm
-from auth.models import User
+from auth.forms import RegistrationForm, SignInForm
+from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
 
-CHALLENGE_EXPIRATION = 60  # Seconds.
+from apps.models import App
 
 
+@method_required('GET', 'POST')
 def register(request):
-    """Create a user account on PageForest."""
+    """
+    Create a user account on PageForest.
+    """
+    form = RegistrationForm(request.POST or None)
     if request.method == 'POST':
-        form = RegistrationForm(request.POST)
+        if 'validate' in request.POST:
+            return HttpResponse(form.errors_json(),
+                                mimetype='application/json')
         if form.is_valid():
-            form.save()
-            return redirect('/auth/welcome/')
+            form.save(request)
+            return redirect('/welcome/')
+    return render_to_response(request, 'auth/register.html', {'form': form})
+
+
+@method_required('GET', 'POST')
+def sign_in(request, app_id=None):
+    """
+    Check credentials and generate session key(s).
+
+    Sign in to:
+
+    - www.pageforest.com
+    - app_id.pageforest.com (if given)
+
+    Note: return the application session key to the client via
+    ajax, so they can request the cookie on the proper domain.
+
+    TODO: Generate long-term reauthorization cookies on
+    path=/auth/reauth so clients can upate their shorter
+    session keys.
+    """
+    form = SignInForm(request.POST or None)
+    app = request.app
+    if app_id:
+        app = App.lookup(app_id)
+        if app is None or app.is_www():
+            return HttpResponseRedirect(reverse(sign_in))
+
+    if app.is_www():
+        del form.fields['app_auth']
     else:
-        form = RegistrationForm()
-    return render_to_response(request, 'auth/register.html', locals())
+        form.fields['app_auth'].label = app_id.title()
+
+    if request.method == 'POST':
+        if form.is_valid():
+            response = HttpResponseRedirect('/auth/sign-in/%s' % app_id)
+            response.set_cookie(settings.SESSION_COOKIE_NAME,
+                                form.user.generate_session_key(app),
+                                max_age=settings.SESSION_COOKIE_AGE)
+            return response
+
+    app_session_key = None
+    if app.is_www():
+        app = None
+    elif request.user:
+        app_session_key = request.user.generate_session_key(app)
+    return render_to_response(request, 'auth/sign-in.html',
+                              {'form': form,
+                               'cross_app': app,
+                               'session_key': app_session_key})
 
 
-@method_required('POST')
-def validate(request, ajax=None):
-    """Interactive registration form validation."""
-    form = RegistrationForm(request.POST)
-    return HttpResponse(form.errors_json(),
-                        mimetype='application/json')
+@jsonp
+@method_required('GET', 'POST')
+def get_username(request):
+    """
+    Get the username that is currently signed in.
+    """
+    if request.user is None:
+        raise Http404("The user is not signed in.")
+    return HttpResponse(request.user.username, mimetype='text/plain')
+
+
+@jsonp
+@method_required('GET', 'POST')
+def set_session_cookie(request, session_key):
+    """
+    When passed a valid session key for the current application,
+    set the cookie for the session key.
+    """
+    user = User.verify_session_key(session_key, request.app)
+    if user is None:
+        raise Http404("Invalid session key.")
+    response = HttpResponse(session_key, content_type='text/plain')
+    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                        max_age=settings.SESSION_COOKIE_AGE)
+    return response
+
+
+@method_required('GET')
+def sign_out(request):
+    """
+    Expire the session key cookie.
+    """
+    response = HttpResponseRedirect('/auth/sign-in/')
+    response.delete_cookie(settings.SESSION_COOKIE_NAME)
+    return response
 
 
 @jsonp
 @method_required('GET')
 def challenge(request):
-    """Generate a random signed challenge for login."""
+    """
+    Generate a random signed challenge for login.
+
+    Challenge is S(random/expires/ip, app.secret)
+    """
     random_key = crypto.random64url(32)
-    expires = datetime.now() + timedelta(seconds=CHALLENGE_EXPIRATION)
-    challenge = crypto.sign(random_key, expires, request.app.secret)
+    expires = int(time.time() + CHALLENGE_EXPIRATION)
     ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    memcache.set(challenge, ip, CHALLENGE_EXPIRATION)
-    return HttpResponse(challenge, mimetype='text/plain')
+    challenge_string = crypto.sign(random_key, expires, ip, request.app.secret)
+    return HttpResponse(challenge_string, mimetype='text/plain')
 
 
 @jsonp
@@ -58,67 +142,41 @@ def verify(request, signature):
     """
     Check the challenge signature with the shared user secret.
     If successful, return a session key and re-auth cookie.
+
+    To protect against replay, we stored any SUCCESSFULLY used
+    challenge in memcache until it's expiration time.
+
+    When memcache is not disabled, replays will be allowed
+    (but authentic challenges will still be able to succeed).
+
+    Signature is:
+        username/S(S(random/expires/ip, app.secret), S(user, pass)) =
+        username/random/expires/ip/App-Signature/User-Signature
     """
-    parts = signature.split(crypto.SEPARATOR)
-    # Check that the request data contains five parts.
-    if len(parts) != 5:
-        return HttpResponseForbidden("Authentication must have five parts.",
-                                     content_type='text/plain')
-    # Check that the expiration time is in the future.
-    expires = datetime.strptime(parts[2], "%Y-%m-%dT%H:%M:%SZ")
-    if expires < datetime.now():
-        return HttpResponseForbidden("The challenge is expired.",
-                                     content_type='text/plain')
-    # Check that the challenge is unused and was generated recently.
-    challenge = crypto.join(parts[1:4])
-    challenge_ip = memcache.get(challenge)
-    if challenge_ip is None:
-        return HttpResponseForbidden("The challenge is unknown.",
-                                     content_type='text/plain')
-    memcache.delete(challenge)
-    # Check that the IP address matches.
-    request_ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
-    if request_ip != challenge_ip:
+    try:
+        user = User.verify_signature(
+            signature, request.app, request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    except SignatureError, error:
         return HttpResponseForbidden(
-            "The challenge was issued to a different IP.",
-            content_type='text/plain')
-    # Check that the username exists.
-    username = parts[0]
-    user = User.get_by_key_name(username.lower())
-    if user is None:
-        return HttpResponseForbidden(
-            "The username '%s' is unknown." % username,
-            content_type='text/plain')
-    # Check the password signature.
-    signed = crypto.sign(challenge, user.password)
-    joined = crypto.join(username, signed)
-    if signature != joined:
-        return HttpResponseForbidden(
-            "The password signature is incorrect.",
-            content_type='text/plain')
-    # Generate a session key for the next 24 hours.
-    key = crypto.join(user.password, request.app.secret)
-    expires = datetime.now() + timedelta(seconds=settings.SESSION_COOKIE_AGE)
-    session_key = crypto.sign(request.app_id, username, expires, key)
-    expires = datetime.now() + timedelta(seconds=settings.REAUTH_COOKIE_AGE)
-    reauth_cookie = crypto.sign(request.app_id, username, expires, key)
+            "Invalid signature: " + unicode(error), content_type='text/plain')
+    # Return fresh session key and reauth cookie.
+    session_key = user.generate_session_key(request.app)
+    reauth_cookie = user.generate_session_key(request.app,
+            settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
-    response['Set-Cookie'] = '%s=%s; path=/; expires=%s' % (
-        settings.REAUTH_COOKIE_NAME, reauth_cookie, http_datetime(expires))
+    response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
+                        max_age=settings.REAUTH_COOKIE_AGE)
     return response
 
 
 @jsonp
 @method_required('GET')
 def reauth(request):
-    return HttpResponseForbidden('No reauth cookie', mimetype="text/plain")
-    return HttpResponse('Reauthenticated', mimetype="text/plain")
-
-
-@jsonp
-@method_required('GET')
-def sign_in(request):
-    return HttpResponse('Signed in', mimetype="text/plain")
+    """
+    Attempt to authenticate with a long-lived reauth cookie.
+    """
+    return HttpResponseForbidden("No reauth cookie.", mimetype="text/plain")
+    # return HttpResponse(session_key, mimetype="text/plain")
 
 
 @jsonp
@@ -133,6 +191,8 @@ def poll(request, token):
     memcache_key = 'auth.poll~' + token
     try:
         while True:
+            if settings.DEBUG:
+                logging.info("polling memcache for " + memcache_key)
             session_key = memcache.get(memcache_key)
             if session_key:
                 return HttpResponse(session_key, mimetype="text/plain")
@@ -141,7 +201,4 @@ def poll(request, token):
             time.sleep(3)  # Seconds.
     except DeadlineExceededError:
         pass
-    return HttpResponse(json.dumps({
-                "seconds": time.time() - started,
-                "megacycles": quota.get_request_cpu_usage(),
-                }), mimetype='application/json')
+    return HttpResponse(status=204)

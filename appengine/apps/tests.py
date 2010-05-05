@@ -3,26 +3,26 @@ from django.test import TestCase
 from apps.models import App
 
 
-class CacheableTest(TestCase):
+class HostnameTest(TestCase):
 
     def setUp(self):
-        self.chess = App(key_name='chess')
-        self.chat = App(key_name='chat')
-        self.chat.put()
+        self.myapp = App(key_name='myapp', domains=['myapp.pageforest.com'])
+        self.myapp.put()
 
-    def test_get_by_key_name(self):
-        """Test that get_by_key_name uses the class cache."""
-        # Create cache attribute on the App class.
-        app = App.get_by_key_name('unknown')
+    def test_get_by_hostname(self):
+        """Test that get_by_hostname finds an existing app."""
+        app = App.get_by_hostname('myapp.pageforest.com')
+        self.assertEqual(app.key().name(), 'myapp')
+        app = App.get_by_hostname('myapp.dev.latest.pageforest.appspot.com')
+        self.assertEqual(app.key().name(), 'myapp')
+        app = App.get_by_hostname('myapp.pgfr.st')
+        self.assertEqual(app.key().name(), 'myapp')
+        app = App.get_by_hostname('myapp.localhost')
+        self.assertEqual(app.key().name(), 'myapp')
+        self.assertTrue(app.is_saved())
+
+    def test_unknown_app(self):
+        """Test that unknown app is not found."""
+        # Create a dummy app if it doesn't exist.
+        app = App.get_by_hostname('unknown.pageforest.com')
         self.assertEqual(app, None)
-        self.assertTrue(hasattr(App, 'cache'))
-        # Get existing app from datastore.
-        app = App.get_by_key_name('chat')
-        self.assertEqual(app.key().name(), 'chat')
-        # Try to get an app that's not in datastore.
-        app = App.get_by_key_name('chess')
-        self.assertEqual(app, None)
-        # Put chess in the App cache and try again.
-        App.cache['chess'] = self.chess
-        app = App.get_by_key_name('chess')
-        self.assertEqual(app.key().name(), 'chess')

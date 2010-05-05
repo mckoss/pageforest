@@ -14,6 +14,8 @@ global_namespace.define('org.startpad.date-util', function(NS) {
 
 NS.ISO = {
     tz: -(new Date().getTimezoneOffset())/60,  // Default timezone = local timezone
+    // TODO: Should not call Base in namespace definition - won't work for out of order
+    // references.
     enumMatch: new Base.Enum([1, "YYYY", "MM", "DD", 5, "hh", "mm", 8, "ss", 10, "sss", "tz"]),
 
 FromDate: function(dt, fTime)

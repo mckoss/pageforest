@@ -155,6 +155,13 @@ class Cacheable(db.Model):
         return instance
 
     @classmethod
+    def get(cls, keys):
+        """
+        TODO: Use memcache here.
+        """
+        return super(Cacheable, cls).get(keys)
+
+    @classmethod
     def get_by_key_name(cls, key_name, parent=None):
         """
         Look in memcache before datastore.

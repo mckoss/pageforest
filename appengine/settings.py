@@ -7,6 +7,18 @@ import sys
 
 from settingsauto import *
 
+# These variables available in all template files using RequestContext
+SAFE_SETTINGS = [
+    'APPLICATION_ID', 'CURRENT_VERSION_ID',
+    'SERVER_SOFTWARE', 'AUTH_DOMAIN', 'ANALYTICS_CODE',
+    'SITE_NAME', 'SITE_OWNER', 'SITE_CONTACT_INFO', 'SITE_EMAIL_FROM',
+    'DEV_APPSERVER', 'DEBUG', 'TEMPLATE_DEBUG',
+    'ADMINS', 'MANAGERS',
+    'DEFAULT_DOMAIN', 'DOMAINS',
+    'MEDIA_URL', 'LIB_URL',
+    'COMBINE_FILES',
+]
+
 # App Engine specific environment variables.
 APPLICATION_ID = os.environ.get('APPLICATION_ID', '')
 CURRENT_VERSION_ID = os.environ.get('CURRENT_VERSION_ID', '')
@@ -14,17 +26,23 @@ SERVER_SOFTWARE = os.environ.get('SERVER_SOFTWARE', '')
 AUTH_DOMAIN = os.environ.get('AUTH_DOMAIN', '')
 
 DEV_APPSERVER = SERVER_SOFTWARE.startswith("Development")
+RUNNING_ON_GAE = SERVER_SOFTWARE.startswith("Google App Engine")
+
 DEBUG = DEV_APPSERVER
 TEMPLATE_DEBUG = DEBUG
+#DEBUG = False
 
 ADMINS = (
-    ('Mike Koss', 'mckoss@startpad.org'),
+    ('Mike Koss', 'mckoss@pageforest.com'),
     ('Johann C. Rocholl', 'johann@rocholl.net'),
 )
 
 MANAGERS = ADMINS
 
-SITE_NAME = "pageforest.com"
+SITE_NAME = "Pageforest"
+SITE_OWNER = "StartPad"
+SITE_CONTACT_INFO = "811 First Ave, Suite 480, Seattle, WA 98104"
+SITE_EMAIL_FROM = "support@pageforest.com"
 
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.
@@ -56,9 +74,32 @@ USE_I18N = False
 # decorate our view functions with @last_modified instead.
 USE_ETAGS = False
 
+# We don't let CommonMiddleware redirect to add www or slashes.
+PREPEND_WWW = False
+APPEND_SLASH = False
+
+# Content-Type header for JSON data.
+JSON_MIMETYPE = 'application/json'
+
+# Allowed dormats for pageforest identifiers:
+USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
+APP_ID_REGEX = USERNAME_REGEX
+DOC_ID_REGEX = r"([a-zA-Z0-9_-][a-zA-Z0-9_\.-]*)"
+
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
-DOMAINS = 'pageforest.com pgfrst.com'.split()
+
+# Trusted domains (for app_id.domain.tld lookup).
+DOMAINS = [
+    'pageforest.com',
+    'pageforest.appspot.com',
+    'latest.pageforest.appspot.com',
+    'pgfrst.com',
+    'pgfr.st',
+    'pageforest',
+    'localhost',
+]
+
 ANALYTICS_CODE = "UA-2072869-6"
 
 # Absolute path to the directory that holds media.
@@ -78,17 +119,19 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
-admin administrator root staff
+admin administrator root
+staff info spam abuse
 www www-data webmaster postmaster
 test tester testuser testclient
 friends family public private
 authenticated anonymous unknown noname
-everybody anybody nobody
+everybody anybody nobody public private
 """.split()
 
 # Prevent app registration with some special app names.
+# Note that 'www' is the default PF app - always available.
 RESERVED_APPS = """
-www meta ssl static auth oauth login
+meta ssl static auth oauth login
 doc docs document documents
 blog list note comment
 test tester testclient testserver
@@ -96,15 +139,32 @@ pageforest pgfrst page
 app apps application applications app_id appid
 css img images js javascript lib
 google microsoft twitter yahoo facebook fb
+flickr
 profile
 """.split()
+
+# Reserved key prefixes in the application namespace.
+# http://app_id.pageforest.com/_key_/...
+# Internally, these are mapped to:
+# /app/_key_/...
+RESERVED_APP_KEYS = (
+    'docs',          # Saved application documents
+    'auth',          # Authentication urls
+    'static',        # Mirror of pf.com/static
+    'lib',           # Mirror of pf.com/lib
+    'app.json',      # Application metadata
+
+    # Reserved for future use
+    'data',
+    )
 
 # Name of the session cookie for simple request authentication.
 SESSION_COOKIE_NAME = 'sessionkey'
 SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
 
-# Name of the reauth cookie on auth.app_id.pageforest.com.
+# Name of the reauth cookie on app_id.pageforest.com
 REAUTH_COOKIE_NAME = 'reauth'
+REAUTH_COOKIE_PATH = '/auth/reauth'
 REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 
 # List of callables that know how to import templates from various sources.
@@ -121,17 +181,18 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     # 'django.contrib.messages.context_processors.messages',
     'utils.context_processors.safe_settings',
     'utils.context_processors.combined_files',
+    'apps.middleware.app_context',
+    'auth.middleware.user_context',
 )
 
 MIDDLEWARE_CLASSES = (
     'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    # 'django.contrib.sessions.middleware.SessionMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'utils.middleware.RequestMiddleware',  # Put request in threading.local().
-    'apps.middleware.AppMiddleware',       # Get the app for this request.
-    'documents.middleware.DocMiddleware',  # Get the document for this request.
-    'auth.middleware.AuthMiddleware',      # Authenticate with session key.
+    'utils.middleware.RequestMiddleware',    # Put request in threading.local()
+    'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
+    'apps.middleware.AppMiddleware',         # Get the app.
+    'auth.middleware.AuthMiddleware',        # Get the signed in user.
+    'documents.middleware.DocMiddleware',    # Get the document.
+    'utils.middleware.ExceptionMiddleware',  # Get exception info.
 )
 
 ROOT_URLCONF = 'urls'
@@ -156,17 +217,28 @@ INSTALLED_APPS = (
     'utils',
 )
 
+if not RUNNING_ON_GAE:
+    import imp
+    try:
+        imp.find_module('django_nose')
+        INSTALLED_APPS = INSTALLED_APPS + ('django_nose', )
+        TEST_RUNNER = 'django_nose.run_tests'
+        DJANGO_NOSE_INSTALLED = True
+    except ImportError:
+        DJANGO_NOSE_INSTALLED = False
+
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG
 #COMBINE_FILES = True
 MEDIA_FILES = {
     'js': {
-        'pageforest': ['namespace', 'json2', 'crypto',
-                       'registration', 'formatutil', 'dateutil', 'data'],
+        'pageforest': ['namespace', 'base', 'vector', 'dom', 'json2', 'crypto',
+                       'timer', 'events', 'registration', 'sign-in-form',
+                       'formatutil', 'dateutil', 'data'],
         },
 
     'css': {
-        'default': ['main', 'home'],
+        'default': ['main', 'home', 'form'],
         },
     }
 
