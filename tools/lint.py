@@ -137,8 +137,10 @@ def main():
     elapsed = time() - start
 
     if total_errors or options.verbose and file_count:
-        sys.exit('Found %d errors in %d files (in %1.1f seconds ... %1.1f secs per file).' %
-                 (total_errors, file_count, elapsed, elapsed / file_count))
+        sys.exit(('Found %d errors in %d files ' +
+                 '(in %1.1f seconds ... %1.1f secs per file).') %
+                 (total_errors, file_count,
+                  elapsed, elapsed / file_count))
 
 
 if __name__ == '__main__':
