@@ -11,7 +11,7 @@ from utils.mixins import Cacheable, Migratable, Timestamped
 from utils import crypto
 
 from auth.models import User
-from documents.supermodels import SuperDoc
+from docs.supermodels import SuperDoc
 
 CACHE_PREFIX = 'GBH1~'
 

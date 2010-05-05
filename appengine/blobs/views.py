@@ -9,11 +9,11 @@ from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.shortcuts import get_int
 
-from storage.models import KeyValue
+from blobs.models import Blob
 
 
 @jsonp
-def key_value(request, doc_id, key):
+def blob(request, doc_id, key):
     """
     Dispatch requests to the key-value storage interface.
     """
@@ -24,50 +24,54 @@ def key_value(request, doc_id, key):
         # Static resources for this application.
         request.key_name = '/'.join(
             ('apps', request.app.get_app_id(), key or 'index.html'))
+    if not request.key_name.endswith('/'):
+        # Force a trailing slash to allow pre-order traversal on key
+        # names, and to prevent separate documents on /foo and /foo/
+        request.key_name += '/'
     method = request.GET.get('method', request.method)
-    function_name = 'key_value_' + method.lower()
+    function_name = 'blob_' + method.lower()
     if function_name not in globals():
-        allow = [name[10:].upper() for name in globals()
-                 if name.startswith('key_value_')]
+        allow = [name[5:].upper() for name in globals()
+                 if name.startswith('blob_')]
         allow.sort()
         return HttpResponseNotAllowed(allow)
     response = globals()[function_name](request)
     return response
 
 
-def key_value_head(request):
+def blob_head(request):
     """
     HTTP HEAD request handler.
     """
-    response = key_value_get(request)
+    response = blob_get(request)
     response.content = ''
     return response
 
 
-def key_value_get(request):
+def blob_get(request):
     """
     HTTP GET request handler.
     """
-    entity = KeyValue.get_by_key_name(request.key_name)
-    if entity is None:
-        raise Http404("Could not find entity " + request.key_name)
-    etag = '"%s"' % entity.sha1
+    blob = Blob.get_by_key_name(request.key_name)
+    if blob is None:
+        raise Http404("Could not find blob " + request.key_name)
+    etag = '"%s"' % blob.sha1
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         return HttpResponseNotModified()
-    last_modified = http_datetime(entity.modified)
+    last_modified = http_datetime(blob.modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
-    mimetype = guess_mimetype(request.key_name)
-    if mimetype == 'text/plain' and entity.valid_json:
+    mimetype = guess_mimetype(request.key_name.rstrip('/'))
+    if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
-    response = HttpResponse(entity.value, mimetype=mimetype)
+    response = HttpResponse(blob.value, mimetype=mimetype)
     response['Last-Modified'] = last_modified
     response['ETag'] = etag
     return response
 
 
 @login_required
-def key_value_put(request):
+def blob_put(request):
     """
     HTTP PUT request handler.
     """
@@ -75,26 +79,26 @@ def key_value_put(request):
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
         value = value.encode('utf-8')
-    entity = KeyValue(
+    blob = Blob(
         key_name=request.key_name,
         value=value,
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
-    entity.put()
+    blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
                             mimetype=settings.JSON_MIMETYPE)
-    response['Last-Modified'] = http_datetime(entity.modified)
+    response['Last-Modified'] = http_datetime(blob.modified)
     return response
 
 
 @login_required
-def key_value_delete(request):
+def blob_delete(request):
     """
     HTTP DELETE request handler.
     """
-    entity = KeyValue.get_by_key_name(request.key_name)
-    if entity is None:
-        raise Http404("Could not find entity " + request.key_name)
-    entity.delete()
+    blob = Blob.get_by_key_name(request.key_name)
+    if blob is None:
+        raise Http404("Could not find blob " + request.key_name)
+    blob.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}',
                         mimetype=settings.JSON_MIMETYPE)
 
@@ -104,19 +108,19 @@ def push_transaction(request, value, max_length):
     """
     Datastore transaction for appending to JSON array.
     """
-    entity = KeyValue.get_by_key_name(request.key_name)
-    if entity is None:
-        entity = KeyValue(key_name=request.key_name, value='[]')
-    array = json.loads(entity.value)
+    blob = Blob.get_by_key_name(request.key_name)
+    if blob is None:
+        blob = Blob(key_name=request.key_name, value='[]')
+    array = json.loads(blob.value)
     array.append(value)
     array = array[-max_length:]
-    entity.value = json.dumps(array)
-    entity.put()
+    blob.value = json.dumps(array)
+    blob.put()
     return len(array)
 
 
 @login_required
-def key_value_push(request):
+def blob_push(request):
     """
     PUSH method request handler.
     """
@@ -133,13 +137,13 @@ def key_value_push(request):
         mimetype=settings.JSON_MIMETYPE)
 
 
-def key_value_slice(request):
+def blob_slice(request):
     """
     SLICE method request handler.
     """
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
-    response = key_value_get(request)
+    response = blob_get(request)
     array = json.loads(response.content)
     if end is not None:
         array = array[:end]

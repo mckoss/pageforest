@@ -52,8 +52,8 @@ def dashboard(request):
     dictionary = {
         'users_chart': chart(hours, 'users', '00FF00'),
         'apps_chart': chart(hours, 'apps', '0000FF'),
-        'documents_chart': chart(hours, 'documents', 'FFFF00'),
-        'keyvalues_chart': chart(hours, 'keyvalues', 'FF0000'),
+        'docs_hart': chart(hours, 'documents', 'FFFF00'),
+        'blobs_chart': chart(hours, 'keyvalues', 'FF0000'),
         }
     return render_to_response(request, 'dashboard/index.html', dictionary)
 

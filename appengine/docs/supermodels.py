@@ -17,6 +17,13 @@ class SuperDoc(Cacheable, Migratable, Timestamped):
     writers = db.StringListProperty()  # Usernames that have write access.
     readers = db.StringListProperty()  # Usernames that have read access.
 
+    def normalize_lists(self):
+        """
+        Force lowercase for all readers and writers.
+        """
+        self.readers = [username.lower() for username in self.readers]
+        self.writers = [username.lower() for username in self.writers]
+
     def is_readable(self, user=None):
         """
         Does this user have read permissions on this document?

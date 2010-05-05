@@ -4,9 +4,26 @@ from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
+from utils.shortcuts import render_to_response
 from auth.middleware import AccessDenied
+from auth.decorators import login_required
 
-from storage.models import KeyValue
+from docs.models import Doc
+from blobs.models import Blob
+
+
+@login_required
+@method_required('GET')
+def index(request):
+    """
+    Show a list of documents for this user.
+    """
+    query = Doc.all()
+    query.filter('writers', request.user.username.lower())
+    query.order('-modified')
+    docs_list = query.fetch(20)
+    return render_to_response(request, 'docs/index.html',
+                              {'docs_list': docs_list})
 
 
 @jsonp
@@ -27,10 +44,10 @@ def document_get(request):
     """
     if not request.doc.is_readable(request.user):
         return AccessDenied(request)
-    # Get extra data from key-value store.
-    data = KeyValue.get_by_key_name(request.doc.key().name())
-    if data:
-        extra = {"json": json.loads(data.value)}
+    # Get extra data from blob store.
+    blob = Blob.get_by_key_name(request.doc.key().name())
+    if blob:
+        extra = {"blob": json.loads(blob.value)}
     else:
         extra = None
     # Generate pretty JSON output.
@@ -58,6 +75,9 @@ def document_put(request):
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
+    request.doc.normalize_lists()
+    if request.user.username.lower() not in request.doc.writers:
+        request.doc.writers.insert(0, request.user.username.lower())
     request.doc.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)

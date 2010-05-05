@@ -1,6 +1,6 @@
 from google.appengine.ext import db
 
-from documents.supermodels import SuperDoc
+from docs.supermodels import SuperDoc
 from apps.models import App
 
 
