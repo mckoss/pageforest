@@ -80,7 +80,15 @@ class FileWalker(object):
         file_path = file_path.lower()
         self.pass_dict[file_path] = file_dict
 
-    def set_passing(self):
+    def set_passing(self, pass_key=None):
+        """
+        Mark the current file as passing the current test.
+
+        If one is provided, we can set a different pass_key than the one
+        controlling the iteration filter (has_passed).
+        """
+        if pass_key is None:
+            pass_key = self.pass_key
         file_dict = self.get_file_dict(self.file_path)
         if file_dict is None:
             file_dict = {'modified': int(os.path.getmtime(self.file_path))}
