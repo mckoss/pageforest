@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra-head %}
+<style type="text/css">
+body {
+  background-color: black;
+  color: white;
+}
+th { text-align: left; }
+td.number { text-align: center; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<table>
+<tr>
+  <th style="color:#00FF00">New users</th>
+  <td><img src="{{ users_chart }}" /></td>
+</tr>
+<tr>
+  <th style="color:#0000FF">New apps</th>
+  <td><img src="{{ apps_chart }}" /></td>
+</tr>
+<tr>
+  <th style="color:#FFFF00">New docs</th>
+  <td><img src="{{ documents_chart }}" /></td>
+</tr>
+<tr>
+  <th style="color:#FF0000">New keys</th>
+  <td><img src="{{ keyvalues_chart }}" /></td>
+</tr>
+</table>
+
+<table>
+<tr><th>Environment</th><th>Value</th></tr>
+<tr><td>APPLICATION_ID</td><td>{{ APPLICATION_ID }}</td></tr>
+<tr><td>CURRENT_VERSION_ID</td><td>{{ CURRENT_VERSION_ID }}</td></tr>
+<tr><td>SERVER_SOFTWARE</td><td>{{ SERVER_SOFTWARE }}</td></tr>
+<tr><td>AUTH_DOMAIN</td><td>{{ AUTH_DOMAIN }}</td></tr>
+<tr><td></td><td></td></tr>
+</table>
+{% endblock content %}
