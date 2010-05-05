@@ -2,7 +2,13 @@ syntax: glob
 
 *.pyc
 .svn/*
-check.log
+*.log
 *~
+\#*\#
 *.orig
+*.pass
+TAGS
+nosetests.xml
+coverage.xml
+.coverage
 .url

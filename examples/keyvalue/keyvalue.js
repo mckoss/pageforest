@@ -1,20 +1,5 @@
 global_namespace.define("com.pageforest.keyvalue", function (ns) {
 
-    var upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    var lower = 'abcdefghijklmnopqrstuvwxyz';
-    var digits = '0123456789';
-    var base64 = upper + lower + digits + '+/';
-    var base64url = upper + lower + digits + '-_';
-
-    function randomString(chars, len) {
-        var radix = chars.length;
-        var uuid = [];
-        for (var i = 0; i < len; i++) {
-            uuid[i] = chars[0 | Math.random() * radix];
-        }
-        return uuid.join('');
-    };
-
     function formatResult(xhr, status, message) {
         var result = '';
         if (xhr) {
@@ -39,46 +24,36 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
                               '</div>');
     }
 
-    function reAuthSuccess(xhr, status, message) {
-        if (message.__class__ == 'Error') {
-            showError(xhr, status, message.message);
-            return;
-        }
-        // Attempt to sign in with a new browser tab.
-        ns.authToken = message.token;
-        var url = "http://auth.pageforest.com/sign-in/" + ns.authToken;
-        ns.newTab(url);
-        // Poll the server for the session key.
-        pollError(xhr, status, message);
-    }
-
-    function poll() {
-        $.ajax({
-            url: "/auth/poll/" + ns.token + "?seconds=5",
-            error: pollError,
-            success: signInSuccess
-        });
-    }
-
-    function pollError(xhr, status, message) {
-        showError(xhr, status, message);
-        setTimeout(poll, 5000); // Poll again after 5 seconds.
-    }
-
     function signInSuccess(message, status, xhr) {
         // Authentication was successful, we got a new session key.
         showSuccess(message, status, xhr);
         ns.sessionKey = message;
-        // ns.setCookie('sessionkey', message);
+        ns.setCookie('sessionkey', message);
+    }
+
+    function pollCookie() {
+        console.log(document.cookie);
+    }
+
+    function newTab(url) {
+        var win = window.open(url, '_blank');
+        // REVIEW: Why is this needed here?
+        if (win && win.focus) {
+            win.focus();
+        }
     }
 
     ns.signIn = function () {
-        ns.token = randomString(base64url, 20);
-        var domain = location.host;
-        domain = "www" + domain.substr(domain.indexOf('.'));
-        var url = "http://" + domain + "/auth/sign-in/" + ns.token;
-        ns.newTab(url);
-        pollError(); // Start polling for the session key.
+        // Open a new tab for the sign-in page.
+        var dot = location.host.indexOf('.');
+        var www = "www" + location.host.substr(dot);
+        var url = "http://" + www + "/auth/sign-in/keyvalue";
+        newTab(url);
+        // Start polling for the session key cookie.
+        if (ns.polling) {
+            clearInterval(ns.polling);
+        }
+        ns.polling = setInterval(pollCookie, 1000);
     };
 
     ns.signOut = function () {
@@ -111,12 +86,5 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         path = '; path=' + (path || '/');
         document.cookie = name + '=' + value + expires + path;
     };
-
-    ns.newTab = function (url) {
-        var win = window.open(url, '_blank');
-        if (win && win.focus) {
-            win.focus();
-        }
-    }
 
 }); // com.pageforest.keyvalue

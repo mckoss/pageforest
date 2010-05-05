@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
     Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
@@ -8,10 +9,7 @@ from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.shortcuts import get_int
 
-from apps.models import App
 from storage.models import KeyValue
-
-JSON_MIME_TYPE = 'application/json'
 
 
 @jsonp
@@ -20,9 +18,12 @@ def key_value(request, doc_id, key):
     Dispatch requests to the key-value storage interface.
     """
     if doc_id:
-        request.key_name = '/'.join((request.app_id, doc_id.lower(), key))
-    else:  # Static resources for this application.
-        request.key_name = '/'.join(('meta', request.app_id, key))
+        request.key_name = '/'.join(
+            (request.app.get_app_id(), doc_id.lower(), key))
+    else:
+        # Static resources for this application.
+        request.key_name = '/'.join(
+            ('meta', request.app.get_app_id(), key or 'index.html'))
     method = request.GET.get('method', request.method)
     function_name = 'key_value_' + method.lower()
     if function_name not in globals():
@@ -31,36 +32,45 @@ def key_value(request, doc_id, key):
         allow.sort()
         return HttpResponseNotAllowed(allow)
     response = globals()[function_name](request)
-    if 'HTTP_X_HELLO' in request.META:
-        response['X-Echo'] = request.META['HTTP_X_HELLO']
     return response
 
 
 def key_value_head(request):
-    """HTTP HEAD request handler."""
+    """
+    HTTP HEAD request handler.
+    """
     response = key_value_get(request)
     response.content = ''
     return response
 
 
 def key_value_get(request):
-    """HTTP GET request handler."""
+    """
+    HTTP GET request handler.
+    """
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404("Could not find entity " + request.key_name)
+    etag = '"%s"' % entity.sha1
+    if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
+        return HttpResponseNotModified()
     last_modified = http_datetime(entity.modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     mimetype = guess_mimetype(request.key_name)
+    if mimetype == 'text/plain' and entity.valid_json:
+        mimetype = settings.JSON_MIMETYPE
     response = HttpResponse(entity.value, mimetype=mimetype)
-    if last_modified:
-        response['Last-Modified'] = last_modified
+    response['Last-Modified'] = last_modified
+    response['ETag'] = etag
     return response
 
 
 @login_required
 def key_value_put(request):
-    """HTTP PUT request handler."""
+    """
+    HTTP PUT request handler.
+    """
     value = request.GET.get('value', request.raw_post_data)
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
@@ -71,25 +81,29 @@ def key_value_put(request):
         ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
     entity.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
-                            mimetype='application/json')
+                            mimetype=settings.JSON_MIMETYPE)
     response['Last-Modified'] = http_datetime(entity.modified)
     return response
 
 
 @login_required
 def key_value_delete(request):
-    """HTTP DELETE request handler."""
+    """
+    HTTP DELETE request handler.
+    """
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         raise Http404("Could not find entity " + request.key_name)
     entity.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}',
-                        mimetype='application/json')
+                        mimetype=settings.JSON_MIMETYPE)
 
 
 @run_in_transaction
 def push_transaction(request, value, max_length):
-    """Datastore transaction for appending to JSON array."""
+    """
+    Datastore transaction for appending to JSON array.
+    """
     entity = KeyValue.get_by_key_name(request.key_name)
     if entity is None:
         entity = KeyValue(key_name=request.key_name, value='[]')
@@ -103,20 +117,26 @@ def push_transaction(request, value, max_length):
 
 @login_required
 def key_value_push(request):
-    """PUSH method request handler."""
+    """
+    PUSH method request handler.
+    """
     max_length = get_int(request.GET, 'max', 100, min=0, max=1000)
-    try:  # Attempt to decode JSON.
+    try:
+        # Attempt to decode JSON.
         value = json.loads(request.raw_post_data)
-    except ValueError:  # Treat it as a simple string.
+    except ValueError:
+        # Treat it as a simple string.
         value = request.raw_post_data
     length = push_transaction(request, value, max_length)
     return HttpResponse(
         '{"status": 200, "statusText": "Pushed", "newLength": %d}' % length,
-        mimetype=JSON_MIME_TYPE)
+        mimetype=settings.JSON_MIMETYPE)
 
 
 def key_value_slice(request):
-    """SLICE method request handler."""
+    """
+    SLICE method request handler.
+    """
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
     response = key_value_get(request)

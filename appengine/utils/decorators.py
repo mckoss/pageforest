@@ -1,8 +1,10 @@
+import logging
 import time
 import email
 import httplib
 
-from django.http import HttpResponse, HttpResponseNotAllowed
+from django.http import HttpResponse, HttpResponseNotAllowed, Http404, \
+    HttpResponseNotFound, HttpResponseServerError
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
@@ -45,12 +47,21 @@ def jsonp(func):
     callback for JSONP.
     """
     def wrapper(request, *args, **kwargs):
-        response = func(request, *args, **kwargs)
         # Check if the query string contains a callback parameter.
         callback = request.GET.get('callback', None)
-        if not callback:
-            return response
+        if callback is None:
+            return func(request, *args, **kwargs)
+
+        # Try to generate a response.
+        try:
+            response = func(request, *args, **kwargs)
+        except Http404, error:
+            response = HttpResponseNotFound(unicode(error))
+        except Exception, error:
+            logging.error("JSONP exception handler: " + unicode(error))
+            response = HttpResponseServerError("Application error.")
         content = response.content
+
         # Tunnel HTTP errors using status code 200.
         if response.status_code / 100 != 2:
             content = json.dumps({
@@ -58,13 +69,16 @@ def jsonp(func):
                 "status": response.status_code,
                 "statusText": httplib.responses[response.status_code],
                 "message": content,
-                }, sort_keys=True, indent=0)
+                }, sort_keys=True, indent=4)
             response.status_code = 200
             response['Content-Type'] = 'application/json'
+
         # Encode arbitrary strings as valid JSON.
         if response['Content-Type'] != 'application/json':
-            content = content.rstrip('\n')  # Remove trailing newlines.
-            content = json.dumps(content)   # Encode to valid JSON string.
+            # Remove trailing newlines.
+            content = content.rstrip('\n')
+            content = json.dumps(content)
+
         # Add the requested callback function.
         response.content = callback + '(' + content + ')'
         response['Content-Type'] = 'application/javascript'

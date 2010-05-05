@@ -2,11 +2,11 @@
 // "this" - points to target object
 // 1st argument is event
 
-global_namespace.Define('startpad.events', function(NS) {
-        var DOM = NS.Import('startpad.DOM');
-        var Vector = NS.Import('startpad.vector');
+global_namespace.define('org.startpad.events', function(NS) {
+        var DOM = NS.lookup('org.startpad.DOM');
+        var Vector = NS.lookup('org.startpad.vector');
 
-NS.Extend(NS, {
+NS.extend(NS, {
 fnHandlers: [],
 
 AddEventFn: function(elem, stEvt, fnCallback, fCapture)

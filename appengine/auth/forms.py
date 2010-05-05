@@ -1,6 +1,10 @@
+import re
+import string
+
 from django import forms
 from django.conf import settings
 from django.utils import simplejson as json
+from django.utils.safestring import mark_safe
 
 from auth.models import User
 
@@ -13,36 +17,65 @@ zxcvbnm,./
 yxcvbnm,.-
 """.split()
 
+USERNAME_REGEX_MATCH = re.compile(settings.USERNAME_REGEX).match
 
-class RegistrationForm(forms.Form):
-    username = forms.RegexField(
-        regex=r'^[A-Za-z0-9]+$', max_length=30,
-        error_messages={'invalid': "Username must be alphanumeric."})
-    email = forms.EmailField(max_length=75)
+
+class LabeledCheckbox(forms.CheckboxInput):
+    """
+    Checkbox with a label.
+    """
+
+    def __init__(self, attrs=None, label=None, field_id=None):
+        super(LabeledCheckbox, self).__init__(attrs)
+        self.label = label
+        self.field_id = field_id
+
+    def render(self, name, value, attrs=None):
+        """
+        Generate HTML for a checkbox with a label.
+        """
+        check_string = super(LabeledCheckbox, self).render(name, value, attrs)
+        import logging
+        logging.info('self %r' % dir(self))
+        check_string += '&nbsp;<label for="id_%s">%s</label>' % (
+            self.field_id, self.label)
+        return mark_safe(check_string)
+
+
+class UsernamePasswordForm(forms.Form):
+    """
+    Reusable form class with a username and password field.
+    Both RegistrationForm and SignInForm are subclasses of this.
+    """
+    username = forms.CharField(min_length=2, max_length=30)
     password = forms.CharField(min_length=6, max_length=40,
         widget=forms.PasswordInput(render_value=False))
-    repeat = forms.CharField(max_length=40,
-        widget=forms.PasswordInput(render_value=False))
-    tos = forms.BooleanField(
-        label="Terms of Service",
-        error_messages={'required': "You must agree to the Terms of Service."})
 
     def clean_username(self):
         """
-        Validate that the username is available.
+        Validate the username and return helpful error messages.
         """
         username = self.cleaned_data['username']
         key_name = username.lower()
+        if username[0] not in string.ascii_letters:
+            raise forms.ValidationError(
+                "Username must start with a letter.")
+        if username[-1] not in string.ascii_letters + string.digits:
+            raise forms.ValidationError(
+                "Username must end with a letter or number.")
+        if not USERNAME_REGEX_MATCH(username):
+            raise forms.ValidationError(
+                "Username must contain only letters, numbers and dashes.")
         if key_name in settings.RESERVED_USERNAMES:
             raise forms.ValidationError("This username is reserved.")
-        if User.get_by_key_name(key_name):
-            raise forms.ValidationError("This username is already taken.")
         return username
 
     def clean_password(self):
         """
         Check that the password is not too silly.
         """
+        # TODO: Move this to client-side checks - and don't send password in
+        # clear - send the HMAC, directly.
         password = self.cleaned_data['password']
         if password.isdigit() or password == len(password) * password[0]:
             raise forms.ValidationError("This password is too simple.")
@@ -52,6 +85,42 @@ class RegistrationForm(forms.Form):
             if lower in row or backwards in row:
                 raise forms.ValidationError("This password is too simple.")
         return password
+
+    def errors_json(self):
+        """
+        Validate and return form error messages as JSON.
+        """
+        if self.is_valid():
+            return '{}'
+        errors = {}
+        for key, val in self.errors.iteritems():
+            errors[key] = [unicode(msg) for msg in val]
+        return json.dumps(errors)
+
+
+class RegistrationForm(UsernamePasswordForm):
+    """
+    Registration form for new users, with helpful error messages.
+    """
+    repeat = forms.CharField(max_length=40, label="Repeat password",
+        widget=forms.PasswordInput(render_value=False))
+    email = forms.EmailField(max_length=75, label="Email address")
+    tos = forms.BooleanField(
+        label="Terms of Service",
+        widget=LabeledCheckbox(label="I agree", field_id='tos'),
+        error_messages={'required':
+          mark_safe('You must agree to the <a href="http://' +
+                    settings.DEFAULT_DOMAIN + '/' + 'terms-of-service">' +
+                    'Terms of Service</a>.')})
+
+    def clean_username(self):
+        """
+        Verify that the username is available.
+        """
+        username = super(RegistrationForm, self).clean_username()
+        if User.lookup(username):
+            raise forms.ValidationError("This username is already taken.")
+        return username
 
     def clean(self):
         """
@@ -65,7 +134,7 @@ class RegistrationForm(forms.Form):
                     "The two password fields are not the same.")
         return self.cleaned_data
 
-    def save(self):
+    def save(self, request):
         """
         Create a new user with the form data.
         """
@@ -75,15 +144,35 @@ class RegistrationForm(forms.Form):
                     email=self.cleaned_data['email'])
         user.set_password(self.cleaned_data['password'])
         user.put()
+        user.send_email_verification(request)
         return user
 
-    def errors_json(self):
+
+class SignInForm(UsernamePasswordForm):
+    """
+    User authentication form.
+    """
+    app_auth = forms.BooleanField(
+        label="Application",
+        widget=LabeledCheckbox(label="Allow access", field_id='app_auth'))
+
+    def clean_username(self):
         """
-        Validate and return form error messages as JSON.
+        Check that the user exists.
         """
-        if self.is_valid():
-            return '{}'
-        errors = {}
-        for key, val in self.errors.iteritems():
-            errors[key] = [unicode(msg) for msg in val]
-        return json.dumps(errors)
+        username = super(SignInForm, self).clean_username()
+        user = User.lookup(username)
+        if user is None:
+            raise forms.ValidationError("No account for %s." % username)
+        self.cleaned_data['user'] = user
+        return username
+
+    def clean(self):
+        """
+        Raise an error if the password does not match.
+        """
+        user = self.cleaned_data.get('user', None)
+        password = self.cleaned_data.get('password', None)
+        if user and password and not user.check_password(password):
+            raise forms.ValidationError("Invalid password.")
+        return self.cleaned_data

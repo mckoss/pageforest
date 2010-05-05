@@ -1,7 +1,9 @@
-{% extends "base.html" %}
+{% extends "page.html" %}
 
 {% block title %}Page not found{% endblock %}
 
-{% block content %}
-The page you requested could not be found.
+{% block both-columns %}
+{{ request.app.app_id }}
+{{ request.exception }}
+<h1 class='error'>The page you requested could not be found.</h1>
 {% endblock %}

@@ -1,85 +1,106 @@
 {% extends "page.html" %}
-{% block left-column %}
+{% block title %}Terms of Service{% endblock %}
+{% block both-columns %}
 <h2>Agreement</h2>
 
 <ul>
-<li>This agreement is between you, the user of the {{SITE_NAME}} web site
-    (the Service), and ({{SITE_NAME}}).</li>
-<li>In order to use the Service, you must agree to these Terms of Service.</li>
-<li>You must be 13 years or older to use the Service.</li>
-<li>{{SITE_NAME}} may terminate your use of the Service at any time, if,
-    at the sole discretion of StartPad,
-    you have violated the terms of this agreement.</li>
-<li>{{SITE_NAME}} reserves the right to change this agreement without
-    prior notice.</li>
+<li>This agreement is between <b>you</b>, the user of the {{DEFAULT_DOMAIN}} and affiliated web sites
+    ({{SITE_NAME}}), and <b>{{SITE_OWNER}}</b> (<i>{{SITE_CONTACT_INFO}}</i>).</li>
+<li>In order to use {{SITE_NAME}}, you must agree to these Terms of Service.</li>
+<li>You must be 13 years or older, or have the permission of your adult guardian.</li>
+<li>{{SITE_OWNER}} may terminate your use of {{SITE_NAME}} at any time, if,
+    at the sole discretion of {{SITE_OWNER}}, you have violated the terms of this agreement.</li>
+<li>{{SITE_OWNER}} reserves the right to change this agreement without prior notice.</li>
 </ul>
 
 <h2>Account</h2>
 
 <ul>
-<li>You may use the Service anonymously.</li>
-<li>If you do create an account (register), you must provide correct contact (email) information so we can get
-        in touch with you about your use of the service.</li>
-<li>You agree not to try to access the administrative features of the Service without authorization.</li>
-<li>You agree not to attempt to impersonate or otherwise use the Service on behalf of another user without
-        their prior knowledge and consent.</li>
-<li>You agree not to attempt to deny access or disrupt the use of the Service by any other user.</li>
-</ul>
-
-<h2>Privacy Policy</h2>
-
-<ul>
-<li>The <a href="http://code.google.com/appengine/privacy.html">Google App Engine Privacy Policy</a>
-        and <a href="http://www.google.com/privacypolicy.html">Google Privacy Policy</a> is included by reference in
-        this agreement.</li>
-<li>{{SITE_NAME}} will have access to your user name and email address if you register with the Service.</li>
-<li>{{SITE_NAME}} will have access to all information provided by you to the service.</li>
-<li>Email addresses will not disclosed to any 3rd party without your prior consent.</li>
+<li>You may use {{SITE_NAME}} anonymously.</li>
+<li>If you do create an account (<a href="/auth/sign-up">Sign Up</a>), you must provide correct contact
+    information (email address) so we can get in touch with you about your use of the service.</li>
+<li>You agree to create no more than one (1) account on {{SITE_NAME}} on behalf each individual or legal entity.</li>
+<li>You agree not to try to access the administrative features of {{SITE_NAME}} without authorization.</li>
+<li>You agree not to attempt to impersonate or otherwise use {{SITE_NAME}} on behalf of another user without
+    their prior knowledge and consent.</li>
+<li>You agree not to attempt to deny access or disrupt the use of {{SITE_NAME}} by any other user.</li>
 </ul>
 
 <h2>Fees</h2>
 
 <ul>
 <li>The Basic Service is provided to you without charge.  Premium Services may
-be offered by {{SITE_NAME}} for a one-time of subscription fee.</li>
+    be offered by {{SITE_NAME}} for a one-time or periodic subscription fee.</li>
 </ul>
 
 <h2>Content</h2>
 
 <ul>
-<li>"Content" is defined as any explicit and implicit information provided to the Service in conjunction with
-        your use of the Service.</li>
-<li>You understand that all Content to which you may have access through use of the Service is the sole
-        responsibility of the person from which that Content originated.</li>
-<li>{{SITE_NAME}} may, at it's sole discretion, remove any Content from the Service, without prior notice.</li>
-<li>You agree {{SITE_NAME}} has no responsibility or liability for the deletion or failure to store any
-        Content you provide to the Service.</li>
+<li>"Content" is defined as any explicit and implicit information provided to {{SITE_NAME}} in conjunction with
+    your use of {{SITE_NAME}}.</li>
+<li>You understand that all Content to which you may have access through use of {{SITE_NAME}} is the sole
+    responsibility of the person from which that Content originated.</li>
+<li>{{SITE_NAME}} provides data storage services to 3rd party applications (Applications), for the purposes
+    of saving application data on your behalf.</li>
+<li>You may grant or deny access to individual 3rd party Applications to create, access, and modify data in
+    your {{SITE_NAME}} account.</li>
+<li>{{SITE_NAME}} will not allow 3rd party access to your non-public data without your explicit consent.</li>
+<li>You may revoke the right of an Application to access your account at any time.</li>
+<li>You agree that {{SITE_OWNER}} has no responsibility or liability for the deletion or failure to store any
+    Content you provide to {{SITE_NAME}}.</li>
+</ul>
+
+<h2>Privacy Policy</h2>
+
+<ul>
+<li>The <a href="http://code.google.com/appengine/privacy.html">Google App Engine Privacy Policy</a>
+    and <a href="http://www.google.com/privacypolicy.html">Google Privacy Policy</a> is included by reference in
+    this agreement.</li>
+<li>{{SITE_OWNER}} will have access to all information provided by you to the service (including your name,
+     username, and email address).</li>
+<li>Your username may be disclosed publicly on {{SITE_NAME}}.</li>
+<li>Your Email address will not be disclosed to any 3rd party without your prior consent.</li>
+<li>Your password will not be disclosed to any 3rd party, nor used for any other purpose than to authenticate
+    your use of {{SITE_NAME}}.</li>
 </ul>
 
 <h2>License from You</h2>
 
 <ul>
-<li>By providing Content to the Service, you give {{SITE_NAME}} a worldwide, royalty-free, and
-        non-exclusive license to reproduce, adapt, modify, translate, publish, publicly display and distribute
-        such Content for the purpose of enabling {{SITE_NAME}} to provide you and other users with the Service
-        in accordance with its privacy policy.</li>
+<li>By providing Content to {{SITE_NAME}}, you give {{SITE_OWNER}} a worldwide, royalty-free, and
+    non-exclusive license to reproduce, adapt, modify, translate, publish, publicly display and distribute
+    such Content for the purpose of enabling {{SITE_OWNER}} to provide you and other users with the {{SITE_NAME}}
+    service in accordance with its privacy policy.</li>
 </ul>
 
+
+<h2>Terms for Application Developers</h2>
+
+<ul>
+<li>You may develop applications using {{SITE_NAME}} for the purposes of allowing {{SITE_NAME}} users
+    to create, access, and modify data in the {{SITE_NAME}} account.</li>
+<li>Your application must not acquire a user's {{SITE_NAME}} password.</li>
+<li>If your application stores content provided by a user outside of the {{SITE_NAME}} Service
+    you agree to disclose prominently to each user which information is stored independently of
+    {{SITE_NAME}} and to have a publicly available privacy policy covering your use of that content.</li>
+<li>You agree to adhere to this {{SITE_NAME}} Privacy Policy with respect to all information you collect
+    from {{SITE_NAME}} users.</li>
+</ul>
 
 <h2>Exclusion of Warranties</h2>
 
 <ul>
 <li>The Service is provided without warranty or liability for losses which may be incurred by you in
-        conjunction with your use of the Service.</li>
-<li>You agree that your use of the Service is at your sole risk and is provided to you "as is" and
-        "as available".</li>
+    conjunction with your use of {{SITE_NAME}}.</li>
+<li>You agree that your use of {{SITE_NAME}} is at your sole risk and is provided to you "as is" and
+    "as available".</li>
 </ul>
 
 <h2>Limitation of Liability</h2>
 
 <ul>
-<li>You agree that {{SITE_NAME}} shall not be liable to you for any damages which may be incurred by you
-        in conjunction with the use of the Service.</li>
+<li>You agree that {{SITE_OWNER}} shall not be liable to you for any damages which may be incurred by you
+    in conjunction with the use of {{SITE_NAME}}.</li>
 </ul>
 
-{% endblock left-column %}
+{% endblock %}
