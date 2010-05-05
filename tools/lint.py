@@ -98,30 +98,6 @@ def main():
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
         command.append('-e')
-<<<<<<< local
-    command = ' '.join(command)
-    walk = pftool.FileWalker(matches=('*.py', ), pass_key='pylint')
-    total_errors = 0
-    for file_name in walk.walk_files(*args):
-        if options.verbose:
-            print "command: %s" % command + ' ' + file_name
-        pylint = subprocess.Popen(command + ' ' + file_name, shell=True,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT)
-        stdout, stderr = pylint.communicate()
-        # Filter error messages and count errors.
-        errors = 0
-        for line in stdout.splitlines():
-            line = line.rstrip()
-            if ignore(line) or not line:
-                continue
-            print line
-            errors += 1
-        if errors == 0:
-            walk.set_passing()
-        total_errors += errors
-=======
->>>>>>> other
 
     if options.force:
         command.extend(args)
