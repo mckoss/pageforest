@@ -22,13 +22,13 @@ class UserTest(TestCase):
         self.paul.put()
 
     def test_random_salt(self):
-        """Test that the same password generates different hashes."""
+        """The same password generates different hashes."""
         self.peter.set_password('secret')
         self.paul.set_password('secret')
         self.assertNotEqual(self.peter.password, self.paul.password)
 
     def test_timestamps(self):
-        """Test that the timestamps are properly set."""
+        """The timestamps are properly set."""
         self.assertTrue(self.peter.created >= self.start_time)
         self.assertTrue(self.peter.last_login >= self.start_time)
         self.assertTrue(self.paul.created >= self.peter.created)
@@ -62,7 +62,7 @@ class RegistrationTest(TestCase):
         self.www = Client(HTTP_HOST='www.pageforest.com')
 
     def test_username_invalid_first(self):
-        """Test that invalid usernames are rejected."""
+        """Invalid usernames are rejected."""
         for char in '012_-.,!?$:@/':
             response = self.www.post(
                 '/auth/sign-up', {'username': char + 'name'})
@@ -70,7 +70,7 @@ class RegistrationTest(TestCase):
                 response, "Username must start with a letter.")
 
     def test_username_invalid_last(self):
-        """Test that invalid usernames are rejected."""
+        """Invalid usernames are rejected."""
         for char in '_-.,!?$:@/':
             response = self.www.post(
                 '/auth/sign-up', {'username': 'name' + char})
@@ -78,7 +78,7 @@ class RegistrationTest(TestCase):
                 response, "Username must end with a letter or number.")
 
     def test_username_invalid(self):
-        """Test that invalid usernames are rejected."""
+        """Invalid usernames are rejected."""
         for char in '_.,!?$:@/':
             response = self.www.post(
                 '/auth/sign-up', {'username': 'a' + char + 'b'})
@@ -86,30 +86,30 @@ class RegistrationTest(TestCase):
                 "Username must contain only letters, numbers and dashes.")
 
     def test_username_too_short(self):
-        """Test that excessively short usernames are rejected."""
+        """Excessively short usernames are rejected."""
         response = self.www.post('/auth/sign-up', {'username': 'a'})
         self.assertContains(response, "at least 2 characters")
 
     def test_username_too_long(self):
-        """Test that excessively long usernames are rejected."""
+        """Excessively long usernames are rejected."""
         response = self.www.post('/auth/sign-up', {'username': 'a' * 31})
         self.assertContains(response,
             "Ensure this value has at most 30 characters (it has 31).")
 
     def test_username_reserved(self):
-        """Test that reserved usernames are enforced."""
+        """Reserved usernames are enforced."""
         for name in 'root admin test'.split():
             response = self.www.post('/auth/sign-up', {'username': name})
             self.assertContains(response, "This username is reserved.")
 
     def test_password_silly(self):
-        """Test that silly passwords are rejected."""
+        """Silly passwords are rejected."""
         for password in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
             response = self.www.post('/auth/sign-up', {'password': password})
             self.assertContains(response, "This password is too simple.")
 
     def test_username_taken(self):
-        """Test that existing usernames are reserved."""
+        """Existing usernames are reserved."""
         response = self.www.post('/auth/sign-up', {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
@@ -124,6 +124,7 @@ class SignInTest(TestCase):
         self.www = Client(HTTP_HOST='www.pageforest.com')
 
     def test_errors(self):
+        """Errors on sign-in form."""
         cases = ({'fields': {'username': '', 'password': ''},
                   'expect': 'This field is required'},
                  {'fields': {'username': 'peter', 'password': 'weak'},
@@ -137,13 +138,43 @@ class SignInTest(TestCase):
             self.assertContains(response, case['expect'])
 
     def test_success(self):
+        """Sign-in form success - cookie and redirect - sign-out."""
+        response = self.www.post('/auth/sign-in',
+                                 {'username': 'peter',
+                                  'password': 'password'})
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].endswith('/auth/sign-in/'))
+        cookie = response.cookies['sessionkey'].value
+        self.assertTrue(cookie.startswith('www/peter/1273'))
+
+        # Simulate the redirect after POST
+        response = self.www.post('/auth/sign-in/')
+        self.assertContains(response, 'Peter, you are signed in to')
+
+        # Now sign out the user - and check his cookies
+        response = self.www.get('/auth/sign-out/')
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response['Location'].endswith('/auth/sign-in/'))
+        cookie = response.cookies['sessionkey']
+        self.assertEqual(cookie.value, '')
+        self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
+
+        # Simulate the redirect after GET
+        response = self.www.post('/auth/sign-in/')
+        self.assertContains(response, 'Sign in to Pageforest')
+
+    def test_cross_app(self):
+        """Sign in to an application as well as pageforest."""
         response = self.www
         response = self.www.post('/auth/sign-in',
                                  {'username': 'peter',
                                   'password': 'password'})
         self.assertEqual(response.status_code, 302)
-        print response['Location']
         self.assertTrue(response['Location'].endswith('/auth/sign-in/'))
+        cookie = response.cookies['sessionkey'].value
+        self.assertTrue(cookie.startswith('www/peter/1273'))
+        response = self.www.post('/auth/sign-in/')
+        self.assertContains(response, 'Peter, you are signed in to')
 
 
 class ChallengeVerifyTest(TestCase):
@@ -187,12 +218,12 @@ class ChallengeVerifyTest(TestCase):
         self.assertContains(response, 'Challenge invalid.', status_code=403)
 
     def test_bogus_login(self):
-        """Test that a bogus authentication string cannot login."""
+        """A bogus authentication string cannot login."""
         response = self.app_client.get('/auth/verify/x')
         self.assertContains(response, 'Expected 6 parts.', status_code=403)
 
     def test_expired_challenge(self):
-        """Test that an expired challenge stops working."""
+        """An expired challenge stops working."""
 
         def mock_time():
             """Mock up a 61 second delayed system time."""
@@ -208,7 +239,7 @@ class ChallengeVerifyTest(TestCase):
         self.assertContains(response, 'Challenge expired.', status_code=403)
 
     def test_replay(self):
-        """Test that a replay attack cannot login."""
+        """A replay attack cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         # First login should be successful.
         response = self.sign_and_verify(challenge)
@@ -218,19 +249,19 @@ class ChallengeVerifyTest(TestCase):
         self.assertContains(response, 'Already used.', status_code=403)
 
     def test_different_ip(self):
-        """Test that different IP address cannot login."""
+        """Different IP address cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         response = self.sign_and_verify(challenge, REMOTE_ADDR='1.1.1.1')
         self.assertContains(response, "IP address changed.", status_code=403)
 
     def test_unknown_user(self):
-        """Test that unknown user cannot login."""
+        """Unknown user cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         response = self.sign_and_verify(challenge, username='unknown')
         self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_wrong_password(self):
-        """Test that incorrect password cannot login."""
+        """Incorrect password cannot login."""
         challenge = self.app_client.get('/auth/challenge').content
         response = self.sign_and_verify(
             challenge, password=self.peter.password[::-1])
