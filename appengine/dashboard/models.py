@@ -6,7 +6,7 @@ from utils.mixins import Cacheable, Migratable
 
 from auth.models import User
 from apps.models import App
-from documents.models import Document
+from documents.models import Doc
 from storage.models import KeyValue
 
 PROPERTIES = ['users', 'apps', 'documents', 'keyvalues']
@@ -46,7 +46,7 @@ class StatsHour(Cacheable, Migratable):
         stop = start + timedelta(hours=1)
         self.users = count_entities(User, 'created', start, stop)
         self.apps = count_entities(App, 'created', start, stop)
-        self.documents = count_entities(Document, 'created', start, stop)
+        self.documents = count_entities(Doc, 'created', start, stop)
         self.keyvalues = count_entities(KeyValue, 'created', start, stop)
 
     def __unicode__(self):

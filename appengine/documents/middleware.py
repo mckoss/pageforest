@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from documents.models import Document
+from documents.models import Doc
 
 
 class DocMiddleware(object):
@@ -11,7 +11,7 @@ class DocMiddleware(object):
             return
         doc_id = parts[3]
         key_name = '/'.join((request.app.get_app_id(), doc_id.lower()))
-        request.doc = Document.get_by_key_name(key_name)
+        request.doc = Doc.get_by_key_name(key_name)
         if request.doc is None:
             # TODO: Return HttpResponseNotFound instead.
-            request.doc = Document(key_name=doc_id)
+            request.doc = Doc(key_name=doc_id)

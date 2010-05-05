@@ -4,7 +4,7 @@ from django.test import TestCase
 from django.test.client import Client
 
 from apps.models import App
-from documents.models import Document
+from documents.models import Doc
 from storage.models import KeyValue
 
 
@@ -14,10 +14,10 @@ class DocumentTest(TestCase):
         self.started = datetime.now()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'])
         self.app.put()
-        self.doc = Document(key_name='myapp/mydoc',
-                            app_id='myapp', doc_id='MyDoc',
-                            title="My Document", tags='one two three'.split(),
-                            readers=['anybody'], writers=['peter'])
+        self.doc = Doc(key_name='myapp/mydoc',
+                       app_id='myapp', doc_id='MyDoc',
+                       title="My Document", tags='one two three'.split(),
+                       readers=['anybody'], writers=['peter'])
         self.doc.put()
         self.data = KeyValue(key_name='myapp/mydoc', value='{"int": 123}')
         self.data.put()
@@ -26,12 +26,11 @@ class DocumentTest(TestCase):
     def test_get_absolute_url(self):
         """Test that the absolute URL is generated correctly."""
         self.assertEqual(self.doc.get_absolute_url(),
-                         'http://myapp.pageforest.com/docs/MyDoc')
+                         'http://myapp.pageforest.com/docs/MyDoc/')
 
     def test_json(self):
         """Test JSON serializer for document."""
         response = self.app_client.get('/docs/MyDoc')
-        self.assertContains(response, '"app_id": "myapp"')
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": ["anybody"]')

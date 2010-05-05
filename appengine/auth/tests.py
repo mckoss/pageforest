@@ -7,7 +7,7 @@ from django.test.client import Client
 
 from auth.models import User
 from apps.models import App
-from documents.models import Document
+from documents.models import Doc
 
 from utils import crypto
 
@@ -168,8 +168,10 @@ class ChallengeVerifyTest(TestCase):
 
         real_time = time.time
         time.time = mock_time
-        challenge = self.app_client.get('/auth/challenge').content
-        time.time = real_time
+        try:
+            challenge = self.app_client.get('/auth/challenge').content
+        finally:
+            time.time = real_time
         response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Challenge expired.', status_code=403)
 
@@ -213,8 +215,8 @@ class SimpleAuthTest(TestCase):
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
-        self.doc = Document(key_name='myapp/mydoc', title='My Document',
-                            readers=['peter'], writers=['peter'])
+        self.doc = Doc(key_name='myapp/mydoc', title='My Document',
+                       readers=['peter'], writers=['peter'])
         self.doc.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
                        secret=crypto.random64())
