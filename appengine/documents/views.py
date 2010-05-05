@@ -13,8 +13,6 @@ def document(request, doc_id):
     """
     Get document metadata.
     """
-    if request.doc is None:
-        raise Http404("Could not find document " + request.key_name)
     if not request.doc.is_readable(request.user):
         if hasattr(request, 'session_key_error'):
             return HttpResponseForbidden(request.session_key_error)
