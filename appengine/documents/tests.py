@@ -53,14 +53,14 @@ class DocumentTest(TestCase):
         response = self.app_client.get('/docs/MYDOC')
         self.assertEqual(response.content, canonical_content)
 
-    def test_get_auth(self):
+    def test_read_permissions(self):
         """Test access control in document_get."""
         # Document owner should have read permission.
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
-        # Other users should not have read permission.
+        # Other users should have read permission.
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.paul.generate_session_key(self.app)
         response = self.app_client.get('/docs/MyDoc/')
@@ -73,3 +73,30 @@ class DocumentTest(TestCase):
         del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
+
+    def test_write_permissions(self):
+        """Test access control in document_put."""
+        # Document owner should have write permission.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.app)
+        response = self.app_client.put('/docs/MyDoc/', '{}',
+                                       content_type=settings.JSON_MIMETYPE)
+        self.assertContains(response, '"statusText": "Saved"')
+        # Other authenticated users should have write permission.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.paul.generate_session_key(self.app)
+        response = self.app_client.put('/docs/MyDoc/', '{}',
+                                       content_type=settings.JSON_MIMETYPE)
+        self.assertContains(response, '"statusText": "Saved"')
+        # Invalid session key should return a helpful error message.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
+        response = self.app_client.put('/docs/MyDoc/', '{}',
+                                       content_type=settings.JSON_MIMETYPE)
+        self.assertContains(
+            response, "Invalid sessionkey cookie: Expected 4 parts.",
+            status_code=403)
+        # Anonymous should not have write permission.
+        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
+        response = self.app_client.put('/docs/MyDoc/', '{}',
+                                       content_type=settings.JSON_MIMETYPE)
+        self.assertContains(response, 'Access denied.', status_code=403)
