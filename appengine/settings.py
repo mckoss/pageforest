@@ -191,7 +191,7 @@ MIDDLEWARE_CLASSES = (
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
     'auth.middleware.AuthMiddleware',        # Get the signed in user.
-    'documents.middleware.DocMiddleware',    # Get the document.
+    'docs.middleware.DocMiddleware',         # Get the document.
     'utils.middleware.ExceptionMiddleware',  # Get exception info.
 )
 
@@ -211,8 +211,8 @@ INSTALLED_APPS = (
     # 'django.contrib.sites',
     'auth',
     'apps',
-    'documents',
-    'storage',
+    'docs',
+    'blobs',
     'dashboard',
     'utils',
 )

@@ -17,11 +17,7 @@ urlpatterns = patterns(
 
     # Pageforest applications on subdomains.
     (r'^app/auth/', include('auth.urlsapp')),
-
-    (r'^app/docs/(?P<doc_id>%s)/$' % settings.DOC_ID_REGEX,
-     'documents.views.document'),
-    (r'^app/docs/(?P<doc_id>%s)/(?P<key>.+)$' % settings.DOC_ID_REGEX,
-     'storage.views.key_value'),
+    (r'^app/docs/', include('docs.urlsapp')),
 
     # Application keyspace reserved for future use
     (r'^app/(docs|data)/', 'utils.views.reserved'),
@@ -29,5 +25,5 @@ urlpatterns = patterns(
     # Static hosting for Pageforest apps.
     (r'^app/app.json$', 'apps.views.app_json'),
     (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)',
-     'storage.views.key_value'),
+     'blobs.views.blob'),
 )

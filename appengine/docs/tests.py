@@ -4,8 +4,8 @@ from django.test.client import Client
 
 from auth.models import User
 from apps.models import App
-from documents.models import Doc
-from storage.models import KeyValue
+from docs.models import Doc
+from blobs.models import Blob
 
 
 class DocumentTest(TestCase):
@@ -23,7 +23,7 @@ class DocumentTest(TestCase):
                        readers=['anybody'],
                        writers=['peter', 'authenticated'])
         self.doc.put()
-        self.data = KeyValue(key_name='myapp/mydoc', value='{"int": 123}')
+        self.data = Blob(key_name='myapp/mydoc', value='{"int": 123}')
         self.data.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
@@ -45,7 +45,7 @@ class DocumentTest(TestCase):
             response, '"created": {"__class__": "Date", "isoformat": "201')
         self.assertContains(
             response, '"modified": {"__class__": "Date", "isoformat": "201')
-        self.assertContains(response, '"json": {"int": 123}')
+        self.assertContains(response, '"blob": {"int": 123}')
         # Check that the document ID is case insensitive.
         canonical_content = response.content
         response = self.app_client.get('/docs/mydoc')

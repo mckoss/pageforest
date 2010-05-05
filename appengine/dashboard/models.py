@@ -6,10 +6,10 @@ from utils.mixins import Cacheable, Migratable
 
 from auth.models import User
 from apps.models import App
-from documents.models import Doc
-from storage.models import KeyValue
+from docs.models import Doc
+from blobs.models import Blob
 
-PROPERTIES = ['users', 'apps', 'documents', 'keyvalues']
+PROPERTIES = ['users', 'apps', 'docs', 'blobs']
 
 
 def count_entities(model, property_name, start, stop):
@@ -30,8 +30,8 @@ class StatsHour(Cacheable, Migratable):
     """
     users = db.IntegerProperty()
     apps = db.IntegerProperty()
-    documents = db.IntegerProperty()
-    keyvalues = db.IntegerProperty()
+    docs = db.IntegerProperty()
+    blobs = db.IntegerProperty()
 
     def start_time(self):
         key_name = self.key().name()
@@ -46,8 +46,8 @@ class StatsHour(Cacheable, Migratable):
         stop = start + timedelta(hours=1)
         self.users = count_entities(User, 'created', start, stop)
         self.apps = count_entities(App, 'created', start, stop)
-        self.documents = count_entities(Doc, 'created', start, stop)
-        self.keyvalues = count_entities(KeyValue, 'created', start, stop)
+        self.docs = count_entities(Doc, 'created', start, stop)
+        self.blobs = count_entities(Blob, 'created', start, stop)
 
     def __unicode__(self):
         result = []

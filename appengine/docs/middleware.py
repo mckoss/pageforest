@@ -1,6 +1,6 @@
 from django.conf import settings
 
-from documents.models import Doc
+from docs.models import Doc
 
 
 class DocMiddleware(object):
