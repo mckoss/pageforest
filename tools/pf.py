@@ -20,7 +20,7 @@ class PutRequest(urllib2.Request):
         return 'PUT'
 
 
-def hmac_sha1(message, key):
+def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
@@ -28,8 +28,8 @@ def login(options):
     url = 'http://%s/auth/challenge' % options.server
     challenge = urllib2.urlopen(url).read()
     print("Challenge: %s" % challenge)
-    userpass = hmac_sha1(options.username.lower(), options.password)
-    signature = hmac_sha1(challenge, userpass)
+    userpass = hmac_sha1(options.password, options.username.lower())
+    signature = hmac_sha1(userpass, challenge)
     reply = '/'.join((options.username, challenge, signature))
     url = 'http://%s/auth/verify/%s' % (options.server, reply)
     print("Response: %s" % url)
@@ -39,10 +39,6 @@ def login(options):
 
 
 def load_config(options):
-    # Don't use config file if (different) server specified
-    if options.server:
-        return
-
     hostname = username = password = ''
     parts = open(CONFIG_FILENAME).readline().split('/')
     if len(parts) > 2 and parts[0] == 'http:' and parts[1] == '':
@@ -74,7 +70,7 @@ def config():
     parser.add_option('-p', '--password')
     options, args = parser.parse_args()
 
-    if os.path.exists(CONFIG_FILENAME):
+    if os.path.exists(CONFIG_FILENAME) and not options.server:
         load_config(options)
 
     options.save = False
