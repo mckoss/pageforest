@@ -84,7 +84,7 @@ def main():
     total_errors = 0
     for file_name in walk.walk_files(*args):
         if options.verbose:
-            print "command: %s" % command
+            print "command: %s" % command + ' ' + file_name
         pylint = subprocess.Popen(command + ' ' + file_name, shell=True,
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.STDOUT)
