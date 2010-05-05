@@ -154,27 +154,3 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         if not crypto.verify(session_key, secret):
             raise SignatureError("Password incorrect.")
         return user
-
-    def is_member(self, usernames):
-        """
-        Case-insensitive username match against a list of usernames.
-
-        >>> paul = User(username='Paul')
-        >>> paul.is_member([])
-        False
-        >>> paul.is_member(['anybody'])
-        False
-        >>> paul.is_member(['authenticated'])
-        False
-        >>> paul.is_member(['anybody', 'authenticated', 'paul'])
-        True
-        >>> paul.is_member(['Peter', 'Paul', 'Mary'])
-        True
-        >>> paul.is_member(['George', 'Dieter'])
-        False
-        """
-        self_lower = self.username.lower()
-        for username in usernames:
-            if username.lower() == self_lower:
-                return True
-        return False
