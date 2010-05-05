@@ -40,5 +40,3 @@ class SuperDoc(Cacheable, Migratable, Timestamped):
         if user is None:
             return False
         return user.username.lower() in self.writers
-
-
