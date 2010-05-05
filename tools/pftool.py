@@ -4,7 +4,7 @@ import os
 import re
 from fnmatch import fnmatch
 
-import simplejson as json
+from django.utils import simplejson as json
 
 IGNORE = """
 .hg .git .bzr .svn .hgignore
