@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>{% block title %}{% endblock %} - {{SITE_NAME}}</title>
+{% block css %}
+        {% for file_name in css_files.default %}
+            <link rel="stylesheet" type="text/css" href="{{ file_name }}" />
+        {% endfor %}
+{% endblock %}
+
+{% block jquery %}
+<!-- TODO: Conditionally load unminified and local copy of jquery for offline testing -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() { $("input.focus:last").focus(); });
+</script>
+{% endblock %}
+
+{% block js %}
+{% for file_name in js_files.pageforest %}
+<script type="text/javascript" src="{{ file_name }}"></script>{% endfor %}
+{% endblock %}
+
+{% if refresh_seconds %}
+<meta http-equiv="refresh" content="{{ refresh_seconds }}" />
+{% endif %}
+
+{% block extra-head %}{% endblock %}
+</head>
+
+<body>
+{% block content %}{% endblock %}
+
+{% block analytics %}
+    <script type="text/javascript">
+    var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+    try {
+        var pageTracker = _gat._getTracker("{{ANALYTICS_CODE}}");
+        pageTracker._trackPageview();
+    } catch (e) {}
+    </script>
+{% endblock %}
+</body>
+</html>
