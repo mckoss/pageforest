@@ -17,7 +17,7 @@ class AppMiddleware(object):
         request.app = App.get_by_hostname(
             request.META.get('HTTP_HOST', 'testserver'))
 
-        if request.app.is_www():
+        if request.app and request.app.is_www():
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
                 raise Http404()
