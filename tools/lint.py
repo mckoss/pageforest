@@ -8,13 +8,16 @@ from optparse import OptionParser
 import pftool
 
 DISABLE_MESSAGES = """
+C0111 Missing docstring
 C0121 Missing required attribute "__revision__"
 E1101 Class 'KeyValue' has no 'get_by_key_name' member
 E1103 Instance of 'KeyValue' has no 'put' member (but some types ...
 F0401 Unable to import 'django.test' (No module named django)
-R0903 Too few public methods (0/2)
+R0903 Too few public methods
+R0904 Too many public methods
 W0142 Used * or ** magic
 W0232 Class has no __init__ method
+W6501 Specify string format arguments as logging function parameters
 """.strip().splitlines()
 
 IGNORE_MESSAGES = """
@@ -27,14 +30,10 @@ manage.py:35: [W0403] Relative import 'settings'
 Wildcard import settingsauto
 from wildcard import
 [E0611] No name 'Utils' in module 'email'
+[E0611] No name 'forms' in module 'django'
 [W0402] Uses of a deprecated module 'string'
 [W0403] Relative import 'settingsauto'
 .process_request] Method could be a function
-:1: [C0111] Missing docstring
-Test] Missing docstring
-.setUp] Missing docstring
-.decorate] Missing docstring
-.wrapper] Missing docstring
 Unused import handler404
 Unused import handler500
 Unused argument 'request'
@@ -60,11 +59,31 @@ def ignore(line):
             return True
 
 
+def exec_and_filter(command, options):
+    if options.verbose:
+        print command
+    proc = subprocess.Popen(command, shell=True,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT)
+    stdout, stderr = proc.communicate()
+    # Filter error messages and count errors.
+    errors = 0
+    for line in stdout.splitlines():
+        line = line.rstrip()
+        if ignore(line) or not line:
+            continue
+        print line
+        errors += 1
+    return errors
+
+
 def main():
     parser = OptionParser(
         usage="%prog [options] module_or_package")
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-e', '--errors_only', action='store_true')
+    parser.add_option('-f', '--force', action='store_true',
+                      help="Force/fast - full check of all files.")
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
@@ -79,6 +98,7 @@ def main():
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
         command.append('-e')
+<<<<<<< local
     command = ' '.join(command)
     walk = pftool.FileWalker(matches=('*.py', ), pass_key='pylint')
     total_errors = 0
@@ -100,11 +120,30 @@ def main():
         if errors == 0:
             walk.set_passing()
         total_errors += errors
+=======
+>>>>>>> other
 
-    walk.save_pass_dict()
+    if options.force:
+        command.extend(args)
+        command = ' '.join(command)
+        total_errors = exec_and_filter(command, options)
+    else:
+        # File by file processing is slower and less complete
+        # But we capture individual file errors and only
+        # lint the subset that has changed.
+        command = ' '.join(command)
+        walk = pftool.FileWalker(matches=('*.py',),
+                                 pass_key='pylint')
+        total_errors = 0
+        for file_name in walk.walk_files(*args):
+            errors = exec_and_filter(command + ' ' + file_name, options)
+            if errors == 0:
+                walk.set_passing()
+            total_errors += errors
+        walk.save_pass_dict()
 
     if total_errors:
-        sys.exit('found %d errors' % errors)
+        sys.exit('found %d errors' % total_errors)
 
 
 if __name__ == '__main__':
