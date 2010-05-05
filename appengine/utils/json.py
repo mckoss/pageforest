@@ -11,10 +11,13 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
     >>> class Example(db.Model):
     ...     text = db.StringProperty()
     ...     number = db.IntegerProperty()
-    >>> print model_to_json(Example(text='abc', number=123))
+    ...     timestamp = db.DateTimeProperty()
+    >>> print model_to_json(Example(text='abc', number=123,
+    ...     timestamp=datetime(2010, 5, 5, 9, 3, 37)))
     {
     "number": 123,
-    "text": "abc"
+    "text": "abc",
+    "timestamp": {"__class__": "Date", "isoformat": "2010-05-05T09:03:37Z"}
     }
     """
     mapping = {}
@@ -42,6 +45,11 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
 def assert_string(key, value):
     """
     Check that the value is a string.
+
+    >>> assert_string('five', '5')
+    >>> assert_string('five', 5)
+    Traceback (most recent call last):
+    ValueError: Expected string value for five.
     """
     if not isinstance(value, basestring):
         raise ValueError("Expected string value for %s." % key)
@@ -50,6 +58,11 @@ def assert_string(key, value):
 def assert_string_list(key, value):
     """
     Check that the value is a list of strings.
+
+    >>> assert_string_list('five', ['5'])
+    >>> assert_string_list('five', [5])
+    Traceback (most recent call last):
+    ValueError: Expected string values inside five list.
     """
     if not isinstance(value, list):
         raise ValueError("Expected string list for %s." % key)
