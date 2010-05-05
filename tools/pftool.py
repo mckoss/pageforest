@@ -204,6 +204,7 @@ if __name__ == '__main__':
     print
 
     # Dump the current .pass file for the passed argument (or cwd)
+    cur_path = os.getcwd().lower()
     walker = FileWalker(matches=sys.argv[1:])
     for file_path in walker.walk_files():
         file_dict = walker.pass_dict.get(file_path, None)
@@ -212,6 +213,8 @@ if __name__ == '__main__':
             flags.remove('modified')
         else:
             flags = ()
+        if file_path.startswith(cur_path):
+            file_path = file_path[len(cur_path) + 1:]
         print("%s: %s" % (file_path, ', '.join(flags)))
 
     # unittest.main()
