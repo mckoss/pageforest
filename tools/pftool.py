@@ -160,6 +160,7 @@ class FileWalker(object):
                         # print file_path, 'skipped'
                         continue
                     # print file_path
+                    # print self.pass_dict.get(file_path, 'not found')
                     self.file_path = file_path
                     yield file_path
 
