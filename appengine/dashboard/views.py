@@ -37,7 +37,7 @@ def chart(hours, property_name, color):
             ])
 
 
-def index(request):
+def dashboard(request):
     """
     Dashboard overview.
     """
