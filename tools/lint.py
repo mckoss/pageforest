@@ -17,7 +17,6 @@ R0903 Too few public methods
 R0904 Too many public methods
 W0142 Used * or ** magic
 W0232 Class has no __init__ method
-W6501 Specify string format arguments as logging function parameters
 """.strip().splitlines()
 
 IGNORE_MESSAGES = """
@@ -33,6 +32,7 @@ from wildcard import
 [E0611] No name 'forms' in module 'django'
 [W0402] Uses of a deprecated module 'string'
 [W0403] Relative import 'settingsauto'
+[W6501] Specify string format arguments as logging function parameters
 .process_request] Method could be a function
 Unused import handler404
 Unused import handler500
