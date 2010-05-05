@@ -3,6 +3,7 @@ from django.utils import simplejson as json
 
 from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
+from auth.middleware import AccessDenied
 
 from storage.models import KeyValue
 
@@ -14,10 +15,7 @@ def document(request, doc_id):
     Get document metadata.
     """
     if not request.doc.is_readable(request.user):
-        if hasattr(request, 'session_key_error'):
-            return HttpResponseForbidden(request.session_key_error)
-        else:
-            return HttpResponseForbidden("Access denied.")
+        return AccessDenied(request)
     data = KeyValue.get_by_key_name(request.doc.key().name())
     if data:
         extra = {"json": json.loads(data.value)}

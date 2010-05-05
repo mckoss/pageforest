@@ -1,8 +1,10 @@
+from django.conf import settings
 from django.http import HttpResponse
 from django.utils import simplejson as json
 
 from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
+from auth.middleware import AccessDenied
 
 
 @jsonp
@@ -12,16 +14,27 @@ def app_json(request):
     Read and write application info with REST API.
     """
     if request.method == 'GET':
-        content = model_to_json(request.app, exclude='secret'.split())
-        return HttpResponse(content, mimetype='application/json')
+        return app_json_get(request)
     if request.method == 'PUT':
         return app_json_put(request)
+
+
+def app_json_get(request):
+    """
+    Get JSON blob with meta info for this app.
+    """
+    if not request.app.is_readable(request.user):
+        return AccessDenied(request)
+    content = model_to_json(request.app, exclude='secret'.split())
+    return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
 def app_json_put(request):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
+    if not request.app.is_writable(request.user):
+        return AccessDenied(request)
     try:
         parsed = json.loads(request.raw_post_data)
         for key in ('title', ):
@@ -36,7 +49,7 @@ def app_json_put(request):
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
     # TODO: Access control and quota checks.
     request.app.put()
-    return HttpResponse("""{"status": 200, "statusText": "Saved"}""",
+    return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype='application/json')
 
 

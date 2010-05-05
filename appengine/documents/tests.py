@@ -1,8 +1,8 @@
-from datetime import datetime
-
+from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
 
+from auth.models import User
 from apps.models import App
 from documents.models import Doc
 from storage.models import KeyValue
@@ -11,13 +11,17 @@ from storage.models import KeyValue
 class DocumentTest(TestCase):
 
     def setUp(self):
-        self.started = datetime.now()
+        self.peter = User(key_name='peter', username='Peter')
+        self.peter.put()
+        self.paul = User(key_name='paul', username='Paul')
+        self.paul.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'])
         self.app.put()
         self.doc = Doc(key_name='myapp/mydoc',
                        app_id='myapp', doc_id='MyDoc',
                        title="My Document", tags='one two three'.split(),
-                       readers=['anybody'], writers=['peter'])
+                       readers=['anybody'],
+                       writers=['peter', 'authenticated'])
         self.doc.put()
         self.data = KeyValue(key_name='myapp/mydoc', value='{"int": 123}')
         self.data.put()
@@ -30,11 +34,11 @@ class DocumentTest(TestCase):
 
     def test_json(self):
         """Test JSON serializer for document."""
-        response = self.app_client.get('/docs/MyDoc')
+        response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": ["anybody"]')
-        self.assertContains(response, '"writers": ["peter"]')
+        self.assertContains(response, '"writers": ["peter", "authenticated"]')
         self.assertContains(response, '"schema": 1')
         self.assertContains(response, '"tags": ["one", "two", "three"]')
         self.assertContains(
@@ -48,3 +52,24 @@ class DocumentTest(TestCase):
         self.assertEqual(response.content, canonical_content)
         response = self.app_client.get('/docs/MYDOC')
         self.assertEqual(response.content, canonical_content)
+
+    def test_get_auth(self):
+        """Test access control in document_get."""
+        # Document owner should have read permission.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.app)
+        response = self.app_client.get('/docs/MyDoc/')
+        self.assertContains(response, '"title": "My Document"')
+        # Other users should not have read permission.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.paul.generate_session_key(self.app)
+        response = self.app_client.get('/docs/MyDoc/')
+        self.assertContains(response, '"title": "My Document"')
+        # Invalid session key should have read permission.
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
+        response = self.app_client.get('/docs/MyDoc/')
+        self.assertContains(response, '"title": "My Document"')
+        # Anonymous should have read permission.
+        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
+        response = self.app_client.get('/docs/MyDoc/')
+        self.assertContains(response, '"title": "My Document"')
