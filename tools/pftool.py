@@ -71,7 +71,7 @@ class FileWalker(object):
 
     def set_passing(self):
         if self.file_path not in self.pass_dict:
-            file_dict = {'modified': os.path.getmtime(self.file_path)}
+            file_dict = {'modified': int(os.path.getmtime(self.file_path))}
             self.pass_dict[self.file_path] = file_dict
         else:
             file_dict = self.pass_dict[self.file_path]
@@ -80,14 +80,23 @@ class FileWalker(object):
     def has_passed(self, file_path):
         if file_path not in self.pass_dict:
             return False
-        modified = os.path.getmtime(file_path)
+        modified = int(os.path.getmtime(file_path))
         file_dict = self.pass_dict[file_path]
         if file_dict['modified'] != modified:
             # File changed: wipe out cached pass states
-            file_dict = {'modified': modified}
-            self.pass_dict[file_path] = file_dict
+            # file_dict = {'modified': modified}
+            # self.pass_dict[file_path] = file_dict
             return False
         return file_dict.get(self.pass_key, False)
+
+    def ignore_dir(self, dir_name):
+        """
+        Decide on which directories to ignore.
+        """
+        for pattern in self.ignored:
+            if fnmatch(dir_name, pattern):
+                # print "IGNORED", dir_name, pattern
+                return True
 
     def ignore_file(self, file_name, file_path=None):
         """
@@ -96,6 +105,7 @@ class FileWalker(object):
         # Ignore patterns take precedence
         for pattern in self.ignored:
             if fnmatch(file_name, pattern):
+                # print "IGNORED", file_name, pattern
                 return True
 
         # If matches are given, it must match one of them
@@ -103,13 +113,14 @@ class FileWalker(object):
             found_match = False
             for pattern in self.matches:
                 if fnmatch(file_name, pattern):
+                    # print "NOT IN MATCHES", file_name, pattern
                     found_match = True
                     break
             if not found_match:
                 return True
 
         # See if the file has already passed the current test
-        if self.has_passed(file_path):
+        if file_path and self.has_passed(file_path):
             return True
 
         return False
@@ -137,14 +148,18 @@ class FileWalker(object):
             if not os.path.isdir(arg):
                 print("Not a file or directory: %s" % arg)
                 continue
+
             for dir_path, dir_names, file_names in os.walk(arg):
-                for dir_name in dir_names:
-                    if self.ignore_file(dir_name):
+                for dir_name in dir_names[:]:
+                    if self.ignore_dir(dir_name):
+                        # print 'DIR', dir_name, 'REMOVED'
                         dir_names.remove(dir_name)
                 for file_name in file_names:
                     file_path = os.path.join(dir_path, file_name)
                     if self.ignore_file(file_name, file_path):
+                        # print file_path, 'skipped'
                         continue
+                    # print file_path
                     self.file_path = file_path
                     yield file_path
 
