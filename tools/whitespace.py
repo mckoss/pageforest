@@ -60,7 +60,7 @@ def main():
     (options, args) = parser.parse_args()
     total_errors = 0
     walk = pftool.FileWalker(ignored=IGNORE_FILES, pass_key='whitespace')
-    for filename in walk.walk_files(args):
+    for filename in walk.walk_files(*args):
         errors = 0
         if options.verbose:
             print("checking %s" % filename)
