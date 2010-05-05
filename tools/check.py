@@ -83,18 +83,21 @@ def main():
 
     global options
     all_checks = [
-        ('pylint', "python %s -e %s" %
-         (pftool.tool_path('lint.py'), pftool.app_dir)),
-        ('jslint', "python jslint.py --strong " +
-         "--ignore beautify* --ignore fulljslint.js"),
-        ('jslint-weak', "python jslint.py --weak " +
-         os.path.join(pftool.app_dir, 'static', 'src', 'js')),
-        ('doctest', "python settingsparser.py"),
+        ('pylint', "python %s -e %s %s" %
+         (pftool.tool_path('lint.py'), pftool.app_dir, pftool.tools_dir)),
+        ('jslint',
+         "python %s --strong --ignore beautify* --ignore fulljslint.js %s" %
+         (pftool.tool_path('jslint.py'), pftool.tools_dir)),
+        ('jslint-weak', "python %s --weak %s" %
+         (pftool.tool_path('jslint.py'),
+          os.path.join(pftool.app_dir, 'static', 'src', 'js'))),
+        ('doctest', "python %s" % pftool.tool_path('settingsparser.py')),
         ('unittest', "python %s test -v0" %
          (os.path.join(pftool.app_dir, 'manage.py'))),
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
-        ('whitespace', "python whitespace.py"),
+        ('whitespace', "python %s %s" %
+         (pftool.tool_path('whitespace.py'), pftool.root_dir)),
         ]
 
     parser = OptionParser(
@@ -127,12 +130,6 @@ def main():
     options.started = time.time()
     for name, command in all_checks:
         if name in options.checks:
-            if name == 'unittest':
-                os.chdir(pftool.root_dir)
-            elif name == 'pylint':
-                os.chdir(pftool.app_dir)
-            else:
-                os.chdir(pftool.tools_dir)
             if name in options.extra:
                 command += ' ' + options.extra[name]
             attempt(name, command)

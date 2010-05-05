@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import re
 from fnmatch import fnmatch
 
@@ -9,7 +10,8 @@ from django.utils import simplejson as json
 IGNORE = """
 .hg .git .bzr .svn .hgignore
 *~ *# *.orig *.log
-*.png *.gif *.pdf *.jpg *.pyc
+*.png *.gif *.pdf *.jpg *.pyc *.ico
+TAGS
 """.split()
 
 try:
@@ -108,6 +110,10 @@ class FileWalker(object):
                 # print "IGNORED", file_name, pattern
                 return True
 
+        # Directories are only tested against the ignore pattern
+        if file_path is None:
+            return False
+
         # If matches are given, it must match one of them
         if self.matches:
             found_match = False
@@ -195,5 +201,9 @@ if __name__ == '__main__':
             for file_path in walker.walk_files(tools_dir):
                 count2 += 1
             self.assertTrue(count2 < count)
+
+    walker = FileWalker(matches=sys.argv[1:])
+    for file_path in walker.walk_files():
+        print file_path
 
     unittest.main()
