@@ -80,8 +80,7 @@ def main():
     if options.errors_only:
         command.append('-e')
     command = ' '.join(command)
-    walk = pftool.FileWalker(matches=('*.py',),
-                             pass_key='pylint')
+    walk = pftool.FileWalker(matches=('*.py', ), pass_key='pylint')
     total_errors = 0
     for file_name in walk.walk_files(*args):
         if options.verbose:
