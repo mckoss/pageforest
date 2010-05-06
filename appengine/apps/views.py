@@ -32,17 +32,18 @@ def create_app(request, app_id):
 
 @jsonp
 @method_required('GET', 'PUT')
-def app_json(request):
+def app_json(request, app_id):
     """
     Read and write application info with REST API.
     """
+    request.app = App.lookup(app_id)
     if request.method == 'GET':
-        return app_json_get(request)
+        return app_json_get(request, app_id)
     if request.method == 'PUT':
-        return app_json_put(request)
+        return app_json_put(request, app_id)
 
 
-def app_json_get(request):
+def app_json_get(request, app_id):
     """
     Get JSON blob with meta info for this app.
     """
@@ -52,11 +53,11 @@ def app_json_get(request):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
-def app_json_put(request):
+def app_json_put(request, app_id):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
-    if not request.app.is_writable(request.user):
+    if request.app and not request.app.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
     try:
