@@ -3,8 +3,9 @@ import string
 
 from django import forms
 from django.conf import settings
-from django.utils import simplejson as json
 from django.utils.safestring import mark_safe
+
+from utils.forms import AjaxForm
 
 from auth.models import User
 
@@ -42,7 +43,7 @@ class LabeledCheckbox(forms.CheckboxInput):
         return mark_safe(check_string)
 
 
-class UsernamePasswordForm(forms.Form):
+class UsernamePasswordForm(AjaxForm):
     """
     Reusable form class with a username and password field.
     Both RegistrationForm and SignInForm are subclasses of this.
@@ -86,17 +87,6 @@ class UsernamePasswordForm(forms.Form):
                 raise forms.ValidationError("This password is too simple.")
         return password
 
-    def errors_json(self):
-        """
-        Validate and return form error messages as JSON.
-        """
-        if self.is_valid():
-            return '{}'
-        errors = {}
-        for key, val in self.errors.iteritems():
-            errors[key] = [unicode(msg) for msg in val]
-        return json.dumps(errors)
-
 
 class RegistrationForm(UsernamePasswordForm):
     """
@@ -134,7 +124,7 @@ class RegistrationForm(UsernamePasswordForm):
                     "The two password fields are not the same.")
         return self.cleaned_data
 
-    def save(self, request):
+    def save(self):
         """
         Create a new user with the form data.
         """
@@ -144,7 +134,6 @@ class RegistrationForm(UsernamePasswordForm):
                     email=self.cleaned_data['email'])
         user.set_password(self.cleaned_data['password'])
         user.put()
-        user.send_email_verification(request)
         return user
 
 
