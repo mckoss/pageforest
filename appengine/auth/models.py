@@ -127,7 +127,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         parts = session_key.split(crypto.SEPARATOR)
         if len(parts) != 4:
             raise SignatureError("Expected 4 parts.")
-        (app_id, username, expires, hmac) = parts
+        (app_id, username, expires) = parts[:3]
         # Check that the session key is for the same app.
         if app_id != app.get_app_id():
             raise SignatureError("Different app.")

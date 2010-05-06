@@ -15,7 +15,7 @@ from blobs.models import Blob
 @jsonp
 def blob(request, doc_id, key):
     """
-    Dispatch requests to the key-value storage interface.
+    Dispatch requests to the blob storage interface.
     """
     if doc_id:
         request.key_name = '/'.join(
