@@ -143,9 +143,8 @@ class SignInTest(TestCase):
         response = self.www.post('/auth/sign-in',
                                  {'username': 'peter',
                                   'password': 'password'})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'],
-                         'http://www.pageforest.com/auth/sign-in/')
+        self.assertRedirects(response,
+                             'http://www.pageforest.com/auth/sign-in/')
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('www/peter/1273'))
 
@@ -155,9 +154,9 @@ class SignInTest(TestCase):
 
         # Now sign out the user - and check his cookies
         response = self.www.get('/auth/sign-out/')
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'],
-                         'http://www.pageforest.com/auth/sign-in/')
+        self.assertRedirects(response,
+                             'http://www.pageforest.com/auth/sign-in/')
+
         cookie = response.cookies['sessionkey']
         self.assertEqual(cookie.value, '')
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
@@ -203,9 +202,8 @@ class AppSignInTest(TestCase):
     def test_no_app(self):
         """Sign into non-existant application -> redirect."""
         response = self.www.get('/auth/sign-in/noapp')
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'],
-                         'http://www.pageforest.com/auth/sign-in/')
+        self.assertRedirects(response,
+                             'http://www.pageforest.com/auth/sign-in/')
 
     def test_sign_in(self):
         """Sign in to an application."""
@@ -218,19 +216,19 @@ class AppSignInTest(TestCase):
                                  {'username': 'peter',
                                   'password': 'password',
                                   'app_auth': 'checked'})
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response['Location'],
-                         'http://www.pageforest.com/auth/sign-in/myapp')
+        self.assertRedirects(response,
+                             'http://www.pageforest.com/auth/sign-in/myapp')
         cookie = response.cookies['sessionkey'].value
         # Expect a first-part session cookie to www.pf.com
-        # self.assertTrue(cookie.startswith('www/peter/1273'))
+        print cookie
+        self.assertTrue(cookie.startswith('www/peter/1273'))
 
         # Simulate the redirect to the form
         response = self.www.post('/auth/sign-in/myapp')
         # We need the app-specific session cookie transfered to JavaScript
-        # self.assertContains(response, 'Peter, you are signed in to')
-        # self.assertContains(response, "transferSession(")
-        # self.assertContains(response, "myapp/peter/1273")
+        self.assertContains(response, 'Peter, you are signed in to')
+        self.assertContains(response, "transferSession(")
+        self.assertContains(response, "myapp/peter/1273")
 
 
 class ChallengeVerifyTest(TestCase):
