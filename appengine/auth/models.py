@@ -1,10 +1,7 @@
 import time
 
 from google.appengine.ext import db
-from google.appengine.api import mail, memcache
-
-from django.template.loader import render_to_string
-from django.template import RequestContext
+from google.appengine.api import memcache
 
 from utils.mixins import Migratable, Cacheable, Timestamped
 from utils import crypto
@@ -65,17 +62,6 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         Migrate from one model schema to the next.
         """
         pass
-
-    def send_email_verification(self, request):
-        """
-        Send email to this user.
-        """
-        message = render_to_string('auth/verify-email.txt',
-                                   RequestContext(request, {'user': self}))
-        mail.send_mail(sender=settings.SITE_EMAIL_FROM,
-                       to=self.email,
-                       subject=settings.SITE_NAME + " account verification.",
-                       body=message)
 
     @classmethod
     def verify_signature(cls, signature, app, remote_ip):
