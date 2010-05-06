@@ -1,35 +1,29 @@
+import string
 import random
 import hmac
 import hashlib
 
 SEPARATOR = '/'
-BASE62 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+HEX = string.hexdigits[:16]  # Without uppercase.
+BASE62 = string.uppercase + string.lowercase + string.digits
 BASE64 = BASE62 + '+/'
 BASE64URL = BASE62 + '-_'
 
 
-def random64(length=32, chars=BASE64):
+def random64(length=32, chars=BASE64URL):
     """
     >>> len(random64())
     32
     >>> len(random64(16))
     16
     >>> min(random64(10000))
-    '+'
+    '-'
     >>> max(random64(10000))
     'z'
     """
     maximum = len(chars) - 1
     return ''.join([chars[random.randint(0, maximum)]
                     for counter in xrange(length)])
-
-
-def random64url(length=32):
-    """
-    >>> min(random64url(10000))
-    '-'
-    """
-    return random64(length, BASE64URL)
 
 
 def join(*args):
