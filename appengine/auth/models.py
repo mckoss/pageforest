@@ -40,19 +40,22 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         """
         return cls.get_by_key_name(username.lower())
 
+    def get_username(self):
+        return self.key().name()
+
     def set_password(self, password):
         """
         Generate HMAC of the username, using the password as secret key.
         This is similar to hashing the password with salt=username.
         """
-        self.password = crypto.hmac_sha1(self.username.lower(), password)
+        self.password = crypto.hmac_sha1(self.get_username(), password)
 
     def check_password(self, password):
         """
         Returns a boolean of whether the (plaintext) password was correct.
         Handles encryption formats behind the scenes.
         """
-        return crypto.hmac_sha1(self.username.lower(),
+        return crypto.hmac_sha1(self.get_username(),
                                 password) == self.password
 
     def migrate(self, next_schema):
@@ -98,7 +101,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         if memcache.get(CHALLENGE_CACHE_PREFIX + random):
             raise SignatureError("Already used.")
         # Check that the user exists.
-        user = cls.get_by_key_name(username.lower())
+        user = cls.lookup(username)
         if user is None:
             raise SignatureError("Unknown user.")
         # Check the user's password.
@@ -125,7 +128,7 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         expires = int(time.time() + seconds)
         secret = crypto.join(self.password, app.secret)
         return crypto.sign(
-            app.get_app_id(), self.username.lower(), expires, secret)
+            app.get_app_id(), self.get_username(), expires, secret)
 
     @classmethod
     def verify_session_key(cls, session_key, app):

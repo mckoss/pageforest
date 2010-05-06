@@ -91,6 +91,8 @@ def sign_in(request, app_id=None):
 def get_username(request):
     """
     Get the username that is currently signed in.
+
+    REVIEW: Security problem - should require referer is www.pf.com
     """
     if request.user is None:
         raise Http404("The user is not signed in.")

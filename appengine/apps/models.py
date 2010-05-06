@@ -161,22 +161,31 @@ class App(SuperDoc):
         app = cls.get_by_key_name(app_id)
         if app is None and app_id == 'www':
             # First invocation on an empty datastore, create www app.
-            app = cls.create('www', settings.DEFAULT_DOMAIN)
+            app = cls.create('www')
             app.put()
         return app
 
     @classmethod
-    def create(cls, app_id, hostname=None):
+    def create(cls, app_id, user=None):
         """
         All App creation should go through this method.
+
+        TODO: Confirm quotas, and permissions.
         """
         if app_id in settings.RESERVED_APPS:
             raise Exception("Application %s is RESERVED." % app_id)
-        if hostname is None:
-            hostname = app_id + '.' + settings.DEFAULT_DOMAIN
+        hostname = app_id + '.' + settings.DEFAULT_DOMAIN
+        if app_id != 'www' and user is not None:
+            username = user.get_username()
+        else:
+            # FIXME: Not logged in users can create applications
+            # (and then can't modify them).
+            username = 'admin'
         title = app_id.capitalize()
-        # TODO: generate real app secret, check creating user's permissions
-        # and quota to do so.
         logging.info("Creating app: %s" % app_id)
-        return App(key_name=app_id, title=title, domains=[hostname],
-                   secret='SecreT!1')
+        return App(key_name=app_id,
+                   title=title,
+                   domains=[hostname],
+                   secret=crypto.random64(),
+                   readers=[username],
+                   writers=[username])

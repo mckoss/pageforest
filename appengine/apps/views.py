@@ -1,10 +1,33 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 from auth.middleware import AccessDenied
+
+from apps.models import App
+
+
+@method_required('PUT', 'GET')
+def create_app(request, app_id):
+    """
+    Bootstrap application creation.
+
+    Since we can't access app_id.pf.com before an application is
+    created, we go to www.pf.com/apps/app_id to create the intial
+    instance of the application.
+
+    We accept content in the format of app.json here for initial
+    application creation.  If none is given, we default to:
+
+
+    """
+    # TODO: Permissions and quota check
+    app = App.create(app_id)
+    app.put()
+    # TODO: should return a default app.json???
+    return HttpResponse('%s created.' % app_id)
 
 
 @jsonp

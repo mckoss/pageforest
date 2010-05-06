@@ -17,8 +17,9 @@ urlpatterns = patterns(
 
     # Pageforest applications on subdomains.
     (r'^app/auth/', include('auth.urlsapp')),
-    (r'^app/docs/', include('docs.urlsapp')),
 
+    # REVIEW: Why is this not just docs.urls?
+    (r'^app/docs/', include('docs.urlsapp')),
     # Application keyspace reserved for future use
     (r'^app/(docs|data)/', 'utils.views.reserved'),
 
@@ -26,4 +27,8 @@ urlpatterns = patterns(
     (r'^app/app.json$', 'apps.views.app_json'),
     (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)',
      'blobs.views.blob'),
+
+    # Application management urls and apis
+    (r'^apps/', include('apps.urls')),
+
 )
