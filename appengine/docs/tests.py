@@ -100,3 +100,18 @@ class DocumentTest(TestCase):
         response = self.app_client.put('/docs/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, 'Access denied.', status_code=403)
+
+    def test_404(self):
+        """Test that missing document prevents blob access."""
+        response = self.app_client.get('/docs/unknown/')
+        print response.content
+        self.assertContains(response, 'Document not found.', status_code=404)
+        # Writing a blob under this document should fail.
+        response = self.app_client.put('/docs/unknown/blob/', 'data',
+                                       content_type='text/plain')
+        print response.content
+        self.assertContains(response, 'Document not found.', status_code=404)
+        # Reading a blob under this document should fail.
+        response = self.app_client.get('/docs/unknown/blob/')
+        print response.content
+        self.assertContains(response, 'Document not found.', status_code=404)
