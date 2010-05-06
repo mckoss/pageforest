@@ -1,4 +1,5 @@
 import time
+import re
 from datetime import datetime
 
 from django.conf import settings
@@ -206,7 +207,7 @@ class AppSignInTest(TestCase):
                              'http://www.pageforest.com/auth/sign-in/')
 
     def test_sign_in(self):
-        """Sign in to an application."""
+        """Sign in to an application (from scratch)."""
         # Initial form - not signed in
         response = self.www.get('/auth/sign-in/myapp')
         self.assertContains(response, "Sign in to Pageforest")
@@ -220,15 +221,31 @@ class AppSignInTest(TestCase):
                              'http://www.pageforest.com/auth/sign-in/myapp')
         cookie = response.cookies['sessionkey'].value
         # Expect a first-part session cookie to www.pf.com
-        print cookie
         self.assertTrue(cookie.startswith('www/peter/1273'))
 
         # Simulate the redirect to the form
         response = self.www.post('/auth/sign-in/myapp')
         # We need the app-specific session cookie transfered to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
-        self.assertContains(response, "transferSession(")
-        self.assertContains(response, "myapp/peter/1273")
+        match = myapp_session_key = re.search(r'transferSession\("(.*)"\)',
+                                     response.content)
+        self.assertTrue(match is not None)
+        myapp_session_key = match.group(1)
+        self.assertTrue(myapp_session_key.startswith("myapp/peter/1273"))
+
+        # Should not be logged in yet
+        response = self.myapp.get('/auth/username')
+        self.assertEqual(response.status_code, 404)
+        self.assertTrue('sessionkey' not in response.cookies)
+        # Simulate the in-page javascript that does the cross-site
+        # authentication
+        response = self.myapp.get("/auth/set-session/" +
+                                  myapp_session_key)
+        cookie = response.cookies['sessionkey'].value
+        self.assertTrue(cookie.startswith('myapp/peter/1273'))
+        # And confirm we're logged in
+        response = self.myapp.get('/auth/username')
+        self.assertContains(response, "Peter")
 
 
 class ChallengeVerifyTest(TestCase):
