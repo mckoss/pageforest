@@ -1,3 +1,5 @@
+from django.http import HttpResponseNotFound
+
 from docs.models import Doc
 
 
@@ -11,5 +13,4 @@ class DocMiddleware(object):
         key_name = '/'.join((request.app.get_app_id(), doc_id.lower()))
         request.doc = Doc.get_by_key_name(key_name)
         if request.doc is None:
-            # TODO: Return HttpResponseNotFound instead.
-            request.doc = Doc(key_name=doc_id)
+            return HttpResponseNotFound("Document not found.")
