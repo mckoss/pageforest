@@ -29,6 +29,15 @@ class HostnameTest(TestCase):
         self.assertEqual(app, None)
 
 
+class AppErrorsTest(TestCase):
+    def setUp(self):
+        self.noapp_client = Client(HTTP_HOST="nosuch.pageforest.com")
+
+    def test_missing_app(self):
+        response = self.noapp_client.get('/')
+        self.assertEqual(response.status_code, 404)
+
+
 class AppJsonTest(TestCase):
 
     def setUp(self):

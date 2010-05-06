@@ -1,6 +1,6 @@
 import logging
 
-from django.http import Http404
+from django.http import HttpResponseNotFound
 
 from apps.models import App
 
@@ -17,10 +17,13 @@ class AppMiddleware(object):
         request.app = App.get_by_hostname(
             request.META.get('HTTP_HOST', 'testserver'))
 
+        if request.app is None:
+            return HttpResponseNotFound("Application not found.")
+
         if request.app and request.app.is_www():
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
-                raise Http404()
+                return HttpResponseNotFound("URL reserved for internal use.")
             return
 
         # Prefix path with /app for matching with urls.py.
