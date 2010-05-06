@@ -8,23 +8,23 @@
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="/lib/0.5/js/widget.js"></script>
-<script type="text/javascript" src="keyvalue.js"></script>
+<script type="text/javascript" src="blobdemo.js"></script>
 <script type="text/javascript">
-var keyvalue = global_namespace.lookup("com.pageforest.keyvalue");
+var blobdemo = global_namespace.lookup("com.pageforest.blobdemo");
 $(document).ready(function() {
     $("input.focus:last").focus();
 });
 </script>
 </head>
 <body>
-<h1>REST API Demo</h1>
+<h1>Blob storage REST API Demo</h1>
 
 <table>
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="keyvalue.signIn()" value="Sign In" />
-<input type="button" onclick="keyvalue.signOut()" value="Sign Out" />
+<input type="button" onclick="blobdemo.signIn()" value="Sign In" />
+<input type="button" onclick="blobdemo.signOut()" value="Sign Out" />
 </td>
 </tr>
 <tr>
@@ -46,10 +46,10 @@ $(document).ready(function() {
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="keyvalue.ajax('PUT')" value="Put" />
-<input type="button" onclick="keyvalue.ajax('GET')" value="Get" />
-<input type="button" onclick="keyvalue.ajax('DELETE')" value="Delete" />
-<input type="button" onclick="keyvalue.ajax('HEAD')" value="Head" />
+<input type="button" onclick="blobdemo.ajax('PUT')" value="Put" />
+<input type="button" onclick="blobdemo.ajax('GET')" value="Get" />
+<input type="button" onclick="blobdemo.ajax('DELETE')" value="Delete" />
+<input type="button" onclick="blobdemo.ajax('HEAD')" value="Head" />
 </td>
 </tr>
 </table>

@@ -1,4 +1,4 @@
-global_namespace.define("com.pageforest.keyvalue", function (ns) {
+global_namespace.define("com.pageforest.blobdemo", function (ns) {
 
     function formatResult(xhr, status, message) {
         var result = '';
@@ -47,7 +47,7 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         // Open a new tab for the sign-in page.
         var dot = location.host.indexOf('.');
         var www = "www" + location.host.substr(dot);
-        var url = "http://" + www + "/auth/sign-in/keyvalue";
+        var url = "http://" + www + "/auth/sign-in/blobdemo/";
         newTab(url);
         // Start polling for the session key cookie.
         if (ns.polling) {
@@ -87,4 +87,4 @@ global_namespace.define("com.pageforest.keyvalue", function (ns) {
         document.cookie = name + '=' + value + expires + path;
     };
 
-}); // com.pageforest.keyvalue
+}); // com.pageforest.blobdemo
