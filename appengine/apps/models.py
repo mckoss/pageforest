@@ -1,5 +1,4 @@
 import re
-import time
 import logging
 
 from google.appengine.ext import db
@@ -7,10 +6,8 @@ from google.appengine.api import memcache
 
 from django.conf import settings
 
-from utils.mixins import Cacheable, Migratable, Timestamped
 from utils import crypto
 
-from auth.models import User
 from docs.supermodels import SuperDoc
 
 CACHE_PREFIX = 'GBH1~'
@@ -170,7 +167,7 @@ class App(SuperDoc):
         """
         All App creation should go through this method.
 
-        TODO: Confirm quotas, and permissions.
+        TODO: Check quotas and permissions.
         """
         if app_id in settings.RESERVED_APPS:
             raise Exception("Application %s is RESERVED." % app_id)

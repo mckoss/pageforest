@@ -1,5 +1,3 @@
-from django.conf import settings
-
 from docs.models import Doc
 
 

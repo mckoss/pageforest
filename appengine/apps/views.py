@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list
@@ -36,7 +36,6 @@ def app_json(request, app_id):
     """
     Read and write application info with REST API.
     """
-    request.app = App.lookup(app_id)
     if request.method == 'GET':
         return app_json_get(request, app_id)
     if request.method == 'PUT':
@@ -47,6 +46,7 @@ def app_json_get(request, app_id):
     """
     Get JSON blob with meta info for this app.
     """
+    request.app = App.lookup(app_id)
     if not request.app.is_readable(request.user):
         return AccessDenied(request)
     content = model_to_json(request.app, exclude='secret'.split())
@@ -57,6 +57,7 @@ def app_json_put(request, app_id):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
+    request.app = App.lookup(app_id)
     if request.app and not request.app.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
