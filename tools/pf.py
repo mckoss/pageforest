@@ -10,7 +10,8 @@ from optparse import OptionParser
 
 META_FILENAME = 'app.json'
 CONFIG_FILENAME = '.url'
-IGNORE_FILENAMES = ''.split()
+IGNORE_FILENAMES = []
+COMMANDS = ['get', 'put']
 
 
 class PutRequest(urllib2.Request):
@@ -62,13 +63,28 @@ def save_config(options):
 
 
 def config():
-    usage = "usage: %prog [options] [filename] ..."
+    usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
         help="deploy to this server (default: read from .url file)")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
     options, args = parser.parse_args()
+
+    if not args:
+        parser.error("No command specified.")
+    options.command = args.pop(0).lower().strip()
+    if not options.command:
+        parser.error("Empty command.")
+    # Prefix expansion.
+    for command in COMMANDS:
+        if command.startswith(options.command):
+            options.command = command
+    if options.command not in COMMANDS:
+        parser.error("Unsupported command: " + options.command)
+
+    if not args:
+        args = ['.']
 
     if os.path.exists(CONFIG_FILENAME) and not options.server:
         load_config(options)
@@ -112,19 +128,22 @@ def upload_dir(options, path):
             upload_file(options, dirpath + '/' + filename)
 
 
-def main():
-    if not os.path.exists(META_FILENAME):
-        sys.exit('Could not find ' + META_FILENAME)
-    options, args = config()
-    options.session_key = login(options)
-    if not args:
-        args = ['.']
+def get(options, args):
+    raise NotImplementedError
+
+
+def put(options, args):
     for path in args:
         if os.path.isdir(path):
             upload_dir(options, path)
         elif os.path.isfile(path):
             upload_file(options, path)
 
+
+def main():
+    options, args = config()
+    options.session_key = login(options)
+    globals()[options.command](options, args)
     if options.save:
         save_config(options)
 
