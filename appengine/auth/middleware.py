@@ -24,7 +24,7 @@ class AuthMiddleware(object):
         except SignatureError, error:
             request.session_key_error = "Invalid %s cookie: %s" % (
                 settings.SESSION_COOKIE_NAME, unicode(error))
-            request.user = None
+            assert request.user is None
 
 
 class AccessDenied(HttpResponseForbidden):
