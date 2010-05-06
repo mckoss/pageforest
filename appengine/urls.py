@@ -1,6 +1,5 @@
 from django.conf.urls.defaults import patterns, handler404, handler500, include
 from django.views.generic.simple import direct_to_template
-from django.conf import settings
 
 urlpatterns = patterns(
     '',
