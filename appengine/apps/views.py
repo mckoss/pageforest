@@ -9,7 +9,7 @@ from auth.middleware import AccessDenied
 from apps.models import App
 
 
-@method_required('PUT', 'GET')
+@method_required('GET', 'POST')
 def create_app(request, app_id):
     """
     Bootstrap application creation.
@@ -24,7 +24,7 @@ def create_app(request, app_id):
 
     """
     # TODO: Permissions and quota check
-    app = App.create(app_id)
+    app = App.create(app_id, request.user)
     app.put()
     # TODO: should return a default app.json???
     return HttpResponse('%s created.' % app_id)
