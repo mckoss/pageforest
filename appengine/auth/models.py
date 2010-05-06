@@ -40,6 +40,9 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
         """
         return cls.get_by_key_name(username.lower())
 
+    # REVIEW: This is confusing because I would expect to get the
+    # username, not the username converted to lowercase. Can we
+    # rename this method to user.get_lower() or similar?
     def get_username(self):
         return self.key().name()
 
@@ -53,10 +56,9 @@ class User(db.Expando, Migratable, Cacheable, Timestamped):
     def check_password(self, password):
         """
         Returns a boolean of whether the (plaintext) password was correct.
-        Handles encryption formats behind the scenes.
         """
-        return crypto.hmac_sha1(self.get_username(),
-                                password) == self.password
+        hmac = crypto.hmac_sha1(self.get_username(), password)
+        return hmac == self.password
 
     def migrate(self, next_schema):
         """
