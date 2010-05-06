@@ -88,9 +88,11 @@ def sign_in(request, app_id=None):
             user = form.cleaned_data['user']
             response = HttpResponseRedirect('/auth/sign-in/%s' %
                                             (app_id or ''))
+            # Whenever we sign in - generate a fresh www session key
+            assert request.app.get_app_id() == 'www', \
+                "Sign-in should only be enabled on the www domain."
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                user.generate_session_key(app or \
-                                                          App.lookup('www')),
+                                user.generate_session_key(request.app),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
 
