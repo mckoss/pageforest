@@ -32,7 +32,7 @@ def register(request):
                                 mimetype='application/json')
         if form.is_valid():
             form.save(request)
-            return redirect('/welcome/')
+            return redirect('/auth/sign-in/')
     return render_to_response(request, 'auth/register.html', {'form': form})
 
 
@@ -49,18 +49,20 @@ def sign_in(request, app_id=None):
     Note: return the application session key to the client via
     ajax, so they can request the cookie on the proper domain.
 
+    This form should only ever be displayed on www.pageforest.com.
+
     TODO: Generate long-term reauthorization cookies on
     path=/auth/reauth so clients can upate their shorter
     session keys.
     """
     form = SignInForm(request.POST or None)
-    app = request.app
+    app = None
     if app_id:
         app = App.lookup(app_id)
         if app is None or app.is_www():
             return HttpResponseRedirect(reverse(sign_in))
 
-    if app.is_www():
+    if app is None:
         del form.fields['app_auth']
     else:
         form.fields['app_auth'].label = app_id.title()
@@ -71,14 +73,13 @@ def sign_in(request, app_id=None):
             response = HttpResponseRedirect('/auth/sign-in/%s' %
                                             (app_id or ''))
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                user.generate_session_key(app),
+                                user.generate_session_key(app or \
+                                                          App.lookup('www')),
                                 max_age=settings.SESSION_COOKIE_AGE)
             return response
 
     app_session_key = None
-    if app.is_www():
-        app = None
-    elif request.user:
+    if app and request.user:
         app_session_key = request.user.generate_session_key(app)
     return render_to_response(request, 'auth/sign-in.html',
                               {'form': form,
