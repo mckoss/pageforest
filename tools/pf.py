@@ -25,14 +25,15 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login(options):
-    url = 'http://%s/auth/challenge' % options.server
+def login(options, server=None):
+    server = server or options.server
+    url = 'http://%s/auth/challenge' % server
     challenge = urllib2.urlopen(url).read()
     print("Challenge: %s" % challenge)
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
     reply = '/'.join((options.username, challenge, signature))
-    url = 'http://%s/auth/verify/%s' % (options.server, reply)
+    url = 'http://%s/auth/verify/%s' % (server, reply)
     print("Response: %s" % url)
     session_key = urllib2.urlopen(url).read()
     print("Session key: %s" % session_key)
@@ -83,9 +84,6 @@ def config():
     if options.command not in COMMANDS:
         parser.error("Unsupported command: " + options.command)
 
-    if not args:
-        args = ['.']
-
     if os.path.exists(CONFIG_FILENAME) and not options.server:
         load_config(options)
 
@@ -103,16 +101,27 @@ def config():
     return options, args
 
 
-def upload_file(options, filename):
-    urlpath = filename.replace('\\', '/')
-    if urlpath.startswith('./'):
-        urlpath = urlpath[2:]
-    url = 'http://%s/%s' % (options.server, urlpath)
+def upload_file(options, filename, url=None):
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = 'http://%s/%s' % (options.server, urlpath)
     data = open(filename).read()
     request = PutRequest(url, data)
     request.add_header('Cookie', 'sessionkey=' + options.session_key)
     print url
     print urllib2.urlopen(request).read()
+
+
+def upload_meta_file(options):
+    parts = options.server.split('.')
+    app_id = parts[0]
+    parts[0] = 'www'
+    www_domain = '.'.join(parts)
+    options.session_key = login(options, www_domain)
+    url = 'http://%s/apps/%s/app.json' % (www_domain, app_id)
+    upload_file(options, META_FILENAME, url)
 
 
 def upload_dir(options, path):
@@ -133,16 +142,26 @@ def get(options, args):
 
 
 def put(options, args):
+    if not args:
+        args = [name for name in os.listdir('.')
+                if not name.startswith('.')]
+    # REVIEW: The following doesn't work if you use "pf put <folder>"
+    # to upload some files including META_FILENAME inside <folder>.
+    # Should we require that "pf put" is always run in the same folder
+    # where META_FILENAME lives?
+    if META_FILENAME in args:
+        upload_meta_file(options)
+    options.session_key = login(options)
     for path in args:
         if os.path.isdir(path):
             upload_dir(options, path)
         elif os.path.isfile(path):
-            upload_file(options, path)
+            if path != META_FILENAME:
+                upload_file(options, path)
 
 
 def main():
     options, args = config()
-    options.session_key = login(options)
     globals()[options.command](options, args)
     if options.save:
         save_config(options)
