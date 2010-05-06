@@ -7,8 +7,11 @@ from django.core.urlresolvers import reverse
 from django.http import \
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
-from google.appengine.api import memcache
+from google.appengine.api import mail, memcache
 from google.appengine.runtime import DeadlineExceededError
+
+from django.template.loader import render_to_string
+from django.template import RequestContext
 
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
@@ -18,6 +21,18 @@ from auth.forms import RegistrationForm, SignInForm
 from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
 
 from apps.models import App
+
+
+def send_email_verification(request, user):
+    """
+    Send email to this user.
+    """
+    message = render_to_string('auth/verify-email.txt',
+                               RequestContext(request, {'user': user}))
+    mail.send_mail(sender=settings.SITE_EMAIL_FROM,
+                   to=user.email,
+                   subject=settings.SITE_NAME + " account verification.",
+                   body=message)
 
 
 @method_required('GET', 'POST')
@@ -31,8 +46,9 @@ def register(request):
             return HttpResponse(form.errors_json(),
                                 mimetype='application/json')
         if form.is_valid():
-            form.save(request)
-            return redirect('/auth/sign-in/')
+            user = form.save()
+            send_email_verification(request, user)
+            return redirect('/auth/welcome/')
     return render_to_response(request, 'auth/register.html', {'form': form})
 
 
