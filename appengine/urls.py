@@ -11,6 +11,7 @@ urlpatterns = patterns(
     (r'^terms-of-service/$', direct_to_template, {'template': 'tos.html'}),
 
     # Include separate urls.py for Django apps.
+    (r'^apps/', include('apps.urls')),
     (r'^auth/', include('auth.urls')),
     (r'^auth/', include('auth.urlsapp')),
     (r'^dashboard/', include('dashboard.urls')),
@@ -19,16 +20,11 @@ urlpatterns = patterns(
     (r'^app/auth/', include('auth.urlsapp')),
 
     # REVIEW: Why is this not just docs.urls?
+    # ANSWER: Because it's app specific (URL starts with /app/ prefix).
     (r'^app/docs/', include('docs.urlsapp')),
     # Application keyspace reserved for future use
     (r'^app/(docs|data)/', 'utils.views.reserved'),
 
     # Static hosting for Pageforest apps.
-    (r'^app/app.json$', 'apps.views.app_json'),
-    (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)',
-     'blobs.views.blob'),
-
-    # Application management urls and apis
-    (r'^apps/', include('apps.urls')),
-
+    (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)', 'blobs.views.blob'),
 )
