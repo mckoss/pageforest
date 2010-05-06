@@ -83,8 +83,8 @@ JSON_MIMETYPE = 'application/json'
 
 # Allowed dormats for pageforest identifiers:
 USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
-APP_ID_REGEX = USERNAME_REGEX
-DOC_ID_REGEX = r"([a-zA-Z0-9_-][a-zA-Z0-9_\.-]*)"
+APP_ID_REGEX = r"[a-z][a-z0-9-]*[a-z0-9]"
+DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]*"
 
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
