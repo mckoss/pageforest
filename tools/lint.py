@@ -88,7 +88,7 @@ def main():
     (options, args) = parser.parse_args()
 
     if len(args) < 1:
-        parser.error("missing module or package")
+        args.append('.')
 
     command = ['pylint']
     command.append('--output-format=parseable')
@@ -102,41 +102,50 @@ def main():
 
     walk = pftool.FileWalker(matches=('*.py',),
                              pass_key='pylint')
+    if options.force:
+        walk.pass_key = None
 
     file_count = 0
     total_errors = 0
     start = time()
 
-    if options.force:
-        command.extend(args)
+    # Pre-flight the test to count the number of file to be
+    # processed.
+    dirty_files = list(walk.walk_files(*args))
+    file_count = len(dirty_files)
+
+    if file_count > 3:
+        # Execute a single pylint command.
+
+        # Pass just the dirty files in the command line
+        # (unless that would be too long).
+        if file_count < 20:
+            command.extend(dirty_files)
+        else:
+            command.extend(args)
         command = ' '.join(command)
         total_errors = exec_and_filter(command, options)
 
         # Optimization - mark all the files processed as passed
         if total_errors == 0:
-            # Walk all the files so we get a total file count of what
-            # was checked.
-            walk.pass_key = None
-            for file_name in walk.walk_files(*args):
-                file_count += 1
-                walk.set_passing('pylint')
+            for file_name in dirty_files:
+                walk.set_passing(pass_key='pylint', file_path=file_name)
     else:
         # File by file processing is slower (and less complete)
         # But we capture individual file errors and only
         # re-lint the subset that has changed.
         command = ' '.join(command)
-        for file_name in walk.walk_files(*args):
-            file_count += 1
+        for file_name in dirty_files:
             errors = exec_and_filter(command + ' ' + file_name, options)
             if errors == 0:
-                walk.set_passing()
+                walk.set_passing(pass_key='pylint', file_path=file_name)
             total_errors += errors
 
     walk.save_pass_dict()
 
     elapsed = time() - start
 
-    if total_errors or options.verbose and file_count:
+    if total_errors or (options.verbose and file_count > 0):
         sys.exit(('Found %d errors in %d files ' +
                  '(in %1.1f seconds ... %1.1f secs per file).') %
                  (total_errors, file_count,
