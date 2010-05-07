@@ -1,9 +1,22 @@
 global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
+    /*
+      Handle logging a user into Pageforest and optionally also log
+      them in to a Pageforest application.
+
+      A logged in use will get a session key on www.pageforest.com.
+      This script makes requests to appid.pageforest.com in order to
+      get a cookie set on the application domain when the user wants
+      to allow the application access to his store.
+
+      TODO: Remove application session cookie on Sign-out.
+    */
+    var cookies = ns.lookup('org.startpad.cookies');
+
     ns.extend(ns, {
         // Check if user is already logged in.
         documentReady: function(username, appId) {
             ns.appId = appId;
-            ns.appDomain = ns.getAppDomain(appId);
+            ns.appAuthURL = ns.getAppDomain(appId) + '/auth/';
 
             // Nothing to do until the user signs in - page will reload
             // on form post.
@@ -16,9 +29,20 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
                 return;
             }
 
+            // Check for a (session) cookie with the application session
+            // key.  We clear it once used so it doesn't get retransmitted.
+            var sessionName = appId + "-sessionkey";
+            var appSession = cookies.getCookies()[sessionName];
+            if (appSession != undefined) {
+                console.log("appSession: " + appSession);
+                cookies.setCookie(sessionName, '', 0);
+                ns.transferSession(appSession);
+            }
+
             // Check (once) if we're also currently logged in @ appId
             // without having to sign-in again.
-            ns.getString(ns.appDomain + "/auth/username", function(username) {
+            // REVIEW: Isn't this insecure?
+            ns.getString(ns.appAuthURL + "username/", function(username) {
                 // We're already logged in!
                 if (typeof(username) == 'string') {
                     ns.closeForm();
@@ -30,7 +54,8 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
         transferSession: function(sessionKey) {
             // Send a valid appId sessionKey to the app domain
             // to get it installed on a cookie.
-            ns.getString(ns.appDomain + "/auth/set-session/" + sessionKey, function (s) {
+            console.log("Sending session: " + sessionKey);
+            ns.getString(ns.appAuthURL + "set-session/" + sessionKey, function (s) {
                 if (typeof(s) != 'string') {
                     alert(s.message);
                     return;

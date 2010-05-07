@@ -91,6 +91,11 @@ ReplaceKeys: function(st, keys)
         st = st.StReplace("{" + key + "}", keys[key]);
     st = st.replace(/\{[^\{\}]*\}/g, "");
     return st;
+    },
+
+strip: function(s)
+    {
+    return (s || "").replace( /^\s+|\s+$/g, "");
     }
 
 });
@@ -98,11 +103,6 @@ ReplaceKeys: function(st, keys)
 //--------------------------------------------------------------------------
 // Some extensions to built-in JavaScript objects (sorry!)
 //--------------------------------------------------------------------------
-
-String.prototype.Trim = function()
-{
-    return (this || "").replace( /^\s+|\s+$/g, "");
-};
 
 String.prototype.StReplace = function(stPat, stRep)
 {

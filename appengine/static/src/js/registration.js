@@ -43,7 +43,7 @@ global_namespace.define('com.pageforest.registration', function(ns) {
         ns.previous = oneline;
         $.ajax({
             type: "POST",
-            url: "",
+            url: "/sign-up",
             data: data,
             dataType: "json",
             success: validate_success,
