@@ -12,6 +12,14 @@ from docs.models import Doc
 
 from utils import crypto
 
+# Authentication application URL prefix
+AUTH_PREFIX = "/"
+SIGN_UP = AUTH_PREFIX + "sign-up/"
+SIGN_IN = AUTH_PREFIX + "sign-in/"
+SIGN_OUT = AUTH_PREFIX + "sign-out/"
+
+APP_AUTH_PREFIX = "/auth/"
+
 
 class UserTest(TestCase):
 
@@ -66,7 +74,7 @@ class RegistrationTest(TestCase):
         """Invalid usernames are rejected."""
         for char in '012_-.,!?$:@/':
             response = self.www.post(
-                '/auth/sign-up', {'username': char + 'name'})
+                SIGN_UP, {'username': char + 'name'})
             self.assertContains(
                 response, "Username must start with a letter.")
 
@@ -74,7 +82,7 @@ class RegistrationTest(TestCase):
         """Invalid usernames are rejected."""
         for char in '_-.,!?$:@/':
             response = self.www.post(
-                '/auth/sign-up', {'username': 'name' + char})
+                SIGN_UP, {'username': 'name' + char})
             self.assertContains(
                 response, "Username must end with a letter or number.")
 
@@ -82,36 +90,36 @@ class RegistrationTest(TestCase):
         """Invalid usernames are rejected."""
         for char in '_.,!?$:@/':
             response = self.www.post(
-                '/auth/sign-up', {'username': 'a' + char + 'b'})
+                SIGN_UP, {'username': 'a' + char + 'b'})
             self.assertContains(response,
                 "Username must contain only letters, numbers and dashes.")
 
     def test_username_too_short(self):
         """Excessively short usernames are rejected."""
-        response = self.www.post('/auth/sign-up', {'username': 'a'})
+        response = self.www.post(SIGN_UP, {'username': 'a'})
         self.assertContains(response, "at least 2 characters")
 
     def test_username_too_long(self):
         """Excessively long usernames are rejected."""
-        response = self.www.post('/auth/sign-up', {'username': 'a' * 31})
+        response = self.www.post(SIGN_UP, {'username': 'a' * 31})
         self.assertContains(response,
             "Ensure this value has at most 30 characters (it has 31).")
 
     def test_username_reserved(self):
         """Reserved usernames are enforced."""
         for name in 'root admin test'.split():
-            response = self.www.post('/auth/sign-up', {'username': name})
+            response = self.www.post(SIGN_UP, {'username': name})
             self.assertContains(response, "This username is reserved.")
 
     def test_password_silly(self):
         """Silly passwords are rejected."""
         for password in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.www.post('/auth/sign-up', {'password': password})
+            response = self.www.post(SIGN_UP, {'password': password})
             self.assertContains(response, "This password is too simple.")
 
     def test_username_taken(self):
         """Existing usernames are reserved."""
-        response = self.www.post('/auth/sign-up', {'username': 'peter'})
+        response = self.www.post(SIGN_UP, {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
 
@@ -135,35 +143,35 @@ class SignInTest(TestCase):
                   'expect': 'Invalid password'},
                  )
         for case in cases:
-            response = self.www.post('/auth/sign-in', case['fields'])
+            response = self.www.post(SIGN_IN, case['fields'])
             self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_success(self):
         """Sign-in form success - cookie and redirect - sign-out."""
-        response = self.www.post('/auth/sign-in',
+        response = self.www.post(SIGN_IN,
                                  {'username': 'peter',
                                   'password': 'password'})
         self.assertRedirects(response,
-                             'http://www.pageforest.com/auth/sign-in/')
+                             'http://www.pageforest.com' + SIGN_IN)
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('www/peter/12'))
 
         # Simulate the redirect after POST
-        response = self.www.post('/auth/sign-in/')
+        response = self.www.post(SIGN_IN)
         self.assertContains(response, 'Peter, you are signed in to')
 
         # Now sign out the user - and check his cookies
-        response = self.www.get('/auth/sign-out/')
+        response = self.www.get(SIGN_OUT)
         self.assertRedirects(response,
-                             'http://www.pageforest.com/auth/sign-in/')
+                             'http://www.pageforest.com' + SIGN_IN)
 
         cookie = response.cookies['sessionkey']
         self.assertEqual(cookie.value, '')
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
         # Simulate the redirect after GET
-        response = self.www.post('/auth/sign-in/')
+        response = self.www.post(SIGN_IN)
         self.assertContains(response, 'Sign in to Pageforest')
 
 
@@ -187,44 +195,44 @@ class AppSignInTest(TestCase):
 
     def test_errors(self):
         """Errors on application sign-in form."""
-        cases = ({'fields': {'username': 'peter', 'password': 'password'},
+        cases = ({'fields': {'username': 'peter'},
                   'expect': 'This field is required'},
                  )
         for case in cases:
-            response = self.www.post('/auth/sign-in/myapp', case['fields'])
+            response = self.www.post(SIGN_IN + 'myapp/', case['fields'])
             self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_no_auth_on_app_domain(self):
         """Only have sign-in pages on the www.pf.com domain."""
-        response = self.myapp.get('/auth/sign-in/')
+        response = self.myapp.get('auth' + SIGN_IN)
         self.assertEqual(response.status_code, 404)
 
     def test_no_app(self):
         """Sign into non-existant application -> redirect."""
-        response = self.www.get('/auth/sign-in/noapp')
+        response = self.www.get(SIGN_IN + 'noapp')
         self.assertRedirects(response,
-                             'http://www.pageforest.com/auth/sign-in/')
+                             'http://www.pageforest.com' + SIGN_IN)
 
     def test_sign_in(self):
         """Sign in to an application (from scratch)."""
         # Initial form - not signed in
-        response = self.www.get('/auth/sign-in/myapp')
+        response = self.www.get(SIGN_IN + 'myapp/')
         self.assertContains(response, "Sign in to Pageforest")
         self.assertContains(response, "and My Test App.")
 
-        response = self.www.post('/auth/sign-in/myapp',
+        response = self.www.post(SIGN_IN + 'myapp/',
                                  {'username': 'peter',
                                   'password': 'password',
                                   'app_auth': 'checked'})
         self.assertRedirects(response,
-                             'http://www.pageforest.com/auth/sign-in/myapp')
+                             'http://www.pageforest.com' + SIGN_IN + 'myapp/')
         cookie = response.cookies['sessionkey'].value
         # Expect a first-part session cookie to www.pf.com
         self.assertTrue(cookie.startswith('www/peter/12'))
 
         # Simulate the redirect to the form
-        response = self.www.post('/auth/sign-in/myapp')
+        response = self.www.post(SIGN_IN + 'myapp/')
         # We need the app-specific session cookie transfered to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
         match = myapp_session_key = re.search(r'transferSession\("(.*)"\)',
@@ -234,17 +242,17 @@ class AppSignInTest(TestCase):
         self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
 
         # Should not be logged in yet
-        response = self.myapp.get('/auth/username')
+        response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
         self.assertEqual(response.status_code, 404)
         self.assertTrue('sessionkey' not in response.cookies)
         # Simulate the in-page javascript that does the cross-site
         # authentication
-        response = self.myapp.get("/auth/set-session/" +
+        response = self.myapp.get(APP_AUTH_PREFIX + 'set-session/' +
                                   myapp_session_key)
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('myapp/peter/12'))
         # And confirm we're logged in
-        response = self.myapp.get('/auth/username')
+        response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")
 
 
@@ -266,12 +274,13 @@ class ChallengeVerifyTest(TestCase):
         password = password or self.peter.password
         signed = crypto.sign(challenge, password)
         data = crypto.join(username.lower(), signed)
-        return self.app_client.get('/auth/verify/' + data, **kwargs)
+        return self.app_client.get(APP_AUTH_PREFIX + 'verify/' + data,
+                                   **kwargs)
 
     def test_login(self):
         """Test challenge and verify."""
         # Get a challenge from the server.
-        response = self.app_client.get('/auth/challenge')
+        response = self.app_client.get(APP_AUTH_PREFIX + 'challenge/')
         self.assertEqual(response.status_code, 200)
         challenge = response.content
         response = self.sign_and_verify(challenge)
@@ -282,7 +291,7 @@ class ChallengeVerifyTest(TestCase):
     def test_invalid_challenge(self):
         """The challenge must have a valid HMAC."""
         # Get a challenge from the server.
-        challenge = self.app_client.get('/auth/challenge').content
+        challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         # Alter the last letter of the challenge HMAC
         challenge = challenge[:-1] + 'x'
         response = self.sign_and_verify(challenge)
@@ -290,7 +299,7 @@ class ChallengeVerifyTest(TestCase):
 
     def test_bogus_login(self):
         """A bogus authentication string cannot login."""
-        response = self.app_client.get('/auth/verify/x')
+        response = self.app_client.get(APP_AUTH_PREFIX + 'verify/x')
         self.assertContains(response, 'Expected 6 parts.', status_code=403)
 
     def test_expired_challenge(self):
@@ -303,7 +312,8 @@ class ChallengeVerifyTest(TestCase):
         real_time = time.time
         time.time = mock_time
         try:
-            challenge = self.app_client.get('/auth/challenge').content
+            challenge = self.app_client.get(APP_AUTH_PREFIX + \
+                                            'challenge/').content
         finally:
             time.time = real_time
         response = self.sign_and_verify(challenge)
@@ -311,7 +321,7 @@ class ChallengeVerifyTest(TestCase):
 
     def test_replay(self):
         """A replay attack cannot login."""
-        challenge = self.app_client.get('/auth/challenge').content
+        challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         # First login should be successful.
         response = self.sign_and_verify(challenge)
         self.assertContains(response, 'myapp/peter/', status_code=200)
@@ -321,19 +331,19 @@ class ChallengeVerifyTest(TestCase):
 
     def test_different_ip(self):
         """Different IP address cannot login."""
-        challenge = self.app_client.get('/auth/challenge').content
+        challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         response = self.sign_and_verify(challenge, REMOTE_ADDR='1.1.1.1')
         self.assertContains(response, "IP address changed.", status_code=403)
 
     def test_unknown_user(self):
         """Unknown user cannot login."""
-        challenge = self.app_client.get('/auth/challenge').content
+        challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         response = self.sign_and_verify(challenge, username='unknown')
         self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_wrong_password(self):
         """Incorrect password cannot login."""
-        challenge = self.app_client.get('/auth/challenge').content
+        challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         response = self.sign_and_verify(
             challenge, password=self.peter.password[::-1])
         self.assertContains(response, 'Password incorrect.',

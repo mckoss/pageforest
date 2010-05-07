@@ -11,7 +11,7 @@ urlpatterns = patterns(
 
     # Include separate urls.py for Django apps.
     (r'^apps/', include('apps.urls')),
-    (r'^auth/', include('auth.urls')),
+    (r'', include('auth.urls')),
     (r'^auth/', include('auth.urlsapp')),
     (r'^dashboard/', include('dashboard.urls')),
 

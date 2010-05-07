@@ -29,8 +29,10 @@ DEV_APPSERVER = SERVER_SOFTWARE.startswith("Development")
 RUNNING_ON_GAE = SERVER_SOFTWARE.startswith("Google App Engine")
 
 DEBUG = DEV_APPSERVER
-TEMPLATE_DEBUG = DEBUG
 #DEBUG = False
+
+TEMPLATE_DEBUG = DEBUG
+USE_APPSTATS = not DEBUG
 
 ADMINS = (
     ('Mike Koss', 'mckoss@pageforest.com'),
@@ -190,15 +192,19 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'auth.middleware.user_context',
 )
 
-MIDDLEWARE_CLASSES = (
-    'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware',
+
+MIDDLEWARE_CLASSES = [
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
     'auth.middleware.AuthMiddleware',        # Get the signed in user.
     'docs.middleware.DocMiddleware',         # Get the document.
     'utils.middleware.ExceptionMiddleware',  # Get exception info.
-)
+]
+
+if USE_APPSTATS:
+    MIDDLEWARE_CLASSES.insert(0,
+        'google.appengine.ext.appstats.recording.AppStatsDjangoMiddleware')
 
 ROOT_URLCONF = 'urls'
 
@@ -238,9 +244,8 @@ COMBINE_FILES = not DEBUG
 #COMBINE_FILES = True
 MEDIA_FILES = {
     'js': {
-        'pageforest': ['namespace', 'base', 'vector', 'dom', 'json2', 'crypto',
-                       'timer', 'events', 'registration', 'sign-in-form',
-                       'formatutil', 'dateutil', 'data'],
+        'pageforest': ['namespace', 'registration', 'sign-in-form',
+                       'formatutil', 'cookies'],
         },
 
     'css': {
