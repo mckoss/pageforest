@@ -1,6 +1,13 @@
-from django.http import HttpResponseNotFound
+import logging
+
+from django.http import HttpResponseNotFound, HttpResponseNotAllowed
+
+from auth.middleware import AccessDenied
 
 from docs.models import Doc
+
+READ_METHODS = ['GET', 'HEAD', 'SLICE']
+WRITE_METHODS = ['PUT', 'POST', 'DELETE', 'PUSH']
 
 
 class DocMiddleware(object):
@@ -12,8 +19,21 @@ class DocMiddleware(object):
         doc_id = parts[3]
         key_name = '/'.join((request.app.get_app_id(), doc_id.lower()))
         request.doc = Doc.get_by_key_name(key_name)
+        if request.doc is None and request.method == 'PUT' and len(parts) == 4:
+            # This request is going to create the document.
+            if request.user is None:
+                return AccessDenied(request)
+            return
+        # Check that the document exists.
         if request.doc is None:
-            # The document was not found in the datastore, return 404
-            # unless this request is going to create it.
-            if request.method != 'PUT' or len(parts) != 4:
-                return HttpResponseNotFound("Document not found: " + doc_id)
+            return HttpResponseNotFound("Document not found: " + doc_id)
+        # Check document permissions before reading or writing.
+        if request.method in READ_METHODS:
+            if not request.doc.is_readable(request.user):
+                return AccessDenied(request)
+        elif request.method in WRITE_METHODS:
+            if not request.doc.is_writable(request.user):
+                return AccessDenied(request)
+        else:
+            logging.info("No access control for unknown request method:" +
+                         request.method)

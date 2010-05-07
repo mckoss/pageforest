@@ -60,15 +60,11 @@ def document_put(request, doc_id):
     Parse incoming JSON blob and update meta info for this document.
     """
     if request.doc is None:
-        # Check session key.
-        if request.user is None:
-            return AccessDenied(request)
-        # Create a new Doc with this doc_id.
+        # Create this document. TODO: Quota check.
         request.doc = Doc.create(request.app.get_app_id(), doc_id,
                                  request.user)
     if not request.doc.is_writable(request.user):
         return AccessDenied(request)
-    # TODO: Quota check.
     try:
         parsed = json.loads(request.raw_post_data)
         for key in ('title', 'doc_id'):
