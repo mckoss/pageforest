@@ -14,11 +14,12 @@ class AppMiddleware(object):
         """
         Get the app by hostname.
         """
-        request.app = App.get_by_hostname(
-            request.META.get('HTTP_HOST', 'testserver'))
+        hostname = request.META.get('HTTP_HOST', 'testserver')
+        request.app = App.get_by_hostname(hostname)
 
         if request.app is None:
-            return HttpResponseNotFound("Application not found.")
+            return HttpResponseNotFound(
+                "Application not found for hostname: " + hostname)
 
         if request.app.is_www():
             # Don't allow references to internal re-written URIs.
@@ -43,7 +44,6 @@ def app_context(request):
     Expose the app as {{ application }} to templates (but only for
     3rd party apps - not for 'www'.
     """
-    logging.info("App Context")
-    if not request.app.is_www():
+    if hasattr(request, 'app') and request.app and not request.app.is_www():
         return {'application': request.app}
     return {}
