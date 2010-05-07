@@ -22,7 +22,8 @@ class AppTestCase(TestCase):
                        domains=['myapp.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
-        self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc')
+        self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc',
+                       readers=['anybody'], writers=['peter'])
         self.doc.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
@@ -128,7 +129,9 @@ class HostTest(AppTestCase):
                          domains=['other.pageforest.com'],
                          secret='OtherSecreT')
         self.other.put()
-        self.otherdoc = Doc(key_name='other/mydoc', doc_id='MyDoc')
+        self.otherdoc = Doc(key_name='other/mydoc', doc_id='MyDoc',
+                            readers=['authenticated'],
+                            writers=['paul', 'peter'])
         self.otherdoc.put()
         self.other_client = Client(HTTP_HOST=self.other.domains[0])
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
