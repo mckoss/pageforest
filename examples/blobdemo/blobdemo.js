@@ -62,11 +62,29 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
         showSuccess('deleted session key');
     };
 
-    ns.blobAjax = function (method) {
+    ns.docAjax = function (method) {
+        var doc_id = $("#id_doc_id").val();
+        var url = '/docs/' + doc_id + '/';
         var options = {
             type: method,
             dataType: 'text',
-            url: '/docs/doc/' + $("#id_key").val(),
+            url: url,
+            success: showSuccess,
+            error: showError
+        };
+        if (method == "PUT") {
+            options.data = $("#id_doc").val();
+        }
+        $.ajax(options);
+    };
+
+    ns.blobAjax = function (method) {
+        var doc_id = $("#id_doc_id").val();
+        var url = '/docs/' + doc_id + '/' + $("#id_key").val();
+        var options = {
+            type: method,
+            dataType: 'text',
+            url: url,
             success: showSuccess,
             error: showError
         };

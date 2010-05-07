@@ -11,9 +11,6 @@ src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="blobdemo.js"></script>
 <script type="text/javascript">
 var blobdemo = global_namespace.lookup("com.pageforest.blobdemo");
-$(document).ready(function() {
-    $("input.focus:last").focus();
-});
 </script>
 </head>
 <body>
@@ -21,12 +18,18 @@ $(document).ready(function() {
 
 <table style="float:left">
 <tr>
-<th><label for="id_doc">Doc ID:</label></th>
-<td><input id="id_doc" type="text" name="doc" value="doc" class="focus" /></td>
+<th><label for="id_doc_id">Doc ID:</label></th>
+<td><input id="id_doc_id" name="doc_id" value="doc" type="text" /></td>
 </tr>
 <tr>
-<th><label for="id_value">Doc:</label></th>
-<td><textarea id="id_value" name="value" style="width:400px; height:100px">
+<th><label for="id_doc">Doc:</label></th>
+<td><textarea id="id_doc" name="doc" style="width:400px; height:100px">
+{
+"title": "My Document",
+"tags": ["test"],
+"readers": ["anybody"],
+"writers": ["authenticated"]
+}
 </textarea></td>
 </tr>
 <tr>
