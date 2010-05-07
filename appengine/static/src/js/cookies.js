@@ -10,32 +10,30 @@ global_namespace.define('org.startpad.cookies', function(ns) {
     var format = ns.lookup('org.startpad.format-util');
 
 ns.extend(ns, {
-setCookie: function(name, value, days, fSecure)
-    {
-    var st = encodeURIComponent(name) + "=" + encodeURIComponent(value);
-    if (days !== undefined)
-        {
-        st += ";max-age=" + days*60*60*24;
-        }
+setCookie: function(name, value, days, path) {
+    var expires = '';
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+        expires = '; expires=' + date.toGMTString();
+    }
+    path = '; path=' + (path || '/');
+    document.cookie =
+        encodeURIComponent(name) + '=' + encodeURIComponent(value)
+        + expires + path;
+},
 
-    if (fSecure)
-        {
-        st += ";secure";
-        }
+getCookie: function(name) {
+    return ns.getCookies()[name];
+},
 
-    st += ";path=/";
-    document.cookie = st;
-    },
-
-getCookies: function()
-    {
+getCookies: function(name) {
     var st = document.cookie;
     var rgPairs = st.split(";");
 
     var obj = {};
-    for (var i = 0; i < rgPairs.length; i++)
-        {
-        // Note that document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
+    for (var i = 0; i < rgPairs.length; i++) {
+        // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
         rgPairs[i] = format.strip(rgPairs[i]);
         var rgC = rgPairs[i].split("=");
         var val = decodeURIComponent(rgC[1]);
@@ -44,7 +42,9 @@ getCookies: function()
         if (rg)
             val = rg[1].replace('\\"', '"');
         obj[decodeURIComponent(rgC[0])] = val;
-        }
-    return obj;
     }
-});});
+    return obj;
+
+}}); // ns
+
+}); // org.startpad.cookies

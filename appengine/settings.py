@@ -256,7 +256,7 @@ MEDIA_FILES = {
 # Exported files - used by external developers
 LIB_FILES = {
     'js': {
-        'widget': ['namespace', 'json2', 'crypto'],
+        'utils': ['namespace', 'json2', 'crypto', 'cookies', 'formatutil'],
         },
 
     'css': {

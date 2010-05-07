@@ -34,7 +34,6 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
             var sessionName = appId + "-sessionkey";
             var appSession = cookies.getCookies()[sessionName];
             if (appSession != undefined) {
-                console.log("appSession: " + appSession);
                 cookies.setCookie(sessionName, '', 0);
                 ns.transferSession(appSession);
             }
@@ -54,10 +53,9 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
         transferSession: function(sessionKey) {
             // Send a valid appId sessionKey to the app domain
             // to get it installed on a cookie.
-            console.log("Sending session: " + sessionKey);
             ns.getString(ns.appAuthURL + "set-session/" + sessionKey, function (s) {
+                alert(s);
                 if (typeof(s) != 'string') {
-                    alert(s.message);
                     return;
                 }
                 ns.closeForm();
