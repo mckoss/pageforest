@@ -24,7 +24,7 @@ def guess_mimetype(filename):
     >>> guess_mimetype('foo')
     'text/plain'
     """
-    name, ext = os.path.splitext(filename.lower())
+    (name, ext) = os.path.splitext(filename.lower())
     if ext in MIMETYPES:
         return MIMETYPES[ext]
     if not mimetypes.inited:
