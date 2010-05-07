@@ -104,14 +104,14 @@ class DocumentTest(TestCase):
     def test_404(self):
         """Test that missing document prevents blob access."""
         response = self.app_client.get('/docs/unknown/')
-        self.assertContains(response, 'Document not found: unknown',
+        self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
         # Writing a blob under this document should fail.
         response = self.app_client.put('/docs/unknown/blob/', 'data',
                                        content_type='text/plain')
-        self.assertContains(response, 'Document not found: unknown',
+        self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
         # Reading a blob under this document should fail.
         response = self.app_client.get('/docs/unknown/blob/')
-        self.assertContains(response, 'Document not found: unknown',
+        self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
