@@ -12,5 +12,4 @@ class DocMiddleware(object):
         doc_id = parts[3]
         key_name = '/'.join((request.app.get_app_id(), doc_id.lower()))
         request.doc = Doc.get_by_key_name(key_name)
-        if request.doc is None:
-            return HttpResponseNotFound("Document not found.")
+        # Attention: request.doc may be None at this point.

@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, Http404, HttpResponseForbidden
 from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list
@@ -33,15 +33,17 @@ def document(request, doc_id):
     Get document metadata.
     """
     if request.method == 'GET':
-        return document_get(request)
+        return document_get(request, doc_id)
     elif request.method == 'PUT':
         return document_put(request, doc_id)
 
 
-def document_get(request):
+def document_get(request, doc_id):
     """
     Get JSON blob with meta info for this document.
     """
+    if request.doc is None:
+        raise Http404("Document not found: " + doc_id)
     if not request.doc.is_readable(request.user):
         return AccessDenied(request)
     # Get extra data from blob store.
@@ -59,7 +61,13 @@ def document_put(request, doc_id):
     """
     Parse incoming JSON blob and update meta info for this document.
     """
-    # TODO: Create request.doc if it's None.
+    if request.doc is None:
+        # Check session key.
+        if request.user is None:
+            return AccessDenied(request)
+        # Create a new Doc with this doc_id.
+        request.doc = Doc.create(request.app.get_app_id(), doc_id,
+                                 request.user)
     if not request.doc.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
