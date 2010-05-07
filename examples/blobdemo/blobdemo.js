@@ -1,10 +1,6 @@
 global_namespace.define("com.pageforest.blobdemo", function (ns) {
     var cookies = ns.lookup('org.startpad.cookies');
 
-    ns.documentReady = function() {
-        pollCookie();
-    };
-
     function formatResult(xhr, status, message) {
         var result = '';
         if (xhr) {
@@ -38,8 +34,9 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
 
     function pollCookie() {
         var sessionkey = cookies.getCookie('sessionkey');
-        if (sessionkey != undefined)
+        if (sessionkey !== undefined) {
             showSuccess("Logged in");
+        }
         if (ns.polling) {
             clearInterval(ns.polling);
             ns.polling = undefined;
@@ -53,6 +50,10 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
             win.focus();
         }
     }
+
+    ns.documentReady = function() {
+        pollCookie();
+    };
 
     ns.signIn = function () {
         // Open a new tab for the sign-in page.
