@@ -40,13 +40,13 @@ class BlobTest(AppTestCase):
         self.blob.put()
 
     def test_get_by_key_name(self):
-        """Test that get_by_key_name correctly retrieves entity."""
+        """The get_by_key_name method should return the blob."""
         blob = Blob.get_by_key_name(self.key_name)
         self.assertEqual(blob.key().name(), self.key_name)
         self.assertEqual(blob.value, self.value)
 
     def test_get_absolute_url(self):
-        """Test the get_absolute_url method."""
+        """The get_absolute_url method should return the correct path."""
         self.assertEqual(self.blob.get_absolute_url(),
                          'http://myapp.pageforest.com/docs/mydoc/key/')
 
@@ -54,18 +54,24 @@ class BlobTest(AppTestCase):
 class ClientErrorTest(AppTestCase):
 
     def test_get_404(self):
-        """Tests that non-existent blob returns 404 Not Found."""
+        """Non-existent blob access should return 404 Not Found."""
         response = self.app_client.get('/docs/mydoc/does_not_exist/')
-        self.assertEqual(response.status_code, 404)
+        self.assertContains(response,
+            "Blob not found: myapp/mydoc/does_not_exist/", status_code=404)
 
-    def test_not_allowed(self):
-        """Tests that unknown methods return 405 Method Not Allowed."""
+    def test_http_method_not_allowed(self):
+        """Unknown HTTP method should return 405 Method Not Allowed."""
         response = self.app_client.options('/docs/mydoc/key')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
                          'DELETE, GET, HEAD, PUSH, PUT, SLICE')
+
+    def test_query_string_method_not_allowed(self):
+        """Unknown query string method should return 405 Method Not Allowed."""
         response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'],
+                         'DELETE, GET, HEAD, PUSH, PUT, SLICE')
 
 
 class RestApiTest(AppTestCase):
