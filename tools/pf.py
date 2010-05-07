@@ -29,14 +29,17 @@ def login(options, server=None):
     server = server or options.server
     url = 'http://%s/auth/challenge' % server
     challenge = urllib2.urlopen(url).read()
-    print("Challenge: %s" % challenge)
+    if options.verbose:
+        print("Challenge: %s" % challenge)
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
     reply = '/'.join((options.username, challenge, signature))
     url = 'http://%s/auth/verify/%s' % (server, reply)
-    print("Response: %s" % url)
+    if options.verbose:
+        print("Response: %s" % url)
     session_key = urllib2.urlopen(url).read()
-    print("Session key: %s" % session_key)
+    if options.verbose:
+        print("Session key: %s" % session_key)
     return session_key
 
 
@@ -70,6 +73,7 @@ def config():
         help="deploy to this server (default: read from .url file)")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
+    parser.add_option('-v', '--verbose', action='store_true')
     options, args = parser.parse_args()
 
     if not args:
@@ -110,11 +114,20 @@ def upload_file(options, filename, url=None):
     data = open(filename).read()
     request = PutRequest(url, data)
     request.add_header('Cookie', 'sessionkey=' + options.session_key)
-    print url
-    print urllib2.urlopen(request).read()
+    if options.verbose:
+        print("Uploading: %s" % url)
+    response = urllib2.urlopen(request)
+    if response.code != 200:
+        print("Error upload file: %s" % response.code)
+    if options.verbose:
+        print response.read()
 
 
 def upload_meta_file(options):
+    """
+    Replace the app name with www to upload the app.json
+    file to the server to create the application.
+    """
     parts = options.server.split('.')
     app_id = parts[0]
     parts[0] = 'www'
@@ -171,6 +184,6 @@ if __name__ == '__main__':
     try:
         main()
     except urllib2.HTTPError, e:
-        print e
+        print("%s: %s" % (e, e.url))
         for line in e.fp.readlines()[:140]:
             print line.rstrip()
