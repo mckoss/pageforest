@@ -62,7 +62,7 @@ def save_password(options):
 def load_server(options):
     for line in file(META_FILENAME):
         parts = line.split(':')
-        if len(parts) == 2 or parts[0].strip() == '"application"':
+        if len(parts) == 2 and parts[0].strip() == '"application"':
             application = parts[1].strip().rstrip(',').strip('"')
             options.server = application + '.pageforest.com'
             return
