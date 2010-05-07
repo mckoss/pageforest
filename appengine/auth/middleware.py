@@ -39,4 +39,6 @@ def user_context(request):
     """
     Make the logged in user available as {{ user }} in templates.
     """
-    return {'user': request.user}
+    if hasattr(request, 'user') and request.user:
+        return {'user': request.user}
+    return {}
