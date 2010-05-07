@@ -30,8 +30,8 @@ RUNNING_ON_GAE = SERVER_SOFTWARE.startswith("Google App Engine")
 
 DEBUG = DEV_APPSERVER
 #DEBUG = False
-
 TEMPLATE_DEBUG = DEBUG
+
 USE_APPSTATS = not DEBUG
 
 ADMINS = (
@@ -192,8 +192,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'auth.middleware.user_context',
 )
 
-
 MIDDLEWARE_CLASSES = [
+    'utils.middleware.ResponseNotFoundMiddleware',  # Render HTML for 404.
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.

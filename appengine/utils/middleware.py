@@ -1,4 +1,8 @@
+import logging
 import threading
+
+from django.template.loader import render_to_string
+from utils.shortcuts import render_to_response
 
 
 class RequestMiddleware(object):
@@ -43,5 +47,19 @@ class ExceptionMiddleware(object):
     Stash information about any thrown exceptions into the request
     object so it can be used by the 404, 500, and json templates.
     """
+
     def process_exception(self, request, exception):
         request.exception = exception
+
+
+class ResponseNotFoundMiddleware(object):
+    """
+    Render ResponseNotFound with text/plain into 404.html template.
+    """
+
+    def process_response(self, request, response):
+        if response.status_code == 404 and '<html' not in response.content:
+            request.exception = response.content
+            response = render_to_response(request, '404.html', {})
+            response.status_code = 404
+        return response
