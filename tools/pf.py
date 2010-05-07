@@ -12,6 +12,7 @@ META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = []
 COMMANDS = ['get', 'put']
+DOMAINS_REGEX = re.compile(r'"domains":\s+\["([a-z0-9\.:-]+)"')
 
 
 class PutRequest(urllib2.Request):
@@ -43,29 +44,26 @@ def login(options, server=None):
     return session_key
 
 
-def load_password(options):
+def load_server():
+    for line in file(META_FILENAME):
+        match = DOMAINS_REGEX.match(line)
+        if match:
+            return match.group(1)
+
+
+def load_credentials():
     credentials = open(PASSWORD_FILENAME).readline().decode('base64')
     parts = credentials.split(':')
     if len(parts) == 2:
-        options.username = parts[0]
-        options.password = parts[1]
+        return parts
 
 
-def save_password(options):
+def save_credentials(options):
     yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
     yesno = yesno.strip().lower() or 'y'
     if yesno.startswith('y'):
         credentials = '%s:%s' % (options.username, options.password)
         open(PASSWORD_FILENAME, 'w').write(credentials.encode('base64'))
-
-
-def load_server(options):
-    for line in file(META_FILENAME):
-        parts = line.split(':')
-        if len(parts) == 2 and parts[0].strip() == '"application"':
-            application = parts[1].strip().rstrip(',').strip('"')
-            options.server = application + '.pageforest.com'
-            return
 
 
 def config():
@@ -92,12 +90,12 @@ def config():
         parser.error("Unsupported command: " + options.command)
 
     if not options.server:
-        load_server(options)
+        options.server = load_server()
     if not options.server:
         options.server = raw_input("Server: ")
 
     if os.path.exists(PASSWORD_FILENAME):
-        load_password(options)
+        options.username, options.password = load_credentials()
 
     options.save = False
     if not options.username:
@@ -191,7 +189,7 @@ def main():
     options, args = config()
     globals()[options.command](options, args)
     if options.save:
-        save_password(options)
+        save_credentials(options)
 
 
 if __name__ == '__main__':
