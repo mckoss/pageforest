@@ -7,6 +7,7 @@ from django.test import TestCase, Client
 
 from auth.models import User
 from apps.models import App
+from docs.models import Doc
 from blobs.models import Blob
 
 
@@ -21,6 +22,8 @@ class AppTestCase(TestCase):
                        domains=['myapp.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
+        self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc')
+        self.doc.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)
@@ -125,6 +128,8 @@ class HostTest(AppTestCase):
                          domains=['other.pageforest.com'],
                          secret='OtherSecreT')
         self.other.put()
+        self.otherdoc = Doc(key_name='other/mydoc', doc_id='MyDoc')
+        self.otherdoc.put()
         self.other_client = Client(HTTP_HOST=self.other.domains[0])
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.other)
@@ -282,12 +287,12 @@ class JsonArrayTest(AppTestCase):
     def test_push_empty(self):
         """Test that push creates the array if it didn't exist."""
         started = datetime.now()
-        response = self.app_client.post('/docs/mydoc2/chat?method=PUSH',
+        response = self.app_client.post('/docs/mydoc/chat2?method=PUSH',
                                         data='hi', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 1')
-        self.assertContent('/docs/mydoc2/chat', '["hi"]')
-        newchat = Blob.get_by_key_name('myapp/mydoc2/chat/')
+        self.assertContent('/docs/mydoc/chat2', '["hi"]')
+        newchat = Blob.get_by_key_name('myapp/mydoc/chat2/')
         self.assertTrue(newchat.created >= started)
         self.assertTrue(newchat.modified >= started)
 
