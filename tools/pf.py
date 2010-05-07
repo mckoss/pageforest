@@ -76,6 +76,7 @@ def config():
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
     parser.add_option('-v', '--verbose', action='store_true')
+    parser.add_option('-q', '--quiet', action='store_true')
     options, args = parser.parse_args()
 
     if not args:
@@ -121,12 +122,13 @@ def upload_file(options, filename, url=None):
     data = open(filename).read()
     request = PutRequest(url, data)
     request.add_header('Cookie', 'sessionkey=' + options.session_key)
-    if options.verbose:
+    if not options.quiet:
         print("Uploading: %s" % url)
     response = urllib2.urlopen(request)
     if response.code != 200:
         print("Error upload file: %s" % response.code)
-    if options.verbose:
+        print response.read()
+    elif options.verbose:
         print response.read()
 
 
