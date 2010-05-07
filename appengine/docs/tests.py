@@ -106,7 +106,6 @@ class DocumentTest(TestCase):
         response = self.app_client.get('/docs/unknown/')
         self.assertContains(response, 'Document not found: unknown',
                             status_code=404)
-        return  # TODO: Make the following tests work too.
         # Writing a blob under this document should fail.
         response = self.app_client.put('/docs/unknown/blob/', 'data',
                                        content_type='text/plain')

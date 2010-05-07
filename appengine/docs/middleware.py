@@ -12,4 +12,8 @@ class DocMiddleware(object):
         doc_id = parts[3]
         key_name = '/'.join((request.app.get_app_id(), doc_id.lower()))
         request.doc = Doc.get_by_key_name(key_name)
-        # Attention: request.doc may be None at this point.
+        if request.doc is None:
+            # The document was not found in the datastore, return 404
+            # unless this request is going to create it.
+            if request.method != 'PUT' or len(parts) != 4:
+                return HttpResponseNotFound("Document not found: " + doc_id)
