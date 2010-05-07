@@ -1,11 +1,16 @@
-// Cookies can be quoted with "..." if they have spaces or other special characters.
-// Internal quotes may be escaped with a \ character
-// These routines use encodeURIComponent to safely encode and decode all special characters
+global_namespace.define('org.startpad.cookies', function(ns) {
+    /*
+    Client-side cookie reader and writing helper.
 
-global_namespace.Define('startpad.cookies', function(NS) {
+    Cookies can be quoted with "..." if they have spaces or other
+    special characters. Internal quotes may be escaped with a \
+    character These routines use encodeURIComponent to safely encode
+    and decode all special characters.
+    */
+    var format = ns.lookup('org.startpad.format-util');
 
-NS.Extend(NS, {
-SetCookie: function(name, value, days, fSecure)
+ns.extend(ns, {
+setCookie: function(name, value, days, fSecure)
     {
     var st = encodeURIComponent(name) + "=" + encodeURIComponent(value);
     if (days !== undefined)
@@ -22,7 +27,7 @@ SetCookie: function(name, value, days, fSecure)
     document.cookie = st;
     },
 
-GetCookies: function()
+getCookies: function()
     {
     var st = document.cookie;
     var rgPairs = st.split(";");
@@ -31,15 +36,13 @@ GetCookies: function()
     for (var i = 0; i < rgPairs.length; i++)
         {
         // Note that document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
-        rgPairs[i] = rgPairs[i].Trim();
+        rgPairs[i] = format.strip(rgPairs[i]);
         var rgC = rgPairs[i].split("=");
         var val = decodeURIComponent(rgC[1]);
         // Remove quotes around value string if any (and also replaces \" with ")
         var rg = val.match('^"(.*)"$');
         if (rg)
-            {
             val = rg[1].replace('\\"', '"');
-            }
         obj[decodeURIComponent(rgC[0])] = val;
         }
     return obj;
