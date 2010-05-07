@@ -159,10 +159,12 @@ RESERVED_APP_KEYS = (
     )
 
 # Name of the session cookie for simple request authentication.
+# TODO: For now - 30 days - with reauth, set to 24 hours.
 SESSION_COOKIE_NAME = 'sessionkey'
-SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
+SESSION_COOKIE_AGE = 30 * 24 * 60 * 60
 
 # Name of the reauth cookie on app_id.pageforest.com
+# TODO: We currently don't support reauthorization.
 REAUTH_COOKIE_NAME = 'reauth'
 REAUTH_COOKIE_PATH = '/auth/reauth'
 REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
