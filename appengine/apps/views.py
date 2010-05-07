@@ -58,7 +58,13 @@ def app_json_put(request, app_id):
     Parse incoming JSON blob and update meta info for this app.
     """
     request.app = App.lookup(app_id)
-    if request.app and not request.app.is_writable(request.user):
+    if request.app is None:
+        # Check session key.
+        if request.user is None:
+            return AccessDenied(request)
+        # Create a new App with this app_id.
+        request.app = App.create(app_id, request.user)
+    if not request.app.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
     try:
