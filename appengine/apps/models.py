@@ -34,9 +34,7 @@ class App(SuperDoc):
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
-        """
-        Get the absolute URL for this model instance.
-        """
+        """Get the absolute URL for this model instance."""
         return ''.join(('http://', self.domains[0], '/'))
 
     def get_app_id(self):
@@ -44,7 +42,7 @@ class App(SuperDoc):
         return self.key().name()
 
     def is_www(self):
-        """Is this app the special pafeforest app?"""
+        """Is this app the Pageforest front-end?"""
         return self.get_app_id() == 'www'
 
     @classmethod
@@ -158,26 +156,23 @@ class App(SuperDoc):
         app = cls.get_by_key_name(app_id)
         if app is None and app_id == 'www':
             # First invocation on an empty datastore, create www app.
-            app = cls.create('www')
+            app = App(key_name='www')
             app.put()
         return app
 
     @classmethod
-    def create(cls, app_id, user=None):
+    def create(cls, app_id, user):
         """
         All App creation should go through this method.
 
         TODO: Check quotas and permissions.
         """
+        if user is None:
+            raise ValueError("The user is None.")
         if app_id in settings.RESERVED_APPS:
-            raise Exception("Application %s is RESERVED." % app_id)
+            raise ValueError("Application %s is reserved." % app_id)
         hostname = app_id + '.' + settings.DEFAULT_DOMAIN
-        if app_id != 'www' and user is not None:
-            username = user.get_username()
-        else:
-            # FIXME: Not logged in users can create applications
-            # (and then can't modify them).
-            username = 'admin'
+        username = user.get_username()
         title = app_id.capitalize()
         logging.info("Creating app: %s" % app_id)
         return App(key_name=app_id,
