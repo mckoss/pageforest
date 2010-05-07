@@ -35,7 +35,7 @@ def document(request, doc_id):
     if request.method == 'GET':
         return document_get(request)
     elif request.method == 'PUT':
-        return document_put(request)
+        return document_put(request, doc_id)
 
 
 def document_get(request):
@@ -55,10 +55,11 @@ def document_get(request):
     return HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
 
 
-def document_put(request):
+def document_put(request, doc_id):
     """
     Parse incoming JSON blob and update meta info for this document.
     """
+    # TODO: Create request.doc if it's None.
     if not request.doc.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
