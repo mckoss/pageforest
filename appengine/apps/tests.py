@@ -12,7 +12,7 @@ class HostnameTest(TestCase):
         self.myapp.put()
 
     def test_get_by_hostname(self):
-        """Test that get_by_hostname finds an existing app."""
+        """The get_by_hostname method should find existing apps."""
         app = App.get_by_hostname('myapp.pageforest.com')
         self.assertEqual(app.key().name(), 'myapp')
         app = App.get_by_hostname('myapp.dev.latest.pageforest.appspot.com')
@@ -24,16 +24,18 @@ class HostnameTest(TestCase):
         self.assertTrue(app.is_saved())
 
     def test_unknown_app(self):
-        """Test that unknown app is not found."""
+        """Unknown apps should not be found."""
         app = App.get_by_hostname('unknown.pageforest.com')
         self.assertEqual(app, None)
 
 
 class AppErrorsTest(TestCase):
+
     def setUp(self):
         self.noapp_client = Client(HTTP_HOST="nosuch.pageforest.com")
 
     def test_missing_app(self):
+        """A missing app should return 404 Not Found."""
         response = self.noapp_client.get('/')
         self.assertEqual(response.status_code, 404)
 
@@ -52,8 +54,29 @@ class AppJsonTest(TestCase):
         self.www = App.lookup('www')
         self.www_client = Client(HTTP_HOST='www.pageforest.com')
 
-    def test_auth_app_json_get(self):
-        """Test access control in app_json_get."""
+    def test_app_json_update(self, app_id='myapp'):
+        """HTTP PUT app.json should update meta info."""
+        url = '/apps/%s/app.json' % app_id
+        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.www)
+        response = self.www_client.put(url, """\
+{
+"title": "My Application",
+"tags": ["test", "myapp"]
+}
+""", content_type='text/plain')
+        self.assertContains(response, '"statusText": "Saved"')
+        # Retrieve updated meta info.
+        response = self.www_client.get(url)
+        self.assertContains(response, '"title": "My Application"')
+        self.assertContains(response, '"tags": ["test", "myapp"]')
+
+    def test_app_json_create(self):
+        """HTTP PUT app.json should create an app if it didn't exist."""
+        self.test_app_json_update(app_id='newapp')
+
+    def test_app_json_get_auth(self):
+        """The app_json_get view function should check read permissions."""
         url = '/apps/myapp/app.json'
         # Application owner should have read permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
@@ -76,14 +99,13 @@ class AppJsonTest(TestCase):
         response = self.www_client.get(url)
         self.assertContains(response, "Access denied.", status_code=403)
 
-    def test_auth_app_json_put(self):
-        """Test access control in app_json_put."""
+    def test_app_json_put_auth(self):
+        """The app_json_put view function should check write permissions."""
         url = '/apps/myapp/app.json'
         # Application owner should have write permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.www)
-        response = self.www_client.put(url, '{"title":"hi mom"}',
-                                       content_type='text/plain')
+        response = self.www_client.put(url, '{}', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         # Other users should not have write permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
