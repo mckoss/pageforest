@@ -30,7 +30,7 @@ def index(request):
 @method_required('GET', 'PUT')
 def document(request, doc_id):
     """
-    Get document metadata.
+    Read or write document metadata.
     """
     if request.method == 'GET':
         return document_get(request, doc_id)
@@ -42,8 +42,6 @@ def document_get(request, doc_id):
     """
     Get JSON blob with meta info for this document.
     """
-    if request.doc is None:
-        raise Http404("Document not found: " + doc_id)
     if not request.doc.is_readable(request.user):
         return AccessDenied(request)
     # Get extra data from blob store.
