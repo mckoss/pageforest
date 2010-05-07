@@ -82,7 +82,8 @@ class AppJsonTest(TestCase):
         # Application owner should have write permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.www)
-        response = self.www_client.put(url, '{}', content_type='text/plain')
+        response = self.www_client.put(url, '{"title":"hi mom"}',
+                                       content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         # Other users should not have write permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
