@@ -11,7 +11,7 @@ from optparse import OptionParser
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = []
-COMMANDS = ['get', 'put']
+COMMANDS = ['get', 'put']  # TODO: Add list and delete.
 DOMAINS_REGEX = re.compile(r'"domains":\s+\["([a-z0-9\.:-]+)"')
 
 
