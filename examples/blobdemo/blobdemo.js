@@ -62,7 +62,7 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
         showSuccess('deleted session key');
     };
 
-    ns.ajax = function (method) {
+    ns.blobAjax = function (method) {
         var options = {
             type: method,
             dataType: 'text',

@@ -19,18 +19,31 @@ $(document).ready(function() {
 <body>
 <h1>Blob storage REST API Demo</h1>
 
-<table>
+<table style="float:left">
+<tr>
+<th><label for="id_doc">Doc ID:</label></th>
+<td><input id="id_doc" type="text" name="doc" value="doc" class="focus" /></td>
+</tr>
+<tr>
+<th><label for="id_value">Doc:</label></th>
+<td><textarea id="id_value" name="value" style="width:400px; height:100px">
+</textarea></td>
+</tr>
 <tr>
 <th></th>
 <td>
 <input type="button" onclick="blobdemo.signIn()" value="Sign In" />
 <input type="button" onclick="blobdemo.signOut()" value="Sign Out" />
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<input type="button" onclick="blobdemo.docAjax('PUT')" value="Put" />
+<input type="button" onclick="blobdemo.docAjax('GET')" value="Get" />
+<input type="button" onclick="blobdemo.docAjax('DELETE')" value="Delete" />
+<input type="button" onclick="blobdemo.docAjax('HEAD')" value="Head" />
 </td>
 </tr>
-<tr>
-<th><label for="id_doc">Doc:</label></th>
-<td><input id="id_doc" type="text" name="doc" value="doc" class="focus" /></td>
-</tr>
+</table>
+
+<table style="float:left">
 <tr>
 <th><label for="id_key">Key:</label></th>
 <td><input id="id_key" type="text" name="key" value="key" /></td>
@@ -46,10 +59,10 @@ $(document).ready(function() {
 <tr>
 <th></th>
 <td>
-<input type="button" onclick="blobdemo.ajax('PUT')" value="Put" />
-<input type="button" onclick="blobdemo.ajax('GET')" value="Get" />
-<input type="button" onclick="blobdemo.ajax('DELETE')" value="Delete" />
-<input type="button" onclick="blobdemo.ajax('HEAD')" value="Head" />
+<input type="button" onclick="blobdemo.blobAjax('PUT')" value="Put" />
+<input type="button" onclick="blobdemo.blobAjax('GET')" value="Get" />
+<input type="button" onclick="blobdemo.blobAjax('DELETE')" value="Delete" />
+<input type="button" onclick="blobdemo.blobAjax('HEAD')" value="Head" />
 </td>
 </tr>
 </table>
