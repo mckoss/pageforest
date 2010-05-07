@@ -26,6 +26,9 @@ from apps.models import App
 def send_email_verification(request, user):
     """
     Send email to this user.
+
+    TODO: Need to CHECK email token sent to user - and mark account as
+    validated.
     """
     message = render_to_string('auth/verify-email.txt',
                                RequestContext(request, {'user': user}))
@@ -48,7 +51,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             send_email_verification(request, user)
-            return redirect('/auth/welcome/')
+            return redirect(reverse(sign_in))
     return render_to_response(request, 'auth/register.html', {'form': form})
 
 
@@ -86,14 +89,22 @@ def sign_in(request, app_id=None):
     if request.method == 'POST':
         if form.is_valid():
             user = form.cleaned_data['user']
-            response = HttpResponseRedirect('/auth/sign-in/%s' %
-                                            (app_id or ''))
+            kwargs = app_id and {'app_id': app_id} or None
+            response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
             # Whenever we sign in - generate a fresh www session key
             assert request.app.get_app_id() == 'www', \
                 "Sign-in should only be enabled on the www domain."
+            app_session_key = user.generate_session_key(request.app)
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                user.generate_session_key(request.app),
+                                app_session_key,
                                 max_age=settings.SESSION_COOKIE_AGE)
+            # If we've authorized the cross-app, set the
+            if 'app_auth' in form.cleaned_data and \
+                    form.cleaned_data['app_auth']:
+                # Cookie names cannot unicode!
+                cookie_name = "%s-%s" % (str(app_id),
+                                        settings.SESSION_COOKIE_NAME)
+                response.set_cookie(cookie_name, app_session_key)
             return response
 
     app_session_key = None
@@ -135,11 +146,14 @@ def set_session_cookie(request, session_key):
 
 
 @method_required('GET')
-def sign_out(request):
+def sign_out(request, app_id=None):
     """
-    Expire the session key cookie.
+    Remove the www.pageforest.com session key cookie.
+
+    TODO: De-authorize the application if given.
     """
-    response = HttpResponseRedirect('/auth/sign-in/')
+    kwargs = app_id and {'app_id': app_id} or None
+    response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
     return response
 

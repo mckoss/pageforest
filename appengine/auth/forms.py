@@ -142,6 +142,7 @@ class SignInForm(UsernamePasswordForm):
     User authentication form.
     """
     app_auth = forms.BooleanField(
+        required=False,
         label="Application",
         widget=LabeledCheckbox(label="Allow access", field_id='app_auth'))
 

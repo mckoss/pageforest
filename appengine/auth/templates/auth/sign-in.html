@@ -66,9 +66,9 @@ $(document).ready(function() {
 </form>
 
 {% if user %}
-    <p><a href="/auth/sign-out">Sign Out</a></p>
+    <p><a href="/sign-out/{{cross_app.get_app_id}}">Sign Out</a></p>
 {% else %}
-    <p>Need to create account?  <a href="/auth/sign-up">Join Now</a>.</p>
+    <p>Need to create account?  <a href="/sign-up">Join Now</a>.</p>
 {% endif %}
 
 {% endblock both-columns %}
