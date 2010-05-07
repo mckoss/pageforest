@@ -54,7 +54,9 @@ class ExceptionMiddleware(object):
 
 class ResponseNotFoundMiddleware(object):
     """
-    Render ResponseNotFound with text/plain into 404.html template.
+    Render HttpResponseNotFound (text/plain) into 404.html template.
+    This work-around is required as long as Django does not let us
+    raise Http404 from AppMiddleware or DocMiddleware.
     """
 
     def process_response(self, request, response):
