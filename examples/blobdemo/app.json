@@ -1,7 +1,6 @@
 {
-"application": "blobdemo",
 "title": "Blob Storage API Demo",
-"domains": ["blob.pageforest.com"],
+"domains": ["blobdemo.pageforest.com"],
 "writers": ["johann", "mike"],
 "readers": ["anybody"]
 }
