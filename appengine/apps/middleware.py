@@ -20,7 +20,7 @@ class AppMiddleware(object):
         if request.app is None:
             return HttpResponseNotFound("Application not found.")
 
-        if request.app and request.app.is_www():
+        if request.app.is_www():
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
                 return HttpResponseNotFound("URL reserved for internal use.")
