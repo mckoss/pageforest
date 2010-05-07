@@ -150,8 +150,8 @@ class Cacheable(db.Model):
             return None
         protobuf = entity_pb.EntityProto(binary)
         instance = db.model_from_protobuf(protobuf)
-        if settings.DEBUG:
-            logging.info("get_by_key_name used cache: " + cache_key)
+        if settings.CACHEABLE_LOGGING:
+            logging.info("get_by_key_name used memcache: " + cache_key)
         return instance
 
     @classmethod
@@ -177,7 +177,7 @@ class Cacheable(db.Model):
         # Fetch from datastore.
         instance = super(Cacheable, cls).get_by_key_name(key_name, parent)
         if instance is not None:
-            if settings.DEBUG:
+            if settings.CACHEABLE_LOGGING:
                 logging.info("get_by_key_name used datastore: " +
                              cls.class_get_cache_key(key_name))
             instance.cache_put()
@@ -196,7 +196,7 @@ class Cacheable(db.Model):
         # Fetch from datastore.
         instance = super(Cacheable, cls).get_or_insert(key_name, **kwargs)
         if instance is not None:
-            if settings.DEBUG:
+            if settings.CACHEABLE_LOGGING:
                 logging.info("get_or_insert used datastore: " +
                              cls.class_get_cache_key(key_name))
             instance.ensure_cached()

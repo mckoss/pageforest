@@ -48,6 +48,9 @@ SITE_EMAIL_FROM = "support@pageforest.com"
 # Change this before deploying incompatible changes.
 CACHEABLE_PREFIX = 'C1'
 
+# Cacheable mixin: show memcache and datastore hits in the server log.
+CACHEABLE_LOGGING = False
+
 # Use appengine database backend for "manage.py test" etc.
 if os.path.basename(sys.argv[0]) == 'manage.py':
     DATABASE_ENGINE = 'appengine'
