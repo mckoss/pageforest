@@ -94,14 +94,15 @@ def sign_in(request, app_id=None):
             # Whenever we sign in - generate a fresh www session key
             assert request.app.get_app_id() == 'www', \
                 "Sign-in should only be enabled on the www domain."
-            app_session_key = user.generate_session_key(request.app)
+            session_key = user.generate_session_key(request.app)
             response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                app_session_key,
+                                session_key,
                                 max_age=settings.SESSION_COOKIE_AGE)
             # If we've authorized the cross-app, set the
-            if 'app_auth' in form.cleaned_data and \
+            if app and 'app_auth' in form.cleaned_data and \
                     form.cleaned_data['app_auth']:
                 # Cookie names cannot unicode!
+                app_session_key = user.generate_session_key(app)
                 cookie_name = "%s-%s" % (str(app_id),
                                         settings.SESSION_COOKIE_NAME)
                 response.set_cookie(cookie_name, app_session_key)

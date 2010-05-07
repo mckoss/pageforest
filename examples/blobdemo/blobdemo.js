@@ -1,4 +1,9 @@
 global_namespace.define("com.pageforest.blobdemo", function (ns) {
+    var cookies = ns.lookup('org.startpad.cookies');
+
+    ns.documentReady = function() {
+        pollCookie();
+    };
 
     function formatResult(xhr, status, message) {
         var result = '';
@@ -28,11 +33,17 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
         // Authentication was successful, we got a new session key.
         showSuccess(message, status, xhr);
         ns.sessionKey = message;
-        ns.setCookie('sessionkey', message);
+        cookies.setCookie('sessionkey', message);
     }
 
     function pollCookie() {
-        console.log(document.cookie);
+        var sessionkey = cookies.getCookie('sessionkey');
+        if (sessionkey != undefined)
+            showSuccess("Logged in");
+        if (ns.polling) {
+            clearInterval(ns.polling);
+            ns.polling = undefined;
+        }
     }
 
     function newTab(url) {
@@ -47,18 +58,19 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
         // Open a new tab for the sign-in page.
         var dot = location.host.indexOf('.');
         var www = "www" + location.host.substr(dot);
-        var url = "http://" + www + "/auth/sign-in/blobdemo/";
+        var url = "http://" + www + "/sign-in/blobdemo/";
         newTab(url);
         // Start polling for the session key cookie.
         if (ns.polling) {
             clearInterval(ns.polling);
+            ns.polling = undefined;
         }
         ns.polling = setInterval(pollCookie, 1000);
     };
 
     ns.signOut = function () {
         delete ns.sessionKey;
-        ns.setCookie('sessionkey', 'expired', -1);
+        cookies.setCookie('sessionkey', 'expired', -1);
         showSuccess('deleted session key');
     };
 
@@ -92,17 +104,6 @@ global_namespace.define("com.pageforest.blobdemo", function (ns) {
             options.data = $("#id_value").val();
         }
         $.ajax(options);
-    };
-
-    ns.setCookie = function (name, value, days, path) {
-        var expires = '';
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-            expires = '; expires=' + date.toGMTString();
-        }
-        path = '; path=' + (path || '/');
-        document.cookie = name + '=' + value + expires + path;
     };
 
 }); // com.pageforest.blobdemo
