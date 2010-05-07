@@ -9,7 +9,7 @@ import urllib2
 from optparse import OptionParser
 
 META_FILENAME = 'app.json'
-CONFIG_FILENAME = '.url'
+PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = []
 COMMANDS = ['get', 'put']
 
@@ -43,34 +43,36 @@ def login(options, server=None):
     return session_key
 
 
-def load_config(options):
-    hostname = username = password = ''
-    parts = open(CONFIG_FILENAME).readline().split('/')
-    if len(parts) > 2 and parts[0] == 'http:' and parts[1] == '':
-        hostname = parts[2]
-    if '@' in hostname:
-        username, hostname = hostname.split('@', 1)
-    if ':' in username:
-        username, password = username.split(':', 1)
-    options.server = hostname
-    if not options.password and not options.username:
-        options.password = password
-    if not options.username:
-        options.username = username
+def load_password(options):
+    credentials = open(PASSWORD_FILENAME).readline().decode('base64')
+    parts = credentials.split(':')
+    if len(parts) == 2:
+        options.username = parts[0]
+        options.password = parts[1]
 
 
-def save_config(options):
-    yesno = raw_input("Save %s file (Y/n)? " % CONFIG_FILENAME) or 'y'
-    if yesno.lower().startswith('y'):
-        open(CONFIG_FILENAME, 'w').write('http://%s:%s@%s/\n' % (
-                options.username, options.password, options.server))
+def save_password(options):
+    yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
+    yesno = yesno.strip().lower() or 'y'
+    if yesno.startswith('y'):
+        credentials = '%s:%s' % (options.username, options.password)
+        open(PASSWORD_FILENAME, 'w').write(credentials.encode('base64'))
+
+
+def load_server(options):
+    for line in file(META_FILENAME):
+        parts = line.split(':')
+        if len(parts) == 2 or parts[0].strip() == '"application"':
+            application = parts[1].strip().rstrip(',').strip('"')
+            options.server = application + '.pageforest.com'
+            return
 
 
 def config():
     usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
-        help="deploy to this server (default: read from .url file)")
+        help="deploy to this server (default: read from app.json)")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
     parser.add_option('-v', '--verbose', action='store_true')
@@ -88,13 +90,15 @@ def config():
     if options.command not in COMMANDS:
         parser.error("Unsupported command: " + options.command)
 
-    if os.path.exists(CONFIG_FILENAME) and not options.server:
-        load_config(options)
+    if not options.server:
+        load_server(options)
+    if not options.server:
+        options.server = raw_input("Server: ")
+
+    if os.path.exists(PASSWORD_FILENAME):
+        load_password(options)
 
     options.save = False
-    if not options.server:
-        options.server = raw_input("Hostname: ")
-        options.save = True
     if not options.username:
         options.username = raw_input("Username: ")
         options.save = True
@@ -106,6 +110,9 @@ def config():
 
 
 def upload_file(options, filename, url=None):
+    """
+    Upload one file to the server.
+    """
     if url is None:
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
@@ -138,6 +145,9 @@ def upload_meta_file(options):
 
 
 def upload_dir(options, path):
+    """
+    Upload a directory, including all files and subdirectories.
+    """
     for dirpath, dirnames, filenames in os.walk(path):
         for dirname in dirnames:
             if dirname.startswith('.'):
@@ -164,20 +174,22 @@ def put(options, args):
     # where META_FILENAME lives?
     if META_FILENAME in args:
         upload_meta_file(options)
+        args.remove(META_FILENAME)
+    if not args:
+        return
     options.session_key = login(options)
     for path in args:
         if os.path.isdir(path):
             upload_dir(options, path)
         elif os.path.isfile(path):
-            if path != META_FILENAME:
-                upload_file(options, path)
+            upload_file(options, path)
 
 
 def main():
     options, args = config()
     globals()[options.command](options, args)
     if options.save:
-        save_config(options)
+        save_password(options)
 
 
 if __name__ == '__main__':

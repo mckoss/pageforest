@@ -11,4 +11,4 @@ TAGS
 nosetests.xml
 coverage.xml
 .coverage
-.url
+.passwd
