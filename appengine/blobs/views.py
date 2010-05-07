@@ -54,7 +54,7 @@ def blob_get(request):
     """
     blob = Blob.get_by_key_name(request.key_name)
     if blob is None:
-        raise Http404("Could not find blob " + request.key_name)
+        raise Http404("Blob not found: " + request.key_name)
     etag = '"%s"' % blob.sha1
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         return HttpResponseNotModified()
@@ -97,7 +97,7 @@ def blob_delete(request):
     """
     blob = Blob.get_by_key_name(request.key_name)
     if blob is None:
-        raise Http404("Could not find blob " + request.key_name)
+        raise Http404("Blob not found: " + request.key_name)
     blob.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}',
                         mimetype=settings.JSON_MIMETYPE)
