@@ -19,6 +19,7 @@ from utils import crypto
 
 from auth.forms import RegistrationForm, SignInForm
 from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
+from auth.middleware import AccessDenied
 
 from apps.models import App
 
@@ -137,12 +138,18 @@ def set_session_cookie(request, session_key):
     When passed a valid session key for the current application,
     set the cookie for the session key.
     """
-    user = User.verify_session_key(session_key, request.app)
-    if user is None:
-        raise Http404("Invalid session key.")
     response = HttpResponse(session_key, content_type='text/plain')
-    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
-                        max_age=settings.SESSION_COOKIE_AGE)
+    if session_key == 'expired':
+        logging.info("Deleting session cookie")
+        response.delete_cookie(settings.SESSION_COOKIE_NAME)
+    else:
+        try:
+            user = User.verify_session_key(session_key, request.app)
+        except SignatureError, error:
+            return AccessDenied(request,
+                                "Invalid session key: %s" % unicode(error))
+        response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                            max_age=settings.SESSION_COOKIE_AGE)
     return response
 
 
@@ -156,6 +163,12 @@ def sign_out(request, app_id=None):
     kwargs = app_id and {'app_id': app_id} or None
     response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
+    # Indicate that the sign_in page should clear the application
+    # cookie on load.
+    if app_id:
+        cookie_name = "%s-%s" % (str(app_id),
+                                settings.SESSION_COOKIE_NAME)
+        response.set_cookie(cookie_name, 'expired')
     return response
 
 
