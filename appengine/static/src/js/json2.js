@@ -2,9 +2,6 @@
     http://www.JSON.org/json2.js
     2010-03-20
 
-    2010-04-14: Updated, changed namespace to org.json.json2
-    2009-06-22: Modified by Mike Koss to place in global_namespace.JSON
-
     Public Domain.
 
     NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
@@ -150,9 +147,8 @@
 */
 
 /*jslint evil: true, strict: false */
-/*global global_namespace */
 
-/*x-members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
+/*members "", "\b", "\t", "\n", "\f", "\r", "\"", JSON, "\\", apply,
     call, charCodeAt, getUTCDate, getUTCFullYear, getUTCHours,
     getUTCMinutes, getUTCMonth, getUTCSeconds, hasOwnProperty, join,
     lastIndex, length, parse, prototype, push, replace, slice, stringify,
@@ -163,7 +159,11 @@
 // Create a JSON object only if one does not already exist. We create the
 // methods in a closure to avoid creating global variables.
 
-global_namespace.define('org.json.json2', function(JSON) {
+if (!this.JSON) {
+    this.JSON = {};
+}
+
+(function () {
 
     function f(n) {
         // Format integers to have at least two digits.
@@ -479,5 +479,4 @@ replace(/(?:^|:|,)(?:\s*\[)+/g, ''))) {
             throw new SyntaxError('JSON.parse');
         };
     }
-
-}); // org.json.json2
+}());
