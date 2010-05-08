@@ -193,7 +193,7 @@ global_namespace.define("com.pageforest.random", function(ns) {
 
 }); // com.pageforest.random
 /* Begin file: cookies.js */
-global_namespace.define('org.startpad.cookies', function(ns) {
+global_namespace.define('com.pageforest.cookies', function(ns) {
     /*
     Client-side cookie reader and writing helper.
 
@@ -202,7 +202,7 @@ global_namespace.define('org.startpad.cookies', function(ns) {
     character These routines use encodeURIComponent to safely encode
     and decode all special characters.
     */
-    var format = ns.lookup('org.startpad.format-util');
+    var misc = ns.lookup('com.pageforest.misc');
 
 ns.extend(ns, {
 setCookie: function(name, value, days, path) {
@@ -229,7 +229,7 @@ getCookies: function(name) {
     var obj = {};
     for (var i = 0; i < rgPairs.length; i++) {
         // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
-        rgPairs[i] = format.strip(rgPairs[i]);
+        rgPairs[i] = misc.strip(rgPairs[i]);
         var rgC = rgPairs[i].split("=");
         var val = decodeURIComponent(rgC[1]);
         // Remove quotes around value string if any (and also replaces \" with ")
@@ -242,4 +242,4 @@ getCookies: function(name) {
 
 }}); // ns
 
-}); // org.startpad.cookies
+}); // com.pageforest.cookies
