@@ -9,6 +9,9 @@ from django.utils import simplejson as json
 
 from google.appengine.ext import db
 
+import settings
+from auth.middleware import AccessDenied
+
 
 def run_in_transaction(func):
     """
@@ -52,6 +55,11 @@ def jsonp(func):
         if callback is None:
             return func(request, *args, **kwargs)
 
+        referer = request.META.get('HTTP_REFERER', '')
+        if not referer_is_safe(request, referer):
+            return AccessDenied(request,
+                                "Request from untrusted domain: %s" % referer)
+
         # Try to generate a response.
         try:
             response = func(request, *args, **kwargs)
@@ -84,6 +92,43 @@ def jsonp(func):
         response['Content-Type'] = 'application/javascript'
         return response
     return wrapper
+
+
+def referer_is_safe(request, referer):
+    """
+    Check the referer for trusted domains (for JSONP calls).
+    """
+    # Any of our domains are trusted as well as localhost
+    # referers - so developers can test offline.
+    # We are permissive to empty referers - so developers
+    # can test on localhost.  Log these cases to see
+    # what's happening.
+    if referer == '':
+        logging.warn("Missing Referer - UA: %s" %
+                     request.META.get('HTTP_USER_AGENT', 'missing'))
+        return True
+
+    if referer in settings.DOMAINS:
+        return True
+    for domain in settings.DOMAINS:
+        if referer.endswith('.' + domain):
+            return True
+
+    app = request.app
+    if app.is_www():
+        return False
+
+    # If we're running on an application domain, we trust any of
+    # the developer's listed domains.
+    if referer in app.domains:
+        return True
+    # TODO: Don't trust all subdomains by default - only if developer
+    # indicates to do so.
+    for domain in app.domains:
+        if referer.endswith('.' + domain):
+            return True
+
+    return False
 
 
 def method_required(*methods):
