@@ -228,8 +228,11 @@ class AppSignInTest(TestCase):
         self.assertRedirects(response,
                              'http://www.pageforest.com' + SIGN_IN + 'myapp/')
         cookie = response.cookies['sessionkey'].value
+        app_cookie = response.cookies['myapp-sessionkey'].value
         # Expect a first-part session cookie to www.pf.com
         self.assertTrue(cookie.startswith('www/peter/12'))
+        # And a copy of the app session suitable to pass to myapp.pf.com
+        self.assertTrue(app_cookie.startswith('myapp/peter/12'))
 
         # Simulate the redirect to the form
         response = self.www.post(SIGN_IN + 'myapp/')
@@ -240,6 +243,9 @@ class AppSignInTest(TestCase):
         self.assertTrue(match is not None)
         myapp_session_key = match.group(1)
         self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
+
+        # And both in-page and cookie app session keys should match
+        self.assertEqual(app_cookie, myapp_session_key)
 
         # Should not be logged in yet
         response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
