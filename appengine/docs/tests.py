@@ -23,8 +23,8 @@ class DocumentTest(TestCase):
                        readers=['anybody'],
                        writers=['peter', 'authenticated'])
         self.doc.put()
-        self.data = Blob(key_name='myapp/mydoc', value='{"int": 123}')
-        self.data.put()
+        self.blob = Blob(key_name='myapp/mydoc/', value='{"int": 123}')
+        self.blob.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
     def test_get_absolute_url(self):
