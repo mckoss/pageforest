@@ -8,7 +8,7 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
       get a cookie set on the application domain when the user wants
       to allow the application access to his store.
     */
-    var cookies = ns.lookup('org.startpad.cookies');
+    var cookies = ns.lookup('com.pageforest.cookies');
 
     ns.extend(ns, {
         // Check if user is already logged in.
