@@ -3,8 +3,8 @@ import time
 import email
 import httplib
 
-from django.http import HttpResponse, HttpResponseNotAllowed, Http404, \
-    HttpResponseNotFound, HttpResponseServerError
+from django.http import HttpResponse, Http404, HttpResponseNotFound, \
+    HttpResponseNotAllowed, HttpResponseServerError
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
