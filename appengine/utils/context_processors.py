@@ -8,14 +8,10 @@ def safe_settings(request):
         result[name] = getattr(settings, name)
 
     # DOMAIN - either 'pageforest.com' or 'localhost'
-    domain = request.get_host()
-    parts = domain.split('.')
-    if parts[-1] == '.com':
-        domain = '.'.join(parts[-2:])
-    else:
-        domain = parts[-1]
-    result['DOMAIN'] = domain
-
+    parts = request.META.get('HTTP_HOST', 'testserver').split('.')
+    if len(parts) > 1:
+        parts[0] = 'www'
+    result['DOMAIN'] = '.'.join(parts)
     return result
 
 
