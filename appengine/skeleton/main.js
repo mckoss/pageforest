@@ -1,20 +1,22 @@
 global_namespace.define('com.pageforest.skeleton', function (ns) {
 
     ns.ready = function() {
-        $('#title').focus();
+        $('#doc_id').focus();
     };
 
     ns.signin = function() {
-        var dot = location.host.indexOf('.');
-        var www = "www" + location.host.substr(dot);
-        var url = "http://" + www + "/sign-in/skeleton/";
-        var tab = window.open(url, '_blank');
+        window.open("http://www.pageforest.com/sign-in/skeleton/", '_blank');
+    };
+
+    ns.signout = function() {
+        document.cookie = 'sessionkey=expired; path=/; expires=' +
+            'Sat, 01 Jan 2000 00:00:00 GMT';
     };
 
     ns.save = function() {
         var data = JSON.stringify({
             title: $('#title').val(),
-            blob: $('#content').val()
+            blob: $('#blob').val()
         });
         $.ajax({
             type: 'PUT',
@@ -28,7 +30,7 @@ global_namespace.define('com.pageforest.skeleton', function (ns) {
             url: '/docs/' + $('#name').val(),
             success: function(document) {
                 $('#title').val(document.title);
-                $('#content').val(document.blob);
+                $('#blob').val(document.blob);
             }
         });
     };
