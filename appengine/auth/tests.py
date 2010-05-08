@@ -257,9 +257,16 @@ class AppSignInTest(TestCase):
                                   myapp_session_key)
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('myapp/peter/12'))
-        # And confirm we're logged in
+        # And confirm the username api returns the user
         response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")
+
+        # And sign out to verify that the cross-app cookie is
+        # marked 'expired'.
+        response = self.myapp.get(APP_AUTH_PREFIX + 'set-session/expired/')
+        cookie = response.cookies['sessionkey']
+        self.assertEqual(cookie.value, '')
+        self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
 
 class ChallengeVerifyTest(TestCase):
