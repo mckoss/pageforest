@@ -1,0 +1,7 @@
+{
+"title": "Skeleton",
+"domains": ["skeleton.localhost:8080"],
+"writers": ["johann", "mike"],
+"readers": ["anybody"],
+"tags": ["demo", "skeleton", "test"]
+}
