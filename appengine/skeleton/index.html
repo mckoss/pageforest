@@ -17,21 +17,25 @@ $(document).ready(namespace.ready);
 </head>
 <body>
 
+<p>
+<input type="button" onclick="namespace.signin()" value="Sign in" />
+<input type="button" onclick="namespace.signout()" value="Sign out" />
+</p>
+
+<p>Document ID:<br />
+<input type="text" id="name" name="name" value="mydoc" />
+<input type="button" onclick="namespace.save()" value="Save" />
+<input type="button" onclick="namespace.load()" value="Load" />
+</p>
+
 <p>Title:<br />
 <input type="text" id="title" name="title" value="My Document" />
 </p>
 
-<p>Content:<br />
-<textarea id="content" name="content">
+<p>Blob:<br />
+<textarea id="blob" name="blob">
 You can store a text blob in each document.
 </textarea>
-</p>
-
-<p>Document ID:<br />
-<input type="text" id="name" name="name" value="mydoc" /><br />
-<input type="button" onclick="namespace.signin()" value="Sign in" />
-<input type="button" onclick="namespace.save()" value="Save" />
-<input type="button" onclick="namespace.load()" value="Load" />
 </p>
 
 <div id="results" style="clear:both"></div>
