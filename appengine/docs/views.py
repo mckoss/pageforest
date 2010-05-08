@@ -70,11 +70,11 @@ def document_put(request, doc_id):
         for key in ('title', 'doc_id'):
             if key in parsed:
                 assert_string(key, parsed[key])
-                setattr(request.app, key, parsed[key])
+                setattr(request.doc, key, parsed[key])
         for key in ('tags', 'readers', 'writers'):
             if key in parsed:
                 assert_string_list(key, parsed[key])
-                setattr(request.app, key, parsed[key])
+                setattr(request.doc, key, parsed[key])
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
