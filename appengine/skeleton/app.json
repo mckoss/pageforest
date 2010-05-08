@@ -1,6 +1,6 @@
 {
 "title": "Skeleton",
-"domains": ["skeleton.localhost:8080"],
+"domains": ["skeleton.pageforest.com"],
 "writers": ["johann", "mike"],
 "readers": ["anybody"],
 "tags": ["demo", "skeleton", "test"]
