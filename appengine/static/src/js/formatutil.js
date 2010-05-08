@@ -91,11 +91,6 @@ ReplaceKeys: function(st, keys)
         st = st.StReplace("{" + key + "}", keys[key]);
     st = st.replace(/\{[^\{\}]*\}/g, "");
     return st;
-    },
-
-strip: function(s)
-    {
-    return (s || "").replace( /^\s+|\s+$/g, "");
     }
 
 });
