@@ -22,7 +22,7 @@ urlpatterns = patterns(
     # ANSWER: Because it's app specific (URL starts with /app/ prefix).
     (r'^app/docs/', include('docs.urlsapp')),
     # Application keyspace reserved for future use
-    (r'^app/(docs|data)/', 'utils.views.reserved'),
+    (r'^app/(docs|data)/', 'utils.views.reserved_url'),
 
     # Static hosting for Pageforest apps.
     (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)', 'blobs.views.blob'),
