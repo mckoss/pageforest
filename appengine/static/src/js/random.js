@@ -3,13 +3,13 @@ global_namespace.define("com.pageforest.random", function(ns) {
     ns.upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     ns.lower = 'abcdefghijklmnopqrstuvwxyz';
     ns.digits = '0123456789';
-    ns.base64 = upper + lower + digits + '+/';
-    ns.base64url = upper + lower + digits + '-_';
-    ns.hexdigits = digits + 'abcdef';
+    ns.base64 = ns.upper + ns.lower + ns.digits + '+/';
+    ns.base64url = ns.upper + ns.lower + ns.digits + '-_';
+    ns.hexdigits = ns.digits + 'abcdef';
 
     ns.random = function(len, chars) {
         if (typeof chars == 'undefined') {
-            chars = base64url;
+            chars = ns.base64url;
         }
         var radix = chars.length;
         var result = [];
