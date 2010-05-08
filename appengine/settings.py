@@ -36,7 +36,7 @@ USE_APPSTATS = not DEBUG
 
 ADMINS = (
     ('Mike Koss', 'mckoss@pageforest.com'),
-    ('Johann C. Rocholl', 'johann@rocholl.net'),
+    ('Johann C. Rocholl', 'jcrocholl@pageforest.com'),
 )
 
 MANAGERS = ADMINS
