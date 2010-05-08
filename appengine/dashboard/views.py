@@ -15,10 +15,8 @@ def sparkline(hours, property_name):
             values.append(None)
         else:
             values.append(getattr(hour, property_name, None))
-    scale_percent = 100
-    maximum = max(values)
-    if maximum > 61:
-        scale_percent = 6100 / maximum  # Rescale for single-letter encoding.
+    maximum = max(10, max(values))
+    scale_percent = 6100 / maximum  # Rescale for single-letter encoding.
     chars = []
     for index in range(len(values)):
         if values[index] is None:
