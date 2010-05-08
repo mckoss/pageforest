@@ -12,8 +12,10 @@ global_namespace.define('com.pageforest.skeleton', function (ns) {
     };
 
     ns.save = function() {
-        var data = '{"title": "' + $('#title').val() + '",' +
-            '"blob": ' + $('#content').val() + '}';
+        var data = JSON.stringify({
+            title: $('#title').val(),
+            blob: $('#content').val()
+        });
         $.ajax({
             type: 'PUT',
             url: '/docs/' + $('#name').val(),
