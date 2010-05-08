@@ -45,7 +45,7 @@ def document_get(request, doc_id):
     if not request.doc.is_readable(request.user):
         return AccessDenied(request)
     # Get extra data from blob store.
-    blob = Blob.get_by_key_name(request.doc.key().name())
+    blob = Blob.get_by_key_name(request.doc.key().name() + '/')
     if blob:
         extra = {"blob": json.loads(blob.value)}
     else:
@@ -82,5 +82,10 @@ def document_put(request, doc_id):
     if request.user.username.lower() not in request.doc.writers:
         request.doc.writers.insert(0, request.user.username.lower())
     request.doc.put()
+    # Write JSON blob to blob storage.
+    if 'blob' in parsed:
+        key_name = request.doc.key().name() + '/'
+        value = json.dumps(parsed['blob'], sort_keys=True)
+        Blob(key_name=key_name, value=value).put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)
