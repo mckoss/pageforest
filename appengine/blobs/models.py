@@ -37,3 +37,6 @@ class Blob(Cacheable, Migratable, Timestamped):
         except ValueError:
             self.valid_json = False
         super(Blob, self).put()
+
+    def get_etag(self):
+        return '"%s"' % self.sha1
