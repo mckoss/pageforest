@@ -55,7 +55,7 @@ def blob_get(request):
     blob = Blob.get_by_key_name(request.key_name)
     if blob is None:
         raise Http404("Blob not found: " + request.key_name)
-    etag = '"%s"' % blob.sha1
+    etag = blob.get_etag()
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         return HttpResponseNotModified()
     last_modified = http_datetime(blob.modified)
@@ -79,14 +79,12 @@ def blob_put(request):
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
         value = value.encode('utf-8')
-    blob = Blob(
-        key_name=request.key_name,
-        value=value,
-        ip=request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    blob = Blob(key_name=request.key_name, value=value)
     blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
                             mimetype=settings.JSON_MIMETYPE)
     response['Last-Modified'] = http_datetime(blob.modified)
+    response['ETag'] = blob.get_etag()
     return response
 
 
