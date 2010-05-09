@@ -179,7 +179,7 @@ class MemcacheTest(AppTestCase):
         """Tests create, read, update, delete with memcache."""
         url = '/docs/mydoc/key/with/slashes'
         key_name = 'myapp/mydoc/key/with/slashes/'
-        cache_key = 'C1~Blob~' + key_name
+        cache_key = settings.CACHEABLE_PREFIX + '~Blob~' + key_name
         self.assertEqual(memcache.get(cache_key), None)
         # Create.
         self.app_client.put(url, 'data', content_type='text/plain')
