@@ -244,9 +244,6 @@ class AppSignInTest(TestCase):
         myapp_session_key = match.group(1)
         self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
 
-        # And both in-page and cookie app session keys should match
-        self.assertEqual(app_cookie, myapp_session_key)
-
         # Should not be logged in yet
         response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
         self.assertEqual(response.status_code, 404)
