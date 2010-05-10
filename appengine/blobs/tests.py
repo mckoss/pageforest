@@ -23,7 +23,7 @@ class AppTestCase(TestCase):
                        secret="SecreT!1")
         self.app.put()
         self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc',
-                       readers=['anybody'], writers=['peter'])
+                       readers=['public'], writers=['peter'])
         self.doc.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \

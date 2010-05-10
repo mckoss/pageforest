@@ -23,8 +23,7 @@ class DocumentTest(TestCase):
         self.doc = Doc(key_name='myapp/mydoc',
                        app_id='myapp', doc_id='MyDoc',
                        title="My Document", tags='one two three'.split(),
-                       readers=['anybody'],
-                       writers=['peter', 'authenticated'])
+                       readers=['public'], writers=['peter', 'authenticated'])
         self.doc.put()
         self.blob = Blob(key_name='myapp/mydoc/', value='{"int": 123}')
         self.blob.put()
@@ -40,7 +39,7 @@ class DocumentTest(TestCase):
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
-        self.assertContains(response, '"readers": ["anybody"]')
+        self.assertContains(response, '"readers": ["public"]')
         self.assertContains(response, '"writers": ["peter", "authenticated"]')
         self.assertContains(response, '"schema": 1')
         self.assertContains(response, '"tags": ["one", "two", "three"]')

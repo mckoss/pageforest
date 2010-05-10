@@ -192,8 +192,8 @@ class App(SuperDoc):
         """
         Update tags for this app, unless they start with underscore.
         """
-        reserved = [tag for tag in self.tags if tag.startswith('_')]
         accepted = [tag for tag in tags if not tag.startswith('_')]
+        reserved = [tag for tag in self.tags if tag.startswith('_')]
         self.tags = accepted + reserved
 
     def update_writers(self, writers, user):
@@ -203,5 +203,7 @@ class App(SuperDoc):
         """
         self.writers = writers
         username = user.get_username()
-        if username not in self.writers:
-            self.writers.append(username)
+        for attempt in ('public', 'authenticated', username):
+            if username in self.writers:
+                return
+        self.writers.append(username)
