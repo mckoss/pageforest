@@ -1,7 +1,5 @@
-import logging
 import threading
 
-from django.template.loader import render_to_string
 from utils.shortcuts import render_to_response
 
 
@@ -9,14 +7,14 @@ class RequestMiddleware(object):
     thread_local = None
 
     def process_request(self, request):
-        self.thread_local = threading.local()
-        self.thread_local.request = request
+        RequestMiddleware.thread_local = threading.local()
+        RequestMiddleware.thread_local.request = request
 
     @classmethod
     def get_request(cls):
-        if not hasattr(cls.thread_local, 'request'):
+        if not hasattr(RequestMiddleware.thread_local, 'request'):
             return None
-        return cls.thread_local.request
+        return RequestMiddleware.thread_local.request
 
 
 class SlashMiddleware(object):
