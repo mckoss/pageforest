@@ -157,6 +157,7 @@ class App(SuperDoc):
         if app is None and app_id == 'www':
             # First invocation on an empty datastore, create www app.
             app = App(key_name='www',
+                      domains=['www.' + settings.DEFAULT_DOMAIN],
                       secret=crypto.random64())
             app.put()
         return app
