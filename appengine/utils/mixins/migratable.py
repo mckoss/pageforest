@@ -57,13 +57,13 @@ class Migratable(db.Model):
                 self.schema))
 
     @classmethod
-    def update_schema_batch(cls, n=100):
+    def update_schema_batch(cls, limit=100):
         """
         Migrate models in batch.
 
         TODO: Deferred migration support via callback.
         """
-        models = cls.all().filter('schema <', cls.schema_current).fetch(n)
+        models = cls.all().filter('schema <', cls.schema_current).fetch(limit)
         for model in models:
             model.update_schema()
         return len(models)
