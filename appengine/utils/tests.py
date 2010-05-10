@@ -1,19 +1,18 @@
 import os
 import imp
 import doctest
-from datetime import datetime
 
 from django.test import TestCase
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from utils.mixins.cacheable import Cacheable, CacheHistory
-from utils.mixins import Timestamped
+from utils.mixins import Timestamped, Migratable, Cacheable
+from utils.mixins.cacheable import CacheHistory
 
 
-class CachedModel(Cacheable, Timestamped):
-    """Simple datastore model for Cacheable mixin test."""
+class TestModel(Timestamped, Migratable, Cacheable):
+    """Simple datastore model for testing mixins."""
     text = db.TextProperty()
     blob = db.BlobProperty()
 
@@ -21,30 +20,29 @@ class CachedModel(Cacheable, Timestamped):
 class CacheableTest(TestCase):
 
     def setUp(self):
-        self.started = datetime.now()
-        self.entity = CachedModel(key_name='e', text='e', blob='e')
-        self.saved = CachedModel(key_name='s', text='s', blob='s')
+        self.entity = TestModel(key_name='e', text='e', blob='e')
+        self.saved = TestModel(key_name='s', text='s', blob='s')
         self.saved.put()
 
     def test_put_and_delete(self):
         """Test that put and delete will update memcache."""
-        e1 = CachedModel.cache_get_by_key_name('e')
-        self.assertEqual(e1, None)
+        entity = TestModel.cache_get_by_key_name('e')
+        self.assertEqual(entity, None)
         self.entity.put()
-        e2 = CachedModel.cache_get_by_key_name('e')
-        self.assertEqual(e2.key().name(), 'e')
+        entity = TestModel.cache_get_by_key_name('e')
+        self.assertEqual(entity.key().name(), 'e')
         self.entity.delete()
-        e3 = CachedModel.cache_get_by_key_name('e')
-        self.assertEqual(e3, None)
+        entity = TestModel.cache_get_by_key_name('e')
+        self.assertEqual(entity, None)
 
     def test_get_by_key_name(self):
         """Test the overriden get_by_key_name method."""
-        e1 = CachedModel.get_by_key_name('s')
-        self.assertEqual(e1.key().name(), 's')
+        entity = TestModel.get_by_key_name('s')
+        self.assertEqual(entity.key().name(), 's')
         # Expire memcache and try again.
-        memcache.delete(e1.get_cache_key())
-        e1 = CachedModel.get_by_key_name('s')
-        self.assertEqual(e1.key().name(), 's')
+        memcache.delete(entity.get_cache_key())
+        entity = TestModel.get_by_key_name('s')
+        self.assertEqual(entity.key().name(), 's')
 
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
@@ -105,8 +103,8 @@ class DocTest(TestCase):
             full_path = os.path.join(dir, filename)
             if self.ignore_file(full_path):
                 continue
-            base, ext = os.path.splitext(filename)
-            file, pathname, desc = imp.find_module(base, [dir])
+            (base, ext) = os.path.splitext(filename)
+            (file, pathname, desc) = imp.find_module(base, [dir])
             mod = imp.load_module('utils.' + base, file, pathname, desc)
-            failures, tests = doctest.testmod(mod)
+            (failures, tests) = doctest.testmod(mod)
             self.assertEqual(failures, 0)
