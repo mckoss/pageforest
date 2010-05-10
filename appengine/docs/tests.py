@@ -1,3 +1,6 @@
+import datetime
+from mock import Mock
+
 from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
@@ -115,3 +118,44 @@ class DocumentTest(TestCase):
         response = self.app_client.get('/docs/unknown/blob/')
         self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
+
+    def test_timestamped_mixin(self):
+        """Timestamps and IP addresses should be updated automatically."""
+        original = datetime.datetime
+        try:
+            datetime.datetime = Mock()
+            datetime.datetime.now.return_value = original(
+                2010, 5, 10, 11, 12, 13)
+            self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+                self.peter.generate_session_key(self.app)
+            self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
+            response = self.app_client.put(
+                '/docs/foo/', '{"title": "Created Document"}',
+                content_type='text/plain')
+            self.assertContains(response, 'Saved')
+            entity = Doc.get_by_key_name('myapp/foo')
+            self.assertEqual(entity.title, 'Created Document')
+            self.assertEqual(entity.created_ip, '10.11.12.13')
+            self.assertEqual(entity.modified_ip, '10.11.12.13')
+            self.assertEqual(entity.created.isoformat(),
+                             '2010-05-10T11:12:13')
+            self.assertEqual(entity.modified.isoformat(),
+                             '2010-05-10T11:12:13')
+            # Update same entity from a different IP address.
+            datetime.datetime.now.return_value = original(
+                2010, 5, 10, 11, 12, 14)
+            self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
+            response = self.app_client.put(
+                '/docs/foo/', '{"title": "Modified Document"}',
+                content_type='text/plain')
+            self.assertContains(response, 'Saved')
+            entity = Doc.get_by_key_name('myapp/foo')
+            self.assertEqual(entity.title, 'Modified Document')
+            self.assertEqual(entity.created_ip, '10.11.12.13')
+            self.assertEqual(entity.modified_ip, '10.11.12.14')
+            self.assertEqual(entity.created.isoformat(),
+                             '2010-05-10T11:12:13')
+            self.assertEqual(entity.modified.isoformat(),
+                             '2010-05-10T11:12:14')
+        finally:
+            datetime.datetime = original
