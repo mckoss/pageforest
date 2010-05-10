@@ -4,11 +4,11 @@ from google.appengine.ext import db
 
 from django.utils import simplejson as json
 
-from utils.mixins import Cacheable, Migratable, Timestamped
+from utils.mixins import Timestamped, Migratable, Cacheable
 from apps.models import App
 
 
-class Blob(Cacheable, Migratable, Timestamped):
+class Blob(Timestamped, Migratable, Cacheable):
     """
     Key-value store for PageForest documents and resources.
     Entity key name format: app_id/doc_id/key/with/slashes
