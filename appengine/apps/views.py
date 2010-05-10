@@ -19,7 +19,7 @@ def index(request):
     """
     title = "Featured apps"
     query = App.all()
-    query.filter('readers', 'anybody')
+    query.filter('readers', 'public')
     if 'writer' in request.GET:
         title = "Apps from " + request.GET['writer']
         query.filter('writers', request.GET['writer'])

@@ -9,7 +9,7 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
 
     The first entry in the writers property is the document owner.
     The readers and writers may include the following virtual usernames:
-    * anybody = with or without a valid session key
+    * public = with or without a valid session key
     * authenticated = only users with a valid session key
     """
     title = db.StringProperty()        # Full unicode.
@@ -28,7 +28,7 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
         """
         Does this user have read permissions on this document?
         """
-        if 'anybody' in self.readers:
+        if 'public' in self.readers:
             return True
         if 'authenticated' in self.readers and user:
             return True
@@ -40,7 +40,7 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
         """
         Does this user have write permissions on this document?
         """
-        if 'anybody' in self.writers:
+        if 'public' in self.writers:
             return True
         if 'authenticated' in self.writers and user:
             return True
