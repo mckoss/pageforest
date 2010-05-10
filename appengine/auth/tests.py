@@ -261,7 +261,7 @@ class AppSignInTest(TestCase):
         # Initial form - not signed in
         response = self.www.get(SIGN_IN + 'myapp/')
         self.assertContains(response, "Sign in to Pageforest")
-        self.assertContains(response, "and My Test App.")
+        self.assertContains(response, "and My Test App")
 
         response = self.www.post(SIGN_IN + 'myapp/',
                                  {'username': 'peter',
