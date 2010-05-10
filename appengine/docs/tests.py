@@ -39,15 +39,17 @@ class DocumentTest(TestCase):
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
-        self.assertContains(response, '"readers": ["public"]')
-        self.assertContains(response, '"writers": ["peter", "authenticated"]')
+        self.assertContains(response, '"readers": [\n    "public"\n  ]')
+        self.assertContains(response,
+            '"writers": [\n    "peter",\n    "authenticated"\n  ]')
         self.assertContains(response, '"schema": 1')
-        self.assertContains(response, '"tags": ["one", "two", "three"]')
-        self.assertContains(
-            response, '"created": {"__class__": "Date", "isoformat": "201')
-        self.assertContains(
-            response, '"modified": {"__class__": "Date", "isoformat": "201')
-        self.assertContains(response, '"blob": {"int": 123}')
+        self.assertContains(response,
+            '"tags": [\n    "one",\n    "two",\n    "three"\n  ]')
+        self.assertContains(response,
+            '"created": {\n    "__class__": "Date",\n    "isoformat": "201')
+        self.assertContains(response,
+            '"modified": {\n    "__class__": "Date",\n    "isoformat": "201')
+        self.assertContains(response, '"blob": {\n    "int": 123\n  }')
         # Check that the document ID is case insensitive.
         canonical_content = response.content
         response = self.app_client.get('/docs/mydoc')

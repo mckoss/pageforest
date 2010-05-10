@@ -69,8 +69,9 @@ class AppJsonTest(TestCase):
         self.assertContains(response, '"statusText": "Saved"')
         # Retrieve updated meta info.
         response = self.www_client.get(url)
+        print response.content
         self.assertContains(response, '"title": "My Application"')
-        self.assertContains(response, '"tags": ["test", "myapp"')
+        self.assertContains(response, '"tags": [\n    "test",\n    "myapp"')
 
     def test_app_json_create(self):
         """HTTP PUT app.json should create an app if it didn't exist."""
@@ -83,7 +84,8 @@ class AppJsonTest(TestCase):
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.www)
         response = self.www_client.get(url)
-        self.assertContains(response, '"domains": ["myapp.pageforest.com"]')
+        self.assertContains(
+            response, '"domains": [\n    "myapp.pageforest.com"\n  ]')
         # Other users should not have read permission.
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.paul.generate_session_key(self.www)
