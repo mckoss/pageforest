@@ -15,9 +15,12 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
     >>> print model_to_json(Example(text='abc', number=123,
     ...     timestamp=datetime(2010, 5, 5, 9, 3, 37)))
     {
-    "number": 123,
-    "text": "abc",
-    "timestamp": {"__class__": "Date", "isoformat": "2010-05-05T09:03:37Z"}
+      "number": 123,
+      "text": "abc",
+      "timestamp": {
+        "__class__": "Date",
+        "isoformat": "2010-05-05T09:03:37Z"
+      }
     }
     """
     mapping = {}
@@ -26,20 +29,15 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
             continue
         if exclude and name in exclude:
             continue
-        mapping[name] = getattr(entity, name)
-    if extra:
-        mapping.update(extra)
-    lines = []
-    keys = mapping.keys()
-    keys.sort()
-    for key in keys:
-        value = mapping[key]
+        value = getattr(entity, name)
         if isinstance(value, datetime):
             value = {"__class__": "Date",
                      "isoformat": value.isoformat() + 'Z'}
-        value = json.dumps(value, sort_keys=True)
-        lines.append('"%s": %s' % (key, value))
-    return '{\n' + ',\n'.join(lines) + '\n}'
+        mapping[name] = value
+    if extra:
+        mapping.update(extra)
+    return json.dumps(mapping, sort_keys=True, indent=2,
+                      separators=(',', ': '))
 
 
 def assert_string(key, value):
