@@ -6,11 +6,12 @@ import sys
 import hmac
 import hashlib
 import urllib2
+from fnmatch import fnmatch
 from optparse import OptionParser
 
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
-IGNORE_FILENAMES = []
+IGNORE_FILENAMES = ['*.orig', '*~', '.*']
 COMMANDS = ['get', 'put']  # TODO: Add list and delete.
 APP_REGEX = re.compile(r'"application":\s*\"([a-z][a-z0-9-]*[a-z0-9]+)"')
 
@@ -98,6 +99,8 @@ def config():
 
     if not options.application:
         options.application = load_application()
+    if not options.application:
+        parser.error('Missing "application" key in app.json.')
     print("Application: %s" % options.application)
 
     if os.path.exists(PASSWORD_FILENAME):
@@ -148,6 +151,15 @@ def upload_meta_file(options):
     upload_file(options, META_FILENAME, url)
 
 
+def filename_matches(filename, patterns):
+    """
+    Check if the filename matches any of the patterns.
+    """
+    for pattern in patterns:
+        if fnmatch(filename, pattern):
+            return True
+
+
 def upload_dir(options, path):
     """
     Upload a directory, including all files and subdirectories.
@@ -157,9 +169,7 @@ def upload_dir(options, path):
             if dirname.startswith('.'):
                 dirnames.remove(dirname)
         for filename in filenames:
-            if filename.startswith('.'):
-                continue
-            if filename in IGNORE_FILENAMES:
+            if filename_matches(filename, IGNORE_FILENAMES):
                 continue
             upload_file(options, dirpath + '/' + filename)
 
@@ -171,7 +181,8 @@ def get(options, args):
 def put(options, args):
     if not args:
         args = [name for name in os.listdir('.')
-                if not name.startswith('.')]
+                if not name.startswith('.')
+                and not filename_matches(name, IGNORE_FILENAMES)]
     # REVIEW: The following doesn't work if you use "pf put <folder>"
     # to upload some files including META_FILENAME inside <folder>.
     # Should we require that "pf put" is always run in the same folder
