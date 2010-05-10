@@ -6,8 +6,8 @@
 <script type="text/javascript">
 var signIn = global_namespace.lookup("com.pageforest.auth.sign-in-form");
 $(document).ready(function() {
-    var username = "{{user.username}}";
-    var appId = "{{cross_app.get_app_id}}";
+    var username = "{{ user.username }}";
+    var appId = "{{ cross_app.get_app_id }}";
     signIn.documentReady(username, appId);
 });
 </script>
@@ -17,16 +17,16 @@ $(document).ready(function() {
 
 <h2>
 {% if user %}
-    {{ user.username }}, you are signed in to {{SITE_NAME}}
-    <span style="display:none;" class="have_app">and {{cross_app.title}}</span>.
+    {{ user.username }}, you are signed in to {{ SITE_NAME }}
+    <span style="display:none;" class="have_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }}).</span>
 {% else %}
-    Sign in to {{SITE_NAME}}
-    {% if cross_app %} and {{ cross_app.title }}{% endif %}.
+    Sign in to {{ SITE_NAME }}
+    {% if cross_app %} and {{ cross_app.title }} ({{ cross_app.get_app_id }}){% endif %}.
 {% endif %}
 </h2>
 
 {% if cross_app %}
-    <p class="want_app">The application, <b>{{ cross_app.title }}</b>,
+    <p class="want_app">The application, <b>{{ cross_app.title }} ({{ cross_app.get_app_id }})</b>,
       is requesting permission to save documents on {{ SITE_NAME }}.
     </p>
 {% endif %}
@@ -42,7 +42,7 @@ $(document).ready(function() {
         {% if cross_app %}
         <input class="want_app"
                type="button"
-               onClick='signIn.transferSession("{{session_key}}");return false;'
+               onClick='signIn.transferSession("{{ session_key }}");return false;'
                value = "Sign In">
         {% endif %}
     {% else %}
@@ -69,7 +69,7 @@ $(document).ready(function() {
     {% if not user.email_verified %}
         <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
     {% endif %}
-    <p><a href="/sign-out/{{cross_app.get_app_id}}">Sign Out</a></p>
+    <p><a href="/sign-out/{{ cross_app.get_app_id }}">Sign Out</a></p>
 {% else %}
     <p>Need to create account?  <a href="/sign-up">Join Now</a>.</p>
 {% endif %}
