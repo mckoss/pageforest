@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse, Http404, HttpResponseForbidden
+from django.http import HttpResponse
 from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list

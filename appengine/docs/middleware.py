@@ -1,6 +1,6 @@
 import logging
 
-from django.http import HttpResponseNotFound, HttpResponseNotAllowed
+from django.http import HttpResponseNotFound
 
 from auth.middleware import AccessDenied
 
