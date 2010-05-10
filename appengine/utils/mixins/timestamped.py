@@ -19,6 +19,6 @@ class Timestamped(db.Model):
         request = RequestMiddleware.get_request()
         if request and 'REMOTE_ADDR' in request.META:
             self.modified_ip = request.META['REMOTE_ADDR']
-            if not self.is_saved():
+            if self.created_ip is None:
                 self.created_ip = request.META['REMOTE_ADDR']
         super(Timestamped, self).put(*args, **kwargs)
