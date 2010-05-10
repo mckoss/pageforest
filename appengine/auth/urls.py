@@ -8,5 +8,5 @@ urlpatterns = patterns(
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
     (r'^sign-out/$', 'sign_out'),
     (r'^sign-out/(?P<app_id>[^/]+)/$', 'sign_out'),
-    (r'^welcome/$', direct_to_template, {'template': 'auth/welcome.html'}),
+#    (r'^email-verification/(?P<verification>.+)/$', 'email_verificaton'),
 )

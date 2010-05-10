@@ -32,3 +32,4 @@ skip_files:
 - ^(.*/)?\.
 - ^.*\.bak$
 - ^.*\.orig$
+- ^TAGS$

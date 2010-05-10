@@ -28,6 +28,9 @@ class HttpResponseCreated(HttpResponse):
         self['Location'] = location
 
 
+class Http403(Exception):
+    pass
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
