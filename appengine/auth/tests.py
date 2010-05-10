@@ -161,7 +161,8 @@ class RegistrationTest(TestCase):
             verify_url = groups.group(1)
 
             response = self.www.get(verify_url)
-            self.assertContains(response, "Your email address has  been verified.")
+            self.assertContains(response,
+                                "Your email address has  been verified.")
 
         finally:
             mail.send_mail = real_send_mail
