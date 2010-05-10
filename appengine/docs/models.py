@@ -26,7 +26,9 @@ class Doc(SuperDoc):
         """
         key_name = '/'.join((app_id, doc_id)).lower()
         username = user.username.lower()
+        title = doc_id and doc_id[0].upper() + doc_id[1:] or ''
         return Doc(key_name=key_name,
-                   title=doc_id,
+                   doc_id=doc_id,
+                   title=title,
                    readers=[username],
                    writers=[username])
