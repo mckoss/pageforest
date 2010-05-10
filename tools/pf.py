@@ -12,7 +12,7 @@ META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = []
 COMMANDS = ['get', 'put']  # TODO: Add list and delete.
-DOMAINS_REGEX = re.compile(r'"domains":\s+\["([a-z0-9\.:-]+)"')
+APP_REGEX = re.compile(r'"application":\s*\"([a-z][a-z0-9-]*[a-z0-9]+)"')
 
 
 class PutRequest(urllib2.Request):
@@ -26,9 +26,11 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login(options, server=None):
-    server = server or options.server
+def login(options, server):
+    appid = options.application
     url = 'http://%s/auth/challenge' % server
+    if options.verbose:
+        print("Getting %s" % url)
     challenge = urllib2.urlopen(url).read()
     if options.verbose:
         print("Challenge: %s" % challenge)
@@ -44,9 +46,9 @@ def login(options, server=None):
     return session_key
 
 
-def load_server():
+def load_application():
     for line in file(META_FILENAME):
-        match = DOMAINS_REGEX.match(line)
+        match = APP_REGEX.match(line)
         if match:
             return match.group(1)
 
@@ -70,7 +72,9 @@ def config():
     usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
-        help="deploy to this server (default: read from app.json)")
+        help="deploy to this server (default: pageforest.com")
+    parser.add_option('-a', '--application',
+        help="override the appliction id from app.json")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
     parser.add_option('-v', '--verbose', action='store_true')
@@ -90,9 +94,11 @@ def config():
         parser.error("Unsupported command: " + options.command)
 
     if not options.server:
-        options.server = load_server()
-    if not options.server:
-        options.server = raw_input("Server: ")
+        options.server = "pageforest.com"
+
+    if not options.application:
+        options.application = load_application()
+    print("Application: %s" % options.application)
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
@@ -132,15 +138,11 @@ def upload_file(options, filename, url=None):
 
 def upload_meta_file(options):
     """
-    Replace the app name with www to upload the app.json
-    file to the server to create the application.
+    Upload app.json to www.pageforest.com (or www.<server>)
     """
-    parts = options.server.split('.')
-    app_id = parts[0]
-    parts[0] = 'www'
-    www_domain = '.'.join(parts)
-    options.session_key = login(options, www_domain)
-    url = 'http://%s/apps/%s/app.json' % (www_domain, app_id)
+    app_id = options.application
+    options.session_key = login(options, 'www.' + options.server)
+    url = 'http://www.%s/apps/%s/app.json' % (options.server, app_id)
     upload_file(options, META_FILENAME, url)
 
 
@@ -177,7 +179,8 @@ def put(options, args):
         args.remove(META_FILENAME)
     if not args:
         return
-    options.session_key = login(options)
+    options.session_key = login(options,
+                                options.application + '.' + options.server)
     for path in args:
         if os.path.isdir(path):
             upload_dir(options, path)
