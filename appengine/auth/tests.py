@@ -6,17 +6,23 @@ from django.conf import settings
 from django.test import TestCase
 from django.test.client import Client
 
+from google.appengine.api import mail
+
 from auth.models import User
 from apps.models import App
 from docs.models import Doc
 
 from utils import crypto
 
+# Default pageforest domain url
+WWW = "http://www.pageforest.com"
+
 # Authentication application URL prefix
 AUTH_PREFIX = "/"
 SIGN_UP = AUTH_PREFIX + "sign-up/"
 SIGN_IN = AUTH_PREFIX + "sign-in/"
 SIGN_OUT = AUTH_PREFIX + "sign-out/"
+EMAIL_VERIFY = AUTH_PREFIX + "email-verification"
 
 APP_AUTH_PREFIX = "/auth/"
 
@@ -122,6 +128,36 @@ class RegistrationTest(TestCase):
         response = self.www.post(SIGN_UP, {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
+    def test_new_registration(self):
+        """Complete a user registration successfully."""
+        mail_kwargs = {}
+
+        def mock_send_mail(*args, **kwargs):
+            """ Assume we always use keyword args """
+            self.assertEqual(len(args), 0)
+            mail_kwargs.update(kwargs)
+            real_send_mail(*args, **kwargs)
+
+        (real_send_mail, mail.send_mail) = (mail.send_mail, mock_send_mail)
+        try:
+            response = self.www.post(SIGN_UP, {'username': 'Paul',
+                                               'password': 'afinepassword',
+                                               'repeat': 'afinepassword',
+                                               'email': 'paul@bunyan.com',
+                                               'tos': 'checked',
+                                               })
+            self.assertRedirects(response, WWW + SIGN_IN)
+            paul = User.lookup('paul')
+            self.assertTrue(paul is not None)
+            self.assertEqual(paul.username, 'Paul')
+            self.assertEqual(paul.get_username(), 'paul')
+            self.assertEqual(mail_kwargs['sender'], 'support@pageforest.com')
+            self.assertEqual(mail_kwargs['to'], 'paul@bunyan.com')
+            self.assertTrue(mail_kwargs['subject'].find("Pageforest") != -1)
+            self.assertTrue(mail_kwargs['body'].find(WWW + EMAIL_VERIFY) != -1)
+        finally:
+            mail.send_mail = real_send_mail
+
 
 class SignInTest(TestCase):
 
@@ -152,8 +188,7 @@ class SignInTest(TestCase):
         response = self.www.post(SIGN_IN,
                                  {'username': 'peter',
                                   'password': 'password'})
-        self.assertRedirects(response,
-                             'http://www.pageforest.com' + SIGN_IN)
+        self.assertRedirects(response, WWW + SIGN_IN)
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('www/peter/12'))
 
@@ -163,8 +198,7 @@ class SignInTest(TestCase):
 
         # Now sign out the user - and check his cookies
         response = self.www.get(SIGN_OUT)
-        self.assertRedirects(response,
-                             'http://www.pageforest.com' + SIGN_IN)
+        self.assertRedirects(response, WWW + SIGN_IN)
 
         cookie = response.cookies['sessionkey']
         self.assertEqual(cookie.value, '')
@@ -211,8 +245,7 @@ class AppSignInTest(TestCase):
     def test_no_app(self):
         """Sign into non-existant application -> redirect."""
         response = self.www.get(SIGN_IN + 'noapp')
-        self.assertRedirects(response,
-                             'http://www.pageforest.com' + SIGN_IN)
+        self.assertRedirects(response, WWW + SIGN_IN)
 
     def test_sign_in(self):
         """Sign in to an application (from scratch)."""
@@ -225,8 +258,7 @@ class AppSignInTest(TestCase):
                                  {'username': 'peter',
                                   'password': 'password',
                                   'app_auth': 'checked'})
-        self.assertRedirects(response,
-                             'http://www.pageforest.com' + SIGN_IN + 'myapp/')
+        self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
         cookie = response.cookies['sessionkey'].value
         app_cookie = response.cookies['myapp-sessionkey'].value
         # Expect a first-part session cookie to www.pf.com

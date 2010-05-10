@@ -1,5 +1,6 @@
 import logging
 import time
+from datetime import datetime
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -16,6 +17,7 @@ from django.template import RequestContext
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils import crypto
+from utils.http import Http403
 
 from auth.forms import RegistrationForm, SignInForm
 from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
@@ -26,17 +28,55 @@ from apps.models import App
 
 def send_email_verification(request, user):
     """
-    Send email to this user.
-
-    TODO: Need to CHECK email token sent to user - and mark account as
-    validated.
+    Send email verification to this user.
     """
+    www = App.lookup('www')
+    expires = int(time.time() + 3 * 24 * 60 * 60)
+    verification = crypto.sign(user.get_username(),
+                               user.email,
+                               expires,
+                               www.secret)
     message = render_to_string('auth/verify-email.txt',
-                               RequestContext(request, {'user': user}))
+                               RequestContext(request,
+                                              {'user': user,
+                                               'verification': verification}))
+
     mail.send_mail(sender=settings.SITE_EMAIL_FROM,
                    to=user.email,
                    subject=settings.SITE_NAME + " account verification.",
                    body=message)
+
+
+@method_required('GET')
+def email_verification(request, verification=None):
+    """
+    Check verification code and mark user as verified.
+
+    """
+    user = None
+    if not crypto.verify(verification):
+        raise Http403("Invalid email verification code.")
+
+    (username, email, expires, secret) = verification.split(crypto.SEPARATOR)
+
+    if time.time() > expires:
+        # TODO: Send user to page to get a new verification code.
+        raise Http403("Email verification code has expired.")
+
+    user = User.lookup(username)
+    if user is None:
+        raise Http403("No such user: %s." % username)
+
+    if user.email != email:
+        raise Http403("Email verification for old email address.")
+
+    if user.email_verified is None:
+        # Record first verification date only.
+        user.email_verified = datetime.now()
+        user.put()
+
+    render_to_response(request, 'auth/email-verification.html',
+                       {'user': user})
 
 
 @method_required('GET', 'POST')
