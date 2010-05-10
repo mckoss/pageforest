@@ -5,7 +5,10 @@ global_namespace.define('com.pageforest.scratch', function (ns) {
     };
 
     ns.signin = function() {
-        window.open("http://www.pageforest.com/sign-in/scratch/", '_blank');
+        var dot = location.host.indexOf('.');
+        var www = "www" + location.host.substr(dot);
+        var url = "http://" + www + "/sign-in/scratch/";
+        window.open(url, '_blank');
     };
 
     ns.signout = function() {
