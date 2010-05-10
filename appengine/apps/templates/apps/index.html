@@ -10,9 +10,10 @@
 <tr>
 <td>
 <img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
-     width="16" height="16" alt="" />
-<td><a href="{{ app.get_absolute_url }}">{{ app.title }}</a></td>
-<td><a href="{% url apps.views.details app.get_app_id %}">{{ app.get_app_id }}</a></td>
+width="16" height="16" alt="" />
+<a href="{{ app.get_absolute_url }}">{{ app.title }}</a>
+(<a href="{% url apps.views.details app.get_app_id %}">details</a>)
+</td>
 <td>By {% for username in app.writers %}
 <a href="/apps/?writer={{ username }}">{{ username }}</a>{% endfor %}</td>
 <td>Tagged {% for tag in app.tags %}
