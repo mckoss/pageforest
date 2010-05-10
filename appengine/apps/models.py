@@ -35,7 +35,11 @@ class App(SuperDoc):
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
-        return ''.join(('http://', self.domains[0], '/'))
+        if self.domains:
+            domain = self.domains[0]
+        else:
+            domain = self.get_app_id() + '.' + settings.DEFAULT_DOMAIN
+        return ''.join(('http://', domain, '/'))
 
     def get_app_id(self):
         """Return the key name which contains the app id."""
