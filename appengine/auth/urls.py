@@ -8,5 +8,6 @@ urlpatterns = patterns(
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
     (r'^sign-out/$', 'sign_out'),
     (r'^sign-out/(?P<app_id>[^/]+)/$', 'sign_out'),
-    (r'^email-verification/(?P<verification>.+)/$', 'email_verification'),
+    (r'^email-verify/(?P<verification>.+)/$', 'email_verification'),
+    (r'^email-verify/$', 'email_verification'),
 )
