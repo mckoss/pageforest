@@ -1,8 +1,5 @@
 {
-"title": "Pageforest Sample Application",
 "application": "scratch",
-"domains": ["scratch.pageforest.com"],
-"writers": ["jcrocholl", "mckoss"],
-"readers": ["public", "anybody"],
+"title": "Pageforest Sample Application",
 "tags": ["demo", "sample"]
 }

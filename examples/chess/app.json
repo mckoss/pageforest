@@ -1,6 +1,5 @@
 {
-"app_id": "chess",
+"application": "chess",
 "title": "Chess",
-"tags": ["chess", "game", "multiplayer"],
-"writers": ["jcrocholl"]
+"tags": ["chess", "game", "multiplayer"]
 }
