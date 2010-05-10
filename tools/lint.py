@@ -11,6 +11,7 @@ import pftool
 DISABLE_MESSAGES = """
 C0111 Missing docstring
 C0121 Missing required attribute "__revision__"
+E0203 Access to member 'tags' before its definition line 197
 E1101 Class 'KeyValue' has no 'get_by_key_name' member
 E1103 Instance of 'KeyValue' has no 'put' member (but some types ...
 F0401 Unable to import 'django.test' (No module named django)
