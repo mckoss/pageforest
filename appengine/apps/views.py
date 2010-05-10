@@ -1,12 +1,46 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from django.utils import simplejson as json
+from django.shortcuts import redirect
 
+from utils.shortcuts import render_to_response
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 from auth.middleware import AccessDenied
+from auth.decorators import login_required
 
 from apps.models import App
+
+
+@method_required('GET')
+def index(request):
+    """
+    List apps.
+    """
+    title = "Featured apps"
+    query = App.all()
+    query.filter('readers', 'anybody')
+    if 'writer' in request.GET:
+        title = "Apps from " + request.GET['writer']
+        query.filter('writers', request.GET['writer'])
+    if 'tag' in request.GET:
+        title = "Apps tagged " + request.GET['tag']
+        query.filter('tags', request.GET['tag'])
+    return render_to_response(request, 'apps/index.html', {
+            'title': title,
+            'apps_list': query.fetch(20)})
+
+
+@method_required('GET')
+def details(request, app_id):
+    """
+    Show details for a specific app.
+    """
+    app = App.get_by_key_name(app_id)
+    if app is None:
+        raise Http404("App not found: " + app_id)
+    return render_to_response(request, 'apps/details.html',
+                              {'app': app})
 
 
 @jsonp
@@ -32,6 +66,11 @@ def app_json_get(request, app_id):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
+def merge_tags(old_tags, new_tags):
+    return [tag for tag in old_tags if tag.startswith('_')] + \
+        [tag for tag in new_tags if not tag.startswith('_')]
+
+
 def app_json_put(request, app_id):
     """
     Parse incoming JSON blob and update meta info for this app.
@@ -54,8 +93,11 @@ def app_json_put(request, app_id):
                 setattr(request.app, key, parsed[key])
         for key in ('tags', 'readers', 'writers', 'domains'):
             if key in parsed:
-                assert_string_list(key, parsed[key])
-                setattr(request.app, key, parsed[key])
+                values = parsed[key]
+                assert_string_list(key, values)
+                if key == 'tags':
+                    values = merge_tags(request.app.tags, values)
+                setattr(request.app, key, values)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
