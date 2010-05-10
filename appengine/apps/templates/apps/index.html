@@ -1,0 +1,23 @@
+{% extends "page.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block both-columns %}
+<h1>{{ title }}</h1>
+
+<table>
+{% for app in apps_list %}
+<tr>
+<td>
+<img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
+     width="16" height="16" alt="" />
+<td><a href="{{ app.get_absolute_url }}">{{ app.title }}</a></td>
+<td><a href="{% url apps.views.details app.get_app_id %}">{{ app.get_app_id }}</a></td>
+<td>By {% for username in app.writers %}
+<a href="/apps/?writer={{ username }}">{{ username }}</a>{% endfor %}</td>
+<td>Tagged {% for tag in app.tags %}
+<a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% endfor %}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}
