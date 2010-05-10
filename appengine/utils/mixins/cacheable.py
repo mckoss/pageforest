@@ -71,6 +71,15 @@ class Cacheable(db.Model):
     """
 
     def __init__(self, *args, **kwargs):
+        # Make sure that Cacheable is the last mixin in the MRO.
+        found = False
+        for cls in self.__class__.__mro__:
+            if found and cls not in (db.Model, object):
+                mro = [c.__name__ for c in self.__class__.__mro__]
+                mro.insert(0, "Cacheable must be the last mixin in the MRO:")
+                raise TypeError(' '.join(mro))
+            if cls is Cacheable:
+                found = True
         super(Cacheable, self).__init__(*args, **kwargs)
 
     def serialize(self):
