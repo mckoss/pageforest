@@ -35,6 +35,8 @@ from wildcard import
 [W0403] Relative import 'settingsauto'
 [W6501] Specify string format arguments as logging function parameters
 .process_request] Method could be a function
+.process_response] Method could be a function
+.process_exception] Method could be a function
 Unused import handler404
 Unused import handler500
 Unused argument 'request'
