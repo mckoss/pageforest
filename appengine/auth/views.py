@@ -82,7 +82,8 @@ def email_verification(request, verification=None):
     """
     error = None
     if verification is not None:
-        (user, error) = test_email_verification(verification, request.app.secret)
+        (user, error) = test_email_verification(verification,
+                                                request.app.secret)
         if user and user.email_verified is None:
             user.email_verified = datetime.now()
             user.put()
