@@ -2,6 +2,7 @@ import logging
 import time
 import email
 import httplib
+from urlparse import urlparse
 
 from django.http import HttpResponse, Http404, HttpResponseNotFound, \
     HttpResponseNotAllowed, HttpResponseServerError
@@ -103,15 +104,17 @@ def referer_is_safe(request, referer):
     # We are permissive to empty referers - so developers
     # can test on localhost.  Log these cases to see
     # what's happening.
-    if referer == '':
+    parts = urlparse(referer)
+    domain = parts[1]
+    if domain == '':
         logging.warn("Missing Referer - UA: %s" %
                      request.META.get('HTTP_USER_AGENT', 'missing'))
         return True
 
-    if referer in settings.DOMAINS:
+    if domain in settings.DOMAINS:
         return True
-    for domain in settings.DOMAINS:
-        if referer.endswith('.' + domain):
+    for pf_domain in settings.DOMAINS:
+        if domain.endswith('.' + pf_domain):
             return True
 
     app = request.app
@@ -120,13 +123,17 @@ def referer_is_safe(request, referer):
 
     # If we're running on an application domain, we trust any of
     # the developer's listed domains.
-    if referer in app.domains:
+    if domain in app.domains:
         return True
-    # TODO: Don't trust all subdomains by default - only if developer
-    # indicates to do so.
-    for domain in app.domains:
-        if referer.endswith('.' + domain):
+    # REVIEW: Don't trust all subdomains by default - only if developer
+    # indicates to do so with . prefix?
+    for app_domain in app.domains:
+        if domain.endswith('.' + app_domain):
             return True
+
+    # TODO: We should actually be trusting specific URL prefixes
+    # designated by the application - since he may not want to trust
+    # every page on his host (e.g., github.com).
 
     return False
 

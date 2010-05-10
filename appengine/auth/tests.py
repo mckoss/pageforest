@@ -286,12 +286,20 @@ class AppSignInTest(TestCase):
 
         # Should not be logged in yet
         response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
+
         self.assertEqual(response.status_code, 404)
         self.assertTrue('sessionkey' not in response.cookies)
+
         # Simulate the in-page javascript that does the cross-site
         # authentication
+        self.myapp.defaults['HTTP_REFERER'] = \
+            "http://www.pageforest.com/sign-in/"
         response = self.myapp.get(APP_AUTH_PREFIX + 'set-session/' +
-                                  myapp_session_key)
+                                  myapp_session_key +
+                                  '?callback=jsonp123')
+        del self.myapp.defaults['HTTP_REFERER']
+        self.assertEqual(response.content,
+                         'jsonp123("' + myapp_session_key + '")')
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('myapp/peter/12'))
         # And confirm the username api returns the user
