@@ -187,3 +187,21 @@ class App(SuperDoc):
                    secret=crypto.random64(),
                    readers=[username],
                    writers=[username])
+
+    def update_tags(self, tags, user):
+        """
+        Update tags for this app, unless they start with underscore.
+        """
+        reserved = [tag for tag in self.tags if tag.startswith('_')]
+        accepted = [tag for tag in tags if not tag.startswith('_')]
+        self.tags = accepted + reserved
+
+    def update_writers(self, writers, user):
+        """
+        Update writers for this app, make sure that the current user
+        is not removing his own write permissions.
+        """
+        self.writers = writers
+        username = user.get_username()
+        if username not in self.writers:
+            self.writers.append(username)

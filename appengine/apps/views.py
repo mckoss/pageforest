@@ -66,11 +66,6 @@ def app_json_get(request, app_id):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
-def merge_tags(old_tags, new_tags):
-    return [tag for tag in old_tags if tag.startswith('_')] + \
-        [tag for tag in new_tags if not tag.startswith('_')]
-
-
 def app_json_put(request, app_id):
     """
     Parse incoming JSON blob and update meta info for this app.
@@ -95,9 +90,12 @@ def app_json_put(request, app_id):
             if key in parsed:
                 values = parsed[key]
                 assert_string_list(key, values)
-                if key == 'tags':
-                    values = merge_tags(request.app.tags, values)
-                setattr(request.app, key, values)
+                # Special treatment if App.update_key method exists.
+                update_method = getattr(request.app, 'update_' + key, None)
+                if update_method:
+                    update_method(values, request.user)
+                else:
+                    setattr(request.app, key, values)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)

@@ -48,7 +48,8 @@ class AppJsonTest(TestCase):
         self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
-                         readers=['peter'], writers=['peter'])
+                       readers=['peter'], writers=['peter'],
+                       tags=['mytag', '_featured'])
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.www = App.lookup('www')
@@ -69,7 +70,7 @@ class AppJsonTest(TestCase):
         # Retrieve updated meta info.
         response = self.www_client.get(url)
         self.assertContains(response, '"title": "My Application"')
-        self.assertContains(response, '"tags": ["test", "myapp"]')
+        self.assertContains(response, '"tags": ["test", "myapp"')
 
     def test_app_json_create(self):
         """HTTP PUT app.json should create an app if it didn't exist."""
@@ -122,3 +123,15 @@ class AppJsonTest(TestCase):
         del self.www_client.cookies[settings.SESSION_COOKIE_NAME]
         response = self.www_client.put(url, '{}', content_type='text/plain')
         self.assertContains(response, "Access denied.", status_code=403)
+
+    def test_app_json_put_tags(self):
+        """The app_json_put view function should update non-reserved tags."""
+        url = '/apps/myapp/app.json'
+        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.www)
+        self.assertEquals(App.get_by_key_name('myapp').tags,
+                          ['mytag', '_featured'])
+        self.www_client.put(url, '{"tags": ["newtag", "_ignorethis"]}',
+                            content_type='application/json')
+        self.assertEquals(App.get_by_key_name('myapp').tags,
+                          ['newtag', '_featured'])
