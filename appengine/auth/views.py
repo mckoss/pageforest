@@ -47,36 +47,56 @@ def send_email_verification(request, user):
                    body=message)
 
 
+def test_email_verification(verification, secret):
+    """
+    Test email verification string for validity.
+
+    Return's (user, error) - error string if user is None.
+    """
+    verified = crypto.verify(verification, secret)
+    if not verified:
+        return (None, "Invalid verification key.")
+
+    (username, email, expires, secret) = verification.split(crypto.SEPARATOR)
+
+    if time.time() > expires:
+        return (None, "Email verification code has expired.")
+
+    user = User.lookup(username)
+    if user is None:
+        return (None, "No such user: %s." % username)
+
+    if user.email != email:
+        return (None, "Email verification for old email address.")
+
+    return (user, None)
+
+
 @method_required('GET')
 def email_verification(request, verification=None):
     """
     Check verification code and mark user as verified.
 
+    If a verification code is not given, we show the current verified
+    state of the signed-in user.
     """
-    user = None
-    if not crypto.verify(verification):
-        raise Http403("Invalid email verification code.")
+    error = None
+    if verification is not None:
+        (user, error) = test_email_verification(verification, request.app.secret)
+        if user and user.email_verified is None:
+            user.email_verified = datetime.now()
+            user.put()
+        elif request.user:
+            user = request.user
+    else:
+        # Show verification status for the currently sign-in in user.
+        user = request.user
+        if user and user.email_verified is None:
+            error = "Your email address has not yet been verified."
 
-    (username, email, expires, secret) = verification.split(crypto.SEPARATOR)
-
-    if time.time() > expires:
-        # TODO: Send user to page to get a new verification code.
-        raise Http403("Email verification code has expired.")
-
-    user = User.lookup(username)
-    if user is None:
-        raise Http403("No such user: %s." % username)
-
-    if user.email != email:
-        raise Http403("Email verification for old email address.")
-
-    if user.email_verified is None:
-        # Record first verification date only.
-        user.email_verified = datetime.now()
-        user.put()
-
-    render_to_response(request, 'auth/email-verification.html',
-                       {'user': user})
+    return render_to_response(request, 'auth/email-verification.html',
+                              {'user': user,
+                               'error': error})
 
 
 @method_required('GET', 'POST')

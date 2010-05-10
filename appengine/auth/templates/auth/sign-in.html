@@ -66,6 +66,9 @@ $(document).ready(function() {
 </form>
 
 {% if user %}
+    {% if not user.email_verified %}
+        <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
+    {% endif %}
     <p><a href="/sign-out/{{cross_app.get_app_id}}">Sign Out</a></p>
 {% else %}
     <p>Need to create account?  <a href="/sign-up">Join Now</a>.</p>

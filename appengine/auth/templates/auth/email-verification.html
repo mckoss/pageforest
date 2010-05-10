@@ -1,0 +1,32 @@
+{% extends "page.html" %}
+
+{% block title %}Verify Your Email{% endblock %}
+
+{% block extra-head %}
+{% endblock %}
+
+{% block both-columns %}
+
+<h2>
+    Your email address has {% if error %}not{% endif %} been verified.
+</h2>
+
+{% if error %}
+<p class="error">{{ error }}</p>
+    {% if user %}
+    <p>
+    {{SITE_NAME}} has sent you an email with a verification link to your email address
+    ({{user.email}}).  If you have not received it, please check your email spam folder
+    for email from {{DOMAIN}}.
+    </p>
+    <p>
+    If you'd like to have another copy of the verification email sent to you, please
+    click here:
+    </p>
+    <input type="button" value="Resend Email Verification" onlick="verify.resend();"/>
+    {% else %}
+    <p>Already have an account?  <a href="/sign-in">Sign In</a>.</p>
+    {% endif %}
+{% endif %}
+
+{% endblock both-columns %}
