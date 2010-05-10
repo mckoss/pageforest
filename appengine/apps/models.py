@@ -185,8 +185,8 @@ class App(SuperDoc):
                    title=title,
                    domains=[hostname],
                    secret=crypto.random64(),
-                   readers=[username],
-                   writers=[username])
+                   writers=[username],
+                   readers=['public'])
 
     def update_tags(self, tags, user):
         """
