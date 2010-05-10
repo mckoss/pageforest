@@ -3,7 +3,7 @@ from google.appengine.ext import db
 from utils.mixins import Cacheable, Migratable, Timestamped
 
 
-class SuperDoc(Cacheable, Migratable, Timestamped):
+class SuperDoc(Timestamped, Migratable, Cacheable):
     """
     Parent class for App and Doc with shared functionality.
 

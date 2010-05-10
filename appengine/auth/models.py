@@ -3,7 +3,7 @@ import time
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from utils.mixins import Migratable, Cacheable, Timestamped
+from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
 
 import settings
@@ -16,7 +16,7 @@ class SignatureError(Exception):
     pass
 
 
-class User(db.Expando, Migratable, Cacheable, Timestamped):
+class User(db.Expando, Timestamped, Migratable, Cacheable):
     """
     The entity key name is username.lower() for case-insensitive matching.
     The password is hmac_sha1(key=raw_password, message=username.lower()).

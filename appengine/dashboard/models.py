@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from google.appengine.ext import db
 
-from utils.mixins import Cacheable, Migratable
+from utils.mixins import Migratable, Cacheable
 
 from auth.models import User
 from apps.models import App
@@ -23,7 +23,7 @@ def count_entities(model, property_name, start, stop):
     return query.count()
 
 
-class StatsHour(Cacheable, Migratable):
+class StatsHour(Migratable, Cacheable):
     """
     Collect statistics for one hour.
     The key name is YYYYMMDDHH.
