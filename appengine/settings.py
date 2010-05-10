@@ -86,7 +86,7 @@ APPEND_SLASH = False
 # Content-Type header for JSON data.
 JSON_MIMETYPE = 'application/json'
 
-# Allowed dormats for pageforest identifiers:
+# Allowed formats for pageforest identifiers:
 USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]*[a-zA-Z0-9]"
 APP_ID_REGEX = r"[a-z][a-z0-9-]*[a-z0-9]"
 DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]*"
@@ -124,13 +124,15 @@ SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
+public authenticated
+
 admin administrator root
 staff info spam abuse
 www www-data webmaster postmaster
 test tester testuser testclient
-friends family public private
-authenticated anonymous unknown noname
-everybody anybody nobody public private
+friends family
+anonymous unknown noname
+everybody anybody nobody private owner
 """.split()
 
 # Prevent app registration with some special app names.
