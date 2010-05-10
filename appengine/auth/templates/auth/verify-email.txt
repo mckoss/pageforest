@@ -1,0 +1,9 @@
+Welcome to {{SITE_NAME}}, {{user.username}}.
+
+To complete your registration, please visit the following link:
+
+http://{{DOMAIN}}/email-verify/{{verification}}/
+
+Thanks!
+Mike and Johann
+pageforest.com

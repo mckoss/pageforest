@@ -1,0 +1,6 @@
+{
+"title": "Blob Storage API Demo",
+"domains": ["blobdemo.pageforest.com"],
+"writers": ["johann", "mike"],
+"readers": ["anybody"]
+}

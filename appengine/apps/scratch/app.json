@@ -1,0 +1,7 @@
+{
+"title": "Pageforest Sample Application",
+"domains": ["scratch.pageforest.com"],
+"writers": ["jcrocholl", "mckoss"],
+"readers": ["public", "anybody"],
+"tags": ["demo", "sample"]
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Pageforest Sample Application</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/0.5/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/0.5/js/utils.min.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+var namespace = global_namespace.lookup("com.pageforest.skeleton");
+$(document).ready(namespace.ready);
+</script>
+</head>
+<body>
+
+<p>
+<input type="button" onclick="namespace.signin()" value="Sign in" />
+<input type="button" onclick="namespace.signout()" value="Sign out" />
+</p>
+
+<p>Document ID:<br />
+<input type="text" id="name" name="name" value="mydoc" />
+<input type="button" onclick="namespace.save()" value="Save" />
+<input type="button" onclick="namespace.load()" value="Load" />
+</p>
+
+<p>Title:<br />
+<input type="text" id="title" name="title" value="My Document" />
+</p>
+
+<p>Blob:<br />
+<textarea id="blob" name="blob">
+You can store a text blob in each document.
+</textarea>
+</p>
+
+<div id="results" style="clear:both"></div>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{% extends "page.html" %}
+
+{% block extra-head %}
+<script type="text/javascript">
+$(document).ready(function() {
+  var registration = global_namespace.lookup("com.pageforest.registration");
+  registration.document_ready();
+});
+</script>
+{% endblock %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block both-columns %}
+<h2>Create your {{SITE_NAME}} account</h2>
+<form method="post">
+<table>
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td class="form-message" id="validate_{{ field.html_name }}"><span class="error">{{ field.errors.0 }}</span></td>
+</tr>
+{% endfor %}
+<tr><td></td><td><input type="submit" value="Join Now" /></td></tr>
+</table>
+</form>
+<p>Already have an account?  <a href="/sign-in">Sign In</a>.</p>
+{% endblock %}
