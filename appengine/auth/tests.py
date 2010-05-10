@@ -22,7 +22,7 @@ AUTH_PREFIX = "/"
 SIGN_UP = AUTH_PREFIX + "sign-up/"
 SIGN_IN = AUTH_PREFIX + "sign-in/"
 SIGN_OUT = AUTH_PREFIX + "sign-out/"
-EMAIL_VERIFY = AUTH_PREFIX + "email-verification"
+EMAIL_VERIFY = AUTH_PREFIX + "email-verify/"
 
 APP_AUTH_PREFIX = "/auth/"
 
@@ -154,7 +154,15 @@ class RegistrationTest(TestCase):
             self.assertEqual(mail_kwargs['sender'], 'support@pageforest.com')
             self.assertEqual(mail_kwargs['to'], 'paul@bunyan.com')
             self.assertTrue(mail_kwargs['subject'].find("Pageforest") != -1)
-            self.assertTrue(mail_kwargs['body'].find(WWW + EMAIL_VERIFY) != -1)
+            verify_url = re.search
+            groups = re.search('(' + WWW + EMAIL_VERIFY + '.*/)',
+                               mail_kwargs['body'])
+            self.assertTrue(groups is not None)
+            verify_url = groups.group(1)
+
+            response = self.www.get(verify_url)
+            self.assertContains(response, "Your email address has  been verified.")
+
         finally:
             mail.send_mail = real_send_mail
 
@@ -270,10 +278,9 @@ class AppSignInTest(TestCase):
         response = self.www.post(SIGN_IN + 'myapp/')
         # We need the app-specific session cookie transfered to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
-        match = myapp_session_key = re.search(r'transferSession\("(.*)"\)',
-                                     response.content)
-        self.assertTrue(match is not None)
-        myapp_session_key = match.group(1)
+        groups = re.search(r'transferSession\("(.*)"\)', response.content)
+        self.assertTrue(groups is not None)
+        myapp_session_key = groups.group(1)
         self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
 
         # Should not be logged in yet
