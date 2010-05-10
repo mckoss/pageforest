@@ -122,7 +122,9 @@ def upload_file(options, filename, url=None):
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
             urlpath = urlpath[2:]
-        url = 'http://%s.%s/%s' % (options.application, options.server, urlpath)
+        url = 'http://%s.%s/%s' % (options.application,
+                                   options.server,
+                                   urlpath)
     data = open(filename).read()
     request = PutRequest(url, data)
     request.add_header('Cookie', 'sessionkey=' + options.session_key)
