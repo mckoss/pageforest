@@ -1,11 +1,11 @@
-global_namespace.define('com.pageforest.skeleton', function (ns) {
+global_namespace.define('com.pageforest.scratch', function (ns) {
 
     ns.ready = function() {
         $('#doc_id').focus();
     };
 
     ns.signin = function() {
-        window.open("http://www.pageforest.com/sign-in/skeleton/", '_blank');
+        window.open("http://www.pageforest.com/sign-in/scratch/", '_blank');
     };
 
     ns.signout = function() {
