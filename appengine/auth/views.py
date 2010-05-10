@@ -184,7 +184,7 @@ def set_session_cookie(request, session_key):
         response.delete_cookie(settings.SESSION_COOKIE_NAME)
     else:
         try:
-            user = User.verify_session_key(session_key, request.app)
+            User.verify_session_key(session_key, request.app)
         except SignatureError, error:
             return AccessDenied(request,
                                 "Invalid session key: %s" % unicode(error))

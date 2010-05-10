@@ -66,7 +66,7 @@ class ClientErrorTest(AppTestCase):
         self.assertEqual(response['Allow'],
                          'DELETE, GET, HEAD, PUSH, PUT, SLICE')
 
-    def test_query_string_method_not_allowed(self):
+    def test_query_string_not_allowed(self):
         """Unknown query string method should return 405 Method Not Allowed."""
         response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
