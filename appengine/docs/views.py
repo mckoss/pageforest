@@ -18,12 +18,13 @@ def index(request):
     """
     Show a list of documents for this user.
     """
+    title = "My documents"
     query = Doc.all()
     query.filter('writers', request.user.username.lower())
     query.order('-modified')
-    docs_list = query.fetch(20)
-    return render_to_response(request, 'docs/index.html',
-                              {'docs_list': docs_list})
+    return render_to_response(request, 'docs/index.html', {
+            'title': title,
+            'docs_list': query.fetch(20)})
 
 
 @jsonp

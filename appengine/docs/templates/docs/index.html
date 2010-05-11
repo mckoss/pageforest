@@ -1,0 +1,28 @@
+{% extends "page.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block both-columns %}
+<h1>{{ title }}</h1>
+
+<table>
+<tr>
+<th>Title</th>
+<th>Tags</th>
+<th>Authors</th>
+<th>Created</th>
+<th>Modified</th>
+</tr>
+{% for doc in docs_list %}
+<tr>
+<td><a href="{{ doc.get_absolute_url }}">{{ doc.title }}</a></td>
+<td>{% for tag in doc.tags %}
+<a href="/docs/?tag={{ tag }}">{{ tag }}</a>{% endfor %}</td>
+<td>{% for username in doc.writers %}
+<a href="/docs/?writer={{ username }}">{{ username }}</a>{% endfor %}</td>
+<td>{{ doc.created|timesince }}</td>
+<td>{{ doc.modified|timesince }}</td>
+</tr>
+{% endfor %}
+</table>
+{% endblock %}
