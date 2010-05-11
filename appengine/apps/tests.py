@@ -69,7 +69,6 @@ class AppJsonTest(TestCase):
         self.assertContains(response, '"statusText": "Saved"')
         # Retrieve updated meta info.
         response = self.www_client.get(url)
-        print response.content
         self.assertContains(response, '"title": "My Application"')
         self.assertContains(response, '"tags": [\n    "test",\n    "myapp"')
 
