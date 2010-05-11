@@ -59,10 +59,12 @@ def app_json_get(request, app_id):
     """
     Get JSON blob with meta info for this app.
     """
-    request.app = App.lookup(app_id)
-    if not request.app.is_readable(request.user):
+    app = App.lookup(app_id)
+    if app is None:
+        raise Http404("App not found: " + app_id)
+    if not app.is_readable(request.user):
         return AccessDenied(request)
-    content = model_to_json(request.app, exclude='secret'.split())
+    content = model_to_json(app, exclude='secret'.split())
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
@@ -70,14 +72,14 @@ def app_json_put(request, app_id):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
-    request.app = App.lookup(app_id)
-    if request.app is None:
+    app = App.lookup(app_id)
+    if app is None:
         # Check session key.
         if request.user is None:
             return AccessDenied(request)
         # Create a new App with this app_id.
-        request.app = App.create(app_id, request.user)
-    if not request.app.is_writable(request.user):
+        app = App.create(app_id, request.user)
+    if not app.is_writable(request.user):
         return AccessDenied(request)
     # TODO: Quota check.
     try:
@@ -85,20 +87,20 @@ def app_json_put(request, app_id):
         for key in ('title', ):
             if key in parsed:
                 assert_string(key, parsed[key])
-                setattr(request.app, key, parsed[key])
+                setattr(app, key, parsed[key])
         for key in ('tags', 'readers', 'writers', 'domains'):
             if key in parsed:
                 values = parsed[key]
                 assert_string_list(key, values)
                 # Special treatment if App.update_key method exists.
-                update_method = getattr(request.app, 'update_' + key, None)
+                update_method = getattr(app, 'update_' + key, None)
                 if update_method:
                     update_method(values, request.user)
                 else:
-                    setattr(request.app, key, values)
+                    setattr(app, key, values)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
-    request.app.put()
+    app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)
