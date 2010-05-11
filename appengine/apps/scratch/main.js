@@ -1,7 +1,38 @@
 global_namespace.define('com.pageforest.scratch', function (ns) {
+    var cookies = ns.lookup('com.pageforest.cookies');
 
     ns.ready = function() {
         $('#doc_id').focus();
+        ns.lastHash = location.hash;
+        setInterval(ns.poll, 1000);
+        if (location.hash) {
+            ns.load(location.hash.substr(1));
+        }
+    };
+
+    ns.poll = function() {
+        if (ns.lastHash != location.hash) {
+            ns.lastHash = location.hash;
+            ns.load(location.hash.substr(1));
+        }
+        ns.checkUsername();
+    };
+
+    ns.checkUsername = function() {
+        var sessionkey = cookies.getCookie('sessionkey');
+        var username;
+
+        if (sessionkey !== undefined) {
+            username = sessionkey.split('/')[1];
+        }
+        else {
+            username = undefined;
+        }
+
+        $('#username').text(username || 'anonymous');
+        var isSignedIn = (username !== undefined);
+        $('#signin').attr('disabled', isSignedIn);
+        $('#signout').attr('disabled', !isSignedIn);
     };
 
     ns.signin = function() {
@@ -22,20 +53,27 @@ global_namespace.define('com.pageforest.scratch', function (ns) {
             blob: $('#blob').val(),
             readers: ['public']
         });
+        var docId = $('#name').val();
         $.ajax({
             type: 'PUT',
-            url: '/docs/' + $('#name').val(),
+            url: '/docs/' + docId,
             data: data,
             complete: ns.showStatus,
             success: function(data) {
-                alert(JSON.stringify(data, undefined, 4));
+                location.hash = docId;
             }
         });
     };
 
-    ns.load = function() {
+    ns.load = function(docid) {
+        if (docid) {
+            $('#name').val(docid);
+        }
+        else {
+            docid = $('#name').val();
+        }
         $.ajax({
-            url: '/docs/' + $('#name').val(),
+            url: '/docs/' + docid,
             complete: ns.showStatus,
             success: function(document) {
                 $('#title').val(document.title);
@@ -49,7 +87,7 @@ global_namespace.define('com.pageforest.scratch', function (ns) {
         var time = now.getHours() + ':' +
             (100 + now.getMinutes()).toString().substr(1) + ':' +
             (100 + now.getSeconds()).toString().substr(1);
-        message = '<div>' + time + ': ' + status;
+        var message = '<div>' + time + ': ' + status;
         message += ' (' + ajax.status + ')';
         message += '</div>';
         $('#results').prepend(message);
