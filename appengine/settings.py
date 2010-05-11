@@ -98,7 +98,7 @@ DEFAULT_DOMAIN = 'pageforest.com'
 DOMAINS = [
     'pageforest.com',
     'pageforest.appspot.com',
-    'latest.pageforest.appspot.com',
+    'dev.latest.pageforest.appspot.com',
     'pgfrst.com',
     'pgfr.st',
     'pageforest',

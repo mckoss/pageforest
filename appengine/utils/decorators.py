@@ -2,7 +2,6 @@ import logging
 import time
 import email
 import httplib
-from urlparse import urlparse
 
 from django.http import HttpResponse, Http404, HttpResponseNotFound, \
     HttpResponseNotAllowed, HttpResponseServerError
@@ -105,43 +104,34 @@ def referer_is_safe(request, referer):
     """
     Check the referer for trusted domains (for JSONP calls).
     """
-    # Any of our domains are trusted as well as localhost
-    # referers - so developers can test offline.
-    # We are permissive to empty referers - so developers
-    # can test on localhost.  Log these cases to see
-    # what's happening.
-    parts = urlparse(referer)
-    domain = parts[1].split(':')[0]
-    logging.info(domain)
-    if domain == '':
+    # Allow empty referers because they may be stripped out by
+    # corporate firewalls. Log these cases to see what's happening.
+    if referer == '':
         logging.warn("Missing Referer - UA: %s" %
                      request.META.get('HTTP_USER_AGENT', 'missing'))
         return True
 
-    if domain in settings.DOMAINS:
-        return True
-    for pf_domain in settings.DOMAINS:
-        if domain.endswith('.' + pf_domain):
-            return True
+    # Extract the domain from the referer (without port number).
+    domain = referer.split('/')[2].split(':')[0]
+    parts = domain.split('.')
 
-    app = request.app
-    if app.is_www():
-        return False
+    # Trust the current application and the www front-end.
+    app_id = request.app.get_app_id()
+    if parts[0] in (app_id, 'www'):
+        if (len(parts) == 6 and parts[2] == 'latest' and
+            parts[4] == 'appspot' and parts[5] == 'com'):
+            parts[1] = 'dev'
+        if '.'.join(parts[1:]) in settings.DOMAINS:
+            return True
 
     # If we're running on an application domain, we trust any of
     # the developer's listed domains.
-    if domain in app.domains:
+    if domain in request.app.domains:
         return True
-    # REVIEW: Don't trust all subdomains by default - only if developer
-    # indicates to do so with . prefix?
-    for app_domain in app.domains:
-        if domain.endswith('.' + app_domain):
-            return True
 
     # TODO: We should actually be trusting specific URL prefixes
     # designated by the application - since he may not want to trust
     # every page on his host (e.g., github.com).
-
     return False
 
 
