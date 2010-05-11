@@ -71,8 +71,14 @@ def jsonp(func):
             response = HttpResponseServerError("Application error.")
         content = response.content
 
+        series = (response.status_code / 100) * 100
+
+        # Send redirects and not-modified directly back to the client
+        if series in (100, 300):
+            return response
+
         # Tunnel HTTP errors using status code 200.
-        if response.status_code / 100 != 2:
+        if series != 200:
             content = json.dumps({
                 "__class__": "Error",
                 "status": response.status_code,
