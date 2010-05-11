@@ -199,3 +199,9 @@ div.CallToAction p {
     color: #598527;
     margin: 0 0 5px 0;
 }
+
+img.favicon16 {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+}
