@@ -154,15 +154,19 @@ profile
 # http://app_id.pageforest.com/_key_/...
 # Internally, these are mapped to:
 # /app/_key_/...
+# TODO: Check for these prefixes in the application blob
+# uploader on the server side.
 RESERVED_APP_KEYS = (
     'docs',          # Saved application documents
     'auth',          # Authentication urls
-    'static',        # Mirror of pf.com/static
-    'lib',           # Mirror of pf.com/lib
-    'app.json',      # Application metadata
+    'static',        # Used in app.yaml
+    'lib',           # Used in app.yaml
+    'shell',         # Used in app.yaml
+    'stats',         # Used in app.yaml
 
     # Reserved for future use
     'data',
+    'admin',         # Future admin pages
     )
 
 # Name of the session cookie for simple request authentication.
