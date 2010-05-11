@@ -10,6 +10,11 @@ handlers:
   secure: optional
   login: admin
 
+- url: /shell.*
+  script: shell.py
+  secure: optional
+  login: admin
+
 - url: /stats/.*
   script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
 
