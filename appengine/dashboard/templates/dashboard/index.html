@@ -3,6 +3,7 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block extra-head %}
+<meta name="viewport" content="width=480" />
 <style type="text/css">
 body {
   background-color: black;
@@ -17,7 +18,7 @@ td.number { text-align: center; }
 {% block content %}
 <table>
 <tr>
-  <th style="color:#00FF00">New users</th>
+  <th style="color:#00FF00; width:60px">New users</th>
   <td><img src="{{ users_chart }}" /></td>
 </tr>
 <tr>
