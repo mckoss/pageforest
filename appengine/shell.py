@@ -300,8 +300,8 @@ class StatementHandler(webapp.RequestHandler):
 
 def main():
   application = webapp.WSGIApplication(
-    [('/shell', FrontPageHandler),
-     ('/shell.do', StatementHandler)], debug=_DEBUG)
+    [('/shell/', FrontPageHandler),
+     ('/shell/do', StatementHandler)], debug=_DEBUG)
   wsgiref.handlers.CGIHandler().run(application)
 
 
