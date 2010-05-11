@@ -15,7 +15,7 @@ from apps.models import App
 @method_required('GET')
 def index(request):
     """
-    List apps.
+    Show a list of apps, with filtering and sorting.
     """
     title = "Featured apps"
     query = App.all()
