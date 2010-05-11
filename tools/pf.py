@@ -13,7 +13,7 @@ META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['*.orig', '*~', '.*']
 COMMANDS = ['get', 'put']  # TODO: Add list and delete.
-APP_REGEX = re.compile(r'"application":\s*\"([a-z][a-z0-9-]*[a-z0-9]+)"')
+APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
 
 class PutRequest(urllib2.Request):
