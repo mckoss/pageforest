@@ -18,7 +18,7 @@ class DocumentTest(TestCase):
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
-        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'])
+        self.app = App(key_name='myapp', url='http://myapp.pageforest.com/')
         self.app.put()
         self.doc = Doc(key_name='myapp/mydoc',
                        app_id='myapp', doc_id='MyDoc',
@@ -27,12 +27,12 @@ class DocumentTest(TestCase):
         self.doc.put()
         self.blob = Blob(key_name='myapp/mydoc/', value='{"int": 123}')
         self.blob.put()
-        self.app_client = Client(HTTP_HOST=self.app.domains[0])
+        self.app_client = Client(HTTP_HOST='myapp.pageforest.com')
 
     def test_get_absolute_url(self):
         """Test that the absolute URL is generated correctly."""
         self.assertEqual(self.doc.get_absolute_url(),
-                         'http://myapp.pageforest.com/docs/MyDoc/')
+                         'http://myapp.pageforest.com/#MyDoc')
 
     def test_json(self):
         """Test JSON serializer for document."""
