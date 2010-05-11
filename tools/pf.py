@@ -49,7 +49,7 @@ def login(options, server):
 
 def load_application():
     for line in file(META_FILENAME):
-        match = APP_REGEX.match(line)
+        match = APP_REGEX.search(line)
         if match:
             return match.group(1)
 
@@ -74,8 +74,6 @@ def config():
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
         help="deploy to this server (default: pageforest.com")
-    parser.add_option('-a', '--application',
-        help="override the appliction id from app.json")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
     parser.add_option('-v', '--verbose', action='store_true')
@@ -97,8 +95,7 @@ def config():
     if not options.server:
         options.server = "pageforest.com"
 
-    if not options.application:
-        options.application = load_application()
+    options.application = load_application()
     if not options.application:
         parser.error('Missing "application" key in app.json.')
     print("Application: %s" % options.application)
