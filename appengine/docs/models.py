@@ -1,3 +1,5 @@
+from django.conf import settings
+
 from google.appengine.ext import db
 
 from docs.supermodels import SuperDoc
@@ -17,7 +19,10 @@ class Doc(SuperDoc):
         """
         app_id = self.key().name().split('/')[0]
         app = App.get_by_key_name(app_id)
-        return ''.join(('http://', app.domains[0], '/docs/', self.doc_id, '/'))
+        if app is None:
+            return 'http://%s.%s/docs/%s' % (
+                app_id, settings.DEFAULT_DOMAIN, self.doc_id)
+        return app.get_absolute_url() + '#' + self.doc_id
 
     @classmethod
     def create(cls, app_id, doc_id, user):
@@ -25,10 +30,7 @@ class Doc(SuperDoc):
         Create a new document.
         """
         key_name = '/'.join((app_id, doc_id)).lower()
-        username = user.username.lower()
+        username = user.get_username()
         title = doc_id and doc_id[0].upper() + doc_id[1:] or ''
-        return Doc(key_name=key_name,
-                   doc_id=doc_id,
-                   title=title,
-                   readers=[username],
-                   writers=[username])
+        return Doc(key_name=key_name, doc_id=doc_id,
+                   title=title, owner=username)

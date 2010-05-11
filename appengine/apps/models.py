@@ -24,22 +24,25 @@ APP_STAGING_DOMAIN_MATCH = re.compile(APP_STAGING_DOMAIN_REGEX).match
 
 class App(SuperDoc):
     """
-    The entity key name contains apps/app_id, minimum length of app_id
-    2 characters, and it's always lowercase.
+    The entity key name contains the app_id, minimum length 2
+    characters, always lowercase.
 
-    The first entry in domains is the default domain.
-    The first entry in developers is the owner.
+    The url property contains the canonical URL for this app:
+    http://scratch.pageforest.com/
+    http://github.com/username/scratch/index.html
+    http://scrat.ch/
+
+    The domains property contains additional trusted domains for
+    cross-site access with JSONP. The domain app_id.pageforest.com is
+    always trusted, it does not need to be listed here.
     """
-    domains = db.StringListProperty()      # One or more lowercase FQDN.
+    url = db.StringProperty()              # Canonical URL for this app.
+    domains = db.StringListProperty()      # Trusted domains for JSONP.
     secret = db.BlobProperty()             # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
-        if self.domains:
-            domain = self.domains[0]
-        else:
-            domain = self.get_app_id() + '.' + settings.DEFAULT_DOMAIN
-        return ''.join(('http://', domain, '/'))
+        return self.url
 
     def get_app_id(self):
         """Return the key name which contains the app id."""
@@ -177,16 +180,13 @@ class App(SuperDoc):
             raise ValueError("The user is None.")
         if app_id in settings.RESERVED_APPS:
             raise ValueError("Application %s is reserved." % app_id)
-        hostname = app_id + '.' + settings.DEFAULT_DOMAIN
         username = user.get_username()
         title = app_id.capitalize()
+        url = 'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN)
         logging.info("Creating app: %s" % app_id)
-        return App(key_name=app_id,
-                   title=title,
-                   domains=[hostname],
-                   secret=crypto.random64(),
-                   writers=[username],
-                   readers=['public'])
+        return App(key_name=app_id, title=title,
+                   url=url, secret=crypto.random64(),
+                   owner=username, readers=['public'])
 
     def update_tags(self, tags, user):
         """
