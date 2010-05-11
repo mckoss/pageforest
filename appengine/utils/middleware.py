@@ -10,6 +10,8 @@ class RequestMiddleware(object):
     def process_request(self, request):
         RequestMiddleware.thread_local = threading.local()
         RequestMiddleware.thread_local.request = request
+        if 'method' in request.GET:
+            request.method = request.GET['method'].upper()
 
     @classmethod
     def get_request(cls):
