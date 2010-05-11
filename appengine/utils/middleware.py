@@ -1,6 +1,7 @@
 import threading
 
 from utils.shortcuts import render_to_response
+from django.shortcuts import redirect
 
 
 class RequestMiddleware(object):
@@ -28,6 +29,9 @@ class SlashMiddleware(object):
         if path.endswith('/'):
             # URL already ends with a slash.
             return
+        if path in ('/stats', '/shell'):
+            # Redirect to add trailing slash for app.yaml handlers.
+            return redirect(path + '/')
         if path.startswith('/docs/') and '/' in path[6:]:
             # Don't mess with the key-value namespace.
             return
