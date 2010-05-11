@@ -105,7 +105,8 @@ def referer_is_safe(request, referer):
     # can test on localhost.  Log these cases to see
     # what's happening.
     parts = urlparse(referer)
-    domain = parts[1]
+    domain = parts[1].split(':')[0]
+    logging.info(domain)
     if domain == '':
         logging.warn("Missing Referer - UA: %s" %
                      request.META.get('HTTP_USER_AGENT', 'missing'))
