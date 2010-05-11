@@ -49,7 +49,7 @@ def login(options, server):
 
 def load_application():
     for line in file(META_FILENAME):
-        match = APP_REGEX.search(line)
+        match = APP_REGEX.match(line)
         if match:
             return match.group(1)
 
