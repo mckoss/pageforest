@@ -11,16 +11,17 @@ urlpatterns = patterns(
 
     # Include separate urls.py for Django apps.
     (r'^apps/', include('apps.urls')),
+    (r'^docs/', include('docs.urls')),
+    (r'^dashboard/', include('dashboard.urls')),
+
+    # Auth uses top-level URLs like /sign-in/ and /email-verify/.
     (r'', include('auth.urls')),
     (r'^auth/', include('auth.appurls')),
-    (r'^dashboard/', include('dashboard.urls')),
 
     # Pageforest applications on subdomains.
     (r'^app/auth/', include('auth.appurls')),
-
-    # REVIEW: Why is this not just docs.urls?
-    # ANSWER: Because it's app specific (URL starts with /app/ prefix).
     (r'^app/docs/', include('docs.appurls')),
+
     # Application keyspace reserved for future use
     (r'^app/(docs|data)/', 'utils.views.reserved_url'),
 
