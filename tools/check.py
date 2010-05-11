@@ -11,7 +11,7 @@ from optparse import OptionParser
 import pftool
 
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
-PEP8_EXCLUDE = 'jsmin.py'.split()
+PEP8_EXCLUDE = 'jsmin.py shell.py'.split()
 TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
 
 
