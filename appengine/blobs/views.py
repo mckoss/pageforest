@@ -28,8 +28,7 @@ def blob(request, doc_id, key):
         # Force a trailing slash to allow pre-order traversal on key
         # names, and to prevent separate documents on /foo and /foo/
         request.key_name += '/'
-    method = request.GET.get('method', request.method)
-    function_name = 'blob_' + method.lower()
+    function_name = 'blob_' + request.method.lower()
     if function_name not in globals():
         allow = [name[5:].upper() for name in globals()
                  if name.startswith('blob_')]
