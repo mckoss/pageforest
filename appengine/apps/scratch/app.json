@@ -1,5 +1,8 @@
 {
-"application": "scratch",
-"title": "Pageforest Sample Application",
-"tags": ["demo", "sample"]
+  "application": "scratch",
+  "title": "Pageforest Sample Application",
+  "tags": [
+    "demo",
+    "sample"
+  ]
 }
