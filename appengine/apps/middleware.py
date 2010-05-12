@@ -1,8 +1,23 @@
 import logging
 
+from django.conf import settings
 from django.http import HttpResponseNotFound
 
 from apps.models import App
+
+
+def app_id_from_trusted_domain(hostname):
+    """
+    Return the first subdomain part if the rest is listed in
+    settings.DOMAINS (ignoring optional port numbers like :8080).
+    """
+    parts = hostname.split(':')[0].split('.')
+    # Normalize App Engine deployment versions.
+    if (len(parts) == 6 and parts[2] == 'latest' and
+        parts[4] == 'appspot' and parts[5] == 'com'):
+        parts[1] = 'version'
+    if '.'.join(parts[1:]) in settings.DOMAINS:
+        return parts[0]
 
 
 class AppMiddleware(object):
@@ -14,9 +29,14 @@ class AppMiddleware(object):
         """
         Get the app by hostname.
         """
-        hostname = request.META.get('HTTP_HOST', 'testserver')
-        request.app = App.get_by_hostname(hostname)
+        default = 'www.' + settings.DEFAULT_DOMAIN
+        hostname = request.META.get('HTTP_HOST', default)
+        app_id = app_id_from_trusted_domain(hostname)
+        if app_id is None:
+            return HttpResponseNotFound(
+                "Domain not in settings.DOMAINS: " + hostname)
 
+        request.app = App.lookup(app_id)
         if request.app is None:
             return HttpResponseNotFound(
                 "Application not found for hostname: " + hostname)
@@ -42,7 +62,7 @@ class AppMiddleware(object):
 def app_context(request):
     """
     Expose the app as {{ application }} to templates (but only for
-    3rd party apps - not for 'www'.
+    3rd party apps, not for 'www'.
     """
     if hasattr(request, 'app') and request.app and not request.app.is_www():
         return {'application': request.app}
