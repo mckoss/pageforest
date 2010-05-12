@@ -217,7 +217,7 @@ var namespace = (function () {
         },
 
         extendObject: function() {
-            return extendObject(arguments);
+            return extendObject.apply(undefined, arguments);
         }
     }).defineOnce();
 

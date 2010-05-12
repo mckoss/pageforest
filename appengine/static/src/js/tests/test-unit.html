@@ -4,7 +4,7 @@
 <script src="../namespace.js"></script>
 <script src="../base.js"></script>
 <script src="../timer.js"></script>
-<script src="..XS/unit.js"></script>
+<script src="../unit.js"></script>
 <script>
 function Sample()
 {
@@ -22,9 +22,9 @@ Sample.prototype.Double = function()
 <h1><script>document.write(document.title);</script></h1>
 Note: Be sure pop-ups are not blocked while running this test.
 <script>
-var UT = global_namespace.lookup("org.startpad.unit");
-var Timer = global_namespace.lookup("org.startpad.timer");
-var Base = global_namespace.lookup("org.startpad.base");
+var UT = namespace.lookup("org.startpad.unit");
+var Timer = namespace.lookup("org.startpad.timer");
+var Base = namespace.lookup("org.startpad.base");
 ts = new UT.TestSuite();
 ts.DWOutputDiv();
 </script>
@@ -189,10 +189,14 @@ ts.AddSubTest("test-passes.html").Expect(0,1);
 ts.AddSubTest("test-fails.html").Expect(1,1);
 
 ts.Run();
-ts.AddTest("Post Run Test", function(ut) {ut.Assert(true);}).Expect(0,1);
+var utNA = ts.AddTest("Post Run Test", function(ut) {ut.Assert(true);}).Expect(0,1);
 ts.Report();
 window.setInterval(function() { utNA.Async(false); }, 7000);
 
 </script>
 </body>
 </html>
+
+
+
+

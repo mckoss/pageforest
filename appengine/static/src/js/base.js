@@ -1,6 +1,6 @@
-global_namespace.define('org.startpad.base', function(NS) {
+namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
-NS.extend(NS, {
+ns.extend({
 Browser:
     {
     version: parseInt(navigator.appVersion),
@@ -28,7 +28,7 @@ ExtendMissing: function(oDest, var_args)
 // Javascript Enumeration
 // Build an object whose properties are mapped to successive integers
 // Also allow setting specific values by passing integers instead of strings.
-// e.g. new NS.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2, d:5}
+// e.g. new ns.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2, d:5}
 Enum: function(aEnum)
     {
     if (!aEnum)
@@ -103,15 +103,15 @@ Reduce: function(a, fn)
 //--------------------------------------------------------------------------
 // Fast string concatenation buffer
 //--------------------------------------------------------------------------
-NS.StBuf = function()
+ns.StBuf = function()
 {
     this.rgst = [];
     this.Append.apply(this, arguments);
     this.sListSep = ", ";
 };
 
-NS.StBuf.prototype = {
-        constructor: NS.StBuf,
+ns.StBuf.prototype = {
+        constructor: ns.StBuf,
 
 Append: function()
     {
@@ -145,7 +145,7 @@ AppendList: function()
         }
     return this;
     }
-}; // NS.StBuf
+}; // ns.StBuf
 
 //--------------------------------------------------------------------------
 // Some extensions to built-in JavaScript objects (sorry!)

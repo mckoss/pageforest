@@ -3,24 +3,24 @@
 //--------------------------------------------------------------------------
 
 
-global_namespace.define('org.startpad.timer', function(NS) {
+namespace.lookup('org.startpad.timer').defineOnce(function(ns) {
 
-NS.extend(NS, {
+ns.extend({
 MSNow: function()
         {
         return new Date().getTime();
         }
 });
 
-NS.Timer = function(ms, fnCallback)
+ns.Timer = function(ms, fnCallback)
 {
         this.ms = ms;
         this.fnCallback = fnCallback;
         return this;
 };
 
-NS.Timer.prototype = {
-        constructor: NS.Timer,
+ns.Timer.prototype = {
+        constructor: ns.Timer,
         fActive: false,
         fRepeat: false,
         fInCallback: false,
@@ -91,6 +91,6 @@ Active: function(fActive)
 
         return this;
 }
-}; // NS.Timer
+}; // ns.Timer
 
 }); // startpad.timer
