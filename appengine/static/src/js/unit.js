@@ -2,7 +2,7 @@
 // Copyright (c) 2007-2010, Mike Koss (mckoss@startpad.org)
 //
 // Usage:
-// ts = new UT.TestSuite("Suite Name");
+// ts = new ns.TestSuite("Suite Name");
 // ts.DWOutputDiv();
 // ts.AddTest("Test Name", function(ut) { ... ut.Assert() ... });
 // ...
@@ -14,24 +14,25 @@
 // UnitTest - Each unit test calls a function which in turn calls
 // back Assert's on the unit test object.
 
-global_namespace.define('org.startpad.unit', function (UT) {
-    Timer = UT.lookup('org.startpad.timer');
+namespace.lookup('org.startpad.unit').defineOnce(function (ns) {
+    var util = namespace.util;
+    var timer = namespace.lookup('org.startpad.timer');
 
-UT.extend(UT, {
+ns.extend({
 DW: function(st)
     {
     document.write(st);
     }
 });
 
-UT.UnitTest = function (stName, fn)
+ns.UnitTest = function (stName, fn)
 {
     this.stName = stName;
     this.fn = fn;
     this.rgres = [];
 };
 
-UT.extend(UT.UnitTest, {
+util.extendObject(ns.UnitTest, {
 states: {
     created: 0,
     running: 1,
@@ -39,8 +40,8 @@ states: {
     }
 });
 
-UT.extend(UT.UnitTest.prototype, {
-    state: UT.UnitTest.states.created,
+util.extendObject(ns.UnitTest.prototype, {
+    state: ns.UnitTest.states.created,
     cErrors: 0,
     cErrorsExpected: 0,
     cAsserts: 0,
@@ -60,12 +61,12 @@ Run: function(ts)
     if (!this.fEnable)
         return;
 
-    this.state = UT.UnitTest.states.running;
+    this.state = ns.UnitTest.states.running;
 
     console.log("=== Running test: " + this.stName + " ===");
 
     if (this.cAsync)
-    this.tm = new Timer.Timer(this.msTimeout, this.Timeout.FnMethod(this)).Active();
+    this.tm = new timer.Timer(this.msTimeout, this.Timeout.FnMethod(this)).Active();
 
     try
         {
@@ -84,12 +85,12 @@ Run: function(ts)
         this.Assert(false, "Missing expected Exception: " + this.stThrows);
 
     if (!this.cAsync)
-        this.state = UT.UnitTest.states.completed;
+        this.state = ns.UnitTest.states.completed;
     },
 
 IsComplete: function()
     {
-    return !this.fEnable || this.state == UT.UnitTest.states.completed;
+    return !this.fEnable || this.state == ns.UnitTest.states.completed;
     },
 
 AssertThrown: function()
@@ -127,7 +128,7 @@ Async: function(dc, msTimeout)
         {
         // Don't call assert unless we have a failure - would mess up user counts for numbers
         // of Asserts expected.
-        if (this.cAsync != 0 || this.state == UT.UnitTest.states.running)
+        if (this.cAsync != 0 || this.state == ns.UnitTest.states.running)
             this.Assert(false, "Test error: Async timeout only allowed at test initialization.");
         this.msTimeout = msTimeout;
         }
@@ -142,8 +143,8 @@ Async: function(dc, msTimeout)
         }
 
     // When cAsync goes to zero, the aynchronous test is complete
-    if (this.cAsync == 0 && this.state == UT.UnitTest.states.running)
-        this.state = UT.UnitTest.states.completed;
+    if (this.cAsync == 0 && this.state == ns.UnitTest.states.running)
+        this.state = ns.UnitTest.states.completed;
 
     this.CheckValid();
     return this;
@@ -205,7 +206,7 @@ Assert: function(f, stNote, stNote2)
     if (!f && (this.cBreakOn == -1 || this.cBreakOn == this.cAsserts+1))
         this.Breakpoint(stNote);
 
-    var res = new UT.TestResult(f, this, stNote);
+    var res = new ns.TestResult(f, this, stNote);
     this.rgres.push(res);
     if (!res.f)
         this.cErrors++;
@@ -503,7 +504,7 @@ FnWrap: function(fn)
 
 // TestResult - a single result from the test
 
-UT.TestResult = function (f, ut, stNote)
+ns.TestResult = function (f, ut, stNote)
 {
     this.f = f;
     this.ut = ut;
@@ -514,7 +515,7 @@ UT.TestResult = function (f, ut, stNote)
 // Test Suite - Holds, executes, and reports on a collection of unit tests.
 // ------------------------------------------------------------------------
 
-UT.TestSuite = function (stName)
+ns.TestSuite = function (stName)
 {
     this.stName = stName;
     this.rgut = [];
@@ -522,7 +523,7 @@ UT.TestSuite = function (stName)
 };
 
 
-UT.extend(UT.TestSuite.prototype, {
+util.extendObject(ns.TestSuite.prototype, {
     cFailures: 0,
     iReport: -1,
     fStopFail: false,
@@ -531,7 +532,7 @@ UT.extend(UT.TestSuite.prototype, {
 
 AddTest: function(stName, fn)
     {
-    var ut = new UT.UnitTest(stName, fn);
+    var ut = new ns.UnitTest(stName, fn);
     this.rgut.push(ut);
 
     // Global setting - stop all unit tests on first failure.
@@ -559,7 +560,7 @@ SkipTo: function(iut)
 Run: function()
     {
     // BUG: should this be Active(false) - since we do first iteration immediately?
-    this.tmRun = new Timer.Timer(100, this.RunNext.FnMethod(this)).Repeat().Active(true);
+    this.tmRun = new timer.Timer(100, this.RunNext.FnMethod(this)).Repeat().Active(true);
 
     this.iCur = 0;
     // Don't wait for timer - start right away.
@@ -578,15 +579,15 @@ loop:
         var ut = this.rgut[this.iCur];
         var state = ut.state;
         if (!ut.fEnable || this.fTerminateAll || this.iCur < this.iutNext)
-            state = UT.UnitTest.states.completed;
+            state = ns.UnitTest.states.completed;
         switch(state)
             {
-        case UT.UnitTest.states.created:
+        case ns.UnitTest.states.created:
             ut.Run();
             break;
-        case UT.UnitTest.states.running:
+        case ns.UnitTest.states.running:
             break loop;
-        case UT.UnitTest.states.completed:
+        case ns.UnitTest.states.completed:
             this.iCur++;
             this.ReportWhenReady();
             // Skip all remaining tests on failure if StopFail
@@ -605,7 +606,7 @@ AllComplete: function()
 
 DWOutputDiv: function()
     {
-    UT.DW("<DIV style=\"font-family: Courier;border:1px solid red;\" id=\"divUnit\">Unit Test Output</DIV>");
+    ns.DW("<DIV style=\"font-family: Courier;border:1px solid red;\" id=\"divUnit\">Unit Test Output</DIV>");
     },
 
 Out: function(st)
@@ -679,10 +680,10 @@ ReportOne: function(i)
 
     switch (ut.state)
         {
-    case UT.UnitTest.states.created:
+    case ns.UnitTest.states.created:
         this.Out("N/A");
         break;
-    case UT.UnitTest.states.running:
+    case ns.UnitTest.states.running:
         if (ut.cAsync > 0)
             this.Out("RUNNING");
         else
@@ -691,7 +692,7 @@ ReportOne: function(i)
             }
         this.cFailures++;
         break;
-    case UT.UnitTest.states.completed:
+    case ns.UnitTest.states.completed:
         if (ut.cErrors == ut.cErrorsExpected &&
             (ut.cTestsExpected == undefined || ut.cTestsExpected == ut.cAsserts))
             this.Out("PASS");
@@ -707,7 +708,7 @@ ReportOne: function(i)
     this.OutRef(ut.stName, ut.urlRef);
     this.Out("] ");
 
-    if (ut.state != UT.UnitTest.states.created)
+    if (ut.state != ns.UnitTest.states.created)
         {
         this.Out(ut.cErrors + " errors " + "out of " + ut.cAsserts + " tests");
         if (ut.cTestsExpected && ut.cTestsExpected != ut.cAsserts)
