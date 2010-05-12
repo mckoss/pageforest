@@ -10,12 +10,13 @@
 <body>
 <h1><script>document.write(document.title);</script></h1>
 <script>
+var util = namespace.util;
 var unit = namespace.lookup('org.startpad.unit');
 var base = namespace.lookup('org.startpad.base');
 var ts = new unit.TestSuite();
-ts.DWOutputDiv();
+ts.dwOutputDiv();
 
-ts.AddTest("fnMethod", function (ut)
+ts.addTest("fnMethod", function (ut)
 {
     function Base()
     {
@@ -35,290 +36,115 @@ ts.AddTest("fnMethod", function (ut)
     var b = new Base;
     var fn = b.Double.fnMethod(b);
     fn();
-    ut.AssertEq(b.x, 14);
+    ut.assertEq(b.x, 14);
 
     var fn2 = b.Mult.fnMethod(b);
     fn2(5);
-    ut.AssertEq(b.x, 14*5);
+    ut.assertEq(b.x, 14*5);
 
     var fn5 = b.Mult.fnMethod(b).fnArgs(4);
     fn5();
-    ut.AssertEq(b.x, 14*5*4);
+    ut.assertEq(b.x, 14*5*4);
 
     // Doesn't matter which order Fn-augmentors are called in!
     var fn6 = b.Mult.fnArgs(3).fnMethod(b);
     fn6();
-    ut.AssertEq(b.x, 14*5*4*3);
+    ut.assertEq(b.x, 14*5*4*3);
 
     function TestfnArgs(a,b,c)
     {
-        ut.AssertEq(arguments.length, 3);
-        ut.AssertEq(a, 1);
-        ut.AssertEq(b, 2);
-        ut.AssertEq(c, 3);
+        ut.assertEq(arguments.length, 3);
+        ut.assertEq(a, 1);
+        ut.assertEq(b, 2);
+        ut.assertEq(c, 3);
     }
 
     var fn7 = TestfnArgs.fnArgs(1,2,3);
     fn7();
 
-    // The second fnArgs appends it's args FIRST!
+    // Each fnArgs places it's arguments after it's predecessor.
     var fn8 = TestfnArgs.fnArgs(3).fnArgs(2);
     fn8(1);
 });
 
-ts.AddTest("String Buffer", function(ut)
+ts.addTest("String Buffer", function(ut)
 {
     var stb1 = new base.StBuf();
-    ut.AssertEq(stb1, "");
+    ut.assertEq(stb1.toString(), "");
 
     stb1.append("hello");
-    ut.AssertEq(stb1, "hello");
+    ut.assertEq(stb1.toString(), "hello");
 
     stb1.append(", mom");
-    ut.AssertEq(stb1, "hello, mom");
+    ut.assertEq(stb1.toString(), "hello, mom");
 
     var stb2 = new base.StBuf();
     stb2.append(stb1).append("-").append(stb1);
     stb1.clear();
-    ut.AssertEq(stb1, "");
-    ut.AssertEq(stb2, "hello, mom-hello, mom");
+    ut.assertEq(stb1.toString(), "");
+    ut.assertEq(stb2.toString(), "hello, mom-hello, mom");
 
     var stb3 = new base.StBuf();
     stb3.append("this", ", that", ", the other");
-    ut.AssertEq(stb3, "this, that, the other");
+    ut.assertEq(stb3.toString(), "this, that, the other");
 
     var stb4 = new base.StBuf("initial", " value");
-    ut.AssertEq(stb4, "initial value");
+    ut.assertEq(stb4.toString(), "initial value");
 });
 
-ts.AddTest("Object Extension", function(ut)
+ts.addTest("Object Extension", function(ut)
 {
     var obj1 = {a:1, b:"hello"};
-    PF.Extend(obj1, {c:3});
-    ut.AssertEq(obj1, {a:1, b:"hello", c:3});
+    util.extendObject(obj1, {c:3});
+    ut.assertEq(obj1, {a:1, b:"hello", c:3});
 
-    PF.ExtendIfMissing(obj1, {a:2, b:"mom", d:"new property"});
-    ut.AssertEq(obj1, {a:1, b:"hello", c:3, d:"new property"});
+    base.extendIfMissing(obj1, {a:2, b:"mom", d:"new property"});
+    ut.assertEq(obj1, {a:1, b:"hello", c:3, d:"new property"});
 
     var obj2 = {};
-    PF.Extend(obj2, {a: 1}, {b: 2}, {a: 3});
-    ut.AssertEq(obj2, {a: 3, b: 2});
+    util.extendObject(obj2, {a: 1}, {b: 2}, {a: 3});
+    ut.assertEq(obj2, {a: 3, b: 2});
 
     var a = [];
     var b = [1,[2,3],4];
-    PF.ExtendCopy(a, b);
-    ut.AssertEq(a, [1,[2,3],4]);
-    a[1][0] = 99;
-    ut.AssertEq(b, [1,[2,3],4]);
+    base.extendDeep(a, b);
+    ut.assertEq(a[0], 1);
+    ut.assertEq(a[1], [2,3]);
+    ut.assertEq(a[2], 4);
 
     var o1 = {};
     var o2 = {a:1, b:{c:2}};
     var o3 = {d:3};
-    PF.ExtendCopy(o1, o2, o3);
-    ut.AssertEq(o1, {a:1, b:{c:2}, d:3});
+    base.extendDeep(o1, o2, o3);
+    ut.assertEq(o1, {a:1, b:{c:2}, d:3});
     o1.b.c = 99;
-    ut.AssertEq(o2, {a:1, b:{c:2}});
+    ut.assertEq(o2, {a:1, b:{c:2}});
 });
 
-ts.AddTest("Trim", function(ut)
+ts.addTest("strip", function(ut)
 {
-    ut.AssertEq(" hello, mom ".Trim(), "hello, mom");
-    ut.AssertEq(" leading".Trim(), "leading");
-    ut.AssertEq("trailing ".Trim(), "trailing");
-    ut.AssertEq("inner space".Trim(), "inner space");
-    ut.AssertEq("     ".Trim(), "");
-    ut.AssertEq("   \r\nWORD\r\n  ".Trim(), "WORD");
+    ut.assertEq(base.strip(" hello, mom "), "hello, mom");
+    ut.assertEq(base.strip(" leading"), "leading");
+    ut.assertEq(base.strip("trailing "), "trailing");
+    ut.assertEq(base.strip("inner space"), "inner space");
+    ut.assertEq(base.strip("     "), "");
+    ut.assertEq(base.strip("   \r\nWORD\r\n  "), "WORD");
 });
 
-ts.AddTest("Cookies", function(ut)
+ts.addTest("Enum", function(ut)
 {
-    var x = PF.RandomInt(100);
-    var y = PF.RandomInt(100);
-    PF.SetCookie("c1", x);
-    PF.SetCookie("c2", y, 30);
-
-    var obj = PF.GetCookies();
-
-    ut.AssertEq(obj.c1, x);
-    ut.AssertEq(obj.c2, y);
-});
-
-ts.AddTest("Enum", function(ut)
-{
-    var e = new PF.Enum(["a", "b", "c"]);
-    ut.AssertEq(e, {a:0, b:1, c:2});
-    e = new PF.Enum([1, "a", "b", 5, "c"]);
-    ut.AssertEq(e, {a:1, b:2, c:5});
-    e = new PF.Enum();
-    ut.AssertEq(e, {});
+    var e = new base.Enum("a", "b", "c");
+    ut.assertEq(e, {a:0, b:1, c:2});
+    e = new base.Enum(1, "a", "b", 5, "c");
+    ut.assertEq(e, {a:1, b:2, c:5});
+    e = new base.Enum();
+    ut.assertEq(e, {});
 
 });
 
-ts.AddTest("ISO 8601 Formatting", function(ut)
-{
-    // Exercise SDigits function first
-    ut.AssertEq(PF.SDigits(1,2), "01");
-    ut.AssertEq(PF.SDigits(11, 10), "0000000011", "long numbers");
-    ut.AssertEq(PF.SDigits(123, 2), "23", "overflow");
-    ut.AssertEq(PF.SDigits(12.34, 2), "12", "fractions");
-    ut.AssertEq(PF.SDigits(-1, 2), "-01", "negative numbers");
+ts.run();
+ts.report();
 
-    var aTest = [
-        [[1960, 8, 31], [0,0,0,0], "1960-08-31"],
-        [[1960, 8, 31], [7,8], "1960-08-31T07:08Z"],
-        [[1960, 8, 31], [7,8,9,333], "1960-08-31T07:08:09.333Z"]
-    ];
-
-    var dt = new Date();
-    ut.AssertEq(dt.getTime(), dt.valueOf(), "Javascript assumption");
-    var sISO = PF.ISO.FromDate(dt);
-    var sTZ = PF.SDigits(-dt.getTimezoneOffset()/60, 2);
-    ut.AssertEq(sISO.substring(sISO.length-3), sTZ, "Timezone");
-
-    // Fix dt as a UTC date/time
-    dt.__tz = 0;
-    sISO = PF.ISO.FromDate(dt);
-    ut.AssertEq(sISO.substring(sISO.length-1), "Z", "Timezone - fixed at UTC: " + sISO);
-    for (var i = 0; i < aTest.length; i++)
-        {
-        ut.Trace(i);
-        var aDate = aTest[i][0];
-        aDate[1]--;
-        var aTime = aTest[i][1];
-        var sISO = aTest[i][2];
-        dt.setUTCFullYear.apply(dt, aDate);
-        dt.setUTCHours.apply(dt, aTime);
-        ut.AssertEq(PF.ISO.FromDate(dt), sISO);
-        }
-
-    dt.setUTCFullYear(1995, 0, 15);
-    dt.setUTCHours(0,0,0,0);
-    ut.AssertEq(PF.ISO.FromDate(dt, true), "1995-01-15T00:00Z");
-});
-
-ts.AddTest("ISO 8601 Parsing", function(ut)
-{
-    var dt = new Date();
-
-    var aTest = [
-    // ISO, UTC: [Y,M,D], [h,m,s,ms], tz
-    ["1984-01-01", [1984, 1, 1], [0,0,0,0], 0],
-    ["", undefined],
-    ["1984", undefined],
-    ["1984-01", undefined],
-    ["1984-01-01T01:02:03.456-07", [1984,1,1], [8,2,3,456], -7],
-    ["1984-01-01T01:02:03.456Z", [1984,1,1], [1,2,3,456], 0],
-    ["19840101T010203.456Z", [1984,1,1], [1,2,3,456], 0],
-    ["19840101 010203.456Z", undefined],
-    ["1984-01-01T01:02:03X456-07", undefined]
-    ];
-
-    for (var i = 0; i < aTest.length; i++)
-        {
-        ut.Trace(i);
-        var aDate = aTest[i][1];
-        if (!aDate)
-            {
-            ut.AssertEq(PF.ISO.ToDate(aTest[i][0]), undefined);
-            continue;
-            }
-        aDate[1]--;
-        var aTime = aTest[i][2];
-        dt.setUTCFullYear.apply(dt, aDate);
-        dt.setUTCHours.apply(dt, aTime);
-        dt.__tz = aTest[i][3];
-        ut.AssertEq(PF.ISO.ToDate(aTest[i][0]), dt);
-        }
-});
-
-ts.AddTest("Event handler - move the mouse", function(ut)
-{
-    var fOnce = false;
-    PF.AddEventFn(document, "mousemove", Handler);
-
-    function Handler(evt)
-    {
-        if (fOnce)
-            return;
-        fOnce = true;
-        ut.AssertEq(arguments.length, 1);
-        ut.AssertEq(evt.type, "mousemove");
-        ut.Async(false);
-    }
-}).Async(true);
-
-function GlobalFunction()
-{
-    alert("Function should never be called");
-}
-
-function GlobalFunction2 ()
-{
-    alert("Function should never be called 2");
-}
-
-ts.AddTest("Function naming", function(ut)
-{
-    var ns = {};
-
-    ns.Class = function()
-    {
-    }
-
-    ns.Class.prototype.Method = function()
-    {
-    }
-
-    PF.NameFunctions(ns, "ns");
-
-    var o = new ns.Class();
-
-    ut.AssertEq(PF.FunctionName(GlobalFunction), "GlobalFunction");
-    ut.AssertEq(PF.FunctionName(GlobalFunction2), "GlobalFunction2");
-    ut.AssertEq(PF.FunctionName(ns), undefined);
-    ut.AssertEq(PF.FunctionName(o.constructor), "ns.Class");
-    ut.AssertEq(PF.FunctionName(o.Method), "ns.Class.prototype.Method");
-});
-
-ts.AddTest("Slewing", function(ut)
-{
-    ut.AssertThrows("argument", function() {new PF.Slew({});});
-
-    // Count up from 0
-    var slew = new PF.Slew({start: 0, end: 100, vMax: 50});
-    ut.AssertEq(slew.tMax, 2);
-    for (var t = 0; t <= 2; t++)
-        ut.AssertEq(slew.Value(t), t*50);
-    ut.AssertEq(slew.Value(3), 100);
-
-    // Count down
-    var slew2 = new PF.Slew({start: 200, end: 100, vMax: 50});
-    ut.AssertEq(slew2.tMax, 2);
-    for (t = 0; t <= 2; t++)
-        ut.AssertEq(slew2.Value(t), 200 - t * 50);
-    ut.AssertEq(slew2.Value(3), 100);
-
-    // Timer simulation
-    var msStart = PF.MSTime();
-    var count = 0;
-    slew.Start(function(v) {
-        count++;
-        if (count == 1) ut.AssertLT(v, 10);
-        if (count == 21) ut.AssertEq(v, 100);
-        if (v == 100)
-            {
-            var ms = PF.MSTime() - msStart;
-            console.log("time", ms, "count", count);
-            ut.Assert(ms > 2000*.9 && ms < 2000 * 1.1, "10% time accuracy");
-            ut.AssertEq(count, 21, "10 times per second call default");
-            ut.Async(false);
-            }
-        });
-
-}).Async();
-
-ts.Run();
-ts.Report();
 </script>
 </body>
 </html>
