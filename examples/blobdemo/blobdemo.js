@@ -1,4 +1,4 @@
-global_namespace.define("com.pageforest.blobdemo", function (ns) {
+namespace.lookup("com.pageforest.blobdemo").defineOnce(function (ns) {
     var cookies = ns.lookup('org.startpad.cookies');
 
     function formatResult(xhr, status, message) {

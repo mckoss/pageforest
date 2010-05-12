@@ -9,8 +9,8 @@ src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="/lib/0.5/js/widget.js"></script>
 <script type="text/javascript" src="chess.js"></script>
 <script type="text/javascript">
-var Chess = global_namespace.lookup("com.pageforest.chess");
-$(document).ready(Chess.ready);
+var chess = namespace.lookup("com.pageforest.chess");
+$(document).ready(chess.ready);
 </script>
 <style type="text/css">
 body { font-family: sans-serif; }
@@ -26,7 +26,7 @@ div.dark.illegal { background: #d78; }
 <body>
 <div id="board"></div>
 <div id="buttons">
-<input type="button" onclick="Chess.undo()" value="Undo" />
+<input type="button" onclick="chess.undo()" value="Undo" />
 </div>
 <table id="moves">
 <tfoot>
