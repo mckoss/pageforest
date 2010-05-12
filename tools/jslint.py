@@ -23,6 +23,7 @@ document.write can be a form of eval
 eval is evil
 Expected a 'break' statement before 'case'
 Bad assignment
+Redefinition of 'console'
 """.strip().splitlines(),
 
     'strong': """

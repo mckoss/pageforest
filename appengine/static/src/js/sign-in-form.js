@@ -1,4 +1,4 @@
-global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
+namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
     /*
       Handle logging a user into Pageforest and optionally also log
       them in to a Pageforest application.
@@ -8,9 +8,9 @@ global_namespace.define('com.pageforest.auth.sign-in-form', function(ns) {
       get a cookie set on the application domain when the user wants
       to allow the application access to his store.
     */
-    var cookies = ns.lookup('com.pageforest.cookies');
+    var cookies = namespace.lookup('com.pageforest.cookies');
 
-    ns.extend(ns, {
+    ns.extend({
         // Check if user is already logged in.
         documentReady: function(username, appId) {
             ns.appId = appId;
