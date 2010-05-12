@@ -55,11 +55,6 @@ def jsonp(func):
         if callback is None:
             return func(request, *args, **kwargs)
 
-        referer = request.META.get('HTTP_REFERER', '')
-        if not referer_is_safe(request, referer):
-            return AccessDenied(request,
-                                "Request from untrusted domain: %s" % referer)
-
         # Try to generate a response.
         try:
             response = func(request, *args, **kwargs)
@@ -98,41 +93,6 @@ def jsonp(func):
         response['Content-Type'] = 'application/javascript'
         return response
     return wrapper
-
-
-def referer_is_safe(request, referer):
-    """
-    Check the referer for trusted domains (for JSONP calls).
-    """
-    # Allow empty referers because they may be stripped out by
-    # corporate firewalls. Log these cases to see what's happening.
-    if referer == '':
-        logging.warn("Missing Referer - UA: %s" %
-                     request.META.get('HTTP_USER_AGENT', 'missing'))
-        return True
-
-    # Extract the domain from the referer (without port number).
-    domain = referer.split('/')[2].split(':')[0]
-    parts = domain.split('.')
-
-    # Trust the current application and the www front-end.
-    app_id = request.app.get_app_id()
-    if parts[0] in (app_id, 'www'):
-        if (len(parts) == 6 and parts[2] == 'latest' and
-            parts[4] == 'appspot' and parts[5] == 'com'):
-            parts[1] = 'dev'
-        if '.'.join(parts[1:]) in settings.DOMAINS:
-            return True
-
-    # If we're running on an application domain, we trust any of
-    # the developer's listed domains.
-    if domain in request.app.domains:
-        return True
-
-    # TODO: We should actually be trusting specific URL prefixes
-    # designated by the application - since he may not want to trust
-    # every page on his host (e.g., github.com).
-    return False
 
 
 def method_required(*methods):
