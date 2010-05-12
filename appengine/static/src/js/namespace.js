@@ -18,9 +18,6 @@
 
    util = namespace.util;
 
-   util.isOwn(object, property) - Test if hasOwnProperty for for..in
-   loops.
-
    util.extendObject(dest, source1, source2, ...) - Copy the properties
    from the sources into the destination (properties in following objects
    override those from the preceding objects).
@@ -210,16 +207,6 @@ var namespace = (function () {
 
     // Put utilities in the 'util' namespace beneath the root.
     namespaceT.lookup('util').extend({
-        // Helper for "for..in" loops like so:
-        // for (prop in object) {
-        //     if (namespace.isOwn(object, prop)) {
-        //     ...
-        //     }
-        // }
-        isOwn: function(object, name) {
-            return Object.prototype.hasOwnProperty.call(object, name);
-        },
-
         extendObject: extendObject,
         copyArray: copyArray
     }).defineOnce();

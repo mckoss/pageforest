@@ -2,39 +2,66 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     var util = namespace.util;
 
 ns.extend({
-extendMissing: function(oDest, var_args)
-    {
-    if (oDest == undefined)
-        oDest = {};
+extendObject: util.extendObject,
 
-    for (var i = 1; i < arguments.length; i++)
-        {
+extendIfMissing: function(oDest, var_args) {
+    if (oDest == undefined) oDest = {};
+    for (var i = 1; i < arguments.length; i++) {
         var oSource = arguments[i];
-        for (var prop in oSource)
-            {
-            if (oSource.hasOwnProperty(prop) && oDest[prop] == undefined)
+        for (var prop in oSource) {
+            if (oSource.hasOwnProperty(prop) && oDest[prop] == undefined) {
                 oDest[prop] = oSource[prop];
             }
         }
-
+    }
     return oDest;
-    },
+},
+
+// Deep copy properties in turn into dest object
+extendDeep: function(dest) {
+    for (var i = 1; i < arguments.length; i++) {
+        var src = arguments[i];
+        for (var prop in src) {
+            if (src.hasOwnProperty(prop)) {
+                if (src[prop] instanceof Array) {
+                    dest[prop] = [];
+                    ns.extendDeep(dest[prop], src[prop]);
+                }
+                else if (src[prop] instanceof Object) {
+                    dest[prop] = {};
+                    ns.extendDeep(dest[prop], src[prop]);
+                }
+                else {
+                    dest[prop] = src[prop];
+                }
+            }
+        }
+    }
+},
+
+randomInt: function(n) {
+    return Math.floor(Math.random() * n);
+},
+
+strip: function(s) {
+    return (s || "").replace(/^\s+|\s+$/g, "");
+},
 
 /* Javascript Enumeration - build an object whose properties are mapped to
  successive integers Also allow setting specific values by passing integers
  instead of strings. e.g. new ns.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2,
  d:5} */
-Enum: function(args)
-    {
+Enum: function(args) {
     var j = 0;
-    for (var i = 0; i < arguments.length; i++)
-        {
-        if (typeof arguments[i] == "string")
+    for (var i = 0; i < arguments.length; i++) {
+        if (typeof arguments[i] == "string") {
             this[arguments[i]] = j++;
-        else
+        }
+        else {
             j = arguments[i];
         }
-    },
+    }
+},
 
 /* Return new object with just the listed properties "projected" into the new
    object */
