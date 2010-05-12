@@ -1,4 +1,4 @@
-global_namespace.define("com.pageforest.random", function(ns) {
+namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
 
     ns.upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     ns.lower = 'abcdefghijklmnopqrstuvwxyz';

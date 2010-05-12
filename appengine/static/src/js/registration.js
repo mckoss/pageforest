@@ -1,4 +1,5 @@
-global_namespace.define('com.pageforest.registration', function(ns) {
+namespace.lookup('com.pageforest.registration').define(function(ns) {
+    var util = namespace.util;
 
     function html_message(name, message) {
         if ($("#id_" + name).val() === '') {
@@ -14,7 +15,7 @@ global_namespace.define('com.pageforest.registration', function(ns) {
         var fields = {"username": "username", "email": "email",
                       "password": "password", "repeat": "__all__"};
         for (var name in fields) {
-            if (ns.isOwn(fields, name)) {
+            if (util.isOwn(fields, name)) {
                 $("#validate_" + name).html(
                     html_message(name, message[fields[name]]));
             }
