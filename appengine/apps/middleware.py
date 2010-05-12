@@ -12,9 +12,12 @@ def app_id_from_trusted_domain(hostname):
     settings.DOMAINS (ignoring optional port numbers like :8080).
     """
     parts = hostname.split(':')[0].split('.')
-    # Normalize App Engine deployment versions.
-    if (len(parts) == 6 and parts[2] == 'latest' and
-        parts[4] == 'appspot' and parts[5] == 'com'):
+    # Normalize App Engine deployment versions, e.g.
+    # app_id.2010-05-12.latest.pageforest.appspot.com
+    if (len(parts) == 6 and
+        parts[2] == 'latest' and
+        parts[4] == 'appspot' and
+        parts[5] == 'com'):
         parts[1] = 'version'
     if '.'.join(parts[1:]) in settings.DOMAINS:
         return parts[0]

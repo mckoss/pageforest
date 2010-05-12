@@ -53,9 +53,8 @@ class AuthMiddleware(object):
             # Check permissions for current document or its blob store.
             return check_permissions(request, request.doc)
 
-        if not request.app.is_www():
-            # Check permissions for the current app.
-            return check_permissions(request, request.app)
+        # Check permissions for the current app.
+        return check_permissions(request, request.app)
 
 
 def user_context(request):

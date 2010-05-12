@@ -54,7 +54,8 @@ class App(SuperDoc):
         app = cls.get_by_key_name(app_id)
         if app is None and app_id == 'www':
             # First invocation on an empty datastore, create www app.
-            app = App(key_name='www', secret=crypto.random64())
+            app = App(key_name='www', secret=crypto.random64(),
+                      readers=['public'])
             app.put()
         return app
 
