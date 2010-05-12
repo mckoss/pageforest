@@ -18,12 +18,12 @@ class AppTestCase(TestCase):
         self.peter = User(key_name='peter', username='Peter')
         self.peter.set_password('SecreT!1')
         self.peter.put()
-        self.app = App(key_name='myapp',
+        self.app = App(key_name='myapp', owner='peter',
                        domains=['myapp.pageforest.com'],
                        secret="SecreT!1")
         self.app.put()
         self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc',
-                       readers=['public'], writers=['peter'])
+                       owner='peter', readers=['public'])
         self.doc.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
