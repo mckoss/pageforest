@@ -203,8 +203,8 @@ MIDDLEWARE_CLASSES = [
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
-    'auth.middleware.AuthMiddleware',        # Get the signed in user.
     'docs.middleware.DocMiddleware',         # Get the document.
+    'auth.middleware.AuthMiddleware',        # Get the signed in user.
     'utils.middleware.ExceptionMiddleware',  # Get exception info.
 ]
 
