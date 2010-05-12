@@ -1,9 +1,9 @@
 // --------------------------------------------------------------------------
 // Vector Functions
 // --------------------------------------------------------------------------
-global_namespace.define('org.startpad.vector', function(ns) {
+namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
 
-ns.extend(ns, {
+ns.extend({
     x:0, y:1,
     x2:2, y2:3,
 
