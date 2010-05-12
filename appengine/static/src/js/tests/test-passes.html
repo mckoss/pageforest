@@ -9,13 +9,13 @@
 <body>
 <h1><script>document.write(document.title);</script></h1>
 <script>
-var UT = namespace.lookup("org.startpad.unit");
-var ts = new UT.TestSuite();
-ts.DWOutputDiv();
-ts.AddTest("Assert(true)", function (ut) {ut.Assert(true, "Never false");});
+var ut = namespace.lookup("org.startpad.unit");
+var ts = new ut.TestSuite();
+ts.dwOutputDiv();
+ts.addTest("Assert(true)", function (ut) {ut.assert(true, "Never false");});
 
-ts.Run();
-ts.Report();
+ts.run();
+ts.report();
 
 </script>
 </body>

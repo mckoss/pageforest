@@ -22,55 +22,55 @@ Sample.prototype.Double = function()
 <h1><script>document.write(document.title);</script></h1>
 Note: Be sure pop-ups are not blocked while running this test.
 <script>
-var UT = namespace.lookup("org.startpad.unit");
-var Timer = namespace.lookup("org.startpad.timer");
-var Base = namespace.lookup("org.startpad.base");
-ts = new UT.TestSuite();
-ts.DWOutputDiv();
+var ut = namespace.lookup("org.startpad.unit");
+var timer = namespace.lookup("org.startpad.timer");
+var base = namespace.lookup("org.startpad.base");
+ts = new ut.TestSuite();
+ts.dwOutputDiv();
 </script>
 <script>
-ts.AddTest("Single Failure", function(ut)
+ts.addTest("Single Failure", function(ut)
 {
-        ut.Assert(true, "true is true");
-        ut.Assert(false, "this one should fail!");
-}).Expect(1,2);
+        ut.assert(true, "true is true");
+        ut.assert(false, "this one should fail!");
+}).expect(1,2);
 
-ts.AddTest("Never Run", function(ut)
+ts.addTest("Never Run", function(ut)
 {
-        ut.Assert(false, "Disable a failing test.");
-}).Enable(false).Expect(1,1).Reference("http://mckoss.com");
+        ut.assert(false, "Disable a failing test.");
+}).enable(false).expect(1,1).reference("http://mckoss.com");
 
-ts.AddTest("All Pass", function(ut)
+ts.addTest("All Pass", function(ut)
 {
         var s = new Sample();
-        ut.Assert(s.x == 1, "Constructor");
+        ut.assert(s.x == 1, "Constructor");
         s.Double();
-        ut.Assert(s.x == 2, "Double Test 1");
+        ut.assert(s.x == 2, "Double Test 1");
         s.x = 10;
         s.Double();
-        ut.Assert(s.x == 20, "Double Test 2");
-        ut.AssertEval("1+1==2");
-        ut.AssertGT(2, 1);
-        ut.AssertGT("Z", "A");
-}).Expect(0,6);
+        ut.assert(s.x == 20, "Double Test 2");
+        ut.assertEval("1+1==2");
+        ut.assertGT(2, 1);
+        ut.assertGT("Z", "A");
+}).expect(0,6);
 
-ts.AddTest("All Fail", function(ut)
+ts.addTest("All Fail", function(ut)
 {
-        ut.Assert(false);
-        ut.AssertEval("1+1 == 3");
-        ut.AssertEq(1, 2);
-        ut.AssertNEq("hello", "hello");
-        ut.AssertGT(1, 2);
-        ut.AssertGT(undefined, 2);
-        ut.AssertGT("A", "Z");
+        ut.assert(false);
+        ut.assertEval("1+1 == 3");
+        ut.assertEq(1, 2);
+        ut.assertNEq("hello", "hello");
+        ut.assertGT(1, 2);
+        ut.assertGT(undefined, 2);
+        ut.assertGT("A", "Z");
         var x = 7;
-        ut.AssertFn(function () { return x != 7; });
-        ut.AssertFn(new Function);
-        ut.AssertFn(function () { });
+        ut.assertFn(function () { return x != 7; });
+        ut.assertFn(new Function);
+        ut.assertFn(function () { });
         IllegalFunction();
-}).Expect(11,11);
+}).expect(11,11);
 
-ts.AddTest("Object Comparison", function(ut)
+ts.addTest("Object Comparison", function(ut)
 {
         var obj1 = {a: 1, b: 2};
         var obj2 = {a: 1, b: 2};
@@ -79,119 +79,119 @@ ts.AddTest("Object Comparison", function(ut)
         var obj5 = {a: 1, b:{c:2, d: 3}};
         var obj6 = {a: 1, b:{c:2, d: 3}};
 
-        ut.AssertEq(obj1, obj2);
-        ut.AssertEq(obj1, obj3);        // Fails
-        ut.AssertEq(obj1, obj4);        // Fails
-        ut.AssertContains(obj1, obj3);
-        ut.AssertIdent(obj1, obj2); // Fails
-        ut.AssertEq(ut.PropCount(obj1), 2);
-        ut.AssertEq(obj5, obj6);
-}).Expect(3,16);
+        ut.assertEq(obj1, obj2);
+        ut.assertEq(obj1, obj3);        // Fails
+        ut.assertEq(obj1, obj4);        // Fails
+        ut.assertContains(obj1, obj3);
+        ut.assertIdent(obj1, obj2); // Fails
+        ut.assertEq(ut.propCount(obj1), 2);
+        ut.assertEq(obj5, obj6);
+}).expect(3,16);
 
-ts.AddTest("Types", function(ut)
+ts.addTest("Types", function(ut)
 {
-        ut.AssertTypes({st:'hi', n:1, m:1.1, f:true, a:[1,2], o: {a:1}},
+        ut.assertTypes({st:'hi', n:1, m:1.1, f:true, a:[1,2], o: {a:1}},
                 {st:'string', n:'number', m:'number', f:'boolean', a:'array', o:'object'});
-        ut.AssertType([1,2], Array);
+        ut.assertType([1,2], Array);
         var f1 = new Foo();
-        ut.AssertType(f1, Foo);
-        ut.AssertType(f1, 'object');
+        ut.assertType(f1, Foo);
+        ut.assertType(f1, 'object');
 
         function Foo(){}
-}).Expect(0, 12);
+}).expect(0, 12);
 
-ts.AddTest("Async timeout", function(ut)
+ts.addTest("Async timeout", function(ut)
 {
-        // No call to Async(false)
-}).Async(true, 100).Expect(1,1);
+        // No call to async(false)
+}).async(true, 100).expect(1,1);
 
-ts.AddTest("Multiple Async calls", function(ut)
+ts.addTest("Multiple Async calls", function(ut)
 {
-        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
-        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
-        new Timer.Timer(1000, function () {ut.Async(false);}).Active(true);
-}).Async(3);
+        new timer.Timer(1000, function () {ut.async(false);}).active(true);
+        new timer.Timer(1000, function () {ut.async(false);}).active(true);
+        new timer.Timer(1000, function () {ut.async(false);}).active(true);
+}).async(3);
 
-ts.AddTest("AsyncSequence", function(ut)
+ts.addTest("asyncSequence", function(ut)
 {
-        var tm = new Timer.Timer(1000, function () {tm.cAS++; ut.NextFn()});
+        var tm = new timer.Timer(1000, function () {tm.cAS++; ut.nextFn()});
         tm.cAS = 0;
-        ut.AsyncSequence(
+        ut.asyncSequence(
                 [
                 function (utT) {
-                        ut.Assert(utT == ut);
-                        ut.Assert(tm.cAS == 0);
-                        tm.Active(true);
+                        ut.assert(utT == ut);
+                        ut.assert(tm.cAS == 0);
+                        tm.active(true);
                 },
 
                 function (utT) {
-                        ut.Assert(utT == ut);
-                        ut.Assert(tm.cAS == 1);
-                        tm.Active(true);
+                        ut.assert(utT == ut);
+                        ut.assert(tm.cAS == 1);
+                        tm.active(true);
                 },
 
                 function (utT) {
-                        ut.Assert(utT == ut);
-                        ut.Assert(tm.cAS == 2);
-                        tm.Active(true);
+                        ut.assert(utT == ut);
+                        ut.assert(tm.cAS == 2);
+                        tm.active(true);
                 }
                 ]);
-}).Async(true);
+}).async(true);
 
-ts.AddTest("Script error expected", function(ut)
+ts.addTest("Script error expected", function(ut)
 {
         IllegalFunction();
-}).Throws(Base.Browser.fIE ? "TypeError" : "ReferenceError").Expect(0,1);
+}).throws().expect(0,1);
 
-ts.AddTest("Some exception expected", function(ut)
+ts.addTest("Some exception expected", function(ut)
 {
         IllegalFunction();
-}).Throws().Expect(0,1);
+}).throws().expect(0,1);
 
-ts.AddTest("no exception", function(ut)
+ts.addTest("no exception", function(ut)
 {
-        ut.Assert(true);
-}).Throws().Expect(1,2);
+        ut.assert(true);
+}).throws().expect(1,2);
 
-ts.AddTest("Fails: Wrong exception", function(ut)
+ts.addTest("Fails: Wrong exception", function(ut)
 {
         throw new Error("the wrong exception");
-}).Throws("ReferenceError").Expect(1,1);
+}).throws("ReferenceError").expect(1,1);
 
-ts.AddTest("Multiple Exceptions", function(ut)
+ts.addTest("Multiple Exceptions", function(ut)
 {
         try { IllegalFunction(); }
-        catch (e) { ut.AssertException(e, Base.Browser.fIE ? "TypeError" : "ReferenceError"); }
+        catch (e) { ut.assertException(e); }
 
-        ut.AssertThrows(undefined, function(ut1)
+        ut.assertThrows(undefined, function(ut1)
                 {
-                ut.AssertIdent(ut, ut1);
+                ut.assertIdent(ut, ut1);
                 throw new Error("Custom exception");
                 });
 
-        ut.AssertThrows("Custom", function (ut)
+        ut.assertThrows("Custom", function (ut)
                 {
                 throw new Error("Custom exception");
                 });
-}).Expect(0,4);
+}).expect(0,4);
 
-ts.AddTest("Markers and Assert Numbers", function(ut)
+ts.addTest("Markers and Assert Numbers", function(ut)
 {
         ut.BreakOn(8);
         for (var i = 0; i < 10; i++)
                 {
-                ut.Trace("Trace Name " + i);
-                ut.Assert(i != 7, "Assert Fails on 7");
+                ut.trace("Trace Name " + i);
+                ut.assert(i != 7, "Assert Fails on 7");
                 }
-}).Expect(1,10);
+}).expect(1,10);
 
-ts.AddSubTest("test-passes.html").Expect(0,1);
-ts.AddSubTest("test-fails.html").Expect(1,1);
+ts.addSubTest("test-passes.html").expect(0,1);
+ts.addSubTest("test-fails.html").expect(1,1);
 
-ts.Run();
-var utNA = ts.AddTest("Post Run Test", function(ut) {ut.Assert(true);}).Expect(0,1);
-ts.Report();
-window.setInterval(function() { utNA.Async(false); }, 7000);
+ts.run();
+var utNA = ts.addTest("Post Run Test", function(ut) {ut.assert(true);}).expect(0,1);
+ts.report();
+window.setInterval(function() { utNA.async(false); }, 7000);
 
 </script>
 </body>

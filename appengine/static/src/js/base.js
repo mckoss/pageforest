@@ -1,13 +1,8 @@
 namespace.lookup('org.startpad.base').defineOnce(function(ns) {
+    var util = namespace.util;
 
 ns.extend({
-Browser:
-    {
-    version: parseInt(navigator.appVersion),
-    fIE: navigator.appName.indexOf("Microsoft") !== -1
-    },
-
-ExtendMissing: function(oDest, var_args)
+extendMissing: function(oDest, var_args)
     {
     if (oDest == undefined)
         oDest = {};
@@ -25,27 +20,25 @@ ExtendMissing: function(oDest, var_args)
     return oDest;
     },
 
-// Javascript Enumeration
-// Build an object whose properties are mapped to successive integers
-// Also allow setting specific values by passing integers instead of strings.
-// e.g. new ns.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2, d:5}
-Enum: function(aEnum)
+/* Javascript Enumeration - build an object whose properties are mapped to
+ successive integers Also allow setting specific values by passing integers
+ instead of strings. e.g. new ns.Enum("a", "b", "c", 5, "d") -> {a:0, b:1, c:2,
+ d:5} */
+Enum: function(args)
     {
-    if (!aEnum)
-        return;
-
     var j = 0;
-    for (var i = 0; i < aEnum.length; i++)
+    for (var i = 0; i < arguments.length; i++)
         {
-        if (typeof aEnum[i] == "string")
-            this[aEnum[i]] = j++;
+        if (typeof arguments[i] == "string")
+            this[arguments[i]] = j++;
         else
-            j = aEnum[i];
+            j = arguments[i];
         }
     },
 
-/* Return new object with just the listed properties "projected" into the new object */
-Project: function(obj, asProps)
+/* Return new object with just the listed properties "projected" into the new
+   object */
+project: function(obj, asProps)
     {
     var objT = {};
 
@@ -55,7 +48,8 @@ Project: function(obj, asProps)
     return objT;
     },
 
-DeDupArray: function(a)
+/* Sort elements and remove duplicates from array (modified in place) */
+uniqueArray: function(a)
     {
     if (!a)
         return;
@@ -68,7 +62,7 @@ DeDupArray: function(a)
         }
     },
 
-Map: function(a, fn)
+map: function(a, fn)
     {
     var aRes = [];
     for (var i = 0; i < a.length; i++)
@@ -76,7 +70,7 @@ Map: function(a, fn)
     return aRes;
     },
 
-Filter: function(a, fn)
+filter: function(a, fn)
     {
     var aRes = [];
     for (var i = 0; i < a.length; i++)
@@ -87,7 +81,7 @@ Filter: function(a, fn)
     return aRes;
     },
 
-Reduce: function(a, fn)
+reduce: function(a, fn)
     {
     if (a.length < 2)
         return a[0];
@@ -106,83 +100,46 @@ Reduce: function(a, fn)
 ns.StBuf = function()
 {
     this.rgst = [];
-    this.Append.apply(this, arguments);
-    this.sListSep = ", ";
+    this.append.apply(this, arguments);
 };
 
-ns.StBuf.prototype = {
-        constructor: ns.StBuf,
-
-Append: function()
-    {
-    for (var ist = 0; ist < arguments.length; ist++)
+util.extendObject(ns.StBuf.prototype, {
+append: function() {
+    for (var ist = 0; ist < arguments.length; ist++) {
         this.rgst.push(arguments[ist].toString());
-    return this;
-    },
-
-Clear: function ()
-    {
-    this.rgst = [];
-    },
-
-toString: function()
-    {
-    return this.rgst.join("");
-    },
-
-// Build a comma separated list - ignoring undefined, null, empty strings
-AppendList: function()
-    {
-    var sSep = "";
-    for (var ist = 0; ist < arguments.length; ist++)
-        {
-        var sT = arguments[ist];
-        if (sT)
-            {
-            this.Append(sSep + sT);
-            sSep = this.sListSep;
-            }
-        }
-    return this;
     }
-}; // ns.StBuf
+    return this;
+},
+
+clear: function () {
+    this.rgst = [];
+},
+
+toString: function() {
+    return this.rgst.join("");
+}
+}); // ns.StBuf
 
 //--------------------------------------------------------------------------
 // Some extensions to built-in JavaScript objects (sorry!)
 //--------------------------------------------------------------------------
 
-// Wrap a method call in a function
-Function.prototype.FnMethod = function(obj)
+// Wrap a method call in a function - like protoype.bind
+Function.prototype.fnMethod = function(obj)
 {
     var _fn = this;
     return function () { return _fn.apply(obj, arguments); };
 };
 
 // Append additional arguments to a function
-Function.prototype.FnArgs = function()
+Function.prototype.fnArgs = function()
 {
     var _fn = this;
-    var _args = [];
-    for (var i = 0; i < arguments.length; i++)
-        {
-        _args.push(arguments[i]);
-        }
+    var _args = util.copyArray(arguments);
 
     return function () {
-        var args = [];
-        // In case this is a method call, preserve the "this" variable
-        var self = this;
-
-        for (var i = 0; i < arguments.length; i++)
-            {
-            args.push(arguments[i]);
-            }
-        for (i = 0; i < _args.length; i++)
-            {
-            args.push(_args[i]);
-            }
-
-        return _fn.apply(self, args);
+        var args = util.copyArray(arguments).concat(_args);
+        return _fn.apply(this, args);
     };
 };
 

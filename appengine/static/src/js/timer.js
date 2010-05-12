@@ -1,32 +1,31 @@
 //--------------------------------------------------------------------------
 // Timer Functions
 //--------------------------------------------------------------------------
-
-
 namespace.lookup('org.startpad.timer').defineOnce(function(ns) {
+    var util = namespace.util;
+    var base = namespace.lookup('org.startpad.base');
 
 ns.extend({
-MSNow: function()
-        {
-        return new Date().getTime();
-        }
+msNow: function()
+    {
+    return new Date().getTime();
+    }
 });
 
 ns.Timer = function(ms, fnCallback)
 {
-        this.ms = ms;
-        this.fnCallback = fnCallback;
-        return this;
+    this.ms = ms;
+    this.fnCallback = fnCallback;
+    return this;
 };
 
-ns.Timer.prototype = {
-        constructor: ns.Timer,
+util.extendObject(ns.Timer.prototype, {
         fActive: false,
         fRepeat: false,
         fInCallback: false,
         fReschedule: false,
 
-Repeat: function(f)
+repeat: function(f)
 {
         if (f === undefined)
                 {
@@ -36,7 +35,7 @@ Repeat: function(f)
         return this;
 },
 
-Ping: function()
+ping: function()
 {
         // In case of race condition - don't call function if deactivated
         if (!this.fActive)
@@ -64,12 +63,12 @@ Ping: function()
 
         if (this.fActive && (this.fRepeat || this.fReschedule))
                 {
-                this.Active(true);
+                this.active(true);
                 }
 },
 
-// Calling Active resets the timer so that next call to Ping will be in this.ms milliseconds from NOW
-Active: function(fActive)
+// Calling Active resets the timer so that next call to ping will be in this.ms milliseconds from NOW
+active: function(fActive)
 {
         if (fActive === undefined)
                 {
@@ -86,11 +85,11 @@ Active: function(fActive)
 
         if (fActive)
                 {
-                this.iTimer = window.setTimeout(this.Ping.FnMethod(this), this.ms);
+                this.iTimer = window.setTimeout(this.ping.fnMethod(this), this.ms);
                 }
 
         return this;
 }
-}; // ns.Timer
+}); // ns.Timer.prototype
 
 }); // startpad.timer

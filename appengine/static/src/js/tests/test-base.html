@@ -11,58 +11,9 @@
 <h1><script>document.write(document.title);</script></h1>
 <script>
 var unit = namespace.lookup('org.startpad.unit');
+var base = namespace.lookup('org.startpad.base');
 var ts = new unit.TestSuite();
 ts.DWOutputDiv();
-
-ts.AddTest("OOP", function(ut)
-{
-    function Base()
-    {
-        this.x = 1;
-    }
-
-    Base.prototype.Double = function()
-    {
-        this.x *= 2;
-    }
-
-    var b = new Base;
-
-    b.Double();
-    ut.AssertEq(b.x, 2);
-
-    function Child()
-    {
-        this.__super.apply(this, arguments);
-        this.y = 1;
-    }
-
-    Child.DeriveFrom(Base);
-
-    var c = new Child;
-
-    ut.AssertEq(c.y, 1);
-    ut.AssertEq(c.x, 1);
-    c.Double();
-    ut.AssertEq(c.x, 2);
-
-    Child2.DeriveFrom(Base);
-    function Child2()
-    {
-        this.__super.apply(this, arguments);
-    }
-
-    Child2.prototype.Double = function()
-    {
-        this.__super.prototype.Double.apply(this, arguments);
-        this.__super.prototype.Double.apply(this, arguments);
-    }
-
-    var c2 = new Child2;
-    ut.AssertFn(function(){return c2.x == 1;});
-    c2.Double();
-    ut.AssertEq(c2.x, 4);
-});
 
 ts.AddTest("fnMethod", function (ut)
 {
@@ -82,24 +33,24 @@ ts.AddTest("fnMethod", function (ut)
     }
 
     var b = new Base;
-    var fn = b.Double.FnCallback(b);
+    var fn = b.Double.fnMethod(b);
     fn();
     ut.AssertEq(b.x, 14);
 
-    var fn2 = b.Mult.FnCallback(b);
+    var fn2 = b.Mult.fnMethod(b);
     fn2(5);
     ut.AssertEq(b.x, 14*5);
 
-    var fn5 = b.Mult.FnCallback(b).FnArgs(4);
+    var fn5 = b.Mult.fnMethod(b).fnArgs(4);
     fn5();
     ut.AssertEq(b.x, 14*5*4);
 
     // Doesn't matter which order Fn-augmentors are called in!
-    var fn6 = b.Mult.FnArgs(3).FnCallback(b);
+    var fn6 = b.Mult.fnArgs(3).fnMethod(b);
     fn6();
     ut.AssertEq(b.x, 14*5*4*3);
 
-    function TestFnArgs(a,b,c)
+    function TestfnArgs(a,b,c)
     {
         ut.AssertEq(arguments.length, 3);
         ut.AssertEq(a, 1);
@@ -107,95 +58,36 @@ ts.AddTest("fnMethod", function (ut)
         ut.AssertEq(c, 3);
     }
 
-    var fn7 = TestFnArgs.FnArgs(1,2,3);
+    var fn7 = TestfnArgs.fnArgs(1,2,3);
     fn7();
 
-    // The second FnArgs appends it's args FIRST!
-    var fn8 = TestFnArgs.FnArgs(3).FnArgs(2);
+    // The second fnArgs appends it's args FIRST!
+    var fn8 = TestfnArgs.fnArgs(3).fnArgs(2);
     fn8(1);
 });
 
-ts.AddTest("Browser", function(ut)
+ts.AddTest("String Buffer", function(ut)
 {
-    ut.AssertEq(navigator.appName, PF.Browser.fIE ? "Microsoft Internet Explorer" : "Netscape");
-    ut.AssertEq(PF.Browser.version, PF.Browser.fIE ? 4 : 5);
-});
-
-ts.AddTest("Strings", function(ut)
-{
-    ut.AssertEq(PF.ReplaceKeys("this is {wow} test", {wow:"foo"}), "this is foo test");
-    ut.AssertEq(PF.ReplaceKeys("{key} is replaced {key} twice", {key:"yup"}), "yup is replaced yup twice");
-    ut.AssertEq(PF.ReplaceKeys("{key} and {key2}", {key:"mom"}), "mom and ");
-});
-
-ts.AddTest("StParams", function(ut)
-{
-    var stParams = PF.StParams({a:1, b:"hello"});
-    ut.AssertEq(stParams, "?a=1&b=hello");
-
-    stParams = PF.StParams({a:"Hello there"});
-    ut.AssertEq(stParams, "?a=Hello%20there");
-
-    stParams = PF.StParams({"a b": 1});
-    ut.AssertEq(stParams, "?a%20b=1");
-
-    stParams = PF.StParams({a:"?", b:"&"});
-    ut.AssertEq(stParams, "?a=%3F&b=%26");
-
-    stParams = PF.StParams();
-    ut.AssertEq(stParams, "");
-
-    stParams = PF.StParams({});
-    ut.AssertEq(stParams, "");
-
-    stParams = PF.StParams({a:1, _anchor:"my anchor"});
-    ut.AssertEq(stParams, "?a=1#my%20anchor");
-});
-
-ts.AddTest("ParseParams", function(ut)
-{
-    var stURL = "http://foo.com/page.htm?a=1&b=2#an-anchor";
-    var objParams = PF.ParseParams(stURL);
-    ut.AssertEq(objParams, {a:1, b:2, _anchor: "an-anchor"});
-
-    objParams = PF.ParseParams("?a=1&b=2#an%20anchor");
-    ut.AssertEq(objParams, {a:1, b:2, _anchor: "an anchor"});
-});
-
-ts.AddTest("Params Round Trip", function(ut)
-{
-    var stURL = "?a=1&b=2#an-anchor";
-    var stURL2 = PF.StParams(PF.ParseParams(stURL));
-    ut.AssertEq(stURL, stURL2);
-
-    var stURL = "?a=1&b=2#an%20anchor";
-    var stURL2 = PF.StParams(PF.ParseParams(stURL));
-    ut.AssertEq(stURL, stURL2);
-
-});
-
-ts.AddTest("String Concatenation", function(ut)
-{
-    var stb1 = new PF.StBuf();
+    var stb1 = new base.StBuf();
     ut.AssertEq(stb1, "");
 
-    stb1.Append("hello");
+    stb1.append("hello");
     ut.AssertEq(stb1, "hello");
 
-    stb1.Append(", mom");
+    stb1.append(", mom");
     ut.AssertEq(stb1, "hello, mom");
 
-    var stb2 = new PF.StBuf();
-    stb2.Append(stb1).Append("-").Append(stb1);
-    stb1.Clear();
+    var stb2 = new base.StBuf();
+    stb2.append(stb1).append("-").append(stb1);
+    stb1.clear();
     ut.AssertEq(stb1, "");
     ut.AssertEq(stb2, "hello, mom-hello, mom");
 
-    var stb3 = new PF.StBuf();
-    stb3.Append("this", ", that", ", the other");
+    var stb3 = new base.StBuf();
+    stb3.append("this", ", that", ", the other");
     ut.AssertEq(stb3, "this, that, the other");
 
-    var stb4 = new PF.StBuf("initial", " value");
+    var stb4 = new base.StBuf("initial", " value");
     ut.AssertEq(stb4, "initial value");
 });
 

@@ -139,6 +139,11 @@ var namespace = (function () {
         return dest;
     }
 
+    // Useful for converting arguments to an regular array
+    function copyArray(arg) {
+        return Array.prototype.slice.call(arg, 0);
+    }
+
     // Functions added to every Namespace.
     extendObject(Namespace.prototype, {
         // Call a function with the namespace as a parameter - forming
@@ -167,10 +172,9 @@ var namespace = (function () {
 
         // Extend the namespace from the arguments of this function.
         extend: function() {
-            args = [this];
-            for (var i = 0; i < arguments.length; i++) {
-                args.push(arguments[i]);
-            }
+            // Use the Array.slice function to convert arguments to a
+            // real array.
+            args = [this].concat(copyArray(arguments));
             return extendObject.apply(undefined, args);
         },
 
@@ -216,9 +220,8 @@ var namespace = (function () {
             return Object.prototype.hasOwnProperty.call(object, name);
         },
 
-        extendObject: function() {
-            return extendObject.apply(undefined, arguments);
-        }
+        extendObject: extendObject,
+        copyArray: copyArray
     }).defineOnce();
 
     return namespaceT;
