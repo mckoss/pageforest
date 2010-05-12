@@ -1,5 +1,5 @@
-global_namespace.define('com.pageforest.scratch', function (ns) {
-    var cookies = ns.lookup('com.pageforest.cookies');
+namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
+    var cookies = namespace.lookup('com.pageforest.cookies');
 
     ns.ready = function() {
         $('#doc_id').focus();
