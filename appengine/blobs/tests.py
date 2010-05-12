@@ -50,6 +50,10 @@ class BlobTest(AppTestCase):
         self.assertEqual(self.blob.get_absolute_url(),
                          'http://myapp.pageforest.com/docs/mydoc/key/')
 
+    def test_directory(self):
+        """The parent key should be the key_name without the last level."""
+        self.assertEqual(self.blob.directory, 'myapp/mydoc/')
+
 
 class ClientErrorTest(AppTestCase):
 

@@ -11,11 +11,17 @@ from apps.models import App
 class Blob(Timestamped, Migratable, Cacheable):
     """
     Key-value store for PageForest documents and resources.
-    Entity key name format: app_id/doc_id/key/with/slashes
+
+    Entity key name format: app_id/doc_id/key/with/slashes/
+    The directory in this case: app_id/doc_id/key/with/
+
+    The sha1, valid_json and directory properties are automatically
+    updated before datastore put.
     """
     value = db.BlobProperty()
     sha1 = db.StringProperty(indexed=False)
     valid_json = db.BooleanProperty(indexed=False)
+    directory = db.StringProperty()
 
     def get_absolute_url(self):
         """
@@ -30,6 +36,8 @@ class Blob(Timestamped, Migratable, Cacheable):
         Update sha1 and valid_json properties automatically before
         each datastore put.
         """
+        key_parts = self.key().name().rstrip('/').split('/')
+        self.directory = '/'.join(key_parts[:-1]) + '/'
         self.sha1 = sha1(self.value).hexdigest()
         self.valid_json = True
         try:
