@@ -5,6 +5,10 @@ from django.shortcuts import redirect
 
 
 class RequestMiddleware(object):
+    """
+    Save the request object in thread local storage to make it
+    available to Django code outside the view function.
+    """
     thread_local = None
 
     def process_request(self, request):
