@@ -3,30 +3,34 @@ from django.test import TestCase, Client
 
 from auth.models import User
 from apps.models import App
+from apps.middleware import app_id_from_trusted_domain
 
 
 class HostnameTest(TestCase):
 
-    def setUp(self):
-        self.myapp = App(key_name='myapp', domains=['myapp.pageforest.com'])
-        self.myapp.put()
+    def test_trusted_domain(self):
+        """The app_id_from_trusted_domain function should find myapp."""
+        for hostname in [
+            'myapp.pageforest.com',
+            'myapp.pageforest.appspot.com',
+            'myapp.dev.latest.pageforest.appspot.com',
+            'myapp.2010-05-12.latest.pageforest.appspot.com',
+            'myapp.pgfr.st',
+            'myapp.pgfrst.com',
+            'myapp.pageforest',
+            'myapp.localhost',
+            'myapp.localhost:8080',
+            ]:
+            self.assertEqual(app_id_from_trusted_domain(hostname), 'myapp')
 
-    def test_get_by_hostname(self):
-        """The get_by_hostname method should find existing apps."""
-        app = App.get_by_hostname('myapp.pageforest.com')
-        self.assertEqual(app.key().name(), 'myapp')
-        app = App.get_by_hostname('myapp.dev.latest.pageforest.appspot.com')
-        self.assertEqual(app.key().name(), 'myapp')
-        app = App.get_by_hostname('myapp.pgfr.st')
-        self.assertEqual(app.key().name(), 'myapp')
-        app = App.get_by_hostname('myapp.localhost')
-        self.assertEqual(app.key().name(), 'myapp')
-        self.assertTrue(app.is_saved())
-
-    def test_unknown_app(self):
-        """Unknown apps should not be found."""
-        app = App.get_by_hostname('unknown.pageforest.com')
-        self.assertEqual(app, None)
+    def test_unknown_domain(self):
+        """Untrusted domains should return None."""
+        for hostname in [
+            'malicious.com',
+            'www.malicious.com',
+            'myapp.malicious.com',
+            ]:
+            self.assertEqual(app_id_from_trusted_domain(hostname), None)
 
 
 class AppErrorsTest(TestCase):
