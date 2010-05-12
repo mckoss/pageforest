@@ -1,4 +1,4 @@
-global_namespace.define('com.pageforest.chess', function (ns) {
+namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
 
     var crypto = ns.lookup('com.googlecode.crypto-js');
 
