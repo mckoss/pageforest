@@ -18,7 +18,8 @@ class DocumentTest(TestCase):
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
-        self.app = App(key_name='myapp', url='http://myapp.pageforest.com/')
+        self.app = App(key_name='myapp', owner='peter',
+                       url='http://myapp.pageforest.com/')
         self.app.put()
         self.doc = Doc(key_name='myapp/mydoc',
                        app_id='myapp', doc_id='MyDoc',
