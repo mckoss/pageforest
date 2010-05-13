@@ -19,9 +19,6 @@
 
    util = namespace.util;
 
-   util.isOwn(object, property) - Test if hasOwnProperty for for..in
-   loops.
-
    util.extendObject(dest, source1, source2, ...) - Copy the properties
    from the sources into the destination (properties in following objects
    override those from the preceding objects).
@@ -75,28 +72,28 @@
 // We refrain from using the window object as we may be in a web worker where
 // the global scope is NOT window.
 try {
-    var console = (function () {
-        if (console != undefined)
+    var console = (function() {
+        if (console != undefined) {
             return console;
-        var noop = function () {};
+        }
+        var noop = function() {};
         var names = ["log", "debug", "info", "warn", "error", "assert",
                      "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
                      "count", "trace", "profile", "profileEnd"];
-
         var consoleT = {};
         for (var i = 0; i < names.length; ++i) {
             consoleT[names[i]] = noop;
         }
-
         return consoleT;
     }());
 }
 catch (e) {}
 
-var namespace = (function () {
+var namespace = (function() {
     try {
-        if (namespace != undefined)
+        if (namespace != undefined) {
             return namespace;
+        }
     }
     catch (e) {}
 
@@ -104,10 +101,8 @@ var namespace = (function () {
         if (name) {
             name = name.replace(/-/g, '_');
         }
-
         this._isDefined = false;
         this._parent = parent;
-
         if (this._parent) {
             this._parent[name] = this;
             this._path = this._parent._path;
@@ -128,7 +123,6 @@ var namespace = (function () {
         if (dest === undefined) {
             dest = {};
         }
-
         for (var i = 1; i < arguments.length; i++) {
             var source = arguments[i];
             for (var prop in source) {
@@ -138,6 +132,11 @@ var namespace = (function () {
             }
         }
         return dest;
+    }
+
+    // Useful for converting arguments to an regular array
+    function copyArray(arg) {
+        return Array.prototype.slice.call(arg, 0);
     }
 
     // Functions added to every Namespace.
@@ -158,20 +157,17 @@ var namespace = (function () {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("WARNING: Namespace '" + this._path +
-                             "' redefinition.");
+                console.warn("WARNING: Namespace '" + this._path + "' redefinition.");
                 return this;
             }
-
             return this.define(callback);
         },
 
         // Extend the namespace from the arguments of this function.
         extend: function() {
-            args = [this];
-            for (var i = 0; i < arguments.length; i++) {
-                args.push(arguments[i]);
-            }
+            // Use the Array.slice function to convert arguments to a
+            // real array.
+            args = [this].concat(copyArray(arguments));
             return extendObject.apply(undefined, args);
         },
 
@@ -181,7 +177,6 @@ var namespace = (function () {
             symbol = symbol.replace(/-/g, '_');
             return 'namespace.' + this._sPath + '.' + symbol;
         }
-
     });
 
     // Functions added to the top level namespace (only).
@@ -207,19 +202,8 @@ var namespace = (function () {
 
     // Put utilities in the 'util' namespace beneath the root.
     namespaceT.lookup('util').extend({
-        // Helper for "for..in" loops like so:
-        // for (prop in object) {
-        //     if (namespace.isOwn(object, prop)) {
-        //     ...
-        //     }
-        // }
-        isOwn: function(object, name) {
-            return Object.prototype.hasOwnProperty.call(object, name);
-        },
-
-        extendObject: function() {
-            return extendObject(arguments);
-        }
+        extendObject: extendObject,
+        copyArray: copyArray
     }).defineOnce();
 
     return namespaceT;
