@@ -74,6 +74,8 @@ class App(SuperDoc):
         title = app_id.capitalize()
         url = 'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN)
         logging.info("Creating app: %s" % app_id)
+        # A new application has public read access by default,
+        # but may be updated immediately by app.json upload.
         return App(key_name=app_id, title=title,
                    url=url, secret=crypto.random64(),
                    owner=username, readers=['public'])
