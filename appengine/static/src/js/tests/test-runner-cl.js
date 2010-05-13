@@ -37,7 +37,7 @@ load("../vector.js");
             ts.run();
         }
         catch (e) {
-            for (prop in e) {
+            for (var prop in e) {
                 print(prop + ": " + e[prop]);
             }
         }
