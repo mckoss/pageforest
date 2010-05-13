@@ -5,8 +5,6 @@ Django settings for appengine project.
 import os
 import sys
 
-from settingsauto import *
-
 # These variables available in all template files using RequestContext
 SAFE_SETTINGS = [
     'APPLICATION_ID', 'CURRENT_VERSION_ID',
@@ -15,7 +13,7 @@ SAFE_SETTINGS = [
     'DEV_APPSERVER', 'DEBUG', 'TEMPLATE_DEBUG',
     'ADMINS', 'MANAGERS',
     'DEFAULT_DOMAIN', 'DOMAINS',
-    'MEDIA_URL', 'LIB_URL',
+    'MEDIA_URL', 'MEDIA_VERSION', 'LIB_URL', 'LIB_VERSION',
     'COMBINE_FILES',
 ]
 
@@ -114,9 +112,11 @@ MEDIA_ROOT = ''
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-# See settingsauto.py for MEDIA_VERSION
 MEDIA_URL = '/static/'
+MEDIA_VERSION = '1'
+
 LIB_URL = '/lib/'
+LIB_VERSION = '0.5.0'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'

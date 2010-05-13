@@ -91,7 +91,6 @@ def main():
         ('jslint-weak', "python %s --weak %s" %
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.app_dir, 'static', 'src', 'js'))),
-        ('doctest', "python %s" % pftool.tool_path('settingsparser.py')),
         ('unittest', "python %s test -v0" %
          (os.path.join(pftool.app_dir, 'manage.py'))),
         ('pep8', "pep8 --count --repeat --exclude %s %s" %

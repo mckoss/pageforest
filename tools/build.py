@@ -8,7 +8,6 @@ import shutil
 
 import pftool
 import jsmin
-import settingsparser
 
 sys.path.insert(0, pftool.app_dir)
 
@@ -17,7 +16,6 @@ import settings
 MEDIA_DIR = os.path.join(pftool.app_dir, 'static')
 SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src')
 LIB_DIR = os.path.join(pftool.app_dir, 'lib')
-SETTINGS_AUTO = os.path.join(pftool.app_dir, 'settingsauto.py')
 
 
 def combine_files(file_dict, output_root, version, verbose=False):
@@ -67,12 +65,12 @@ def combine_files(file_dict, output_root, version, verbose=False):
                 raw_output_file.close()
 
             # Copy latest version in each of the parent version folders
-            for level in range(1, len(levels)):
+            for level in range(len(levels) - 1, 0, -1):
                 copy_dir = os.path.join(output_root,
                                          '.'.join(levels[:level]),
                                          file_type)
                 if verbose:
-                    print("Copying to %s" % copy_dir)
+                    print(" Copy to %s" % copy_dir)
                 shutil.copyfile(os.path.join(output_dir, output_name),
                                 os.path.join(copy_dir, output_name))
 
@@ -112,15 +110,13 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 
-def get_version(name, max_depth, options, settings_dict, verbose):
+def get_version(name, max_depth, options, verbose):
     """ Get fully expanded version string.
 
     The version string is padded with '0' parts up to the max_depth.
     """
     settings_name = name.upper() + "_VERSION"
-    version = getattr(options, name + '_version', None)
-    if version is None:
-        version = settings_dict.get(settings_name, None)
+    version = getattr(settings, settings_name)
     if version is None:
         levels = []
     else:
@@ -130,9 +126,8 @@ def get_version(name, max_depth, options, settings_dict, verbose):
         sys.exit("Version number too long: %s", version)
 
     version = '.'.join(levels)
-    settings_dict[settings_name] = version
     if verbose:
-        print("%s version = %s" % (name, version))
+        print("%s = %s" % (settings_name, version))
     return version
 
 
@@ -173,39 +168,17 @@ def main():
     parser = OptionParser(
         usage="%prog [options]",
         description=trim(main.__doc__))
-    parser.add_option('-o', '--overwrite', action='store_true',
-        help="overwrite the current file version regardless of digest hash")
-    parser.add_option('--lib_version', action='store',
-        help="set the current lib (published files) version - format: n.n.n")
-    parser.add_option('--media_version', action='store',
-        help="set the current media version string")
     parser.add_option('-v', '--verbose', action='store_true')
     (options, args) = parser.parse_args()
 
     os.chdir(pftool.root_dir)
-
-    settings_auto = open(SETTINGS_AUTO, 'r')
-    settings_dict = settingsparser.load(settings_auto.read())
-    settings_auto.close()
-
     for (name, depth, output_dir, file_dict) in \
             (('lib', 3, LIB_DIR, settings.LIB_FILES),
              ('media', 1, MEDIA_DIR, settings.MEDIA_FILES)):
-        version = get_version(name, depth, options,
-                              settings_dict, options.verbose)
+        version = get_version(name, depth, options, options.verbose)
         ensure_version_dirs(output_dir, version, ('css', 'js'),
                             options.verbose)
         combine_files(file_dict, output_dir, version, options.verbose)
-
-    settings_auto = open(SETTINGS_AUTO, 'w')
-    content = settingsparser.save(settings_dict)
-    settings_auto.write(content)
-    settings_auto.close()
-
-    if options.verbose:
-        print "=== begin %s ===" % SETTINGS_AUTO
-        print content
-        print "=== end %s ===" % SETTINGS_AUTO
 
 
 if __name__ == '__main__':
