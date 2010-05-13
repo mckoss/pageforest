@@ -204,10 +204,9 @@ MIDDLEWARE_CLASSES = [
     # TODO: Implement WwwMiddleware
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
-    # TODO: Implement RefererMiddleware
     'docs.middleware.DocMiddleware',         # Get the document.
+    # TODO: Implement RefererMiddleware
     'auth.middleware.AuthMiddleware',        # Check access permissions.
-    'utils.middleware.ExceptionMiddleware',  # Get exception info.
 ]
 
 if USE_APPSTATS:
