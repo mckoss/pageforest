@@ -72,11 +72,13 @@
 // the global scope is NOT window.
 try {
     var console = (function() {
-        if (console != undefined) return console;
+        if (console != undefined) {
+            return console;
+        }
         var noop = function() {};
         var names = ["log", "debug", "info", "warn", "error", "assert",
-                                             "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
-                                             "count", "trace", "profile", "profileEnd"];
+                     "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
+                     "count", "trace", "profile", "profileEnd"];
         var consoleT = {};
         for (var i = 0; i < names.length; ++i) {
             consoleT[names[i]] = noop;
