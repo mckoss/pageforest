@@ -205,7 +205,7 @@ assert: function(f, stNote, stNote2)
 
     // Allow the user to set a breakpoint when we hit a particular failing test
     if (!f && (this.cBreakOn == -1 || this.cBreakOn == this.cAsserts+1))
-        this.Breakpoint(stNote);
+        this.breakpoint(stNote);
 
     var res = new ns.TestResult(f, this, stNote);
     this.rgres.push(res);
@@ -226,15 +226,17 @@ trace: function(stTrace)
     this.stTrace = stTrace;
     },
 
-BreakOn: function(cBreakOn)
+// Set to -1 to trace/break on all errors.  Set to N to break on the Nth
+// failure only.
+breakOn: function(cBreakOn)
     {
     this.cBreakOn = cBreakOn;
     },
 
 // Set Firebug breakpoint in this function
-Breakpoint: function(stNote)
+breakpoint: function(stNote)
     {
-    console.log("unit.js Breakpoint: [" + this.stName + "] " + stNote);
+    console.log("unit.js breakpoint: [" + this.stName + "] " + stNote);
     // Set Firebug breakpoint on this line:
     var x = 1;
     },

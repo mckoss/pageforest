@@ -2,6 +2,7 @@
 // Vector Functions
 // --------------------------------------------------------------------------
 namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
+    util = namespace.util;
 
 ns.extend({
     x:0, y:1,
@@ -43,7 +44,7 @@ addTo: function(vSum)
 add: function()
     {
     var vSum = ns.copy(arguments[0]);
-    var args = ns.copy(arguments);
+    var args = util.copyArray(arguments);
     args[0] = vSum;
     return ns.addTo.apply(undefined, args);
     },
@@ -147,24 +148,25 @@ dotProduct: function()
 // Append all arrays into a new array (append(v) is same as copy(v)
 append: function()
     {
-    var v1 = [].concat.apply([], arguments);
+    var v1 = Array.prototype.concat.apply([], arguments);
     return v1;
     },
 
-// Do a (shallow) comparison of two arrays
+// Do a (deep) comparison of two arrays
 equal: function(v1, v2)
     {
     if (typeof v1 != typeof v2)
         return false;
     if (typeof v1 == 'undefined')
         return true;
-    for (var i = 0; i < v1.length; i++)
-        {
-        if (v1[i] !== v2[i])
-            {
-            return false;
-            }
+    for (var i = 0; i < v1.length; i++) {
+        if (v1[i] == v2[i]) {
+            continue;
         }
+        if (ns.equal(v1[i], v2[i])) {
+            continue;
+        }
+    }
     return true;
     },
 
