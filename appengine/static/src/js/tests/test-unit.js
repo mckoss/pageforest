@@ -124,22 +124,22 @@ ts.addTest("asyncSequence", function(ut)
 ts.addTest("Script error expected", function(ut)
 {
         IllegalFunction();
-}).throws().expect(0,1);
+}).throwsException().expect(0,1);
 
 ts.addTest("Some exception expected", function(ut)
 {
         IllegalFunction();
-}).throws().expect(0,1);
+}).throwsException().expect(0,1);
 
 ts.addTest("no exception", function(ut)
 {
         ut.assert(true);
-}).throws().expect(1,2);
+}).throwsException().expect(1,2);
 
 ts.addTest("Fails: Wrong exception", function(ut)
 {
         throw new Error("the wrong exception");
-}).throws("ReferenceError").expect(1,1);
+}).throwsException("ReferenceError").expect(1,1);
 
 ts.addTest("Multiple Exceptions", function(ut)
 {
