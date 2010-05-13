@@ -151,14 +151,14 @@ toString: function() {
 // Some extensions to built-in JavaScript objects (sorry!)
 //--------------------------------------------------------------------------
 
-// Wrap a method call in a function - like protoype.bind
+// Create a closure for a method call - like protoype.bind()
 Function.prototype.fnMethod = function(obj)
 {
     var _fn = this;
     return function () { return _fn.apply(obj, arguments); };
 };
 
-// Append additional arguments to a function
+// Create a closure with appended parameters to the function call.
 Function.prototype.fnArgs = function()
 {
     var _fn = this;
@@ -166,7 +166,9 @@ Function.prototype.fnArgs = function()
 
     return function () {
         var args = util.copyArray(arguments).concat(_args);
-        return _fn.apply(this, args);
+        // REVIEW: Is this intermediat self variable needed?
+        var self = this;
+        return _fn.apply(self, args);
     };
 };
 
