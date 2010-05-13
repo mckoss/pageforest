@@ -185,7 +185,7 @@ def get_username(request):
     """
     Get the username that is currently signed in.
 
-    REVIEW: Security problem - should require referer is www.pf.com
+    REVIEW: Security problem - should require referer is www.pageforest.com
     """
     if request.user is None:
         raise Http404("The user is not signed in.")
