@@ -16,16 +16,19 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var util = namespace.util;
     var timer = namespace.lookup('org.startpad.timer');
     var base = namespace.lookup('org.startpad.base');
+
     ns.extend({
         DW: function(st) {
             document.write(st);
         }
     });
+
     ns.UnitTest = function(stName, fn) {
         this.stName = stName;
         this.fn = fn;
         this.rgres = [];
     };
+
     util.extendObject(ns.UnitTest, {
         states: {
             created: 0,
@@ -33,6 +36,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             completed: 2
         }
     });
+
     util.extendObject(ns.UnitTest.prototype, {
         state: ns.UnitTest.states.created,
         cErrors: 0,
@@ -46,6 +50,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         stTrace: "",
         cBreakOn: 0,
         fStopFail: false,
+
         run: function(ts) {
             var fCaught = false;
             if (!this.fEnable) return;
@@ -71,21 +76,26 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.state = ns.UnitTest.states.completed;
             }
         },
+
         isComplete: function() {
             return !this.fEnable || this.state == ns.UnitTest.states.completed;
         },
+
         assertThrown: function() {
             this.assertGT(this.cThrows, 0, "Expected exceptions not thrown.");
             this.cThrows = 0;
         },
+
         enable: function(f) {
             this.fEnable = f;
             return this;
         },
+
         stopFail: function(f) {
             this.fStopFail = f;
             return this;
         },
+
         // Change expected number async events running - test is finishd at 0.
         // async(false) -> -1
         // async(true) -> +1
@@ -119,6 +129,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.checkValid();
             return this;
         },
+
         timeout: function() {
             if (this.cAsync > 0) {
                 this.fStopFail = false;
@@ -126,26 +137,31 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assert(false, "Async test timed out.");
             }
         },
-        throws: function(stThrows) {
+
+        throwsException: function(stThrows) {
             this.fThrows = true;
             this.stThrows = stThrows;
             this.checkValid();
             return this;
         },
+
         expect: function(cErrors, cTests) {
             this.cErrorsExpected = cErrors;
             this.cTestsExpected = cTests;
             return this;
         },
+
         checkValid: function() {
             if (this.cAsync > 0 && this.fThrows) {
                 this.assert(false, "Test error: can't test async thrown exceptions.");
             }
         },
+
         reference: function(url) {
             this.urlRef = url;
             return this;
         },
+
         // All asserts bottleneck to this function
         // Eror line pattern "N. [Trace] Note (Note2)"
         assert: function(f, stNote, stNote2) {
@@ -178,23 +194,28 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 throw new Error("stopFail - test terminates on first (unexpected) failure.");
             }
         },
+
         trace: function(stTrace) {
             this.stTrace = stTrace;
         },
+
         // Set to -1 to trace/break on all errors.  Set to N to break on the Nth
         // failure only.
         breakOn: function(cBreakOn) {
             this.cBreakOn = cBreakOn;
         },
+
         // Set Firebug breakpoint in this function
         breakpoint: function(stNote) {
             console.log("unit.js breakpoint: [" + this.stName + "] " + stNote);
             // Set Firebug breakpoint on this line:
             var x = 1;
         },
+
         assertEval: function(stEval) {
             this.assert(eval(stEval), stEval);
         },
+
         // v1 is the quantity to be tested against the "known" quantity, v2.
         assertEq: function(v1, v2, stNote) {
             if (typeof v1 != typeof v2) {
@@ -230,6 +251,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 break;
             }
         },
+
         propCount: function(obj) {
             var cProp = 0;
             for (var prop in obj) {
@@ -239,6 +261,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             return cProp;
         },
+
         assertType: function(v1, type, stNote) {
             if (type == "array") {
                 type = Array;
@@ -251,6 +274,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             this.assertEq(typeof v1, type, stNote);
         },
+
         assertTypes: function(obj, mTypes) {
             for (var prop in mTypes) {
                 if (!mTypes.hasOwnProperty(prop)) {
@@ -259,6 +283,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assertType(obj[prop], mTypes[prop], prop + " should be type " + mTypes[prop]);
             }
         },
+
         // assert that objAll contains all the (top level) properties of objSome
         assertContains: function(objAll, objSome) {
             var prop;
@@ -301,23 +326,29 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assertEq(objAll[prop], objSome[prop], "prop: " + prop);
             }
         },
+
         assertIdent: function(v1, v2) {
             this.assert(v1 === v2, v1 + " === " + v2);
         },
+
         assertNEq: function(v1, v2) {
             this.assert(v1 != v2, v1 + " != " + v2);
         },
+
         assertGT: function(v1, v2) {
             this.assert(v1 > v2, v1 + " > " + v2);
         },
+
         assertLT: function(v1, v2) {
             this.assert(v1 < v2, v1 + " < " + v2);
         },
+
         assertFn: function(fn) {
             var stFn = fn.toString();
             stFn = stFn.substring(stFn.indexOf("{") + 1, stFn.lastIndexOf("}") - 1);
             this.assert(fn(), stFn);
         },
+
         // Useage: ut.assertThrows(<type>, function(ut) {...});
         assertThrows: function(stExpected, fn) {
             try {
@@ -329,6 +360,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             this.assert(false, "Missing expected Exception: " + stExpected);
         },
+
         // assert expected and caught exceptions
         // If stExpected != undefined, e.name or e.message must contain it
         assertException: function(e, stExpected, fExpected) {
@@ -360,6 +392,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assert(false, stMsg);
             }
         },
+
         // asyncSequence - Run a sequence of asynchronous function calls
         // Each fn(ut) must call ut.nextFn() to advance
         // Last call to nextFn calls async(false)
@@ -368,6 +401,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.ifn = 0;
             this.nextFn();
         },
+
         nextFn: function() {
             if (this.ifn >= this.rgfn.length) {
                 this.async(false);
@@ -381,6 +415,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assertException(e, "", false);
             }
         },
+
         // Wrap asynchronous function calls so we can catch are report exception errors
         fnWrap: function(fn) {
             var ut = this;
@@ -398,12 +433,16 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             });
         }
     }); // UnitTest
+
+
     // TestResult - a single result from the test
     ns.TestResult = function(f, ut, stNote) {
         this.f = f;
         this.ut = ut;
         this.stNote = stNote;
     };
+
+
     // ------------------------------------------------------------------------
     // Test Suite - Holds, executes, and reports on a collection of unit tests.
     // ------------------------------------------------------------------------
@@ -412,12 +451,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         this.rgut = [];
         this.stOut = "";
     };
+
     util.extendObject(ns.TestSuite.prototype, {
         cFailures: 0,
         iReport: -1,
         fStopFail: false,
         fTerminateAll: false,
         iutNext: 0,
+
         // Will auto-disable any unit test less than iutNext (see skipTo)
         addTest: function(stName, fn) {
             var ut = new ns.UnitTest(stName, fn);
@@ -428,24 +469,27 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             return ut;
         },
+
         stopFail: function(f) {
             this.fStopFail = f;
             return this;
         },
+
         skipTo: function(iut) {
             // Tests displayed as one-based
             this.iutNext = iut - 1;
             return this;
         },
+
         // We support asynchronous tests - so we use a timer to kick off tests when the current one
         // is complete.
         run: function() {
-            // BUG: should this be active(false) - since we do first iteration immediately?
-            this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this)).repeat().active(true);
+            this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this)).repeat().active(false);
             this.iCur = 0;
             // Don't wait for timer - start right away.
             this.runNext();
         },
+
         runNext: function() {
             if (this.iCur == this.rgut.length) {
                 return;
@@ -475,16 +519,20 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             this.tmRun.active(true);
         },
+
         allComplete: function() {
             return (this.iCur == this.rgut.length);
         },
+
         dwOutputDiv: function() {
             ns.DW("<DIV style=\"font-family: Courier;border:1px solid red;\" id=\"divUnit\">Unit Test Output</DIV>");
         },
+
         out: function(st) {
             this.stOut += st;
             return this;
         },
+
         outRef: function(st, url) {
             if (!url) {
                 this.out(st);
@@ -502,6 +550,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
             }
         },
+
         newLine: function() {
             if (this.divOut) {
                 this.divOut.appendChild(document.createElement("BR"));
@@ -516,12 +565,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.stOut = "";
             return this;
         },
+
         report: function() {
             this.divOut = this.divOut || document.getElementById("divUnit");
             this.cFailures = 0;
             this.iReport = 0;
             this.reportWhenReady();
         },
+
         reportWhenReady: function() {
             // Reporting not enabled
             if (this.iReport == -1) {
@@ -535,6 +586,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.reportSummary();
             this.reportOut();
         },
+
         reportOne: function(i) {
             var ut = this.rgut[i];
             this.out((i + 1) + ". ");
@@ -578,6 +630,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
             }
         },
+
         reportSummary: function() {
             if (this.cFailures == 0) {
                 this.out("Summary: All (" + this.rgut.length + ") tests pass.").newLine();
@@ -586,6 +639,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.out("Summary: " + this.cFailures + " failures out of " + this.rgut.length + " tests.").newLine();
             }
         },
+
         // Report results to master unit test, if any.
         reportOut: function() {
             if (!this.allComplete()) {
@@ -596,12 +650,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 window.opener.masterTest(iUnit, this.cFailures, this.rgut.length);
             }
         },
+
         addSubTest: function(stPath) {
             var ut = this.addTest(stPath, this.runSubTest.fnMethod(this)).async(true).reference(stPath);
             ut.stPath = stPath;
             ut.iUnit = this.rgut.length - 1;
             return ut;
         },
+
         runSubTest: function(ut) {
             var stName = "Unit_" + ut.iUnit;
             // Ensure unique name even if multi-level of master-child tests.
@@ -613,6 +669,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 window.masterTest = this.masterTest.fnMethod(this);
             }
         },
+
         masterTest: function(iUnit, cErrors, cTests) {
             var ut = this.rgut[iUnit];
             ut.cErrors = cErrors;
