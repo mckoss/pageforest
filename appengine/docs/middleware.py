@@ -7,7 +7,7 @@ from docs.models import Doc
 
 # If this matches request.path_info, it is a doc or blob request, and
 # DocMiddleware will attempt to load request.doc from the datastore.
-DOC_BLOB_REGEX = re.compile(r'^/app/docs/(%s)(|/.*)$' % settings.DOC_ID_REGEX)
+DOC_BLOB_REGEX = re.compile(r'^/app/docs/(%s)(/.*)?$' % settings.DOC_ID_REGEX)
 
 # If this matches request.path_info, it is a doc request without blob.
 DOC_REGEX = re.compile(r'^/app/docs/(%s)/?$' % settings.DOC_ID_REGEX)
@@ -19,11 +19,10 @@ class DocMiddleware(object):
         """
         Load the document for this request, if required.
 
-        The following paths will have request.doc loaded:
+        The following paths will have request.doc loaded for doc_id:
         /app/docs/doc_id/
-        /app/docs/backup.txt
         /app/docs/doc_id/blob/key/with/slashes/
-        /app/docs/doc_id/blob.json
+        /app/docs/doc_id/blob.json/
         """
         match = DOC_BLOB_REGEX.match(request.path_info)
         if match is None:
@@ -41,6 +40,7 @@ class DocMiddleware(object):
 
         if request.method == 'PUT' and DOC_REGEX.match(request.path_info):
             # This request is going to create the document.
+            assert request.doc is None
             return
 
         return HttpResponseNotFound("Document not found: " + key_name)
