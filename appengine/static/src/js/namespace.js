@@ -71,28 +71,26 @@
 // We refrain from using the window object as we may be in a web worker where
 // the global scope is NOT window.
 try {
-    var console = (function () {
-        if (console != undefined)
-            return console;
-        var noop = function () {};
+    var console = (function() {
+        if (console != undefined) return console;
+        var noop = function() {};
         var names = ["log", "debug", "info", "warn", "error", "assert",
-                     "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
-                     "count", "trace", "profile", "profileEnd"];
-
+                                             "dir", "dirxml", "group", "groupEnd", "time", "timeEnd",
+                                             "count", "trace", "profile", "profileEnd"];
         var consoleT = {};
         for (var i = 0; i < names.length; ++i) {
             consoleT[names[i]] = noop;
         }
-
         return consoleT;
     }());
 }
 catch (e) {}
 
-var namespace = (function () {
+var namespace = (function() {
     try {
-        if (namespace != undefined)
+        if (namespace != undefined) {
             return namespace;
+        }
     }
     catch (e) {}
 
@@ -100,10 +98,8 @@ var namespace = (function () {
         if (name) {
             name = name.replace(/-/g, '_');
         }
-
         this._isDefined = false;
         this._parent = parent;
-
         if (this._parent) {
             this._parent[name] = this;
             this._path = this._parent._path;
@@ -124,7 +120,6 @@ var namespace = (function () {
         if (dest === undefined) {
             dest = {};
         }
-
         for (var i = 1; i < arguments.length; i++) {
             var source = arguments[i];
             for (var prop in source) {
@@ -159,11 +154,9 @@ var namespace = (function () {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("WARNING: Namespace '" + this._path +
-                             "' redefinition.");
+                console.warn("WARNING: Namespace '" + this._path + "' redefinition.");
                 return this;
             }
-
             return this.define(callback);
         },
 
@@ -181,7 +174,6 @@ var namespace = (function () {
             symbol = symbol.replace(/-/g, '_');
             return 'namespace.' + this._sPath + '.' + symbol;
         }
-
     });
 
     // Functions added to the top level namespace (only).
