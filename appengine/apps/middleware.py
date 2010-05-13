@@ -51,15 +51,17 @@ class AppMiddleware(object):
             return
 
         # Prefix path with /app for matching with urls.py.
-        logging.info(" original URL: http://" +
-                     request.META.get('HTTP_HOST', '') +
-                     request.get_full_path())
+        if settings.DEBUG:
+            logging.info(" original URL: http://" +
+                         request.META.get('HTTP_HOST', '') +
+                         request.get_full_path())
         request.path_info = '/app' + request.path_info
         request.META['PATH_INFO'] = request.path_info
         request.path = request.META['SCRIPT_NAME'] + request.path_info
-        logging.info("rewritten URL: http://" +
-                     request.META.get('HTTP_HOST', '') +
-                     request.get_full_path())
+        if settings.DEBUG:
+            logging.info("rewritten URL: http://" +
+                         request.META.get('HTTP_HOST', '') +
+                         request.get_full_path())
 
 
 def app_context(request):
