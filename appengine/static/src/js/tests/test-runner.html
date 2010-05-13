@@ -19,6 +19,7 @@ var ts = new ut.TestSuite();
 
     var tests = {
         base: {namespace: 'org.startpad.base.test'},
+        unit: {namespace: 'org.startpad.unit.test'},
         timer: {namespace: 'org.startpad.timer.test'},
         vector: {namespace: 'org.startpad.vector.test'}
     };
@@ -38,9 +39,15 @@ var ts = new ut.TestSuite();
 
     document.getElementById('title').innerHTML += " - " + target;
 
-    loader.loadScript('test-' + target + '.js', function() {
+    var moduleUrl = 'test-' + target + '.js';
+    loader.loadScript(moduleUrl, function() {
         testModule = namespace.lookup(tests[target].namespace);
 
+        if (!testModule.addTests) {
+            alert("Either module " + moduleUrl + " did not load or " +
+                  "no addTests() function was found.");
+            return;
+        }
 
         testModule.addTests(ts);
 
