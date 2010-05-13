@@ -1,20 +1,8 @@
-<html>
-<head>
-<title>base.js Unit Tests</title>
-<script src="../namespace.js"></script>
-<script src="../base.js"></script>
-<script src="../timer.js"></script>
-<script src="../unit.js"></script>
-</head>
+namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
+    util = namespace.util;
+    var base = namespace.lookup('org.startpad.base');
 
-<body>
-<h1><script>document.write(document.title);</script></h1>
-<script>
-var util = namespace.util;
-var unit = namespace.lookup('org.startpad.unit');
-var base = namespace.lookup('org.startpad.base');
-var ts = new unit.TestSuite();
-ts.dwOutputDiv();
+ns.addTests = function (ts) {
 
 ts.addTest("fnMethod", function (ut)
 {
@@ -26,14 +14,14 @@ ts.addTest("fnMethod", function (ut)
     Base.prototype.Double = function()
     {
         this.x *= 2;
-    }
+    };
 
     Base.prototype.Mult = function(x)
     {
         this.x *= x;
-    }
+    };
 
-    var b = new Base;
+    var b = new Base();
     var fn = b.Double.fnMethod(b);
     fn();
     ut.assertEq(b.x, 14);
@@ -142,9 +130,6 @@ ts.addTest("Enum", function(ut)
 
 });
 
-ts.run();
-ts.report();
+}; // addTests
 
-</script>
-</body>
-</html>
+}); // org.startpad.base.test
