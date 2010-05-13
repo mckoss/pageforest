@@ -1,11 +1,6 @@
-<html>
-<head>
-<title>unit.js Unit Test</title>
-<script src="../namespace.js"></script>
-<script src="../base.js"></script>
-<script src="../timer.js"></script>
-<script src="../unit.js"></script>
-<script>
+namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
+    var timer = namespace.lookup('org.startpad.timer');
+
 function Sample()
 {
         this.x = 1;
@@ -14,21 +9,10 @@ function Sample()
 Sample.prototype.Double = function()
 {
         this.x *= 2;
-}
+};
 
-</script>
-</head>
-<body>
-<h1><script>document.write(document.title);</script></h1>
-Note: Be sure pop-ups are not blocked while running this test.
-<script>
-var ut = namespace.lookup("org.startpad.unit");
-var timer = namespace.lookup("org.startpad.timer");
-var base = namespace.lookup("org.startpad.base");
-ts = new ut.TestSuite();
-ts.dwOutputDiv();
-</script>
-<script>
+ns.addTests = function(ts) {
+
 ts.addTest("Single Failure", function(ut)
 {
         ut.assert(true, "true is true");
@@ -65,10 +49,9 @@ ts.addTest("All Fail", function(ut)
         ut.assertGT("A", "Z");
         var x = 7;
         ut.assertFn(function () { return x != 7; });
-        ut.assertFn(new Function);
         ut.assertFn(function () { });
         IllegalFunction();
-}).expect(11,11);
+}).expect(10,10);
 
 ts.addTest("Object Comparison", function(ut)
 {
@@ -90,14 +73,14 @@ ts.addTest("Object Comparison", function(ut)
 
 ts.addTest("Types", function(ut)
 {
+        function Foo(){}
+
         ut.assertTypes({st:'hi', n:1, m:1.1, f:true, a:[1,2], o: {a:1}},
                 {st:'string', n:'number', m:'number', f:'boolean', a:'array', o:'object'});
         ut.assertType([1,2], Array);
         var f1 = new Foo();
         ut.assertType(f1, Foo);
         ut.assertType(f1, 'object');
-
-        function Foo(){}
 }).expect(0, 12);
 
 ts.addTest("Async timeout", function(ut)
@@ -114,7 +97,7 @@ ts.addTest("Multiple Async calls", function(ut)
 
 ts.addTest("asyncSequence", function(ut)
 {
-        var tm = new timer.Timer(1000, function () {tm.cAS++; ut.nextFn()});
+        var tm = new timer.Timer(1000, function () {tm.cAS++; ut.nextFn();});
         tm.cAS = 0;
         ut.asyncSequence(
                 [
@@ -185,14 +168,6 @@ ts.addTest("Markers and Assert Numbers", function(ut)
                 }
 }).expect(1,10);
 
-ts.addSubTest("test-passes.html").expect(0,1);
-ts.addSubTest("test-fails.html").expect(1,1);
+}; // addTests
 
-ts.run();
-var utNA = ts.addTest("Post Run Test", function(ut) {ut.assert(true);}).expect(0,1);
-ts.report();
-window.setInterval(function() { utNA.async(false); }, 7000);
-
-</script>
-</body>
-</html>
+}); // org.startpad.unit.test
