@@ -1,12 +1,16 @@
 <html>
+
 <head>
 <title>Unit Test Runner</title>
+<!-- REVIEW: Automatically load all file dependencies based on the test. -->
 <script src="../namespace.js"></script>
 <script src="../base.js"></script>
 <script src="../timer.js"></script>
+<script src="../vector.js"></script>
 <script src="../unit.js"></script>
 <script src="../loader.js"></script>
 </head>
+
 <body>
 <h1 id="title"><script>document.write(document.title);</script></h1>
 <script>
@@ -57,7 +61,6 @@ var ts = new ut.TestSuite();
 }()); // function
 
 ts.dwOutputDiv();
-
 </script>
 </body>
 </html>
