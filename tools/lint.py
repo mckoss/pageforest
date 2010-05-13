@@ -28,12 +28,10 @@ Invalid name "urlpatterns"
 Invalid name "setUp"
 Invalid name "assert
 manage.py:35: [W0403] Relative import 'settings'
-Wildcard import settingsauto
 from wildcard import
 [E0611] No name 'Utils' in module 'email'
 [E0611] No name 'forms' in module 'django'
 [W0402] Uses of a deprecated module 'string'
-[W0403] Relative import 'settingsauto'
 [W6501] Specify string format arguments as logging function parameters
 .process_request] Method could be a function
 .process_response] Method could be a function
