@@ -424,8 +424,8 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
             });
         },
 
-        // www.pf.com -> app.pf.com
-        // pf.com -> app.pf.com
+        // www.pageforest.com -> app.pageforest.com
+        // pageforest.com -> app.pageforest.com
         getAppDomain: function(appId) {
             var parts = window.location.host.split('.');
             if (parts[0] == 'www')
