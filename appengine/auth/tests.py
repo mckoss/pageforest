@@ -231,7 +231,7 @@ class AppSignInTest(TestCase):
         self.peter.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
                        title="My Test App",
-                         readers=['peter'], writers=['peter'])
+                       readers=['public'], writers=['peter'])
         self.app.put()
         self.www = Client(HTTP_HOST='www.pageforest.com')
         self.myapp = Client(HTTP_HOST='myapp.pageforest.com')
@@ -247,7 +247,7 @@ class AppSignInTest(TestCase):
             self.assertContains(response, case['expect'])
 
     def test_no_auth_on_app_domain(self):
-        """Only have sign-in pages on the www.pf.com domain."""
+        """Only have sign-in pages on the www.pageforest.com domain."""
         response = self.myapp.get('auth' + SIGN_IN)
         self.assertEqual(response.status_code, 404)
 
@@ -270,9 +270,9 @@ class AppSignInTest(TestCase):
         self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
         cookie = response.cookies['sessionkey'].value
         app_cookie = response.cookies['myapp-sessionkey'].value
-        # Expect a first-part session cookie to www.pf.com
+        # Expect a first-party session cookie to www.pageforest.com
         self.assertTrue(cookie.startswith('www/peter/12'))
-        # And a copy of the app session suitable to pass to myapp.pf.com
+        # And a copy of the app session to pass to myapp.pageforest.com
         self.assertTrue(app_cookie.startswith('myapp/peter/12'))
 
         # Simulate the redirect to the form
@@ -321,7 +321,7 @@ class ChallengeVerifyTest(TestCase):
         self.peter.set_password('SecreT!1')
         self.peter.put()
         self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
-                       secret=crypto.random64())
+                       readers=['public'], secret=crypto.random64())
         self.app.put()
         self.app_client = Client(HTTP_HOST=self.app.domains[0])
 
