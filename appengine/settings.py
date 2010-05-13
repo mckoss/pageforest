@@ -266,8 +266,4 @@ LIB_FILES = {
         'json2': ['json2'],
         'utils': ['namespace', 'misc', 'random', 'cookies'],
         },
-
-    'css': {
-        'widget': ['widget'],
-        },
     }
