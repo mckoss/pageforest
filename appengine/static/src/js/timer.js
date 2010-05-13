@@ -1,15 +1,18 @@
 //--------------------------------------------------------------------------
 // Timer Functions
+//
+// setInterval has not been reliable in browsers in the past.  So these
+// functions use setTimeout for higher accuracy and repeatability.
+// It's not clear if this is now obsolete in modern browsers.
 //--------------------------------------------------------------------------
 namespace.lookup('org.startpad.timer').defineOnce(function(ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
 
 ns.extend({
-msNow: function()
-    {
+msNow: function() {
     return new Date().getTime();
-    }
+}
 });
 
 ns.Timer = function(ms, fnCallback)
@@ -22,73 +25,46 @@ ns.Timer = function(ms, fnCallback)
 util.extendObject(ns.Timer.prototype, {
         fActive: false,
         fRepeat: false,
-        fInCallback: false,
-        fReschedule: false,
 
-repeat: function(f)
-{
-        if (f === undefined)
-                {
-                f = true;
-                }
-        this.fRepeat = f;
-        return this;
+repeat: function(f) {
+    if (f === undefined) {
+        f = true;
+    }
+    this.fRepeat = f;
+    return this;
 },
 
-ping: function()
-{
-        // In case of race condition - don't call function if deactivated
-        if (!this.fActive)
-                {
-                return;
-                }
+ping: function() {
+    // In case of race condition - don't call function if deactivated
+    if (!this.fActive) {
+        return;
+    }
 
-        // Eliminate re-entrancy - is this possible?
-        if (this.fInCallback)
-                {
-                this.fReschedule = true;
-                return;
-                }
+    this.fnCallback();
 
-        this.fInCallback = true;
-        try
-                {
-                this.fnCallback();
-                }
-        catch (e)
-                {
-                console.error("Error in timer callback: " + e.message + "(" + e.name + ")");
-                }
-        this.fInCallback = false;
-
-        if (this.fActive && (this.fRepeat || this.fReschedule))
-                {
-                this.active(true);
-                }
+    if (this.fActive && this.fRepeat) {
+        this.active(true);
+    }
 },
 
 // Calling Active resets the timer so that next call to ping will be in this.ms milliseconds from NOW
-active: function(fActive)
-{
-        if (fActive === undefined)
-                {
-                fActive = true;
-                }
-        this.fActive = fActive;
-        this.fReschedule = false;
+active: function(fActive) {
+    if (fActive === undefined) {
+        fActive = true;
+    }
+    this.fActive = fActive;
 
-        if (this.iTimer)
-                {
-                window.clearTimeout(this.iTimer);
-                this.iTimer = undefined;
-                }
+    // If a current timer exists - remove it.
+    if (this.iTimer) {
+        clearTimeout(this.iTimer);
+        this.iTimer = undefined;
+    }
 
-        if (fActive)
-                {
-                this.iTimer = window.setTimeout(this.ping.fnMethod(this), this.ms);
-                }
+    if (fActive) {
+        this.iTimer = setTimeout(this.ping.fnMethod(this), this.ms);
+    }
 
-        return this;
+    return this;
 }
 }); // ns.Timer.prototype
 
