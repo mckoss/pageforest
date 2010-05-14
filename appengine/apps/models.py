@@ -21,15 +21,17 @@ class App(SuperDoc):
     The url property contains the canonical URL for this app:
     http://scratch.pageforest.com/
     http://github.com/username/scratch/index.html
-    http://scrat.ch/
+    https://scrat.ch/
 
-    The domains property contains additional trusted domains for
-    cross-site access with JSONP. The domain app_id.pageforest.com is
-    always trusted, it does not need to be listed here.
+    The trusted_urls property contains additional trusted URL prefixes
+    for the Referer header check. If it starts with https, the Referer
+    header must also start with https. Otherwise, both http and https
+    are trusted. The default http://app_id.pageforest.com/ is always
+    trusted, it does not need to be listed here.
     """
-    url = db.StringProperty()              # Canonical URL for this app.
-    domains = db.StringListProperty()      # Trusted domains for JSONP.
-    secret = db.BlobProperty()             # Pseudo-random Base64 string.
+    url = db.StringProperty()               # Canonical URL for this app.
+    trusted_urls = db.StringListProperty()  # URL prefixes for referer check.
+    secret = db.BlobProperty()              # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""

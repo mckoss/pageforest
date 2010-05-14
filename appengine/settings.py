@@ -205,7 +205,6 @@ MIDDLEWARE_CLASSES = [
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
     'docs.middleware.DocMiddleware',         # Get the document.
-    # TODO: Implement RefererMiddleware
     'auth.middleware.AuthMiddleware',        # Check access permissions.
 ]
 
