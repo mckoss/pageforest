@@ -6,6 +6,8 @@ from google.appengine.api import memcache
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
 
+from apps.models import App
+
 import settings
 
 CHALLENGE_EXPIRATION = 60  # Seconds.
@@ -145,3 +147,18 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         if not crypto.verify(session_key, secret):
             raise SignatureError("Password incorrect.")
         return user
+
+    def can_create_apps(self):
+        """
+        Check if this user can create a Pageforest app.
+        """
+        # Each user must complete email verification before creating apps.
+        if self.email_verified is None:
+            self.message = "Please verify your email address."
+            return False
+        # Each user can only create 10 apps.
+        count = App.all().filter('owner', self.get_username()).count()
+        if count >= 10:
+            self.message = "You have already created %d apps." % count
+            return False
+        return True
