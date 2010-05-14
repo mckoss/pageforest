@@ -15,7 +15,7 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
         var fields = {"username": "username", "email": "email",
                       "password": "password", "repeat": "__all__"};
         for (var name in fields) {
-            if (util.isOwn(fields, name)) {
+            if (fields.hasOwnProperty(name)) {
                 $("#validate_" + name).html(
                     html_message(name, message[fields[name]]));
             }
