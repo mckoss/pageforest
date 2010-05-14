@@ -138,8 +138,18 @@ var namespace = (function() {
         return Array.prototype.slice.call(arg, 0);
     }
 
+    // Inspired by JavaScript: The Good Parts, p33.
+    // Usage:
+    // Class.methods({
+    // f1: function() {...},
+    // f2: function() {...}
+    // });
+    Function.prototype.methods = function (obj) {
+        extendObject(this.prototype, obj);
+    };
+
     // Functions added to every Namespace.
-    extendObject(Namespace.prototype, {
+    Namespace.methods({
         // Call a function with the namespace as a parameter - forming
         // a closure for the namespace definition.
         define: function(callback) {
