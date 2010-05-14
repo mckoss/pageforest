@@ -8,9 +8,8 @@ load("../vector.js");
     var unit = namespace.lookup('org.startpad.unit');
 
     var tests = {
+        namespace: {ns: 'org.startpad.namespace.test'},
         base: {ns: 'org.startpad.base.test'},
-        unit: {ns: 'org.startpad.unit.test'},
-        timer: {ns: 'org.startpad.timer.test'},
         vector: {ns: 'org.startpad.vector.test'}
     };
 
