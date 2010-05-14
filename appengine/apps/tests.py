@@ -13,11 +13,7 @@ from blobs.models import Blob
 
 from apps.middleware import app_id_from_trusted_domain
 
-FLOAT_REGEX = re.compile(
-    r'<div style="float:left;margin-left:\d+px;width:\d+px;">\s+(.*)',
-    re.DOTALL)
-CONTENT_REGEX = re.compile('<!-- Page Content -->\s+(.*)', re.DOTALL)
-TITLE_REGEX = re.compile(r'(<title>[^<]+</title>)')
+TAG_REGEX = re.compile(r'<[/!\w][^>]*>')
 
 
 class AppTestCase(TestCase):
@@ -56,14 +52,14 @@ class AppTestCase(TestCase):
         self.doc.put()
         # Create some test blobs.
         Blob(key_name='apps/myapp/index.html/', value='<html>').put()
-        Blob(key_name='myapp/mydoc/myblob/', value='["json"]').put()
-        self.blob = Blob(key_name='myapp/mydoc/', value='{"int": 123}')
+        Blob(key_name='myapp/mydoc/', value='{"int": 123}').put()
+        self.blob = Blob(key_name='myapp/mydoc/myblob/', value='["json"]')
         self.blob.put()
         # Create test clients for www and app.
         self.www_client = Client(HTTP_HOST='www.pageforest.com',
                                  HTTP_REFERER='http://www.pageforest.com/')
         self.app_client = Client(HTTP_HOST='myapp.pageforest.com',
-                                 HTTP_REFERER=self.app.url)
+                                 HTTP_REFERER='http://myapp.pageforest.com/')
 
     def sign_in(self, user):
         """
@@ -85,13 +81,9 @@ class AppTestCase(TestCase):
 
     def extract_content(self, response):
         """Extract the most meaningful parts from the response."""
-        content = response.content
-        for regex in (FLOAT_REGEX, CONTENT_REGEX, TITLE_REGEX):
-            match = regex.search(content)
-            if match:
-                content = match.group(1)
-                break
-        return '\n'.join(content.splitlines()[:30])
+        text = TAG_REGEX.sub(' ', response.content)
+        lines = [line.strip() for line in text.splitlines() if line.strip()]
+        return '\n'.join(lines[:20])
 
     def assertContains(self, response, *args, **kwargs):
         """Show the response if the test fails."""
