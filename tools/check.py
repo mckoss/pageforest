@@ -14,6 +14,8 @@ LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
 PEP8_EXCLUDE = 'jsmin.py shell.py'.split()
 TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
 
+JS_UNIT_TESTS = ['base', 'vector']
+
 
 def show_summary(nick):
     seconds = time.time() - options.job_started
@@ -83,18 +85,29 @@ def main():
 
     global options
     all_checks = [
-        ('pylint', "python %s -e %s %s" %
+        ('pylint',
+         "python %s -e %s %s" %
          (pftool.tool_path('lint.py'), pftool.app_dir, pftool.tools_dir)),
+
         ('jslint',
          "python %s --strong --ignore beautify* --ignore fulljslint.js %s" %
          (pftool.tool_path('jslint.py'), pftool.tools_dir)),
-        ('jslint-weak', "python %s --weak %s" %
+
+        ('jslint-weak',
+         "python %s --weak %s" %
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.app_dir, 'static', 'src', 'js'))),
+
         ('unittest', "python %s test -v0" %
          (os.path.join(pftool.app_dir, 'manage.py'))),
+
+        ('jstest',
+         "python %s %s" %
+         (pftool.tool_path('jstest.py'), ' '.join(JS_UNIT_TESTS))),
+
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
+
         ('whitespace', "python %s %s" %
          (pftool.tool_path('whitespace.py'), pftool.root_dir)),
         ]

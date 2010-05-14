@@ -35,5 +35,8 @@ load("../vector.js");
         testModule.addTests(ts);
         ts.run();
         ts.report();
+        if (ts.cFailures > 0) {
+            quit(1);
+        }
     }
 }(arguments));
