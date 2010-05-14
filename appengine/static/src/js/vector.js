@@ -2,7 +2,7 @@
 // Vector Functions
 // --------------------------------------------------------------------------
 namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
-    util = namespace.util;
+    var util = namespace.util;
 
     ns.extend({
         x: 0,
@@ -43,9 +43,11 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             return ns.addTo.apply(undefined, args);
         },
 
-        // Return new vector with element-wise max
-        // All arguments must be same dimensioned array
-        // TODO: Allow mixing scalars - share code with mult - iterator/callback pattern
+        // Return new vector with element-wise max All arguments must
+        // be same dimensioned array.
+
+        // TODO: Allow mixing scalars - share code with mult -
+        // iterator/callback pattern
         max: function() {
             var vMax = ns.copy(arguments[0]);
             for (var iarg = 1; iarg < arguments.length; iarg++) {
@@ -143,7 +145,8 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             return true;
         },
 
-        // Routines for dealing with Points [x, y] and Rects [left, top, bottom, right]
+        // Routines for dealing with Points [x, y] and Rects [left,
+        // top, bottom, right]
         ul: function(rc) {
             return rc.slice(0, 2);
         },
@@ -171,29 +174,35 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         },
 
         ptInRect: function(pt, rc) {
-            return ns.numInRange(pt[ns.x], rc[ns.x], rc[ns.x2]) && ns.numInRange(pt[ns.y], rc[ns.y], rc[ns.y2]);
+            return ns.numInRange(pt[ns.x], rc[ns.x], rc[ns.x2]) &&
+                ns.numInRange(pt[ns.y], rc[ns.y], rc[ns.y2]);
         },
 
         ptClipToRect: function(pt, rc) {
-            return [ns.clipToRange(pt[ns.x], rc[ns.x], rc[ns.x2]), ns.clipToRange(pt[ns.y], rc[ns.y], rc[ns.y2])];
+            return [ns.clipToRange(pt[ns.x], rc[ns.x], rc[ns.x2]),
+                    ns.clipToRange(pt[ns.y], rc[ns.y], rc[ns.y2])];
         },
 
         rcClipToRect: function(rc, rcClip) {
-            return ns.append(ns.ptClipToRect(ns.ul(rc), rcClip), ns.ptClipToRect(ns.lr(rc), rcClip));
+            return ns.append(ns.ptClipToRect(ns.ul(rc), rcClip),
+                             ns.ptClipToRect(ns.lr(rc), rcClip));
         },
 
         rcExpand: function(rc, ptSize) {
-            return ns.append(ns.sub(ns.ul(rc), ptSize), ns.add(ns.lr(rc), ptSize));
+            return ns.append(ns.sub(ns.ul(rc), ptSize),
+                             ns.add(ns.lr(rc), ptSize));
         },
 
         keepInRect: function(rcIn, rcBound) {
-            // First, make sure the rectangle is not bigger than either bound dimension
-            var ptFixSize = ns.max([0, 0], ns.sub(ns.size(rcIn), ns.size(rcBound)));
+            // First, make sure the rectangle is not bigger than
+            // either bound dimension
+            var ptFixSize = ns.max([0, 0], ns.sub(ns.size(rcIn),
+                                                  ns.size(rcBound)));
             rcIn[ns.x2] -= ptFixSize[ns.x];
             rcIn[ns.y2] -= ptFixSize[ns.y];
             // Now move the rectangle to be totally within the bounds
             var dx = 0;
-            dy = 0;
+            var dy = 0;
             dx = Math.max(0, rcBound[ns.x] - rcIn[ns.x]);
             dy = Math.max(0, rcBound[ns.y] - rcIn[ns.y]);
             if (dx == 0) {
@@ -257,7 +266,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             if (iY == 1) {
                 iY = undefined;
             }
-            function ApplyDelta(rc, dpt) {
+            function applyDelta(rc, dpt) {
                 var rcDelta = [0, 0, 0, 0];
                 if (iX != undefined) {
                     rcDelta[iX] = dpt[0];
@@ -267,7 +276,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 }
                 return ns.add(rc, rcDelta);
             }
-            rcT = ApplyDelta(rc, dpt);
+            rcT = applyDelta(rc, dpt);
             // Ensure the rectangle is not less than the minimum size
             if (!ptSizeMin) {
                 ptSizeMin = [0, 0];
@@ -280,7 +289,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             if (iY == 0) {
                 ptFixSize[1] *= -1;
             }
-            rcT = ApplyDelta(rcT, ptFixSize);
+            rcT = applyDelta(rcT, ptFixSize);
             // Ensure rectangle is not outside the bounding box
             if (rcBounds) {
                 ns.keepInRect(rcT, rcBounds);
@@ -312,7 +321,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 // Looks like an array of points
                 else {
                     for (var i = 0; i < v.length; i++) {
-                        vT = v[i];
+                        var vT = v[i];
                         d2 = ns.Distance2(pt, vT);
                         if (d2Min == undefined || d2 < d2Min) {
                             d2Min = d2;
@@ -339,25 +348,25 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         boundingBox: function() {
             var vPoints = ns.append.apply(undefined, arguments);
             if (vPoints.length % 2 !== 0) {
-                throw Error("Invalid arguments to boundingBox");
+                throw new Error("Invalid arguments to boundingBox");
             }
             var ptMin = vPoints.slice(0, 2),
                 ptMax = vPoints.slice(0, 2);
             for (var ipt = 2; ipt < vPoints.length; ipt += 2) {
-                    var pt = vPoints.slice(ipt, ipt + 2);
-                    if (pt[0] < ptMin[0]) {
-                        ptMin[0] = pt[0];
-                    }
-                    if (pt[1] < ptMin[1]) {
-                        ptMin[1] = pt[1];
-                    }
-                    if (pt[0] > ptMax[0]) {
-                        ptMax[0] = pt[0];
-                    }
-                    if (pt[1] > ptMax[1]) {
-                        ptMax[1] = pt[1];
-                    }
+                var pt = vPoints.slice(ipt, ipt + 2);
+                if (pt[0] < ptMin[0]) {
+                    ptMin[0] = pt[0];
                 }
+                if (pt[1] < ptMin[1]) {
+                    ptMin[1] = pt[1];
+                }
+                if (pt[0] > ptMax[0]) {
+                    ptMax[0] = pt[0];
+                }
+                if (pt[1] > ptMax[1]) {
+                    ptMax[1] = pt[1];
+                }
+            }
             return [ptMin[0], ptMin[1], ptMax[0], ptMax[1]];
         },
 
@@ -365,7 +374,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         json: function(v) {
             var sRect = "[";
             var chSep = "";
-            for (i = 0; i < v.length; i++) {
+            for (var i = 0; i < v.length; i++) {
                 sRect += chSep + v[i];
                 chSep = ",";
             }
