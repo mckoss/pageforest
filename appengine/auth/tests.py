@@ -427,6 +427,7 @@ class SimpleAuthTest(TestCase):
         self.session_key = self.peter.generate_session_key(self.app)
 
     def test_bogus_session_key(self):
+        """Bogus session key should return error message."""
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
         response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
@@ -435,15 +436,8 @@ class SimpleAuthTest(TestCase):
         response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
 
-    def test_different_app(self):
-        parts = self.session_key.split(crypto.SEPARATOR)
-        parts[0] = 'other'
-        session_key = crypto.join(parts)
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Different app.", status_code=403)
-
     def test_session_key_expired(self):
+        """Expired session key should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[2] = int(time.time() - 10)
         session_key = crypto.join(parts)
@@ -451,7 +445,24 @@ class SimpleAuthTest(TestCase):
         response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Session key expired.", status_code=403)
 
+    def test_different_app(self):
+        """Session key for a different app should return error message."""
+        parts = self.session_key.split(crypto.SEPARATOR)
+        parts[0] = 'other'
+        session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        response = self.app_client.get('/docs/mydoc/')
+        self.assertContains(response, "Different app.", status_code=403)
+
+    def test_different_user(self):
+        """Session key for different user should return error message."""
+        session_key = self.paul.generate_session_key(self.app)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
+        response = self.app_client.get('/docs/mydoc/')
+        self.assertContains(response, "Access denied.", status_code=403)
+
     def test_unknown_user(self):
+        """Session key with unknown user should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[1] = 'unknown'
         session_key = crypto.join(parts)
@@ -460,15 +471,10 @@ class SimpleAuthTest(TestCase):
         self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_incorrect_session_key(self):
+        """Incorrect password should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[-1] = parts[-1][::-1]  # Backwards.
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Password incorrect.", status_code=403)
-
-    def test_different_user(self):
-        session_key = self.paul.generate_session_key(self.app)
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Access denied.", status_code=403)
