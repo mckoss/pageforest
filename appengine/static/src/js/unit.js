@@ -494,7 +494,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.iCur == this.rgut.length) {
                 return;
             }
-            this.tmRun.active(false);
             loop: while (this.iCur < this.rgut.length) {
                 var ut = this.rgut[this.iCur];
                 var state = ut.state;
@@ -517,7 +516,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                     break;
                 }
             }
-            this.tmRun.active(true);
+            // Only way out is to be running an async test.
+            if (this.iCur < this.rgut.length)
+                this.tmRun.active(true);
         },
 
         allComplete: function() {
@@ -558,7 +559,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 txt.innerHTML = this.stOut;
                 this.divOut.appendChild(txt);
             }
-            else if (typeof console != "undefined") {
+            else if (typeof print != 'undefined') {
+                print(this.stOut);
+            }
+            else if (typeof console != 'undefined') {
                 console.log(this.stOut);
             }
             else alert(this.stOut);
@@ -567,7 +571,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         report: function() {
-            this.divOut = this.divOut || document.getElementById("divUnit");
+            try {
+                this.divOut = this.divOut || document.getElementById("divUnit");
+            }
+            catch (e) {}
             this.cFailures = 0;
             this.iReport = 0;
             this.reportWhenReady();
@@ -578,8 +585,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.iReport == -1) {
                 return;
             }
-            while (this.iReport < this.iCur)
-            this.reportOne(this.iReport++);
+            while (this.iReport < this.iCur) {
+                this.reportOne(this.iReport++);
+            }
             if (!this.allComplete()) {
                 return;
             }
@@ -645,7 +653,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (!this.allComplete()) {
                 return;
             }
-            if (window.opener && window.opener.masterTest) {
+            if (typeof window != 'undefined' && window.opener && window.opener.masterTest) {
                 var iUnit = parseInt(window.name.replace(/^Unit_/, ""));
                 window.opener.masterTest(iUnit, this.cFailures, this.rgut.length);
             }

@@ -33,13 +33,7 @@ load("../vector.js");
         var testModule = namespace.lookup(tests[target].ns);
 
         testModule.addTests(ts);
-        try {
-            ts.run();
-        }
-        catch (e) {
-            for (var prop in e) {
-                print(prop + ": " + e[prop]);
-            }
-        }
+        ts.run();
+        ts.report();
     }
 }(arguments));
