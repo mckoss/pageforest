@@ -2,10 +2,10 @@ from hashlib import sha1
 
 from google.appengine.ext import db
 
+from django.conf import settings
 from django.utils import simplejson as json
 
 from utils.mixins import Timestamped, Migratable, Cacheable
-from apps.models import App
 
 
 class Blob(Timestamped, Migratable, Cacheable):
@@ -28,8 +28,8 @@ class Blob(Timestamped, Migratable, Cacheable):
         The URL includes the default domain name for this app.
         """
         app_id, key = self.key().name().split('/', 1)
-        app = App.get_by_key_name(app_id)
-        return '/'.join(('http:/', app.domains[0], 'docs', key))
+        return ''.join(('http://', app_id, '.', settings.DEFAULT_DOMAIN,
+                        '/docs/', key))
 
     def put(self):
         """
