@@ -157,7 +157,8 @@ var namespace = (function() {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("WARNING: Namespace '" + this._path + "' redefinition.");
+                console.warn("WARNING: Namespace '" + this._path +
+                             "' redefinition.");
                 return this;
             }
             return this.define(callback);
@@ -167,7 +168,7 @@ var namespace = (function() {
         extend: function() {
             // Use the Array.slice function to convert arguments to a
             // real array.
-            args = [this].concat(copyArray(arguments));
+            var args = [this].concat(copyArray(arguments));
             return extendObject.apply(undefined, args);
         },
 
