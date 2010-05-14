@@ -235,16 +235,9 @@ INSTALLED_APPS = (
     'utils',
 )
 
-if not (DEV_APPSERVER or RUNNING_ON_GAE):
-    import imp
-    try:
-        imp.find_module('django_nose')
-    except ImportError:
-        DJANGO_NOSE_INSTALLED = False
-    else:
-        DJANGO_NOSE_INSTALLED = True
-        INSTALLED_APPS = INSTALLED_APPS + ('django_nose', )
-        TEST_RUNNER = 'django_nose.run_tests'
+if '--with-xunit' in sys.argv:
+    INSTALLED_APPS = INSTALLED_APPS + ('django_nose', )
+    TEST_RUNNER = 'django_nose.run_tests'
 
 # Combined JavaScript and CSS files
 COMBINE_FILES = not DEBUG

@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-import imp
 import time
 import subprocess
 from optparse import OptionParser
@@ -80,9 +79,6 @@ def main():
     - Static anaysis tests (lint) - fix typos, undefined vars, etc.
     - Unit tests
     - Formatting and stylistic problems (pep8, and whitespace)
-
-    TODO: Optimize lint and pep8 by skipping files that have not
-    been modified since the last check.
     """
 
     global options
@@ -120,6 +116,8 @@ def main():
         help="run all checks with more output")
     parser.add_option('-p', '--prompt', action='store_true',
         help="ask before running any checks")
+    parser.add_option('-n', '--nose', action='store_true',
+        help="add unittest options --with-xunit --with-doctest")
     for name, command in all_checks:
         parser.add_option('--' + name, action='callback',
                           callback=part_callback,
@@ -134,12 +132,9 @@ def main():
             return
 
     options.extra = {}
-    try:
-        imp.find_module('django_nose')
+    if options.nose:
         options.extra['unittest'] = \
             '--nologcapture --with-xunit --with-doctest'
-    except ImportError:
-        pass
 
     options.started = time.time()
     for name, command in all_checks:
