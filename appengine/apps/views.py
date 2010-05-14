@@ -77,6 +77,9 @@ def app_json_put(request, app_id):
         # Check session key.
         if request.user is None:
             return AccessDenied(request)
+        # Check app creator permission.
+        if not request.user.can_create_apps():
+            return AccessDenied(request, request.user.message)
         # Create a new App with this app_id.
         app = App.create(app_id, request.user)
     if not app.is_writable(request.user):

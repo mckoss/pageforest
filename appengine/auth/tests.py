@@ -546,3 +546,36 @@ class AnonymousTest(TestCase):
                             'Access denied.', status_code=403)
         self.assertContains(self.app_client.put('/docs/mydoc/newblob'),
                             'Access denied.', status_code=403)
+
+
+class AppCreatorTest(TestCase):
+    """
+    Test permissions for app creators.
+    """
+
+    def setUp(self):
+        self.peter = User(key_name='peter', username='Peter')
+        self.peter.put()
+        self.www_client = Client(HTTP_HOST='www.pageforest.com')
+        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(App.lookup('www'))
+
+    def test_email_not_verified(self):
+        response = self.www_client.put('/apps/myapp10/app.json', '{}',
+                                       content_type='application/json')
+        self.assertContains(response, 'Please verify your email address.',
+                            status_code=403)
+
+    def test_eleven_apps(self):
+        self.peter.email_verified = datetime.now()
+        self.peter.put()
+        for index in range(1, 11):
+            response = self.www_client.put(
+                '/apps/myapp%d/app.json' % index, '{}',
+                content_type='application/json')
+            self.assertContains(response, 'Saved')
+        response = self.www_client.put(
+            '/apps/myapp11/app.json', '{}',
+            content_type='application/json')
+        self.assertContains(response, 'You have already created 10 apps.',
+                            status_code=403)

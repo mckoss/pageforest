@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.conf import settings
 from django.test import TestCase, Client
 
@@ -47,7 +49,8 @@ class AppErrorsTest(TestCase):
 class AppJsonTest(TestCase):
 
     def setUp(self):
-        self.peter = User(key_name='peter', username='Peter')
+        self.peter = User(key_name='peter', username='Peter',
+                          email_verified=datetime.now())
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul')
         self.paul.put()
