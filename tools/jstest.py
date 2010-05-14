@@ -5,7 +5,7 @@ import sys
 
 import pftool
 
-DEBUG = True
+DEBUG = False
 
 if DEBUG:
     RHINO = 'java org.mozilla.javascript.tools.debugger.Main'
