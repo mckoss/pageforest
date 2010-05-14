@@ -31,7 +31,6 @@ manage.py:35: [W0403] Relative import 'settings'
 from wildcard import
 [E0611] No name 'Utils' in module 'email'
 [E0611] No name 'forms' in module 'django'
-[W0402] Uses of a deprecated module 'string'
 [W6501] Specify string format arguments as logging function parameters
 .process_request] Method could be a function
 .process_response] Method could be a function
@@ -44,6 +43,19 @@ Unused argument 'kwargs'
 Use super on an old style class
 Access to a protected member _rollback_on_exception
 """.strip().splitlines()
+
+DEPRECATED_MODULES = sorted(set("""
+regsub rexec cl sv timing
+addpack cmp cmpcache codehack dircmp dump find fmt
+grep lockfile newdir ni packmail Para poly
+rand reconvert regex regsub statcache tb tzparse
+util whatsound whrandom zmod
+gopherlib rgbimg  macfs rfc822  mimetools  multifile
+posixfile gopherlib rgbimgmodule pre whrandom
+rfc822 mimetools MimeWriter mimify rotor
+TERMIOS statcache mpz xreadlines multifile sets
+buildtools cfmfile macfs md5 sha
+""".split()))
 
 
 def disable_msg():
@@ -92,10 +104,12 @@ def main():
         args.append('.')
 
     command = ['pylint']
+    command.append('--ignore=shell.py')
     command.append('--output-format=parseable')
     command.append('--include-ids=yes')
     command.append('--reports=no')
     command.append('--notes=FIXME,XXX,TODO,REVIEW')
+    command.append('--deprecated-modules=' + ','.join(DEPRECATED_MODULES))
     command.append('--good-names=ip')
     command.append('--disable-msg=' + disable_msg())
     if options.errors_only:
