@@ -450,6 +450,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         this.stName = stName;
         this.rgut = [];
         this.stOut = "";
+        this.fQuiet = false;
     };
 
     util.extendObject(ns.TestSuite.prototype, {
@@ -553,6 +554,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         newLine: function() {
+            if (this.fQuiet) {
+                this.stOut = "";
+                return;
+            }
+
             if (this.divOut) {
                 this.divOut.appendChild(document.createElement("BR"));
                 var txt = document.createElement("span");
@@ -565,7 +571,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             else if (typeof console != 'undefined') {
                 console.log(this.stOut);
             }
-            else alert(this.stOut);
+            else {
+                alert(this.stOut);
+            }
             this.stOut = "";
             return this;
         },

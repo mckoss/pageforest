@@ -50,7 +50,9 @@ def attempt(nick, command):
     logfile = open(LOGFILENAME, 'w')
     returncode = subprocess.call(command.split(), stderr=logfile)
     logfile.close()
-    if nick == 'unittest':
+    # FIXME: jstest can't write to stderr - so I think we'd have to combine
+    # stderr and stdout to get the same behavior.
+    if nick in ('unittest', 'x-jstest'):
         show_unittest_count()
     show_summary(nick)
     if returncode:
@@ -102,7 +104,7 @@ def main():
          (os.path.join(pftool.app_dir, 'manage.py'))),
 
         ('jstest',
-         "python %s %s" %
+         "python %s -q %s" %
          (pftool.tool_path('jstest.py'), ' '.join(JS_UNIT_TESTS))),
 
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
