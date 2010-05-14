@@ -32,6 +32,10 @@ Redefinition of 'console'
     'strong': """
 Unexpected dangling '_' in '_
 Missing space after 'function'
+Redefinition of 'console'
+Use '!==' to compare with 'undefined'
+Use '===' to compare with 'undefined'
+Use '===' to compare with '0'
 """.strip().splitlines(),
 
     'strict': """

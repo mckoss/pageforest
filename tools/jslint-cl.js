@@ -16,7 +16,7 @@ load("fulljslint.js");
             forin: true,
             laxbreak: true,
             maxerr: 500,
-            predef: ['global_namespace', '$', 'console', 'window']
+            predef: ['namespace', '$', 'console', 'window']
         },
         'strong': {
             browser: true,
@@ -27,7 +27,7 @@ load("fulljslint.js");
             maxlen: 80,
             newcap: true,
             nomen: true,
-            predef: ['global_namespace', '$', 'console', 'window'],
+            predef: ['namespace', '$', 'console', 'window'],
             undef: true,
             white: true
         },
@@ -40,7 +40,7 @@ load("fulljslint.js");
             maxlen: 80,
             newcap: true,
             nomen: true,
-            predef: ['global_namespace', '$', 'console', 'window'],
+            predef: ['namespace', '$', 'console', 'window'],
             regexp: true,
             strict: true,
             undef: true,
