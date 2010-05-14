@@ -18,7 +18,7 @@ load("../vector.js");
     }
 
     function secs(ms) {
-        return " " + ms/1000;
+        return (ms / 1000).toString();
     }
 
     function printSummary() {

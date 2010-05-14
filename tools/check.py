@@ -47,11 +47,10 @@ def attempt(nick, command):
         sys.stdout.flush()
     options.job_started = time.time()
     logfile = open(LOGFILENAME, 'w')
-    returncode = subprocess.call(command.split(), stderr=logfile)
+    returncode = subprocess.call(
+        command.split(), stdout=logfile, stderr=subprocess.STDOUT)
     logfile.close()
-    # FIXME: jstest can't write to stderr - so I think we'd have to combine
-    # stderr and stdout to get the same behavior.
-    if nick in ('unittest', 'x-jstest'):
+    if nick in ('unittest', 'jstest'):
         show_unittest_count()
     show_summary(nick)
     if returncode:
