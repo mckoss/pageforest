@@ -91,7 +91,7 @@ def app_json_put(request, app_id):
             if key in parsed:
                 assert_string(key, parsed[key])
                 setattr(app, key, parsed[key])
-        for key in ('tags', 'readers', 'writers', 'domains'):
+        for key in ('tags', 'readers', 'writers', 'trusted_urls'):
             if key in parsed:
                 values = parsed[key]
                 assert_string_list(key, values)
