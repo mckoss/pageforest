@@ -6,6 +6,8 @@ from django.shortcuts import redirect
 from utils.shortcuts import render_to_response
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
+
+from auth.models import AuthorizationError
 from auth.middleware import AccessDenied
 from auth.decorators import login_required
 
@@ -78,8 +80,10 @@ def app_json_put(request, app_id):
         if request.user is None:
             return AccessDenied(request)
         # Check app creator permission.
-        if not request.user.can_create_apps():
-            return AccessDenied(request, request.user.message)
+        try:
+            request.user.assert_authorized(App.create)
+        except AuthorizationError, error:
+            return AccessDenied(request, error.message)
         # Create a new App with this app_id.
         app = App.create(app_id, request.user)
     if not app.is_writable(request.user):

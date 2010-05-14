@@ -18,6 +18,10 @@ class SignatureError(Exception):
     pass
 
 
+class AuthorizationError(Exception):
+    pass
+
+
 class User(db.Expando, Timestamped, Migratable, Cacheable):
     """
     The entity key name is username.lower() for case-insensitive matching.
@@ -148,17 +152,16 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
             raise SignatureError("Password incorrect.")
         return user
 
-    def can_create_apps(self):
+    def assert_authorized(self, action):
         """
         Check if this user can create a Pageforest app.
         """
-        # Each user must complete email verification before creating apps.
-        if self.email_verified is None:
-            self.message = "Please verify your email address."
-            return False
-        # Each user can only create 10 apps.
-        count = App.all().filter('owner', self.get_username()).count()
-        if count >= 10:
-            self.message = "You have already created %d apps." % count
-            return False
-        return True
+        if action == App.create:
+            # Each user must complete email verification before creating apps.
+            if self.email_verified is None:
+                raise AuthorizationError("Please verify your email address.")
+            # Each user can only create 10 apps.
+            count = App.all().filter('owner', self.get_username()).count()
+            if count >= 10:
+                raise AuthorizationError(
+                    "You have already created %d apps." % count)
