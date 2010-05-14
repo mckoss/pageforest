@@ -1,7 +1,9 @@
 import threading
 
-from utils.shortcuts import render_to_response
+from django.conf import settings
 from django.shortcuts import redirect
+
+from utils.shortcuts import render_to_response
 
 
 class ResponseNotFoundMiddleware(object):
@@ -40,6 +42,26 @@ class RequestMiddleware(object):
         if not hasattr(RequestMiddleware.thread_local, 'request'):
             return None
         return RequestMiddleware.thread_local.request
+
+
+class WwwMiddleware(object):
+    """
+    External redirect to prepend www to the host header if missing.
+
+    Examples:
+    http://localhost:8080/         => http://www.localhost:8080/
+    https://pageforest.com/sign-in => https://www.pageforest.com/sign-in
+    http://PGFR.ST/apps/?tag=foo   => http://www.pgfr.st/apps/?tag=foo
+    """
+
+    def process_request(self, request):
+        if 'HTTP_HOST' not in request.META:
+            return
+        hostname = request.META['HTTP_HOST'].lower()
+        if hostname.split(':')[0] in settings.DOMAINS:
+            url = request.is_secure() and 'https:' or 'http:'
+            url += '//www.' + hostname + request.get_full_path()
+            return redirect(url)
 
 
 class SlashMiddleware(object):

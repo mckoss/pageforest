@@ -201,7 +201,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 MIDDLEWARE_CLASSES = [
     'utils.middleware.ResponseNotFoundMiddleware',  # Render HTML for 404.
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
-    # TODO: Implement WwwMiddleware
+    'utils.middleware.WwwMiddleware',        # Prepend www if it's missing.
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'apps.middleware.AppMiddleware',         # Get the app.
     'docs.middleware.DocMiddleware',         # Get the document.
