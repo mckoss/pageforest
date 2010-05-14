@@ -11,6 +11,7 @@ from google.appengine.api import mail
 from auth.models import User
 from apps.models import App
 from docs.models import Doc
+from blobs.models import Blob
 
 from utils import crypto
 
@@ -478,3 +479,70 @@ class SimpleAuthTest(TestCase):
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
         response = self.app_client.get('/docs/mydoc/')
         self.assertContains(response, "Password incorrect.", status_code=403)
+
+
+class AnonymousTest(TestCase):
+    """
+    Anonymous user (without session key) should have limited access.
+    """
+
+    def setUp(self):
+        App(key_name='myapp', readers=['public']).put()
+        Blob(key_name='apps/myapp/index.html/', value='<html>').put()
+        Doc(key_name='myapp/mydoc', readers=['public']).put()
+        Blob(key_name='myapp/mydoc/myblob/', value='["json"]').put()
+        self.www_client = Client(HTTP_HOST='www.pageforest.com')
+        self.app_client = Client(HTTP_HOST='myapp.pageforest.com')
+
+    def test_www(self):
+        """Anonymous user should have access to www front-end."""
+        self.assertContains(self.www_client.head('/'), '')
+        self.assertContains(self.www_client.get('/'), 'Pageforest')
+
+    def test_apps(self):
+        """Anonymous user should have read-only access to /apps/."""
+        self.assertContains(self.www_client.get('/apps/'), 'apps')
+        self.assertContains(self.www_client.put('/apps/'), '',
+                            status_code=405)
+
+    def test_docs(self):
+        """Anonymous user should not have access to /docs/."""
+        self.assertContains(self.www_client.get('/docs/'),
+                            'Login is required.', status_code=403)
+
+    def test_sign_in(self):
+        """Anonymous user should have access to sign-in pages."""
+        self.assertContains(self.www_client.get('/sign-in'), 'Password')
+        self.assertContains(self.www_client.post('/sign-in', {'foo': 'bar'}),
+                            'This field is required.')
+
+    def test_app_json(self):
+        """Anonymous user should have read-only access to public app.json."""
+        self.assertContains(self.www_client.get('/apps/myapp/app.json'),
+                            '"readers": [')
+        self.assertContains(self.www_client.put('/apps/myapp/app.json'),
+                            'Access denied.', status_code=403)
+
+    def test_app(self):
+        """Anonymous user should have read-only access to public apps."""
+        self.assertContains(self.app_client.get('/'), '<html>')
+        self.assertContains(self.app_client.put('/'),
+                            'Access denied.', status_code=403)
+        self.assertContains(self.app_client.get('/index.html'), '<html>')
+        self.assertContains(self.app_client.put('/index.html'),
+                            'Access denied.', status_code=403)
+        self.assertContains(self.app_client.put('/newpage.html'),
+                            'Access denied.', status_code=403)
+
+    def test_doc(self):
+        """Anonymous user should have read-only access to public docs."""
+        self.assertContains(self.app_client.get('/docs/mydoc'), '"readers"')
+        self.assertContains(self.app_client.put('/docs/mydoc'),
+                            'Access denied.', status_code=403)
+        self.assertContains(self.app_client.put('/docs/newdoc'),
+                            'Access denied.', status_code=403)
+        self.assertContains(self.app_client.get('/docs/mydoc/myblob'), 'json')
+        self.assertContains(self.app_client.put('/docs/mydoc/myblob'),
+                            'Access denied.', status_code=403)
+        self.assertContains(self.app_client.put('/docs/mydoc/newblob'),
+                            'Access denied.', status_code=403)
