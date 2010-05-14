@@ -9,6 +9,9 @@ import re
 
 import pftool
 
+RHINO = 'java org.mozilla.javascript.tools.shell.Main'
+RHINO_DEBUG = 'java org.mozilla.javascript.tools.debugger.Main'
+
 IGNORED_MESSAGES = {
     'weak': """
 Unexpected dangling '_' in '_
@@ -74,12 +77,18 @@ def main():
 
     walk = pftool.FileWalker(matches=('*.js', '*.json'),
                              ignored=options.ignored,
-                             pass_key='jslint')
+                             pass_key='jslint-' + options.level)
+    dirty_files = list(walk.walk_files(*args))
+
+    # LAME: This chdir is need because jslint-cl has a load that only
+    # works in the tools directory and rhino has no way to discover
+    # the path of the currently executing file. So we have to evaluate
+    # all the command line args BEFORE enumerating them.
     os.chdir(pftool.tools_dir)
+
     total_errors = 0
-    for file_name in walk.walk_files(*args):
-        command = 'java org.mozilla.javascript.tools.shell.Main ' + \
-            'jslint-cl.js --' + options.level + ' ' + file_name
+    for file_name in dirty_files:
+        command = RHINO + ' jslint-cl.js --' + options.level + ' ' + file_name
         if options.verbose:
             print(command)
         jslint = subprocess.Popen(command,
@@ -99,7 +108,7 @@ def main():
                 print shorten_path(line)
             errors += 1
         if errors == 0:
-            walk.set_passing()
+            walk.set_passing(file_path=file_name)
         total_errors += errors
 
     walk.save_pass_dict()
