@@ -14,10 +14,11 @@ APP_ID_REGEX_MATCH = re.compile(settings.APP_ID_REGEX).match
 class AppForm(AjaxForm):
     app_id = forms.CharField(required=True)
     title = forms.CharField(required=True)
+    url = forms.CharField(required=True)
+    trusted_urls = forms.CharField()
+    readers = forms.CharField()
+    writers = forms.CharField()
     tags = forms.CharField()
-    domains = forms.CharField(required=True)
-    readers = forms.CharField(required=True)
-    writers = forms.CharField(required=True)
 
     def clean_app_id(self):
         """
@@ -46,8 +47,9 @@ class AppForm(AjaxForm):
         """
         app = App(key_name=self.cleaned_data['app_id'],
                   title=self.cleaned_data['title'],
+                  url=self.cleaned_data['url'],
+                  trusted_urls=self.cleaned_data['trusted_urls'],
                   tags=self.cleaned_data['tags'],
-                  domains=self.cleaned_data['domains'],
                   readers=self.cleaned_data['readers'],
                   writers=self.cleaned_data['writers'])
         app.put()

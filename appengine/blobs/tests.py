@@ -3,31 +3,13 @@ from datetime import datetime
 from google.appengine.api import memcache
 
 from django.conf import settings
-from django.test import TestCase, Client
+from django.test import Client
 
-from auth.models import User
+from apps.tests import AppTestCase
+
 from apps.models import App
 from docs.models import Doc
 from blobs.models import Blob
-
-
-class AppTestCase(TestCase):
-    """TestCase with automatic test app."""
-
-    def setUp(self):
-        self.peter = User(key_name='peter', username='Peter')
-        self.peter.set_password('SecreT!1')
-        self.peter.put()
-        self.app = App(key_name='myapp', owner='peter',
-                       domains=['myapp.pageforest.com'],
-                       secret="SecreT!1")
-        self.app.put()
-        self.doc = Doc(key_name='myapp/mydoc', doc_id='MyDoc',
-                       owner='peter', readers=['public'])
-        self.doc.put()
-        self.app_client = Client(HTTP_HOST=self.app.domains[0])
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(self.app)
 
 
 class BlobTest(AppTestCase):
@@ -65,6 +47,7 @@ class ClientErrorTest(AppTestCase):
 
     def test_http_method_not_allowed(self):
         """Unknown HTTP method should return 405 Method Not Allowed."""
+        self.sign_in(self.peter)
         response = self.app_client.options('/docs/mydoc/key')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
@@ -72,6 +55,7 @@ class ClientErrorTest(AppTestCase):
 
     def test_query_string_not_allowed(self):
         """Unknown query string method should return 405 Method Not Allowed."""
+        self.sign_in(self.peter)
         response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
@@ -84,8 +68,9 @@ class RestApiTest(AppTestCase):
         """Tests create, read, update, delete with REST API."""
         key_name = 'myapp/mydoc/key/'
         self.assertEqual(Blob.get_by_key_name(key_name), None)
-        # Create.
+        self.sign_in(self.peter)
         url = '/docs/mydoc/key'
+        # Create.
         response = self.app_client.put(url, 'data',
                                        content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
@@ -111,8 +96,9 @@ class JsonpApiTest(AppTestCase):
         """Tests create, read, update, delete with JSONP API."""
         key_name = 'myapp/mydoc/key/'
         self.assertEqual(Blob.get_by_key_name(key_name), None)
-        # Create.
+        self.sign_in(self.peter)
         url = '/docs/mydoc/key'
+        # Create.
         response = self.app_client.get(url + '?method=PUT&value=data')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'data')
@@ -136,14 +122,15 @@ class HostTest(AppTestCase):
     def setUp(self):
         super(HostTest, self).setUp()
         self.other = App(key_name='other',
-                         domains=['other.pageforest.com'],
+                         url='https://other.pageforest.com/',
                          secret='OtherSecreT')
         self.other.put()
         self.otherdoc = Doc(key_name='other/mydoc', doc_id='MyDoc',
                             readers=['authenticated'],
                             writers=['paul', 'peter'])
         self.otherdoc.put()
-        self.other_client = Client(HTTP_HOST=self.other.domains[0])
+        self.other_client = Client(HTTP_HOST='other.pageforest.com',
+                                   HTTP_REFERER=self.other.url)
         self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.other)
 
@@ -185,6 +172,7 @@ class MemcacheTest(AppTestCase):
         key_name = 'myapp/mydoc/key/with/slashes/'
         cache_key = settings.CACHEABLE_PREFIX + '~Blob~' + key_name
         self.assertEqual(memcache.get(cache_key), None)
+        self.sign_in(self.peter)
         # Create.
         self.app_client.put(url, 'data', content_type='text/plain')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'data')
@@ -212,6 +200,7 @@ class MimeTest(AppTestCase):
 
     def put_and_get(self, path):
         """Helper function for MIME tests."""
+        self.sign_in(self.peter)
         self.app_client.put(path, 'data', content_type='text/plain')
         return self.app_client.get(path)
 
@@ -287,6 +276,7 @@ class JsonArrayTest(AppTestCase):
     def test_push(self):
         """Test that push appends to the end af the array."""
         started = datetime.now()
+        self.sign_in(self.peter)
         response = self.app_client.post('/docs/mydoc/chat?method=PUSH',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
@@ -300,6 +290,7 @@ class JsonArrayTest(AppTestCase):
     def test_push_empty(self):
         """Test that push creates the array if it didn't exist."""
         started = datetime.now()
+        self.sign_in(self.peter)
         response = self.app_client.post('/docs/mydoc/chat2?method=PUSH',
                                         data='hi', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
@@ -311,6 +302,7 @@ class JsonArrayTest(AppTestCase):
 
     def test_push_max(self):
         """Test that push appends to the end af the array."""
+        self.sign_in(self.peter)
         response = self.app_client.post('/docs/mydoc/chat?method=PUSH&max=3',
                                         data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')

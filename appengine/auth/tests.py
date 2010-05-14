@@ -1,18 +1,13 @@
 import time
 import re
-from datetime import datetime
 
 from django.conf import settings
-from django.test import TestCase
-from django.test.client import Client
 
 from google.appengine.api import mail
 
 from auth.models import User
-from apps.models import App
-from docs.models import Doc
-from blobs.models import Blob
 
+from apps.tests import AppTestCase
 from utils import crypto
 
 # Default pageforest domain url
@@ -28,14 +23,7 @@ EMAIL_VERIFY = AUTH_PREFIX + "email-verify/"
 APP_AUTH_PREFIX = "/auth/"
 
 
-class UserTest(TestCase):
-
-    def setUp(self):
-        self.start_time = datetime.now()
-        self.peter = User(key_name='peter', username='Peter')
-        self.peter.put()
-        self.paul = User(key_name='paul', username='Paul')
-        self.paul.put()
+class UserTest(AppTestCase):
 
     def test_random_salt(self):
         """The same password generates different hashes."""
@@ -66,21 +54,12 @@ class UserTest(TestCase):
         self.assertEqual(self.peter.migrated, 2)
 
 
-class RegistrationTest(TestCase):
-
-    def setUp(self):
-        self.start_time = datetime.now()
-        self.peter = User(key_name='peter',
-                          username='Peter',
-                          email='peter@example.com')
-        self.peter.set_password('password')
-        self.peter.put()
-        self.www = Client(HTTP_HOST='www.pageforest.com')
+class RegistrationTest(AppTestCase):
 
     def test_username_invalid_first(self):
         """Invalid usernames are rejected."""
         for char in '012_-.,!?$:@/':
-            response = self.www.post(
+            response = self.www_client.post(
                 SIGN_UP, {'username': char + 'name'})
             self.assertContains(
                 response, "Username must start with a letter.")
@@ -88,7 +67,7 @@ class RegistrationTest(TestCase):
     def test_username_invalid_last(self):
         """Invalid usernames are rejected."""
         for char in '_-.,!?$:@/':
-            response = self.www.post(
+            response = self.www_client.post(
                 SIGN_UP, {'username': 'name' + char})
             self.assertContains(
                 response, "Username must end with a letter or number.")
@@ -96,37 +75,37 @@ class RegistrationTest(TestCase):
     def test_username_invalid(self):
         """Invalid usernames are rejected."""
         for char in '_.,!?$:@/':
-            response = self.www.post(
+            response = self.www_client.post(
                 SIGN_UP, {'username': 'a' + char + 'b'})
             self.assertContains(response,
                 "Username must contain only letters, numbers and dashes.")
 
     def test_username_too_short(self):
         """Excessively short usernames are rejected."""
-        response = self.www.post(SIGN_UP, {'username': 'a'})
+        response = self.www_client.post(SIGN_UP, {'username': 'a'})
         self.assertContains(response, "at least 2 characters")
 
     def test_username_too_long(self):
         """Excessively long usernames are rejected."""
-        response = self.www.post(SIGN_UP, {'username': 'a' * 31})
+        response = self.www_client.post(SIGN_UP, {'username': 'a' * 31})
         self.assertContains(response,
             "Ensure this value has at most 30 characters (it has 31).")
 
     def test_username_reserved(self):
         """Reserved usernames are enforced."""
         for name in 'root admin test'.split():
-            response = self.www.post(SIGN_UP, {'username': name})
+            response = self.www_client.post(SIGN_UP, {'username': name})
             self.assertContains(response, "This username is reserved.")
 
     def test_password_silly(self):
         """Silly passwords are rejected."""
         for password in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.www.post(SIGN_UP, {'password': password})
+            response = self.www_client.post(SIGN_UP, {'password': password})
             self.assertContains(response, "This password is too simple.")
 
     def test_username_taken(self):
         """Existing usernames are reserved."""
-        response = self.www.post(SIGN_UP, {'username': 'peter'})
+        response = self.www_client.post(SIGN_UP, {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
     def test_new_registration(self):
@@ -134,26 +113,27 @@ class RegistrationTest(TestCase):
         mail_kwargs = {}
 
         def mock_send_mail(*args, **kwargs):
-            """ Assume we always use keyword args """
+            """Assume we always use keyword args."""
             self.assertEqual(len(args), 0)
             mail_kwargs.update(kwargs)
             real_send_mail(*args, **kwargs)
 
         (real_send_mail, mail.send_mail) = (mail.send_mail, mock_send_mail)
         try:
-            response = self.www.post(SIGN_UP, {'username': 'Paul',
-                                               'password': 'afinepassword',
-                                               'repeat': 'afinepassword',
-                                               'email': 'paul@bunyan.com',
-                                               'tos': 'checked',
-                                               })
+            response = self.www_client.post(SIGN_UP, {
+                    'username': 'Mary',
+                    'password': 'afinepassword',
+                    'repeat': 'afinepassword',
+                    'email': 'mary@bunyan.com',
+                    'tos': 'checked',
+                    })
             self.assertRedirects(response, WWW + SIGN_IN)
-            paul = User.lookup('paul')
-            self.assertTrue(paul is not None)
-            self.assertEqual(paul.username, 'Paul')
-            self.assertEqual(paul.get_username(), 'paul')
+            mary = User.lookup('mary')
+            self.assertTrue(mary is not None)
+            self.assertEqual(mary.username, 'Mary')
+            self.assertEqual(mary.get_username(), 'mary')
             self.assertEqual(mail_kwargs['sender'], 'support@pageforest.com')
-            self.assertEqual(mail_kwargs['to'], 'paul@bunyan.com')
+            self.assertEqual(mail_kwargs['to'], 'mary@bunyan.com')
             self.assertTrue(mail_kwargs['subject'].find("Pageforest") != -1)
             verify_url = re.search
             groups = re.search('(' + WWW + EMAIL_VERIFY + '.*/)',
@@ -161,7 +141,7 @@ class RegistrationTest(TestCase):
             self.assertTrue(groups is not None)
             verify_url = groups.group(1)
 
-            response = self.www.get(verify_url)
+            response = self.www_client.get(verify_url)
             self.assertContains(response,
                                 "Your email address has  been verified.")
 
@@ -169,15 +149,7 @@ class RegistrationTest(TestCase):
             mail.send_mail = real_send_mail
 
 
-class SignInTest(TestCase):
-
-    def setUp(self):
-        self.peter = User(key_name='peter',
-                          username='Peter',
-                          email='peter@example.com')
-        self.peter.set_password('password')
-        self.peter.put()
-        self.www = Client(HTTP_HOST='www.pageforest.com')
+class SignInTest(AppTestCase):
 
     def test_errors(self):
         """Errors on sign-in form."""
@@ -189,25 +161,25 @@ class SignInTest(TestCase):
                   'expect': 'Invalid password'},
                  )
         for case in cases:
-            response = self.www.post(SIGN_IN, case['fields'])
+            response = self.www_client.post(SIGN_IN, case['fields'])
             self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_success(self):
         """Sign-in form success - cookie and redirect - sign-out."""
-        response = self.www.post(SIGN_IN,
+        response = self.www_client.post(SIGN_IN,
                                  {'username': 'peter',
-                                  'password': 'password'})
+                                  'password': 'peter_secret'})
         self.assertRedirects(response, WWW + SIGN_IN)
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('www/peter/12'))
 
         # Simulate the redirect after POST
-        response = self.www.post(SIGN_IN)
+        response = self.www_client.post(SIGN_IN)
         self.assertContains(response, 'Peter, you are signed in to')
 
         # Now sign out the user - and check his cookies
-        response = self.www.get(SIGN_OUT)
+        response = self.www_client.get(SIGN_OUT)
         self.assertRedirects(response, WWW + SIGN_IN)
 
         cookie = response.cookies['sessionkey']
@@ -215,27 +187,15 @@ class SignInTest(TestCase):
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
         # Simulate the redirect after GET
-        response = self.www.post(SIGN_IN)
+        response = self.www_client.post(SIGN_IN)
         self.assertContains(response, 'Sign in to Pageforest')
 
 
-class AppSignInTest(TestCase):
+class AppSignInTest(AppTestCase):
     """
     Signing in to and out of an application should set session keys
     on both the pageforest.com domain AND the application domain.
     """
-    def setUp(self):
-        self.peter = User(key_name='peter',
-                          username='Peter',
-                          email='peter@example.com')
-        self.peter.set_password('password')
-        self.peter.put()
-        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
-                       title="My Test App",
-                       readers=['public'], writers=['peter'])
-        self.app.put()
-        self.www = Client(HTTP_HOST='www.pageforest.com')
-        self.myapp = Client(HTTP_HOST='myapp.pageforest.com')
 
     def test_errors(self):
         """Errors on application sign-in form."""
@@ -243,30 +203,30 @@ class AppSignInTest(TestCase):
                   'expect': 'This field is required'},
                  )
         for case in cases:
-            response = self.www.post(SIGN_IN + 'myapp/', case['fields'])
+            response = self.www_client.post(SIGN_IN + 'myapp/', case['fields'])
             self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_no_auth_on_app_domain(self):
         """Only have sign-in pages on the www.pageforest.com domain."""
-        response = self.myapp.get('auth' + SIGN_IN)
+        response = self.app_client.get('auth' + SIGN_IN)
         self.assertEqual(response.status_code, 404)
 
     def test_no_app(self):
         """Sign into non-existant application -> redirect."""
-        response = self.www.get(SIGN_IN + 'noapp')
+        response = self.www_client.get(SIGN_IN + 'noapp')
         self.assertRedirects(response, WWW + SIGN_IN)
 
     def test_sign_in(self):
         """Sign in to an application (from scratch)."""
         # Initial form - not signed in
-        response = self.www.get(SIGN_IN + 'myapp/')
+        response = self.www_client.get(SIGN_IN + 'myapp/')
         self.assertContains(response, "Sign in to Pageforest")
         self.assertContains(response, "and My Test App")
 
-        response = self.www.post(SIGN_IN + 'myapp/',
+        response = self.www_client.post(SIGN_IN + 'myapp/',
                                  {'username': 'peter',
-                                  'password': 'password',
+                                  'password': 'peter_secret',
                                   'app_auth': 'checked'})
         self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
         cookie = response.cookies['sessionkey'].value
@@ -277,7 +237,7 @@ class AppSignInTest(TestCase):
         self.assertTrue(app_cookie.startswith('myapp/peter/12'))
 
         # Simulate the redirect to the form
-        response = self.www.post(SIGN_IN + 'myapp/')
+        response = self.www_client.post(SIGN_IN + 'myapp/')
         # We need the app-specific session cookie transfered to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
         groups = re.search(r'transferSession\("(.*)"\)', response.content)
@@ -286,45 +246,37 @@ class AppSignInTest(TestCase):
         self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
 
         # Should not be logged in yet
-        response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
+        response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
 
         self.assertEqual(response.status_code, 404)
         self.assertTrue('sessionkey' not in response.cookies)
 
         # Simulate the in-page javascript that does the cross-site
         # authentication
-        self.myapp.defaults['HTTP_REFERER'] = \
+        self.app_client.defaults['HTTP_REFERER'] = \
             "http://www.pageforest.com/sign-in/"
-        response = self.myapp.get(APP_AUTH_PREFIX + 'set-session/' +
-                                  myapp_session_key +
-                                  '?callback=jsonp123')
-        del self.myapp.defaults['HTTP_REFERER']
+        response = self.app_client.get(
+            APP_AUTH_PREFIX + 'set-session/' +
+            myapp_session_key + '?callback=jsonp123')
+        del self.app_client.defaults['HTTP_REFERER']
         self.assertEqual(response.content,
                          'jsonp123("' + myapp_session_key + '")')
         cookie = response.cookies['sessionkey'].value
         self.assertTrue(cookie.startswith('myapp/peter/12'))
         # And confirm the username api returns the user
-        response = self.myapp.get(APP_AUTH_PREFIX + 'username/')
+        response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")
 
         # And sign out to verify that the cross-app cookie is
         # marked 'expired'.
-        response = self.myapp.get(APP_AUTH_PREFIX + 'set-session/expired/')
+        response = self.app_client.get(
+            APP_AUTH_PREFIX + 'set-session/expired/')
         cookie = response.cookies['sessionkey']
         self.assertEqual(cookie.value, '')
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
 
-class ChallengeVerifyTest(TestCase):
-
-    def setUp(self):
-        self.peter = User(key_name='peter', username='Peter')
-        self.peter.set_password('SecreT!1')
-        self.peter.put()
-        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
-                       readers=['public'], secret=crypto.random64())
-        self.app.put()
-        self.app_client = Client(HTTP_HOST=self.app.domains[0])
+class ChallengeVerifyTest(AppTestCase):
 
     def sign_and_verify(self, challenge, username=None, password=None,
                         **kwargs):
@@ -333,8 +285,8 @@ class ChallengeVerifyTest(TestCase):
         password = password or self.peter.password
         signed = crypto.sign(challenge, password)
         data = crypto.join(username.lower(), signed)
-        return self.app_client.get(APP_AUTH_PREFIX + 'verify/' + data,
-                                   **kwargs)
+        return self.app_client.get(
+            APP_AUTH_PREFIX + 'verify/' + data, **kwargs)
 
     def test_login(self):
         """Test challenge and verify."""
@@ -371,8 +323,8 @@ class ChallengeVerifyTest(TestCase):
         real_time = time.time
         time.time = mock_time
         try:
-            challenge = self.app_client.get(APP_AUTH_PREFIX + \
-                                            'challenge/').content
+            challenge = self.app_client.get(
+                APP_AUTH_PREFIX + 'challenge/').content
         finally:
             time.time = real_time
         response = self.sign_and_verify(challenge)
@@ -409,22 +361,12 @@ class ChallengeVerifyTest(TestCase):
                             status_code=403)
 
 
-class SimpleAuthTest(TestCase):
+class SimpleAuthTest(AppTestCase):
 
     def setUp(self):
-        self.peter = User(key_name='peter', username='Peter',
-                          email='peter@example.com')
-        self.peter.set_password('password')
-        self.peter.put()
-        self.paul = User(key_name='paul', username='Paul')
-        self.paul.put()
-        self.doc = Doc(key_name='myapp/mydoc', title='My Document',
-                       readers=['peter'], writers=['peter'])
+        super(SimpleAuthTest, self).setUp()
+        self.doc.readers = []
         self.doc.put()
-        self.app = App(key_name='myapp', domains=['myapp.pageforest.com'],
-                       secret=crypto.random64())
-        self.app.put()
-        self.app_client = Client(HTTP_HOST=self.app.domains[0])
         self.session_key = self.peter.generate_session_key(self.app)
 
     def test_bogus_session_key(self):
@@ -481,18 +423,10 @@ class SimpleAuthTest(TestCase):
         self.assertContains(response, "Password incorrect.", status_code=403)
 
 
-class AnonymousTest(TestCase):
+class AnonymousTest(AppTestCase):
     """
     Anonymous user (without session key) should have limited access.
     """
-
-    def setUp(self):
-        App(key_name='myapp', readers=['public']).put()
-        Blob(key_name='apps/myapp/index.html/', value='<html>').put()
-        Doc(key_name='myapp/mydoc', readers=['public']).put()
-        Blob(key_name='myapp/mydoc/myblob/', value='["json"]').put()
-        self.www_client = Client(HTTP_HOST='www.pageforest.com')
-        self.app_client = Client(HTTP_HOST='myapp.pageforest.com')
 
     def test_www(self):
         """Anonymous user should have access to www front-end."""
@@ -548,28 +482,21 @@ class AnonymousTest(TestCase):
                             'Access denied.', status_code=403)
 
 
-class AppCreatorTest(TestCase):
+class AppCreatorTest(AppTestCase):
     """
     Test permissions for app creators.
     """
 
-    def setUp(self):
-        self.peter = User(key_name='peter', username='Peter')
-        self.peter.put()
-        self.www_client = Client(HTTP_HOST='www.pageforest.com')
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(App.lookup('www'))
-
     def test_email_not_verified(self):
+        self.sign_in(self.paul)
         response = self.www_client.put('/apps/myapp10/app.json', '{}',
                                        content_type='application/json')
         self.assertContains(response, 'Please verify your email address.',
                             status_code=403)
 
     def test_eleven_apps(self):
-        self.peter.email_verified = datetime.now()
-        self.peter.put()
-        for index in range(1, 11):
+        self.sign_in(self.peter)
+        for index in range(2, 11):
             response = self.www_client.put(
                 '/apps/myapp%d/app.json' % index, '{}',
                 content_type='application/json')

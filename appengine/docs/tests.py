@@ -2,33 +2,13 @@ import datetime
 from mock import Mock
 
 from django.conf import settings
-from django.test import TestCase
-from django.test.client import Client
 
-from auth.models import User
-from apps.models import App
+from apps.tests import AppTestCase
+
 from docs.models import Doc
-from blobs.models import Blob
 
 
-class DocumentTest(TestCase):
-
-    def setUp(self):
-        self.peter = User(key_name='peter', username='Peter')
-        self.peter.put()
-        self.paul = User(key_name='paul', username='Paul')
-        self.paul.put()
-        self.app = App(key_name='myapp', owner='peter',
-                       url='http://myapp.pageforest.com/')
-        self.app.put()
-        self.doc = Doc(key_name='myapp/mydoc',
-                       app_id='myapp', doc_id='MyDoc',
-                       title="My Document", tags='one two three'.split(),
-                       readers=['public'], writers=['peter', 'authenticated'])
-        self.doc.put()
-        self.blob = Blob(key_name='myapp/mydoc/', value='{"int": 123}')
-        self.blob.put()
-        self.app_client = Client(HTTP_HOST='myapp.pageforest.com')
+class DocumentTest(AppTestCase):
 
     def test_get_absolute_url(self):
         """Test that the absolute URL is generated correctly."""
@@ -41,8 +21,7 @@ class DocumentTest(TestCase):
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": [\n    "public"\n  ]')
-        self.assertContains(response,
-            '"writers": [\n    "peter",\n    "authenticated"\n  ]')
+        self.assertContains(response, '"writers": []')
         self.assertContains(response, '"schema": 1')
         self.assertContains(response,
             '"tags": [\n    "one",\n    "two",\n    "three"\n  ]')
@@ -81,6 +60,8 @@ class DocumentTest(TestCase):
 
     def test_write_permissions(self):
         """Test access control in document_put."""
+        self.doc.writers = ['authenticated']
+        self.doc.put()
         # Document owner should have write permission.
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)

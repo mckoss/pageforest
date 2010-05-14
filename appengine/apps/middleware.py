@@ -48,20 +48,22 @@ class AppMiddleware(object):
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
                 return HttpResponseNotFound("URL reserved for internal use.")
-            return
+        else:
+            # Prefix path with /app for matching with urls.py.
+            if settings.DEBUG:
+                logging.info(" original URL: http://" +
+                             request.META.get('HTTP_HOST', '') +
+                             request.get_full_path())
+            request.path_info = '/app' + request.path_info
+            request.META['PATH_INFO'] = request.path_info
+            request.path = request.META['SCRIPT_NAME'] + request.path_info
+            if settings.DEBUG:
+                logging.info("rewritten URL: http://" +
+                             request.META.get('HTTP_HOST', '') +
+                             request.get_full_path())
 
-        # Prefix path with /app for matching with urls.py.
-        if settings.DEBUG:
-            logging.info(" original URL: http://" +
-                         request.META.get('HTTP_HOST', '') +
-                         request.get_full_path())
-        request.path_info = '/app' + request.path_info
-        request.META['PATH_INFO'] = request.path_info
-        request.path = request.META['SCRIPT_NAME'] + request.path_info
-        if settings.DEBUG:
-            logging.info("rewritten URL: http://" +
-                         request.META.get('HTTP_HOST', '') +
-                         request.get_full_path())
+        # Unless AppMiddleware returned 404, request.app is always set.
+        assert request.app is not None
 
 
 def app_context(request):
