@@ -12,8 +12,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var cookies = namespace.lookup('com.pageforest.cookies');
     var base = namespace.lookup('org.startpad.base');
 
+    // TODO: Add alert if jQuery is not present.
+
     var pollInterval = 500;
-    var states = new base.Enum('clean', 'dirty', 'loading', 'saving');
 
     // The application calls Client, and implements the following methods:
     // app.loaded(jsonDocument) - Called when a new document is loaded
@@ -26,15 +27,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.app = app;
 
         // TODO: Support remote and local filesytem hosting.
-        var dot = location.host.indexOf('.');
-        this.appid = location.host.substr(0, dot);
-        this.wwwHost = 'www' + location.host.substr(dot);
+        this.appHost = location.host;
+        var dot = this.appHost.indexOf('.');
+        this.appid = this.appHost.substr(0, dot);
+        this.wwwHost = 'www' + this.appHost.substr(dot);
 
         this.lastHash = '';
-        this.state = states.clean;
+        this.state = Client.states.clean;
         this.username = undefined;
-
-        var www = "www" + location.host.substr(dot);
+        this.fLogging = false;
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -44,28 +45,40 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
     }
 
+    Client.states = new base.Enum('clean', 'dirty', 'loading', 'saving');
+
     Client.methods({
         // Load a document
         load: function (docid) {
             // REVIEW: What to do if already in loading or saving state?
-            this.state = states.loading;
+            this.state = Client.states.loading;
             this.docid = docid;
+            this.log("load: " + this.docid);
             $.ajax({
                 dataType: 'json',
-                url: this.host + '/docs/' + docid,
+                url: 'http://' + this.appHost + '/docs/' + docid,
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
-                    this.state = states.idle;
+                    this.state = Client.states.clean;
                     this.app.loaded(document);
                 }.fnMethod(this)
             });
         },
 
         save: function (json, docid) {
+            if (this.username == undefined) {
+                this.errorReport('no_username', "You must sign in to save.");
+            }
             if (docid != undefined) {
                 this.docid = docid;
             }
-            this.state = states.saving;
+
+            // First save - assign docid like username_random
+            if (this.docid == undefined) {
+                this.docid = this.username + '_' + base.randomInt(1000);
+            }
+
+            this.state = Client.states.saving;
 
             // TODO: If this is a first save, generate a default docid
             // using username_N pattern.
@@ -73,14 +86,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 json.readers = ['public'];
             }
             var data = JSON.stringify(json);
+            this.log('save: ' + this.docid, json);
             $.ajax({
                 type: 'PUT',
                 url: '/docs/' + this.docid,
                 data: data,
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
+                    this.log('saved');
                     location.hash = this.docid;
-                    this.state = states.clean;
+                    // Don't trigger a load after we just saved.
+                    this.lastHash = location.hash;
+                    this.state = Client.states.clean;
                     if (this.app.saved) {
                         this.app.saved();
                     }
@@ -88,12 +105,36 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
+        setLogging: function(f) {
+            f = (f == undefined) ? true : f;
+            this.fLogging = f;
+        },
+
+        log: function(message, obj) {
+            if (this.fLogging) {
+                // BUG: console.log.apply(undefined, arguments) work in Chrome!
+                if (obj != undefined) {
+                    console.log(message, obj);
+                }
+                else {
+                    console.log(message);
+                }
+            }
+        },
+
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            var code = 'ajax_error/' + xmlhttp.status;
+            var message = xmlhttp.statusText;
+            this.log(message + ' (' + code + ')', xmlhttp);
+            this.errorReport(code, xmlhttp.statusText);
+        },
+
+        errorReport: function(status, message) {
             if (this.app.error) {
-                this.app.error(textStatus);
+                this.app.error(status, message);
             }
             else {
-                alert(textStatus);
+                alert(status + ': ' + message);
             }
         },
 
@@ -103,13 +144,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             // REVIEW: What if we are loading or saving? Does this
             // canel a load?
-            this.state = fDirty ? states.dirty : states.clean;
+            this.state = fDirty ? Client.states.dirty : Client.states.clean;
         },
 
         // The user is about to close the page - we want to alert the
         // user if he might lose changes.
         beforeUnload: function(evt) {
-            if (this.state != states.clean) {
+            if (this.state != Client.states.clean) {
                 evt.returnValue = "You will lose your changes if you leave " +
                     "the window without saving.";
                 return evt.returnValue;
@@ -142,13 +183,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.username = undefined;
             }
             if (this.app.userChanged && usernameLast != this.username) {
+                this.log('found user: ' + this.username);
                 this.app.userChanged(this.username || 'anonymous');
             }
         },
 
         // Direct the user to the Pageforest sign-in page.
         signIn: function () {
-            window.open(this.wwwHost + "/sign-in/scratch/", '_blank');
+            window.open('http://' + this.wwwHost + "/sign-in/scratch/",
+                        '_blank');
         },
 
         // Expire the session key to remove the sign-in for the user.
@@ -160,7 +203,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
     });
 
-    // Export the Client class.
+    // Exports
     ns.extend({
         Client: Client
     });
