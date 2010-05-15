@@ -1,8 +1,62 @@
 namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     var util = namespace.util;
 
+    /* Javascript Enumeration - build an object whose properties are
+       mapped to successive integers. Also allow setting specific values
+       by passing integers instead of strings. e.g. new ns.Enum("a", "b",
+       "c", 5, "d") -> {a:0, b:1, c:2, d:5}
+    */
+    function Enum(args) {
+        var j = 0;
+        for (var i = 0; i < arguments.length; i++) {
+            if (typeof arguments[i] == "string") {
+                this[arguments[i]] = j++;
+            }
+            else {
+                j = arguments[i];
+            }
+        }
+    }
+
+    Enum.methods({
+        // Get the name of a enumerated value.
+        getName: function(value) {
+            for (var prop in this) {
+                if (this.hasOwnProperty(prop)) {
+                    if (this[prop] == value)
+                        return prop;
+                }
+            }
+        }
+    });
+
+    // Fast string concatenation buffer
+    function StBuf() {
+        this.rgst = [];
+        this.append.apply(this, arguments);
+    }
+
+    StBuf.methods({
+        append: function() {
+            for (var ist = 0; ist < arguments.length; ist++) {
+                this.rgst.push(arguments[ist].toString());
+            }
+            return this;
+        },
+
+        clear: function() {
+            this.rgst = [];
+        },
+
+        toString: function() {
+            return this.rgst.join("");
+        }
+    });
+
     ns.extend({
         extendObject: util.extendObject,
+        Enum: Enum,
+        StBuf: StBuf,
 
         extendIfMissing: function(oDest, var_args) {
             if (oDest == undefined) {
@@ -48,22 +102,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
         strip: function(s) {
             return (s || "").replace(/^\s+|\s+$/g, "");
-        },
-
-        /* Javascript Enumeration - build an object whose properties are
-         mapped to successive integers. Also allow setting specific values
-         by passing integers instead of strings. e.g. new ns.Enum("a", "b",
-         "c", 5, "d") -> {a:0, b:1, c:2, d:5} */
-        Enum: function(args) {
-            var j = 0;
-            for (var i = 0; i < arguments.length; i++) {
-                if (typeof arguments[i] == "string") {
-                    this[arguments[i]] = j++;
-                }
-                else {
-                    j = arguments[i];
-                }
-            }
         },
 
         /* Return new object with just the listed properties "projected"
@@ -118,32 +156,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             return res;
         }
     });
-
-
-    //--------------------------------------------------------------------------
-    // Fast string concatenation buffer
-    //--------------------------------------------------------------------------
-    ns.StBuf = function() {
-        this.rgst = [];
-        this.append.apply(this, arguments);
-    };
-
-    util.extendObject(ns.StBuf.prototype, {
-        append: function() {
-            for (var ist = 0; ist < arguments.length; ist++) {
-                this.rgst.push(arguments[ist].toString());
-            }
-            return this;
-        },
-
-        clear: function() {
-            this.rgst = [];
-        },
-
-        toString: function() {
-            return this.rgst.join("");
-        }
-    }); // ns.StBuf
 
 
 }); // startpad.base
