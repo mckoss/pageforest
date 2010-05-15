@@ -2,17 +2,47 @@ from datetime import datetime, timedelta
 
 
 def plural(number):
+    """
+    >>> plural(0)
+    's'
+    >>> plural(1)
+    ''
+    >>> plural(2)
+    's'
+    """
     return number != 1 and 's' or ''
 
 
-def interval(delta):
+def ago(delta):
     """
     Format a interval as a human-readable "age".
 
-    >>> interval(timedelta(days=800))
+    >>> ago(timedelta(days=-1))
+    'in the future'
+    >>> ago(timedelta(days=800))
     '2 years ago'
-    >>> interval(timedelta(days=400))
+    >>> ago(timedelta(days=400))
     '1 year ago'
+    >>> ago(timedelta(days=300))
+    '9 months ago'
+    >>> ago(timedelta(days=80))
+    '80 days ago'
+    >>> ago(timedelta(hours=48))
+    '2 days ago'
+    >>> ago(timedelta(hours=47))
+    'yesterday'
+    >>> ago(timedelta(hours=24))
+    'yesterday'
+    >>> ago(timedelta(hours=23))
+    '23 hours ago'
+    >>> ago(timedelta(minutes=60))
+    '1 hour ago'
+    >>> ago(timedelta(minutes=59))
+    '59 minutes ago'
+    >>> ago(timedelta(seconds=60))
+    '1 minute ago'
+    >>> ago(timedelta(seconds=59))
+    'seconds ago'
     """
     if delta.days < 0:
         return "in the future"
@@ -39,3 +69,8 @@ def interval(delta):
         return "seconds ago"
 
     return "%d minute%s ago" % (minutes, plural(minutes))
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
