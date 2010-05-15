@@ -15,15 +15,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var pollInterval = 500;
     var states = new base.Enum('clean', 'dirty', 'loading', 'saving');
 
-    var lastHash;
-
     // The application calls Client, and implements the following methods:
     // app.loaded(jsonDocument) - Called when a new document is loaded
+    // app.saved() - successfully saved
     // app.error(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
     // app.userChanged(username) - Called when the user signs in or signs out
     //     ('anonymous').
-    // app.saved() - successfully saved
     function Client(app) {
         this.app = app;
 
@@ -59,11 +57,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 success: function (document, textStatus, xmlhttp) {
                     this.state = states.idle;
                     this.app.loaded(document);
-                }
+                }.fnMethod(this)
             });
         },
 
-        save: function (docid) {
+        save: function (json, docid) {
             if (docid != undefined) {
                 this.docid = docid;
             }
@@ -71,15 +69,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // TODO: If this is a first save, generate a default docid
             // using username_N pattern.
-            var data = JSON.stringify({
-                title: $('#title').val(),
-                blob: $('#blob').val(),
-                readers: ['public']
-            });
-            var docId = $('#name').val();
+            if (!json.readers) {
+                json.readers = ['public'];
+            }
+            var data = JSON.stringify(json);
             $.ajax({
                 type: 'PUT',
-                url: '/docs/' + docId,
+                url: '/docs/' + this.docid,
                 data: data,
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
@@ -88,7 +84,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     if (this.app.saved) {
                         this.app.saved();
                     }
-                }
+                }.fnMethod(this)
             });
         },
 
@@ -164,6 +160,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
     });
 
+    // Export the Client class.
     ns.extend({
         Client: Client
     });
