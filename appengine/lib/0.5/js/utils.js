@@ -23,6 +23,20 @@
    from the sources into the destination (properties in following objects
    override those from the preceding objects).
 
+   util.copyArray(a) - makes a (shallow) copy of an array or arguments list
+   and returns an Array object.
+
+   Extensions to the Function object:
+
+   Class.methods({
+   f1: function () {...},
+   f2: function () {...}
+   ));
+
+   f1.fnMethod(obj, args) - closure to call obj.f1(args);
+
+   f1.fnArgs(args) - closure to add more arguments to a function
+
    *** Class Namespace ***
 
    Methods:
@@ -139,8 +153,41 @@ var namespace = (function() {
         return Array.prototype.slice.call(arg, 0);
     }
 
+    // Inspired by JavaScript: The Good Parts, p33.
+    // Usage:
+    // Class.methods({
+    // f1: function() {...},
+    // f2: function() {...}
+    // });
+    Function.prototype.methods = function (obj) {
+        extendObject(this.prototype, obj);
+    };
+
+    Function.methods({
+        // Closure for a method call - like protoype.bind()
+        fnMethod: function (obj) {
+            var _fn = this;
+            return function() {
+                return _fn.apply(obj, arguments);
+            };
+        },
+
+        // Closure with appended parameters to the function call.
+        fnArgs: function () {
+            var _fn = this;
+            var _args = copyArray(arguments);
+
+            return function() {
+                var args = copyArray(arguments).concat(_args);
+                // REVIEW: Is this intermediate self variable needed?
+                var self = this;
+                return _fn.apply(self, args);
+            };
+        }
+    });
+
     // Functions added to every Namespace.
-    extendObject(Namespace.prototype, {
+    Namespace.methods({
         // Call a function with the namespace as a parameter - forming
         // a closure for the namespace definition.
         define: function(callback) {
@@ -180,7 +227,6 @@ var namespace = (function() {
         }
     });
 
-    // Functions added to the top level namespace (only).
     extendObject(namespaceT, {
         // Lookup a global namespace object, creating it (and it's parents)
         // as necessary.
@@ -209,6 +255,156 @@ var namespace = (function() {
 
     return namespaceT;
 }());
+/* Begin file: base.js */
+namespace.lookup('org.startpad.base').defineOnce(function(ns) {
+    var util = namespace.util;
+
+    ns.extend({
+        extendObject: util.extendObject,
+
+        extendIfMissing: function(oDest, var_args) {
+            if (oDest == undefined) {
+                oDest = {};
+            }
+            for (var i = 1; i < arguments.length; i++) {
+                var oSource = arguments[i];
+                for (var prop in oSource) {
+                    if (oSource.hasOwnProperty(prop) &&
+                        oDest[prop] == undefined) {
+                        oDest[prop] = oSource[prop];
+                    }
+                }
+            }
+            return oDest;
+        },
+
+        // Deep copy properties in turn into dest object
+        extendDeep: function(dest) {
+            for (var i = 1; i < arguments.length; i++) {
+                var src = arguments[i];
+                for (var prop in src) {
+                    if (src.hasOwnProperty(prop)) {
+                        if (src[prop] instanceof Array) {
+                            dest[prop] = [];
+                            ns.extendDeep(dest[prop], src[prop]);
+                        }
+                        else if (src[prop] instanceof Object) {
+                            dest[prop] = {};
+                            ns.extendDeep(dest[prop], src[prop]);
+                        }
+                        else {
+                            dest[prop] = src[prop];
+                        }
+                    }
+                }
+            }
+        },
+
+        randomInt: function(n) {
+            return Math.floor(Math.random() * n);
+        },
+
+        strip: function(s) {
+            return (s || "").replace(/^\s+|\s+$/g, "");
+        },
+
+        /* Javascript Enumeration - build an object whose properties are
+         mapped to successive integers. Also allow setting specific values
+         by passing integers instead of strings. e.g. new ns.Enum("a", "b",
+         "c", 5, "d") -> {a:0, b:1, c:2, d:5} */
+        Enum: function(args) {
+            var j = 0;
+            for (var i = 0; i < arguments.length; i++) {
+                if (typeof arguments[i] == "string") {
+                    this[arguments[i]] = j++;
+                }
+                else {
+                    j = arguments[i];
+                }
+            }
+        },
+
+        /* Return new object with just the listed properties "projected"
+         into the new object */
+        project: function(obj, asProps) {
+            var objT = {};
+            for (var i = 0; i < asProps.length; i++) {
+                objT[asProps[i]] = obj[asProps[i]];
+            }
+            return objT;
+        },
+
+        /* Sort elements and remove duplicates from array (modified in place) */
+        uniqueArray: function(a) {
+            if (!a) {
+                return;
+            }
+            a.sort();
+            for (var i = 1; i < a.length; i++) {
+                if (a[i - 1] == a[i]) {
+                    a.splice(i, 1);
+                }
+            }
+        },
+
+        map: function(a, fn) {
+            var aRes = [];
+            for (var i = 0; i < a.length; i++) {
+                aRes.push(fn(a[i]));
+            }
+            return aRes;
+        },
+
+        filter: function(a, fn) {
+            var aRes = [];
+            for (var i = 0; i < a.length; i++) {
+                if (fn(a[i])) {
+                    aRes.push(a[i]);
+                }
+            }
+            return aRes;
+        },
+
+        reduce: function(a, fn) {
+            if (a.length < 2) {
+                return a[0];
+            }
+            var res = a[0];
+            for (var i = 1; i < a.length - 1; i++) {
+                res = fn(res, a[i]);
+            }
+            return res;
+        }
+    });
+
+
+    //--------------------------------------------------------------------------
+    // Fast string concatenation buffer
+    //--------------------------------------------------------------------------
+    ns.StBuf = function() {
+        this.rgst = [];
+        this.append.apply(this, arguments);
+    };
+
+    util.extendObject(ns.StBuf.prototype, {
+        append: function() {
+            for (var ist = 0; ist < arguments.length; ist++) {
+                this.rgst.push(arguments[ist].toString());
+            }
+            return this;
+        },
+
+        clear: function() {
+            this.rgst = [];
+        },
+
+        toString: function() {
+            return this.rgst.join("");
+        }
+    }); // ns.StBuf
+
+
+}); // startpad.base
 /* Begin file: misc.js */
 namespace.lookup("com.pageforest.misc").define(function(ns) {
 
@@ -291,3 +487,172 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
     }}); // ns
 
 }); // com.pageforest.cookies
+/* Begin file: client.js */
+/*
+  client.js - Pageforest client api for sign in, save, load, and url
+  management.
+
+  Requires jQuery.
+
+  TODO: This client assumes the app is hosted at appid.pageforest.com.
+  It needs to be modified to support remote hosting and local filesystem
+  testing.
+ */
+namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
+    var cookies = namespace.lookup('com.pageforest.cookies');
+    var base = namespace.lookup('org.startpad.base');
+
+    var pollInterval = 500;
+    var states = new base.Enum('clean', 'dirty', 'loading', 'saving');
+
+    // The application calls Client, and implements the following methods:
+    // app.loaded(jsonDocument) - Called when a new document is loaded
+    // app.saved() - successfully saved
+    // app.error(errorMessage) - Called when we get an error reading or
+    //     writing a document (optional).
+    // app.userChanged(username) - Called when the user signs in or signs out
+    //     ('anonymous').
+    function Client(app) {
+        this.app = app;
+
+        // TODO: Support remote and local filesytem hosting.
+        var dot = location.host.indexOf('.');
+        this.appid = location.host.substr(0, dot);
+        this.wwwHost = 'www' + location.host.substr(dot);
+
+        this.lastHash = '';
+        this.state = states.clean;
+        this.username = undefined;
+
+        var www = "www" + location.host.substr(dot);
+
+        // REVIEW: When we support multiple clients per page, we can
+        // combine all the poll functions into a shared one.
+        setInterval(this.poll.fnMethod(this), pollInterval);
+
+        // Catch window unload if the user tries to close an unsaved window
+        $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
+    }
+
+    Client.methods({
+        // Load a document
+        load: function (docid) {
+            // REVIEW: What to do if already in loading or saving state?
+            this.state = states.loading;
+            this.docid = docid;
+            $.ajax({
+                dataType: 'json',
+                url: this.host + '/docs/' + docid,
+                error: this.errorHandler.fnMethod(this),
+                success: function (document, textStatus, xmlhttp) {
+                    this.state = states.idle;
+                    this.app.loaded(document);
+                }.fnMethod(this)
+            });
+        },
+
+        save: function (json, docid) {
+            if (docid != undefined) {
+                this.docid = docid;
+            }
+            this.state = states.saving;
+
+            // TODO: If this is a first save, generate a default docid
+            // using username_N pattern.
+            if (!json.readers) {
+                json.readers = ['public'];
+            }
+            var data = JSON.stringify(json);
+            $.ajax({
+                type: 'PUT',
+                url: '/docs/' + this.docid,
+                data: data,
+                error: this.errorHandler.fnMethod(this),
+                success: function(data) {
+                    location.hash = this.docid;
+                    this.state = states.clean;
+                    if (this.app.saved) {
+                        this.app.saved();
+                    }
+                }.fnMethod(this)
+            });
+        },
+
+        errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            if (this.app.error) {
+                this.app.error(textStatus);
+            }
+            else {
+                alert(textStatus);
+            }
+        },
+
+        makeDirty: function(fDirty) {
+            if (fDirty == undefined) {
+                fDirty = true;
+            }
+            // REVIEW: What if we are loading or saving? Does this
+            // canel a load?
+            this.state = fDirty ? states.dirty : states.clean;
+        },
+
+        // The user is about to close the page - we want to alert the
+        // user if he might lose changes.
+        beforeUnload: function(evt) {
+            if (this.state != states.clean) {
+                evt.returnValue = "You will lose your changes if you leave " +
+                    "the window without saving.";
+                return evt.returnValue;
+            }
+        },
+
+        // Periodically poll for changes in the URL and state of user sign-in
+        // Could start loading a new document
+        // TODO: If the document is dirty, we don't want to overwrite it
+        // without getting permission?
+        poll: function () {
+            if (this.lastHash != location.hash) {
+                this.lastHash = location.hash;
+                this.load(location.hash.substr(1));
+            }
+            this.checkUsername();
+        },
+
+        // See if the user sign-in state has changed by polling the cookie
+        // TODO: Need to do a JSONP call to get the username if not hosting
+        // on appid.pageforest.com.
+        checkUsername: function () {
+            var sessionkey = cookies.getCookie('sessionkey');
+            var usernameLast = this.username;
+
+            if (sessionkey !== undefined) {
+                this.username = sessionkey.split('/')[1];
+            }
+            else {
+                this.username = undefined;
+            }
+            if (this.app.userChanged && usernameLast != this.username) {
+                this.app.userChanged(this.username || 'anonymous');
+            }
+        },
+
+        // Direct the user to the Pageforest sign-in page.
+        signIn: function () {
+            window.open(this.wwwHost + "/sign-in/scratch/", '_blank');
+        },
+
+        // Expire the session key to remove the sign-in for the user.
+        signOut: function () {
+            // checkUsername will update the user state in a jiffy
+            document.cookie = 'sessionkey=expired; path=/; expires=' +
+                'Sat, 01 Jan 2000 00:00:00 GMT';
+        }
+
+    });
+
+    // Export the Client class.
+    ns.extend({
+        Client: Client
+    });
+
+});
