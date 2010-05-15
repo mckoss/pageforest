@@ -1,39 +1,57 @@
+import random
+import string
 from datetime import datetime, timedelta
 
 from google.appengine.ext import db
 
 from utils.shortcuts import render_to_response
-from utils.crypto import BASE62
 
 from dashboard.models import StatsHour, StatsDay, StatsMonth
+
+ENCODING = string.uppercase + string.lowercase + string.digits + '.-'
+
+
+def smooth(values):
+    for i in range(len(values)):
+        avg = int(sum([values[i - j] for j in range(10)]) / 10)
+        yield max(0, avg)
 
 
 def sparkline(hours, property_name):
     values = []
     for hour in hours:
         if hour is None:
-            values.append(None)
+            values.append(random.randint(-100, 200))
         else:
             values.append(getattr(hour, property_name, None))
-    maximum = max(10, max(values))
-    scale_percent = 6100 / maximum  # Rescale for single-letter encoding.
+    values = list(smooth(values))
+    maximum = max(values)
+    divider = max(10, maximum)
     chars = []
+    radix = len(ENCODING)
     for index in range(len(values)):
-        if values[index] is None:
-            chars.append('A')
-        else:
-            chars.append(BASE62[values[index] * scale_percent / 100])
-    return ''.join(chars)
+        value = values[index] or 0
+        value = value * 4095 / divider
+        chars.append(ENCODING[value / radix] +
+                     ENCODING[value % radix])
+    return ''.join(chars), values.index(maximum)
 
 
 def chart(hours, property_name, color):
+    (chars, max_index) = sparkline(hours, property_name)
+    title_vertical = (ENCODING.index(chars[0]) * len(ENCODING) +
+                      ENCODING.index(chars[1]))
     return '&'.join([
             'http://chart.apis.google.com/chart?cht=ls',
-            'chs=400x40',       # Size in pixels.
+            'chs=480x100',      # Size in pixels.
             'chf=bg,s,000000',  # Black background.
             'chco=' + color,    # Foreground.
             'chls=3',           # Line width in pixels.
-            'chd=s:' + sparkline(hours, property_name),
+            'chma=0,0,0,20',   # Left, right, top, bottom margins.
+            'chm=tNew+%s,%s,0,0,16,,t::%s|N*f0*,%s,0,%d,16,,:10' % (
+                property_name, color, -title_vertical * 80 / 4095 - 2,
+                color, max_index),
+            'chd=e:' + chars,
             ])
 
 
@@ -51,7 +69,7 @@ def dashboard(request):
     hours = db.get(keys)
     dictionary = {
         'users_chart': chart(hours, 'users', '00FF00'),
-        'apps_chart': chart(hours, 'apps', '0000FF'),
+        'apps_chart': chart(hours, 'apps', '0080FF'),
         'docs_chart': chart(hours, 'docs', 'FFFF00'),
         'blobs_chart': chart(hours, 'blobs', 'FF0000'),
         }

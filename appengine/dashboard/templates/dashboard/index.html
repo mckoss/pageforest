@@ -8,39 +8,23 @@
 body {
   background-color: black;
   color: white;
+  padding: 0;
+  margin: 0;
 }
-th { text-align: left; }
-td.number { text-align: center; }
+p {
+  margin-top: 0;
+}
 </style>
 {% endblock %}
 
 
 {% block content %}
-<table>
-<tr>
-  <th style="color:#00FF00; width:60px">New users</th>
-  <td><img src="{{ users_chart }}" /></td>
-</tr>
-<tr>
-  <th style="color:#0000FF">New apps</th>
-  <td><img src="{{ apps_chart }}" /></td>
-</tr>
-<tr>
-  <th style="color:#FFFF00">New docs</th>
-  <td><img src="{{ docs_chart }}" /></td>
-</tr>
-<tr>
-  <th style="color:#FF0000">New blobs</th>
-  <td><img src="{{ blobs_chart }}" /></td>
-</tr>
-</table>
+<p>
+<img src="{{ users_chart }}" /><br />
+<img src="{{ apps_chart }}" /><br />
+<img src="{{ docs_chart }}" /><br />
+<img src="{{ blobs_chart }}" />
+</p>
 
-<table>
-<tr><th>Environment</th><th>Value</th></tr>
-<tr><td>APPLICATION_ID</td><td>{{ APPLICATION_ID }}</td></tr>
-<tr><td>CURRENT_VERSION_ID</td><td>{{ CURRENT_VERSION_ID }}</td></tr>
-<tr><td>SERVER_SOFTWARE</td><td>{{ SERVER_SOFTWARE }}</td></tr>
-<tr><td>AUTH_DOMAIN</td><td>{{ AUTH_DOMAIN }}</td></tr>
-<tr><td></td><td></td></tr>
-</table>
+<p>Version {{ CURRENT_VERSION_ID }} on {{ SERVER_SOFTWARE }}</p>
 {% endblock content %}
