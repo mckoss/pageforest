@@ -146,28 +146,4 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }); // ns.StBuf
 
 
-    //--------------------------------------------------------------------------
-    // Some extensions to built-in JavaScript objects (sorry!)
-    //--------------------------------------------------------------------------
-    // Create a closure for a method call - like protoype.bind()
-    Function.prototype.fnMethod = function(obj) {
-        var _fn = this;
-
-        return function() {
-            return _fn.apply(obj, arguments);
-        };
-    };
-
-    // Create a closure with appended parameters to the function call.
-    Function.prototype.fnArgs = function() {
-        var _fn = this;
-        var _args = util.copyArray(arguments);
-
-        return function() {
-            var args = util.copyArray(arguments).concat(_args);
-            // REVIEW: Is this intermediate self variable needed?
-            var self = this;
-            return _fn.apply(self, args);
-        };
-    };
 }); // startpad.base

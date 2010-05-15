@@ -4,57 +4,6 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
 
 ns.addTests = function (ts) {
 
-ts.addTest("fnMethod", function (ut)
-{
-    function Base()
-    {
-        this.x = 7;
-    }
-
-    Base.prototype.Double = function()
-    {
-        this.x *= 2;
-    };
-
-    Base.prototype.Mult = function(x)
-    {
-        this.x *= x;
-    };
-
-    var b = new Base();
-    var fn = b.Double.fnMethod(b);
-    fn();
-    ut.assertEq(b.x, 14);
-
-    var fn2 = b.Mult.fnMethod(b);
-    fn2(5);
-    ut.assertEq(b.x, 14*5);
-
-    var fn5 = b.Mult.fnMethod(b).fnArgs(4);
-    fn5();
-    ut.assertEq(b.x, 14*5*4);
-
-    // Doesn't matter which order Fn-augmentors are called in!
-    var fn6 = b.Mult.fnArgs(3).fnMethod(b);
-    fn6();
-    ut.assertEq(b.x, 14*5*4*3);
-
-    function TestfnArgs(a,b,c)
-    {
-        ut.assertEq(arguments.length, 3);
-        ut.assertEq(a, 1);
-        ut.assertEq(b, 2);
-        ut.assertEq(c, 3);
-    }
-
-    var fn7 = TestfnArgs.fnArgs(1,2,3);
-    fn7();
-
-    // Each fnArgs places it's arguments after it's predecessor.
-    var fn8 = TestfnArgs.fnArgs(3).fnArgs(2);
-    fn8(1);
-});
-
 ts.addTest("String Buffer", function(ut)
 {
     var stb1 = new base.StBuf();
