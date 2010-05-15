@@ -17,11 +17,6 @@ $(document).ready(scratch.init);
 </head>
 <body>
 
-<p>Document ID:<br />
-<input type="text" id="docid" name="name" value="mydoc" />
-<input type="button" onclick="scratch.app.save()" value="Save" />
-</p>
-
 <p>Title:<br />
 <input type="text" id="title" name="title" value="My Document" />
 </p>
@@ -34,8 +29,12 @@ You can store a text blob in each document.
 
 <p>Current username: <span id="username"></span></p>
 <p>
-  <input type="button" id="signin" onclick="scratch.app.client.sigIn()" value="Sign in" />
+  <input type="button" id="signin" onclick="scratch.app.client.signIn()" value="Sign in" />
   <input type="button" id="signout" onclick="scratch.app.client.signOut()" value="Sign out" />
+</p>
+
+<p>
+<input type="button" onclick="scratch.app.save()" value="Save" />
 </p>
 
 

@@ -7,28 +7,30 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
 
     function init() {
         ns.app = new App();
+        ns.app.client.setLogging();
     }
 
     App.methods({
         loaded: function (json) {
             $('#title').val(json.title);
             $('#blob').val(json.blob);
-            $('#docid').val(this.client.docid);
-            this.status("Loaded");
+            this.status("Loaded.");
         },
 
         saved: function () {
             this.status("Saved.");
         },
 
-        error: function (errorMessage) {
-            this.status(errorMessage);
+        error: function (status, message) {
+            this.status(status + ": " + message);
         },
 
         status: function (message) {
             $('#results').prepend('<div>' + message +
-                                  '(' + this.client.state + ')' +
-                                  '</div>');
+              '(' +
+              client.Client.states.getName(this.client.state) +
+              ')' +
+              '</div>');
         },
 
         save: function () {
@@ -36,7 +38,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
                 'title': $('#title').val(),
                 'blob': $('#blob').val()
                 };
-            this.client.save(json, $('#docid'));
+            this.client.save(json);
         },
 
         userChanged: function (username) {
