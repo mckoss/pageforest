@@ -505,7 +505,7 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
             if (ns.appId)
                 $(".have_app").show();
             $(".want_app").hide();
-            setTimeout(closeFinal, 5000);
+            setTimeout(closeFinal, 2000);
         }
 
     }); // ns.extend
