@@ -256,6 +256,6 @@ MEDIA_FILES = {
 LIB_FILES = {
     'js': {
         'json2': ['json2'],
-        'utils': ['namespace', 'misc', 'random', 'cookies'],
+        'utils': ['namespace', 'base', 'misc', 'random', 'cookies', 'client'],
         },
     }
