@@ -21,10 +21,10 @@ def sparkline(hours, property_name):
     values = []
     for hour in hours:
         if hour is None:
-            values.append(random.randint(-100, 200))
+            values.append(0)
         else:
             values.append(getattr(hour, property_name, None))
-    values = list(smooth(values))
+    # values = list(smooth(values))
     maximum = max(values)
     divider = max(10, maximum)
     chars = []
@@ -39,18 +39,13 @@ def sparkline(hours, property_name):
 
 def chart(hours, property_name, color):
     (chars, max_index) = sparkline(hours, property_name)
-    title_vertical = (ENCODING.index(chars[0]) * len(ENCODING) +
-                      ENCODING.index(chars[1]))
     return '&'.join([
             'http://chart.apis.google.com/chart?cht=ls',
-            'chs=480x100',      # Size in pixels.
+            'chs=460x80',      # Size in pixels.
             'chf=bg,s,000000',  # Black background.
             'chco=' + color,    # Foreground.
             'chls=3',           # Line width in pixels.
-            'chma=0,0,0,20',   # Left, right, top, bottom margins.
-            'chm=tNew+%s,%s,0,0,16,,t::%s|N*f0*,%s,0,%d,16,,:10' % (
-                property_name, color, -title_vertical * 80 / 4095 - 2,
-                color, max_index),
+            'chm=N*f0*,%s,0,%d,16,,:10' % (color, max_index),
             'chd=e:' + chars,
             ])
 
