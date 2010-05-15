@@ -23,6 +23,20 @@
    from the sources into the destination (properties in following objects
    override those from the preceding objects).
 
+   util.copyArray(a) - makes a (shallow) copy of an array or arguments list
+   and returns an Array object.
+
+   Extensions to the Function object:
+
+   Class.methods({
+   f1: function () {...},
+   f2: function () {...}
+   ));
+
+   f1.fnMethod(obj, args) - closure to call obj.f1(args);
+
+   f1.fnArgs(args) - closure to add more arguments to a function
+
    *** Class Namespace ***
 
    Methods:
@@ -139,8 +153,41 @@ var namespace = (function() {
         return Array.prototype.slice.call(arg, 0);
     }
 
+    // Inspired by JavaScript: The Good Parts, p33.
+    // Usage:
+    // Class.methods({
+    // f1: function() {...},
+    // f2: function() {...}
+    // });
+    Function.prototype.methods = function (obj) {
+        extendObject(this.prototype, obj);
+    };
+
+    Function.methods({
+        // Closure for a method call - like protoype.bind()
+        fnMethod: function (obj) {
+            var _fn = this;
+            return function() {
+                return _fn.apply(obj, arguments);
+            };
+        },
+
+        // Closure with appended parameters to the function call.
+        fnArgs: function () {
+            var _fn = this;
+            var _args = copyArray(arguments);
+
+            return function() {
+                var args = copyArray(arguments).concat(_args);
+                // REVIEW: Is this intermediate self variable needed?
+                var self = this;
+                return _fn.apply(self, args);
+            };
+        }
+    });
+
     // Functions added to every Namespace.
-    extendObject(Namespace.prototype, {
+    Namespace.methods({
         // Call a function with the namespace as a parameter - forming
         // a closure for the namespace definition.
         define: function(callback) {
@@ -180,7 +227,6 @@ var namespace = (function() {
         }
     });
 
-    // Functions added to the top level namespace (only).
     extendObject(namespaceT, {
         // Lookup a global namespace object, creating it (and it's parents)
         // as necessary.
