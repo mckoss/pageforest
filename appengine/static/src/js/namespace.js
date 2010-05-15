@@ -162,27 +162,28 @@ var namespace = (function() {
         extendObject(this.prototype, obj);
     };
 
-    // Closure for a method call - like protoype.bind()
-    Function.prototype.fnMethod = function(obj) {
-        var _fn = this;
+    Function.methods({
+        // Closure for a method call - like protoype.bind()
+        fnMethod: function (obj) {
+            var _fn = this;
+            return function() {
+                return _fn.apply(obj, arguments);
+            };
+        },
 
-        return function() {
-            return _fn.apply(obj, arguments);
-        };
-    };
+        // Closure with appended parameters to the function call.
+        fnArgs: function () {
+            var _fn = this;
+            var _args = copyArray(arguments);
 
-    // Closure with appended parameters to the function call.
-    Function.prototype.fnArgs = function() {
-        var _fn = this;
-        var _args = copyArray(arguments);
-
-        return function() {
-            var args = copyArray(arguments).concat(_args);
-            // REVIEW: Is this intermediate self variable needed?
-            var self = this;
-            return _fn.apply(self, args);
-        };
-    };
+            return function() {
+                var args = copyArray(arguments).concat(_args);
+                // REVIEW: Is this intermediate self variable needed?
+                var self = this;
+                return _fn.apply(self, args);
+            };
+        }
+    });
 
     // Functions added to every Namespace.
     Namespace.methods({
@@ -225,7 +226,6 @@ var namespace = (function() {
         }
     });
 
-    // Functions added to the top level namespace (only).
     extendObject(namespaceT, {
         // Lookup a global namespace object, creating it (and it's parents)
         // as necessary.
