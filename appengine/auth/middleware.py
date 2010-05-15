@@ -3,7 +3,8 @@ import re
 from django.conf import settings
 from django.http import HttpResponseForbidden
 
-from auth.models import User, SignatureError
+from auth import SignatureError
+from auth.models import User
 from apps.middleware import app_id_from_trusted_domain
 
 APP_JSON_REGEX = re.compile(r'^/apps/(%s)/app.json/$' % settings.APP_ID_REGEX)

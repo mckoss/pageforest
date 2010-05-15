@@ -6,20 +6,13 @@ from google.appengine.api import memcache
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
 
+from auth import AuthError, SignatureError
 from apps.models import App
 
 import settings
 
 CHALLENGE_EXPIRATION = 60  # Seconds.
 CHALLENGE_CACHE_PREFIX = 'CR1~'
-
-
-class SignatureError(Exception):
-    pass
-
-
-class AuthorizationError(Exception):
-    pass
 
 
 class User(db.Expando, Timestamped, Migratable, Cacheable):
@@ -73,8 +66,7 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
     def verify_signature(cls, signature, app, remote_ip):
         """
         Check a challenge signature and return the user. If the
-        signature is invalid, raise SignatureError with explanation
-        message.
+        signature is invalid, raise SignatureError with explanation.
         """
         parts = signature.split(crypto.SEPARATOR)
         if len(parts) != 6:
@@ -159,9 +151,10 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         if action == App.create:
             # Each user must complete email verification before creating apps.
             if self.email_verified is None:
-                raise AuthorizationError("Please verify your email address.")
+                raise AuthError("Please verify your email address.")
             # Each user can only create 10 apps.
             count = App.all().filter('owner', self.get_username()).count()
             if count >= 10:
-                raise AuthorizationError(
+                raise AuthError(
                     "You have already created %d apps." % count)
+        return True

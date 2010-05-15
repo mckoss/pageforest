@@ -7,7 +7,7 @@ from utils.shortcuts import render_to_response
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 
-from auth.models import AuthorizationError
+from auth import AuthError
 from auth.middleware import AccessDenied
 from auth.decorators import login_required
 
@@ -82,7 +82,7 @@ def app_json_put(request, app_id):
         # Check app creator permission.
         try:
             request.user.assert_authorized(App.create)
-        except AuthorizationError, error:
+        except AuthError, error:
             return AccessDenied(request, error.message)
         # Create a new App with this app_id.
         app = App.create(app_id, request.user)

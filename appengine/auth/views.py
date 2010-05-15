@@ -19,8 +19,9 @@ from utils.shortcuts import render_to_response
 from utils import crypto
 from utils.http import Http403
 
+from auth import SignatureError
 from auth.forms import RegistrationForm, SignInForm
-from auth.models import User, SignatureError, CHALLENGE_EXPIRATION
+from auth.models import User, CHALLENGE_EXPIRATION
 from auth.middleware import AccessDenied
 
 from apps.models import App
