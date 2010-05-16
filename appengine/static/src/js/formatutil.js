@@ -1,125 +1,112 @@
-global_namespace.define('org.startpad.format-util', function(NS) {
+namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var base = namespace.lookup('org.startpad.base');
 
-NS.extend(NS, {
-// Convert and digits in d to thousand-separated digits
-Thousands: function(d)
-    {
-    var s = d.toString();
-    var sLast = "";
-    while (s != sLast)
-        {
-        sLast = s;
-        s = s.replace(/(\d+)(\d{3})/, "$1,$2");
+    // Thousands separator
+    var comma = ',';
+
+    // Return an integer as a string using a fixed number of digits,
+    // (require a sign if fSign).
+    function fixedDigits(value, digits, fSign) {
+        var s = "";
+        var fNeg = (value < 0);
+        if (digits == undefined) {
+            digits = 0;
         }
-    return s;
-    },
+        if (fNeg) {
+            value = -value;
+        }
+        value = Math.floor(value);
 
-// Converts to lowercase, removes non-alpha chars and converts spaces to hyphens"
-Slugify: function(s)
-    {
-    s = s.Trim().toLowerCase();
-    s = s.replace(/[^\w\s-]/g, '-')
-        .replace(/[-\s]+/g, '-')
-        .replace(/(^-+)|(-+$)/g, '');
-    return s;
-    },
-
-FormatNumber: function(val, digits)
-    {
-    var nInt = Math.floor(val);
-    var sInt = nInt.toString();
-    var sLast = "";
-    while (sInt != sLast)
-        {
-        sLast = sInt;
-        sInt = sInt.replace(/(\d+)(\d{3})/, "$1,$2");
+        for (; digits > 0; digits--) {
+            s = (value % 10) + s;
+            value = Math.floor(value / 10);
         }
 
-    if (digits && digits > 0)
-        {
-        var nFrac = val - nInt;
-        nFrac = Math.floor(nFrac * Math.pow(10,digits));
-        sFrac = "." + SDigits(nFrac, digits);
-        }
-    else
-        sFrac = "";
-
-    return sInt + sFrac;
-    },
-
-// Return an integer as a string using a fixed number of digits, c. (require a sign with fSign).
-SDigits: function(val, c, fSign)
-    {
-    var s = "";
-    var fNeg = (val < 0);
-
-    if (c == undefined)
-        c = 0;
-
-    if (fNeg)
-        val = -val;
-
-    val = Math.floor(val);
-
-    for (; c > 0; c--)
-        {
-        s = (val%10) + s;
-        val = Math.floor(val/10);
+        if (fSign || fNeg) {
+            s = (fNeg ? "-" : "+") + s;
         }
 
-    if (fSign || fNeg)
-        s = (fNeg ? "-" : "+") + s;
-
-    return s;
-    },
-
-EscapeHTML: function(s)
-    {
-    s = s.toString();
-    s = s.replace(/&/g, '&amp;');
-    s = s.replace(/</g, '&lt;');
-    s = s.replace(/>/g, '&gt;');
-    s = s.replace(/\"/g, '&quot;');
-    s = s.replace(/'/g, '&#39;');
-    return s;
-    },
-
-// Replace keys in dictionary of for {key} in the text string.
-ReplaceKeys: function(st, keys)
-    {
-    for (var key in keys)
-        st = st.StReplace("{" + key + "}", keys[key]);
-    st = st.replace(/\{[^\{\}]*\}/g, "");
-    return st;
+        return s;
     }
 
-});
-
-//--------------------------------------------------------------------------
-// Some extensions to built-in JavaScript objects (sorry!)
-//--------------------------------------------------------------------------
-
-String.prototype.StReplace = function(stPat, stRep)
-{
-
-    var st = "";
-    if (stRep == undefined)
-        stRep = "";
-    else
-        stRep = stRep.toString();
-
-    var ich = 0;
-    var ichFind = this.indexOf(stPat, 0);
-
-    while (ichFind >= 0)
-        {
-        st += this.substring(ich, ichFind) + stRep;
-        ich = ichFind + stPat.length;
-        ichFind = this.indexOf(stPat, ich);
+    // Return integer as string with thousand separators with optional
+    // decimal digits.
+    function thousands(value, digits) {
+        var integerPart = Math.floor(value);
+        var s = value.toString();
+        var sLast = "";
+        while (s != sLast) {
+            sLast = s;
+            s = s.replace(/(\d+)(\d{3})/, "$1" + comma + "$2");
         }
-    st += this.substring(ich);
 
-    return st;
-};
+        var fractionString = "";
+        if (digits && digits > 0) {
+            var fraction = value - integerPart;
+            fraction = Math.floor(fraction * Math.pow(10, digits));
+            fractionString = "." + fixedDigits(fraction, digits);
+        }
+        return s + fractionString;
+    }
 
-}); // startpad.format-util
+    // Converts to lowercase, removes non-alpha chars and converts
+    // spaces to hyphens
+    function slugify(s) {
+        s = base.strip(s).toLowerCase();
+        s = s.replace(/[^\w\s\-]/g, '-').
+              replace(/[\-\s]+/g, '-').
+              replace(/(^-+)|(-+$)/g, '');
+        return s;
+    }
+
+    function escapeHTML(s) {
+        s = s.toString();
+        s = s.replace(/&/g, '&amp;');
+        s = s.replace(/</g, '&lt;');
+        s = s.replace(/>/g, '&gt;');
+        s = s.replace(/\"/g, '&quot;');
+        s = s.replace(/'/g, '&#39;');
+        return s;
+    }
+
+    // Replace all instances of pattern, with replacement in string.
+    function replaceString(string, pattern, replacement) {
+        var output = "";
+        if (replacement == undefined) {
+            replacement = "";
+        }
+        else {
+            replacement = replacement.toString();
+        }
+        var ich = 0;
+        var ichFind = string.indexOf(pattern, 0);
+        while (ichFind >= 0) {
+            output += string.substring(ich, ichFind) + replacement;
+            ich = ichFind + pattern.length;
+            ichFind = string.indexOf(pattern, ich);
+        }
+        output += string.substring(ich);
+        return output;
+    }
+
+    // Replace keys in dictionary of for {key} in the text string.
+    function replaceKeys(st, keys) {
+        for (var key in keys) {
+            if (keys.hasOwnProperty(key)) {
+                st = replaceString(st, "{" + key + "}", keys[key]);
+            }
+        }
+        // remove unused keys
+        st = st.replace(/\{[^\{\}]*\}/g, "");
+        return st;
+    }
+
+    ns.extend({
+        fixedDigits: fixedDigits,
+        thousands: thousands,
+        slugify: slugify,
+        escapeHTML: escapeHTML,
+        replaceKeys: replaceKeys,
+        replaceString: replaceString
+    });
+}); // org.startpad.format
