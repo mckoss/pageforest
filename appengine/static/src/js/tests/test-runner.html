@@ -2,66 +2,43 @@
 
 <head>
 <title>Unit Test Runner</title>
-<!-- REVIEW: Automatically load all file dependencies based on the test. -->
 <script src="../namespace.js"></script>
+<script src="modules.js"></script>
+<script src="../unit.js"></script>
 <script src="../base.js"></script>
 <script src="../timer.js"></script>
-<script src="../vector.js"></script>
-<script src="../unit.js"></script>
 <script src="../loader.js"></script>
 </head>
 
-<body>
+<body onload="runner.run();">
 <h1 id="title"><script>document.write(document.title);</script></h1>
 <script>
-var ut = namespace.lookup('org.startpad.unit');
-var ts = new ut.TestSuite();
+var unit = namespace.lookup('org.startpad.unit');
+var modules = namespace.lookup('com.pageforest.modules');
+var runner = namespace.lookup('com.pageforest.test.runner.html');
+runner.define(function (ns) {
+    ns.run = function () {
+        var target = location.hash;
+        if (!target) {
+            target = 'all';
+        }
+        else {
+            target = target.substr(1);
+        }
 
-// TODO: Move most of this code to unit test module proper.
-(function() {
-    var loader = namespace.lookup('org.startpad.loader');
-
-    var tests = {
-        base: {namespace: 'org.startpad.base.test'},
-        unit: {namespace: 'org.startpad.unit.test'},
-        timer: {namespace: 'org.startpad.timer.test'},
-        vector: {namespace: 'org.startpad.vector.test'},
-        namespace: {namespace: 'org.startpad.namespace.test'}
-    };
-
-    var target = location.hash;
-    if (!target) {
-        alert("Missing test name after # in url.");
-        return;
-    }
-
-    target = target.substr(1);
-
-    if (!tests[target]) {
-        alert("No test defined for " + target);
-        return;
-    }
-
-    document.getElementById('title').innerHTML += " - " + target;
-
-    var moduleUrl = 'test-' + target + '.js';
-    loader.loadScript(moduleUrl, function() {
-        testModule = namespace.lookup(tests[target].namespace);
-
-        if (!testModule.addTests) {
-            alert("Either module " + moduleUrl + " did not load or " +
-                  "no addTests() function was found.");
+        if (target != 'all' && !modules.locations[target + '.test']) {
+            alert("No test defined for " + target);
             return;
         }
 
-        testModule.addTests(ts);
-
-        ts.run();
-        ts.report();
-    });
-}()); // function
-
-ts.dwOutputDiv();
+        unit.runTest(target, modules.locations);
+    };
+});
 </script>
+
+<div id="divUnit" style="font-family: Courier;">
+<h2>Unit Test Output</h2>
+</div>
+
 </body>
 </html>
