@@ -19,7 +19,8 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                          [-100, '-100'],
                          [1000, '1,000'],
                          [-1000, '-1,000'],
-                         [1000000, '1,000,000']];
+                         [1000000, '1,000,000']
+                        ];
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
                 ut.assertEq(format.thousands(test[0]), test[1]);
@@ -28,11 +29,13 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
         });
 
         ts.addTest("fixedDigits", function (ut) {
-            ut.assertEq(format.fixedDigits(1,2), "01");
-            ut.assertEq(format.fixedDigits(11, 10), "0000000011", "long numbers");
+            ut.assertEq(format.fixedDigits(1, 2), "01");
+            ut.assertEq(format.fixedDigits(11, 10), "0000000011",
+                        "long numbers");
             ut.assertEq(format.fixedDigits(123, 2), "23", "overflow");
             ut.assertEq(format.fixedDigits(12.34, 2), "12", "fractions");
-            ut.assertEq(format.fixedDigits(-1, 2), "-01", "negative numbers");
+            ut.assertEq(format.fixedDigits(-1, 2), "-01",
+                        "negative numbers");
         });
 
         ts.addTest("slugify", function (ut) {
@@ -41,7 +44,8 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                          ["DON'T YELL", "don-t-yell"],
                          ["   mr. doo_little  ", "mr-doo-little"],
                          ["keep 5 numb3rs", "keep-5-numb3rs"],
-                         ["no!crazy!!:\\\puncuation's?", "no-crazy-puncuation-s"]
+                         ["no!crazy!!:\\\\puncuation's?",
+                          "no-crazy-puncuation-s"]
                         ];
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
@@ -49,38 +53,52 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             }
         });
 
+        ts.addTest("escapeHTML", function (ut) {
+            var tests = [["<body><h1>This is text.</h1></body>",
+             "&lt;body&gt;&lt;h1&gt;This is text.&lt;/h1&gt;&lt;/body&gt;"],
+                         ['What about "quotes\'s"?',
+                          "What about &quot;quotes&#39;s&quot;?"],
+                         ["strings & things", "strings &amp; things"],
+                         ["&amp;lth1&ampgt", "&amp;amp;lth1&amp;ampgt"]
+                        ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(format.escapeHTML(test[0]), test[1]);
+            }
+        });
+
         ts.addTest("ISO 8601 Formatting", function(ut)
         {
             var aTest = [
-                [[1960, 8, 31], [0,0,0,0], "1960-08-31"],
-                [[1960, 8, 31], [7,8], "1960-08-31T07:08Z"],
-                [[1960, 8, 31], [7,8,9,333], "1960-08-31T07:08:09.333Z"]
+                [[1960, 8, 31], [0, 0, 0, 0], "1960-08-31"],
+                [[1960, 8, 31], [7, 8], "1960-08-31T07:08Z"],
+                [[1960, 8, 31], [7, 8, 9, 333], "1960-08-31T07:08:09.333Z"]
             ];
 
             var dt = new Date();
             ut.assertEq(dt.getTime(), dt.valueOf(), "Javascript assumption");
             var sISO = format.iso(dt);
-            var sTZ = format.fixedDigits(-dt.getTimezoneOffset()/60, 2);
-            ut.assertEq(sISO.substring(sISO.length-3), sTZ, "Timezone");
+            var sTZ = format.fixedDigits(-dt.getTimezoneOffset() / 60, 2);
+            ut.assertEq(sISO.substring(sISO.length - 3), sTZ, "Timezone");
 
             // Fix dt as a UTC date/time
             dt.__tz = 0;
             sISO = format.iso(dt);
-            ut.assertEq(sISO.substring(sISO.length-1), "Z", "Timezone - fixed at UTC: " + sISO);
-            for (var i = 0; i < aTest.length; i++)
-                {
+            ut.assertEq(sISO.substring(sISO.length - 1), "Z",
+                        "Timezone - fixed at UTC: " + sISO);
+            for (var i = 0; i < aTest.length; i++) {
                 ut.Trace(i);
                 var aDate = aTest[i][0];
                 aDate[1]--;
                 var aTime = aTest[i][1];
-                var sISO = aTest[i][2];
+                sISO = aTest[i][2];
                 dt.setUTCFullYear.apply(dt, aDate);
                 dt.setUTCHours.apply(dt, aTime);
                 ut.assertEq(format.iso(dt), sISO);
-                }
+            }
 
             dt.setUTCFullYear(1995, 0, 15);
-            dt.setUTCHours(0,0,0,0);
+            dt.setUTCHours(0, 0, 0, 0);
             ut.assertEq(format.iso(dt, true), "1995-01-15T00:00Z");
         }).enable(false);
 
@@ -89,34 +107,35 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             var dt = new Date();
 
             var aTest = [
-            // ISO, UTC: [Y,M,D], [h,m,s,ms], tz
-            ["1984-01-01", [1984, 1, 1], [0,0,0,0], 0],
-            ["", undefined],
-            ["1984", undefined],
-            ["1984-01", undefined],
-            ["1984-01-01T01:02:03.456-07", [1984,1,1], [8,2,3,456], -7],
-            ["1984-01-01T01:02:03.456Z", [1984,1,1], [1,2,3,456], 0],
-            ["19840101T010203.456Z", [1984,1,1], [1,2,3,456], 0],
-            ["19840101 010203.456Z", undefined],
-            ["1984-01-01T01:02:03X456-07", undefined]
+                // ISO, UTC: [Y,M,D], [h,m,s,ms], tz
+                ["1984-01-01", [1984, 1, 1], [0, 0, 0, 0], 0],
+                ["", undefined],
+                ["1984", undefined],
+                ["1984-01", undefined],
+                ["1984-01-01T01:02:03.456-07",
+                 [1984, 1, 1], [8, 2, 3, 456], -7],
+                ["1984-01-01T01:02:03.456Z",
+                 [1984, 1, 1], [1, 2, 3, 456], 0],
+                ["19840101T010203.456Z",
+                 [1984, 1, 1], [1, 2, 3, 456], 0],
+                ["19840101 010203.456Z", undefined],
+                ["1984-01-01T01:02:03X456-07", undefined]
             ];
 
-            for (var i = 0; i < aTest.length; i++)
-                {
+            for (var i = 0; i < aTest.length; i++) {
                 ut.Trace(i);
                 var aDate = aTest[i][1];
-                if (!aDate)
-                    {
+                if (!aDate) {
                     ut.assertEq(format.parseISO(aTest[i][0]), undefined);
                     continue;
-                    }
+                }
                 aDate[1]--;
                 var aTime = aTest[i][2];
                 dt.setUTCFullYear.apply(dt, aDate);
                 dt.setUTCHours.apply(dt, aTime);
                 dt.__tz = aTest[i][3];
                 ut.assertEq(format.parseISO(aTest[i][0]), dt);
-                }
+            }
         }).enable(false);
 
     }; // addTests
