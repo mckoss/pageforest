@@ -6,7 +6,7 @@
 // ts.DWOutputDiv();
 // ts.addTest("Test Name", function(ut) { ... ut.assert() ... });
 // ...
-// ts.Run();
+// ts.Ru(nests);
 // ts.report();
 //
 // Requires: base.js, timer.js
@@ -16,12 +16,25 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var util = namespace.util;
     var timer = namespace.lookup('org.startpad.timer');
     var base = namespace.lookup('org.startpad.base');
+    var loader = namespace.lookup('org.startpad.loader');
 
-    ns.extend({
-        DW: function(st) {
-            document.write(st);
-        }
-    });
+    // Run the selected tests in the browser
+    function runTest(moduleName, locations) {
+        loader.loadNamespace(moduleName + '.test', locations, function () {
+            var ts = new ns.TestSuite();
+            var testModule = namespace.lookup(moduleName + '.test');
+            if (!testModule.addTests) {
+                alert("Either module " + moduleName + " did not load or " +
+                      "no addTests() function was found.");
+                return;
+            }
+
+            testModule.addTests(ts);
+
+            ts.run();
+            ts.report();
+        });
+    }
 
     ns.UnitTest = function(stName, fn) {
         this.stName = stName;
@@ -53,7 +66,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         run: function(ts) {
             var fCaught = false;
-            if (!this.fEnable) return;
+            if (!this.fEnable) {
+                return;
+            }
             this.state = ns.UnitTest.states.running;
             console.log("=== Running test: " + this.stName + " ===");
             if (this.cAsync) {
@@ -560,7 +575,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
 
             if (this.divOut) {
-                this.divOut.appendChild(document.createElement("BR"));
+                this.divOut.appendChild(document.createElement("br"));
                 var txt = document.createElement("span");
                 txt.innerHTML = this.stOut;
                 this.divOut.appendChild(txt);
@@ -696,4 +711,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
         }
     }); // TestSuite
+
+    ns.extend({
+        DW: function(st) {
+            document.write(st);
+        },
+        runTest: runTest
+    });
+
 }); // startpad.unit
