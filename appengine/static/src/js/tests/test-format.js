@@ -15,14 +15,14 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
         });
 
         ts.addTest("thousands", function (ut) {
-            var cases = [[100, '100'],
+            var tests = [[100, '100'],
                          [-100, '-100'],
                          [1000, '1,000'],
                          [-1000, '-1,000'],
                          [1000000, '1,000,000']];
-            for (var i = 0; i < cases.length; i++) {
-                var acase = cases[i];
-                ut.assertEq(format.thousands(acase[0]), acase[1]);
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(format.thousands(test[0]), test[1]);
             }
             ut.assertEq(format.thousands(1000, 2), '1,000.00');
         });
@@ -33,6 +33,20 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ut.assertEq(format.fixedDigits(123, 2), "23", "overflow");
             ut.assertEq(format.fixedDigits(12.34, 2), "12", "fractions");
             ut.assertEq(format.fixedDigits(-1, 2), "-01", "negative numbers");
+        });
+
+        ts.addTest("slugify", function (ut) {
+            var tests = [["hello", "hello"],
+                         ["hello mom", "hello-mom"],
+                         ["DON'T YELL", "don-t-yell"],
+                         ["   mr. doo_little  ", "mr-doo-little"],
+                         ["keep 5 numb3rs", "keep-5-numb3rs"],
+                         ["no!crazy!!:\\\puncuation's?", "no-crazy-puncuation-s"]
+                        ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(format.slugify(test[0]), test[1]);
+            }
         });
 
         ts.addTest("ISO 8601 Formatting", function(ut)
