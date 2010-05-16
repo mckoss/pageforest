@@ -243,7 +243,7 @@ COMBINE_FILES = not DEBUG
 #COMBINE_FILES = True
 MEDIA_FILES = {
     'js': {
-        'pageforest': ['namespace', 'misc', 'random', 'cookies',
+        'pageforest': ['namespace', 'base', 'random', 'cookies',
                        'registration', 'sign-in-form'],
         },
 
@@ -256,6 +256,7 @@ MEDIA_FILES = {
 LIB_FILES = {
     'js': {
         'json2': ['json2'],
-        'utils': ['namespace', 'base', 'misc', 'random', 'cookies', 'client', 'format'],
+        'utils': ['namespace', 'base', 'random', 'cookies', 'client',
+                  'format'],
         },
     }
