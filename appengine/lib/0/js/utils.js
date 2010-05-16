@@ -116,6 +116,8 @@ var namespace = (function() {
             name = name.replace(/-/g, '_');
         }
         this._isDefined = false;
+        // List of namespaces that were referenced during definition.
+        this._referenced = [];
         this._parent = parent;
         if (this._parent) {
             this._parent[name] = this;
@@ -194,7 +196,9 @@ var namespace = (function() {
             this._isDefined = true;
             console.info("Namespace '" + this._path + "' defined.");
             if (callback) {
+                Namespace.defining = this;
                 callback(this);
+                Namespace.defining = undefined;
             }
             return this;
         },
@@ -204,8 +208,7 @@ var namespace = (function() {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("WARNING: Namespace '" + this._path +
-                             "' redefinition.");
+                console.warn("Namespace '" + this._path + "' redefinition.");
                 return this;
             }
             return this.define(callback);
@@ -223,14 +226,17 @@ var namespace = (function() {
         // or use in onEvent html attributes.
         nameOf: function(symbol) {
             symbol = symbol.replace(/-/g, '_');
-            return 'namespace.' + this._sPath + '.' + symbol;
+            return 'namespace.' + this._path + '.' + symbol;
         }
     });
 
     extendObject(namespaceT, {
         // Lookup a global namespace object, creating it (and it's parents)
-        // as necessary.
+        // as necessary.  If a namespace is currently being defined,
+        // add any looked up references to the namespace (if lookup is not
+        // used, _referenced will not be complete.
         lookup: function(path) {
+            var fCreated = false;
             path = path.replace(/-/g, '_');
             var parts = path.split('.');
             var cur = namespaceT;
@@ -238,9 +244,18 @@ var namespace = (function() {
                 var name = parts[i];
                 if (cur[name] === undefined) {
                     cur = new Namespace(cur, name);
+                    fCreated = true;
                 }
                 else {
                     cur = cur[name];
+                }
+            }
+            if (Namespace.defining) {
+                Namespace.defining._referenced.push(cur);
+                if (fCreated) {
+                    console.warn("Forward reference from " +
+                                 Namespace.defining._path + " to " +
+                                 path + ".");
                 }
             }
             return cur;
@@ -513,10 +528,12 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var cookies = namespace.lookup('com.pageforest.cookies');
     var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
 
     // TODO: Add alert if jQuery is not present.
 
     var pollInterval = 500;
+    var discardMessage = "You will lose your document changes if you continue.";
 
     // The application calls Client, and implements the following methods:
     // app.loaded(jsonDocument) - Called when a new document is loaded
@@ -552,16 +569,28 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     Client.methods({
         // Load a document
         load: function (docid) {
-            // REVIEW: What to do if already in loading or saving state?
+            // Your data is on notice.
+            if (this.state == Client.states.dirty) {
+                if (!this.confirmDiscard()) {
+                    return;
+                }
+                // Your data is dead to me.
+                this.state = Client.states.clean;
+            }
+
+            // REVIEW: What to do about race condition if already
+            // loading or saving?
+            this.stateSave = this.state;
             this.state = Client.states.loading;
-            this.docid = docid;
-            this.log("load: " + this.docid);
+
+            this.log("loading: " + docid);
             $.ajax({
                 dataType: 'json',
                 url: 'http://' + this.appHost + '/docs/' + docid,
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
-                    this.state = Client.states.clean;
+                    this.setCleanDoc(docid);
+                    // Required
                     this.app.loaded(document);
                 }.fnMethod(this)
             });
@@ -571,40 +600,52 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (this.username == undefined) {
                 this.errorReport('no_username', "You must sign in to save.");
             }
-            if (docid != undefined) {
-                this.docid = docid;
+
+            if (json == undefined) {
+                json = this.app.getData();
             }
 
-            // First save - assign docid like username_random
-            if (this.docid == undefined) {
-                this.docid = this.username + '_' + base.randomInt(1000);
+            if (docid == undefined) {
+                docid = this.docid;
             }
 
+            // First save?  Assign docid like username-slug
+            if (docid == undefined) {
+                docid = this.username + '-' + json.title;
+                docid = format.slugify(docid);
+            }
+
+            this.stateSave = this.state;
             this.state = Client.states.saving;
 
-            // TODO: If this is a first save, generate a default docid
-            // using username_N pattern.
+            // Default permissions to be public readable.
             if (!json.readers) {
                 json.readers = ['public'];
             }
+
             var data = JSON.stringify(json);
-            this.log('save: ' + this.docid, json);
+            this.log('saving: ' + docid, json);
             $.ajax({
                 type: 'PUT',
-                url: '/docs/' + this.docid,
+                url: '/docs/' + docid,
                 data: data,
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
+                    this.setCleanDoc(docid);
                     this.log('saved');
-                    location.hash = this.docid;
-                    // Don't trigger a load after we just saved.
-                    this.lastHash = location.hash;
-                    this.state = Client.states.clean;
                     if (this.app.saved) {
                         this.app.saved();
                     }
                 }.fnMethod(this)
             });
+        },
+
+        setCleanDoc: function(docid) {
+            this.docid = docid;
+            this.state = Client.states.clean;
+            location.hash = this.docid;
+            // Don't trigger a load after we just saved.
+            this.lastHash = location.hash;
         },
 
         setLogging: function(f) {
@@ -625,10 +666,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            this.state = this.stateSave;
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
             this.log(message + ' (' + code + ')', xmlhttp);
-            this.errorReport(code, xmlhttp.statusText);
+            this.errorReport(code, message);
         },
 
         errorReport: function(status, message) {
@@ -640,6 +682,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
+        confirmDiscard: function() {
+            if (this.app.confirmDiscard) {
+                return this.app.confirmDiscard();
+            }
+            return confirm(discardMessage);
+        },
+
         makeDirty: function(fDirty) {
             if (fDirty == undefined) {
                 fDirty = true;
@@ -649,12 +698,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.state = fDirty ? Client.states.dirty : Client.states.clean;
         },
 
-        // The user is about to close the page - we want to alert the
-        // user if he might lose changes.
+        // The user is about to navigate away from the page - we want to
+        // alert the user if he might lose changes.
         beforeUnload: function(evt) {
             if (this.state != Client.states.clean) {
                 evt.returnValue = "You will lose your changes if you leave " +
-                    "the window without saving.";
+                    "the document without saving.";
                 return evt.returnValue;
             }
         },
@@ -692,8 +741,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Direct the user to the Pageforest sign-in page.
         signIn: function () {
-            window.open('http://' + this.wwwHost + "/sign-in/scratch/",
-                        '_blank');
+            window.open('http://' + this.wwwHost + "/sign-in/" +
+                        this.appid + "/", '_blank');
         },
 
         // Expire the session key to remove the sign-in for the user.
@@ -711,3 +760,116 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     });
 
 });
+/* Begin file: format.js */
+namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var base = namespace.lookup('org.startpad.base');
+
+    // Thousands separator
+    var comma = ',';
+
+    // Return an integer as a string using a fixed number of digits,
+    // (require a sign if fSign).
+    function fixedDigits(value, digits, fSign) {
+        var s = "";
+        var fNeg = (value < 0);
+        if (digits == undefined) {
+            digits = 0;
+        }
+        if (fNeg) {
+            value = -value;
+        }
+        value = Math.floor(value);
+
+        for (; digits > 0; digits--) {
+            s = (value % 10) + s;
+            value = Math.floor(value / 10);
+        }
+
+        if (fSign || fNeg) {
+            s = (fNeg ? "-" : "+") + s;
+        }
+
+        return s;
+    }
+
+    // Return integer as string with thousand separators with optional
+    // decimal digits.
+    function thousands(value, digits) {
+        var integerPart = Math.floor(value);
+        var s = value.toString();
+        var sLast = "";
+        while (s != sLast) {
+            sLast = s;
+            s = s.replace(/(\d+)(\d{3})/, "$1" + comma + "$2");
+        }
+
+        var fractionString = "";
+        if (digits && digits > 0) {
+            var fraction = value - integerPart;
+            fraction = Math.floor(fraction * Math.pow(10, digits));
+            fractionString = "." + fixedDigits(fraction, digits);
+        }
+        return s + fractionString;
+    }
+
+    // Converts to lowercase, removes non-alpha chars and converts
+    // spaces to hyphens
+    function slugify(s) {
+        s = base.strip(s).toLowerCase();
+        s = s.replace(/[^a-zA-Z0-9]/g, '-').
+              replace(/[\-]+/g, '-').
+              replace(/(^-+)|(-+$)/g, '');
+        return s;
+    }
+
+    function escapeHTML(s) {
+        s = s.toString();
+        s = s.replace(/&/g, '&amp;');
+        s = s.replace(/</g, '&lt;');
+        s = s.replace(/>/g, '&gt;');
+        s = s.replace(/\"/g, '&quot;');
+        s = s.replace(/'/g, '&#39;');
+        return s;
+    }
+
+    // Replace all instances of pattern, with replacement in string.
+    function replaceString(string, pattern, replacement) {
+        var output = "";
+        if (replacement == undefined) {
+            replacement = "";
+        }
+        else {
+            replacement = replacement.toString();
+        }
+        var ich = 0;
+        var ichFind = string.indexOf(pattern, 0);
+        while (ichFind >= 0) {
+            output += string.substring(ich, ichFind) + replacement;
+            ich = ichFind + pattern.length;
+            ichFind = string.indexOf(pattern, ich);
+        }
+        output += string.substring(ich);
+        return output;
+    }
+
+    // Replace keys in dictionary of for {key} in the text string.
+    function replaceKeys(st, keys) {
+        for (var key in keys) {
+            if (keys.hasOwnProperty(key)) {
+                st = replaceString(st, "{" + key + "}", keys[key]);
+            }
+        }
+        // remove unused keys
+        st = st.replace(/\{[^\{\}]*\}/g, "");
+        return st;
+    }
+
+    ns.extend({
+        fixedDigits: fixedDigits,
+        thousands: thousands,
+        slugify: slugify,
+        escapeHTML: escapeHTML,
+        replaceKeys: replaceKeys,
+        replaceString: replaceString
+    });
+}); // org.startpad.format

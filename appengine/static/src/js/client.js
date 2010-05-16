@@ -11,10 +11,12 @@
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var cookies = namespace.lookup('com.pageforest.cookies');
     var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
 
     // TODO: Add alert if jQuery is not present.
 
     var pollInterval = 500;
+    var discardMessage = "You will lose your document changes if you continue.";
 
     // The application calls Client, and implements the following methods:
     // app.loaded(jsonDocument) - Called when a new document is loaded
@@ -50,16 +52,28 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     Client.methods({
         // Load a document
         load: function (docid) {
-            // REVIEW: What to do if already in loading or saving state?
+            // Your data is on notice.
+            if (this.state == Client.states.dirty) {
+                if (!this.confirmDiscard()) {
+                    return;
+                }
+                // Your data is dead to me.
+                this.state = Client.states.clean;
+            }
+
+            // REVIEW: What to do about race condition if already
+            // loading or saving?
+            this.stateSave = this.state;
             this.state = Client.states.loading;
-            this.docid = docid;
-            this.log("load: " + this.docid);
+
+            this.log("loading: " + docid);
             $.ajax({
                 dataType: 'json',
                 url: 'http://' + this.appHost + '/docs/' + docid,
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
-                    this.state = Client.states.clean;
+                    this.setCleanDoc(docid);
+                    // Required
                     this.app.loaded(document);
                 }.fnMethod(this)
             });
@@ -69,40 +83,52 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (this.username == undefined) {
                 this.errorReport('no_username', "You must sign in to save.");
             }
-            if (docid != undefined) {
-                this.docid = docid;
+
+            if (json == undefined) {
+                json = this.app.getData();
             }
 
-            // First save - assign docid like username_random
-            if (this.docid == undefined) {
-                this.docid = this.username + '_' + base.randomInt(1000);
+            if (docid == undefined) {
+                docid = this.docid;
             }
 
+            // First save?  Assign docid like username-slug
+            if (docid == undefined) {
+                docid = this.username + '-' + json.title;
+                docid = format.slugify(docid);
+            }
+
+            this.stateSave = this.state;
             this.state = Client.states.saving;
 
-            // TODO: If this is a first save, generate a default docid
-            // using username_N pattern.
+            // Default permissions to be public readable.
             if (!json.readers) {
                 json.readers = ['public'];
             }
+
             var data = JSON.stringify(json);
-            this.log('save: ' + this.docid, json);
+            this.log('saving: ' + docid, json);
             $.ajax({
                 type: 'PUT',
-                url: '/docs/' + this.docid,
+                url: '/docs/' + docid,
                 data: data,
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
+                    this.setCleanDoc(docid);
                     this.log('saved');
-                    location.hash = this.docid;
-                    // Don't trigger a load after we just saved.
-                    this.lastHash = location.hash;
-                    this.state = Client.states.clean;
                     if (this.app.saved) {
                         this.app.saved();
                     }
                 }.fnMethod(this)
             });
+        },
+
+        setCleanDoc: function(docid) {
+            this.docid = docid;
+            this.state = Client.states.clean;
+            location.hash = this.docid;
+            // Don't trigger a load after we just saved.
+            this.lastHash = location.hash;
         },
 
         setLogging: function(f) {
@@ -123,10 +149,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            this.state = this.stateSave;
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
             this.log(message + ' (' + code + ')', xmlhttp);
-            this.errorReport(code, xmlhttp.statusText);
+            this.errorReport(code, message);
         },
 
         errorReport: function(status, message) {
@@ -138,6 +165,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
+        confirmDiscard: function() {
+            if (this.app.confirmDiscard) {
+                return this.app.confirmDiscard();
+            }
+            return confirm(discardMessage);
+        },
+
         makeDirty: function(fDirty) {
             if (fDirty == undefined) {
                 fDirty = true;
@@ -147,12 +181,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.state = fDirty ? Client.states.dirty : Client.states.clean;
         },
 
-        // The user is about to close the page - we want to alert the
-        // user if he might lose changes.
+        // The user is about to navigate away from the page - we want to
+        // alert the user if he might lose changes.
         beforeUnload: function(evt) {
             if (this.state != Client.states.clean) {
                 evt.returnValue = "You will lose your changes if you leave " +
-                    "the window without saving.";
+                    "the document without saving.";
                 return evt.returnValue;
             }
         },
@@ -190,8 +224,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Direct the user to the Pageforest sign-in page.
         signIn: function () {
-            window.open('http://' + this.wwwHost + "/sign-in/scratch/",
-                        '_blank');
+            window.open('http://' + this.wwwHost + "/sign-in/" +
+                        this.appid + "/", '_blank');
         },
 
         // Expire the session key to remove the sign-in for the user.
