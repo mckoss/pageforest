@@ -115,6 +115,8 @@ var namespace = (function() {
             name = name.replace(/-/g, '_');
         }
         this._isDefined = false;
+        // List of namespaces that were referenced during definition.
+        this._referenced = [];
         this._parent = parent;
         if (this._parent) {
             this._parent[name] = this;
@@ -193,7 +195,9 @@ var namespace = (function() {
             this._isDefined = true;
             console.info("Namespace '" + this._path + "' defined.");
             if (callback) {
+                Namespace.defining = this;
                 callback(this);
+                Namespace.defining = undefined;
             }
             return this;
         },
@@ -203,8 +207,7 @@ var namespace = (function() {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("WARNING: Namespace '" + this._path +
-                             "' redefinition.");
+                console.warn("Namespace '" + this._path + "' redefinition.");
                 return this;
             }
             return this.define(callback);
@@ -222,14 +225,17 @@ var namespace = (function() {
         // or use in onEvent html attributes.
         nameOf: function(symbol) {
             symbol = symbol.replace(/-/g, '_');
-            return 'namespace.' + this._sPath + '.' + symbol;
+            return 'namespace.' + this._path + '.' + symbol;
         }
     });
 
     extendObject(namespaceT, {
         // Lookup a global namespace object, creating it (and it's parents)
-        // as necessary.
+        // as necessary.  If a namespace is currently being defined,
+        // add any looked up references to the namespace (if lookup is not
+        // used, _referenced will not be complete.
         lookup: function(path) {
+            var fCreated = false;
             path = path.replace(/-/g, '_');
             var parts = path.split('.');
             var cur = namespaceT;
@@ -237,9 +243,18 @@ var namespace = (function() {
                 var name = parts[i];
                 if (cur[name] === undefined) {
                     cur = new Namespace(cur, name);
+                    fCreated = true;
                 }
                 else {
                     cur = cur[name];
+                }
+            }
+            if (Namespace.defining) {
+                Namespace.defining._referenced.push(cur);
+                if (fCreated) {
+                    console.warn("Forward reference from " +
+                                 Namespace.defining._path + " to " +
+                                 path + ".");
                 }
             }
             return cur;

@@ -76,8 +76,26 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             ut.assertEq(namespace.lookup('org.startpad.test2').x, 5);
         });
 
-        ts.addTest("fnMethod and fnArgs", function (ut)
-        {
+        ts.addTest("namespace names", function (ut) {
+            var ns = namespace.lookup('org.start-pad.foo');
+            ut.assertEq(ns._path, 'org.start_pad.foo');
+            ut.assertIdent(ns, namespace.org.start_pad.foo);
+            ut.assertEq(ns.nameOf('x'), 'namespace.org.start_pad.foo.x');
+            ns.x = {};
+            ut.assertIdent(ns.x, eval(ns.nameOf('x')));
+        });
+
+        ts.addTest("_referenced", function (ut) {
+            var ns = namespace.lookup('org.startpad.ref').
+                defineOnce(function (ns) {
+                    var x = namespace.lookup('org.startpad.required');
+                });
+
+            ut.assertEq(ns._referenced.length, 1);
+            ut.assertIdent(ns._referenced[0], namespace.lookup('org.startpad.required'));
+        });
+
+        ts.addTest("fnMethod and fnArgs", function (ut) {
             function Base()
             {
                 this.x = 7;
