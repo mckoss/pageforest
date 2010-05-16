@@ -85,7 +85,7 @@
 // This is here because this will often be the first javascript file loaded.
 // We refrain from using the window object as we may be in a web worker where
 // the global scope is NOT window.
-try {
+if (typeof console == 'undefined') {
     var console = (function() {
         if (console != undefined) {
             return console;
@@ -101,7 +101,6 @@ try {
         return consoleT;
     }());
 }
-catch (e) {}
 
 var namespace = (function() {
     try {
@@ -432,14 +431,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
 
 }); // startpad.base
-/* Begin file: misc.js */
-namespace.lookup("com.pageforest.misc").define(function(ns) {
-
-    ns.strip = function(s) {
-        return (s || "").replace(/^\s+|\s+$/g, "");
-    };
-
-});
 /* Begin file: random.js */
 namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
 
@@ -464,7 +455,7 @@ namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
 
 }); // com.pageforest.random
 /* Begin file: cookies.js */
-namespace.lookup('com.pageforest.cookies').define(function(ns) {
+namespace.lookup('org.startpad.cookies').define(function(ns) {
     /*
     Client-side cookie reader and writing helper.
 
@@ -473,7 +464,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
     character These routines use encodeURIComponent to safely encode
     and decode all special characters.
     */
-    var misc = namespace.lookup('com.pageforest.misc');
+    var base = namespace.lookup('org.startpad.base');
 
     ns.extend({
     setCookie: function(name, value, days, path) {
@@ -500,7 +491,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
         var obj = {};
         for (var i = 0; i < rgPairs.length; i++) {
             // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
-            rgPairs[i] = misc.strip(rgPairs[i]);
+            rgPairs[i] = base.strip(rgPairs[i]);
             var rgC = rgPairs[i].split("=");
             var val = decodeURIComponent(rgC[1]);
             // Remove quotes around value string if any (and also replaces \" with ")
@@ -513,7 +504,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
 
     }}); // ns
 
-}); // com.pageforest.cookies
+}); // org.startpad.cookies
 /* Begin file: client.js */
 /*
   client.js - Pageforest client api for sign in, save, load, and url
@@ -526,7 +517,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
   testing.
  */
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
-    var cookies = namespace.lookup('com.pageforest.cookies');
+    var cookies = namespace.lookup('org.startpad.cookies');
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 
