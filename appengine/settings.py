@@ -116,7 +116,7 @@ MEDIA_URL = '/static/'
 MEDIA_VERSION = '1'
 
 LIB_URL = '/lib/'
-LIB_VERSION = '0.5.0'
+LIB_VERSION = '0.5.1'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
