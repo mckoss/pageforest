@@ -84,7 +84,7 @@
 // This is here because this will often be the first javascript file loaded.
 // We refrain from using the window object as we may be in a web worker where
 // the global scope is NOT window.
-try {
+if (typeof console == 'undefined') {
     var console = (function() {
         if (console != undefined) {
             return console;
@@ -100,7 +100,6 @@ try {
         return consoleT;
     }());
 }
-catch (e) {}
 
 var namespace = (function() {
     try {
