@@ -3,6 +3,7 @@ load("../base.js");
 load("../unit.js");
 load("../timer.js");
 load("../vector.js");
+load("../format.js");
 
 (function(a) {
     var unit = namespace.lookup('org.startpad.unit');
@@ -30,7 +31,8 @@ load("../vector.js");
     var tests = {
         namespace: {ns: 'org.startpad.namespace.test'},
         base: {ns: 'org.startpad.base.test'},
-        vector: {ns: 'org.startpad.vector.test'}
+        vector: {ns: 'org.startpad.vector.test'},
+        format: {ns: 'org.startpad.format.test'}
     };
 
     if (a.length < 1) {
