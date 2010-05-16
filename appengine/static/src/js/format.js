@@ -53,8 +53,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // spaces to hyphens
     function slugify(s) {
         s = base.strip(s).toLowerCase();
-        s = s.replace(/[^\w\s\-]/g, '-').
-              replace(/[\-\s]+/g, '-').
+        s = s.replace(/[^a-zA-Z0-9]/g, '-').
+              replace(/[\-]+/g, '-').
               replace(/(^-+)|(-+$)/g, '');
         return s;
     }
