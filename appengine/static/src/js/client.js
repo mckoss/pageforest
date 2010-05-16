@@ -9,7 +9,7 @@
   testing.
  */
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
-    var cookies = namespace.lookup('com.pageforest.cookies');
+    var cookies = namespace.lookup('org.startpad.cookies');
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 

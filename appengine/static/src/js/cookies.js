@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.cookies').define(function(ns) {
+namespace.lookup('org.startpad.cookies').define(function(ns) {
     /*
     Client-side cookie reader and writing helper.
 
@@ -7,7 +7,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
     character These routines use encodeURIComponent to safely encode
     and decode all special characters.
     */
-    var misc = namespace.lookup('com.pageforest.misc');
+    var base = namespace.lookup('org.startpad.base');
 
     ns.extend({
     setCookie: function(name, value, days, path) {
@@ -34,7 +34,7 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
         var obj = {};
         for (var i = 0; i < rgPairs.length; i++) {
             // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
-            rgPairs[i] = misc.strip(rgPairs[i]);
+            rgPairs[i] = base.strip(rgPairs[i]);
             var rgC = rgPairs[i].split("=");
             var val = decodeURIComponent(rgC[1]);
             // Remove quotes around value string if any (and also replaces \" with ")
@@ -47,4 +47,4 @@ namespace.lookup('com.pageforest.cookies').define(function(ns) {
 
     }}); // ns
 
-}); // com.pageforest.cookies
+}); // org.startpad.cookies
