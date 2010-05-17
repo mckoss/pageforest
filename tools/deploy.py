@@ -62,13 +62,12 @@ def main():
     elif options.version == 'today':
         options.version = datetime.now().strftime('%Y-%m-%d')
     dash_v = options.verbose and '-v' or ''
-    os.chdir(pftool.tools_dir)
     # Update auto-generated files (combined and minified JS and CSS).
-    if os.system('python build.py ' + dash_v):
+    if os.system('python %s/build.py %s' % (pftool.tools_dir, dash_v)):
         sys.exit('build failed')
     # Check coding style and unit tests.
     if not options.nocheck:
-        if os.system('python check.py ' + dash_v):
+        if os.system('python %s/check.py %s' % (pftool.tools_dir, dash_v)):
             sys.exit('check failed')
     # Load app.yaml from disk.
     app_yaml = load_app_yaml()
