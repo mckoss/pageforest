@@ -1,6 +1,5 @@
 {
   "application": "scratch",
   "title": "Pageforest Sample Application",
-  "tags": ["demo", "sample"],
-  "writers": ["mike", "mckoss", "johann", "jcrocholl"]
+  "tags": ["demo", "sample"]
 }
