@@ -5,7 +5,6 @@ from django.utils import simplejson as json
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
-from auth.middleware import AccessDenied
 from auth.decorators import login_required
 
 from docs.models import Doc
@@ -43,8 +42,6 @@ def document_get(request, doc_id):
     """
     Get JSON blob with meta info for this document.
     """
-    if not request.doc.is_readable(request.user):
-        return AccessDenied(request)
     # Get extra data from blob store.
     blob = Blob.get_by_key_name(request.doc.key().name() + '/')
     if blob:
@@ -64,8 +61,6 @@ def document_put(request, doc_id):
         # Create this document. TODO: Quota check.
         request.doc = Doc.create(request.app.get_app_id(), doc_id,
                                  request.user)
-    if not request.doc.is_writable(request.user):
-        return AccessDenied(request)
     try:
         parsed = json.loads(request.raw_post_data)
         for key in ('title', 'doc_id'):
@@ -80,8 +75,8 @@ def document_put(request, doc_id):
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
     request.doc.normalize_lists()
-    if request.user.username.lower() not in request.doc.writers:
-        request.doc.writers.insert(0, request.user.username.lower())
+    if request.user.get_username() not in request.doc.writers:
+        request.doc.writers.insert(0, request.user.get_username())
     request.doc.put()
     # Write JSON blob to blob storage.
     if 'blob' in parsed:
