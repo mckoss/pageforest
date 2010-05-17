@@ -18,10 +18,10 @@ $(document).ready(function() {
 <h2>
 {% if user %}
     {{ user.username }}, you are signed in to {{ SITE_NAME }}
-    <span style="display:none;" class="have_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }}).</span>
+    <span style="display:none;" class="have_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
 {% else %}
     Sign in to {{ SITE_NAME }}
-    {% if cross_app %} and {{ cross_app.title }} ({{ cross_app.get_app_id }}){% endif %}.
+    {% if cross_app %} and {{ cross_app.title }} ({{ cross_app.get_app_id }}){% endif %}
 {% endif %}
 </h2>
 
