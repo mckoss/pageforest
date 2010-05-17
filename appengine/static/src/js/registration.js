@@ -44,7 +44,7 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
         ns.previous = oneline;
         $.ajax({
             type: "POST",
-            url: "/sign-up",
+            url: "/sign-up/",
             data: data,
             dataType: "json",
             success: validate_success,
@@ -52,13 +52,31 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
         });
     }
 
-    ns.document_ready = function () {
+    function document_ready() {
         ns.previous = '~~~';
         // Validate in the background
         setInterval(validate_if_changed, 3000);
         $("#id_tos").click(function() {
             $("#validate_tos").html('');
         });
-    };
+    }
+
+    // Request a new email verification for the signed in user.
+    function resend() {
+        console.log("resend");
+        $.ajax({
+            type: "POST",
+            url: "/email-verify/",
+            data: {resend: true},
+            dataType: "json",
+            success: validate_success,
+            error: validate_error
+        });
+    }
+
+    ns.extend({
+        document_ready: document_ready,
+        resend: resend
+    });
 
 }); // com.pageforest.registration

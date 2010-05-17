@@ -73,7 +73,7 @@ def test_email_verification(verification, secret):
     return (user, None)
 
 
-@method_required('GET')
+@method_required('GET', 'POST')
 def email_verification(request, verification=None):
     """
     Check verification code and mark user as verified.
@@ -91,13 +91,20 @@ def email_verification(request, verification=None):
         elif request.user:
             user = request.user
     else:
+        if request.method == 'POST' and 'resend' in request.POST and \
+                request.user:
+            send_email_verification(request, request.user)
+            return HttpResponse({'resent': True},
+                                    mimetype='application/json')
         # Show verification status for the currently sign-in in user.
         user = request.user
-        if user and user.email_verified is None:
+        if user is None:
+            error = "You are not signed in."
+        elif user.email_verified is None:
             error = "Your email address has not yet been verified."
 
     return render_to_response(request, 'auth/email-verification.html',
-                              {'user': user,
+                              {'verification_user': user,
                                'error': error})
 
 
@@ -112,8 +119,8 @@ def register(request):
             return HttpResponse(form.errors_json(),
                                 mimetype='application/json')
         if form.is_valid():
-            registering_user = form.save()
-            send_email_verification(request, registering_user)
+            user = form.save()
+            send_email_verification(request, user)
             return redirect(reverse(sign_in))
     return render_to_response(request, 'auth/register.html',
                               {'form': form})
