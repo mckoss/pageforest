@@ -11,7 +11,7 @@ from optparse import OptionParser
 
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
-IGNORE_FILENAMES = ['*.orig', '*~', '.*']
+IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
 COMMANDS = ['get', 'put']  # TODO: Add list and delete.
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
