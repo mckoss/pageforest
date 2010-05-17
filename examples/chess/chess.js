@@ -1,6 +1,6 @@
 namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
 
-    var crypto = ns.lookup('com.googlecode.crypto-js');
+    var random = ns.lookup('com.pageforest.random');
 
     ns.tileSize = 80;
     ns.anchor = '';
@@ -614,7 +614,7 @@ namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
     function checkAnchor() {
         if (!document.location.hash.substr(1)) {
             // Add a random anchor to the URL if it doesn't have one.
-            document.location.hash = '#' + crypto.random(5);
+            document.location.hash = '#' + random.randomString(5);
         }
         if (ns.anchor != document.location.hash.substr(1)) {
             // Update the anchor if it has changed.

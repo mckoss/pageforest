@@ -7,7 +7,7 @@ namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
     ns.base64url = ns.upper + ns.lower + ns.digits + '-_';
     ns.hexdigits = ns.digits + 'abcdef';
 
-    ns.random = function(len, chars) {
+    ns.randomString = function(len, chars) {
         if (typeof chars == 'undefined') {
             chars = ns.base64url;
         }
