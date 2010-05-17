@@ -44,7 +44,7 @@ def send_email_verification(request, user):
 
     mail.send_mail(sender=settings.SITE_EMAIL_FROM,
                    to=user.email,
-                   subject=settings.SITE_NAME + " account verification.",
+                   subject=settings.SITE_NAME + " account verification",
                    body=message)
 
 
