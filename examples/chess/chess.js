@@ -1,6 +1,6 @@
 namespace.lookup('com.pageforest.chess').define(function (ns) {
 
-    var random = ns.lookup('com.pageforest.random');
+    var random = namespace.lookup('com.pageforest.random');
 
     ns.tileSize = 80;
     ns.anchor = '';
