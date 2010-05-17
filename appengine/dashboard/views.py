@@ -11,6 +11,14 @@ from dashboard.models import StatsHour, StatsDay, StatsMonth
 SPARKLINE_HOURS = 14 * 24  # Two weeks.
 ENCODING = string.uppercase + string.lowercase + string.digits + '.-'
 
+# Output sizes in pixels.
+LAYOUT = {
+    'chart_width': 460,
+    'chart_height': 80,
+    'body_margin': 10,
+}
+LAYOUT['viewport_width'] = LAYOUT['chart_width'] + 2 * LAYOUT['body_margin']
+
 
 def sparkline(hours, property_name):
     values = []
@@ -41,7 +49,8 @@ def chart(hours, property_name, color):
         horizontal_offset = -10
     return '&'.join([
             'http://chart.apis.google.com/chart?cht=ls',
-            'chs=460x80',       # Size in pixels.
+            'chs=%dx%d' % (     # Chart dimensions in pixels.
+                LAYOUT['chart_width'], LAYOUT['chart_height']),
             'chf=bg,s,000000',  # Black background.
             'chco=' + color,    # Foreground.
             'chls=3',           # Line width in pixels.
@@ -77,6 +86,7 @@ def dashboard(request):
         'blobs_chart': chart(hours, 'blobs', 'FF0000'),
         'start_date': simple_date(start),
         'today_date': simple_date(today),
+        'layout': LAYOUT,
         }
     return render_to_response(request, 'dashboard/index.html', dictionary)
 
