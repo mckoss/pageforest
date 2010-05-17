@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
+namespace.lookup('com.pageforest.chess').define(function (ns) {
 
     var random = ns.lookup('com.pageforest.random');
 
@@ -609,7 +609,7 @@ namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
             saveMoves();
         }
         showMoves();
-    }
+    };
 
     function checkAnchor() {
         if (!document.location.hash.substr(1)) {
