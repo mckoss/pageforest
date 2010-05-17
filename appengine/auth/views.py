@@ -39,7 +39,7 @@ def send_email_verification(request, user):
                                www.secret)
     message = render_to_string('auth/verify-email.txt',
                                RequestContext(request,
-                                              {'user': user,
+                                              {'registering_user': user,
                                                'verification': verification}))
 
     mail.send_mail(sender=settings.SITE_EMAIL_FROM,
@@ -112,10 +112,11 @@ def register(request):
             return HttpResponse(form.errors_json(),
                                 mimetype='application/json')
         if form.is_valid():
-            user = form.save()
-            send_email_verification(request, user)
+            registering_user = form.save()
+            send_email_verification(request, registering_user)
             return redirect(reverse(sign_in))
-    return render_to_response(request, 'auth/register.html', {'form': form})
+    return render_to_response(request, 'auth/register.html',
+                              {'form': form})
 
 
 @method_required('GET', 'POST')
