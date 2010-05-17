@@ -3,6 +3,9 @@
 {% block title %}Verify Your Email{% endblock %}
 
 {% block extra-head %}
+<script type="text/javascript">
+var registration = namespace.lookup("com.pageforest.registration");
+</script>
 {% endblock %}
 
 {% block both-columns %}
@@ -13,20 +16,22 @@
 
 {% if error %}
 <p class="error">{{ error }}</p>
-    {% if user %}
+    {% if verification_user %}
     <p>
-    {{SITE_NAME}} has sent you an email with a verification link to your email address
-    ({{user.email}}).  If you have not received it, please check your email spam folder
-    for email from {{DOMAIN}}.
+    {{ SITE_NAME }} has sent you an email with a verification link to your email address
+    ({{ verification_user.email }}).  If you have not received it, please check your email spam folder
+    for email from {{ DOMAIN }}.
     </p>
     <p>
     If you'd like to have another copy of the verification email sent to you, please
     click here:
     </p>
-    <input type="button" value="Resend Email Verification" onlick="verify.resend();"/>
+    <input type="button" value="Resend Email Verification" onClick="registration.resend();return false;"/>
     {% else %}
     <p>Already have an account?  <a href="/sign-in">Sign In</a>.</p>
     {% endif %}
 {% endif %}
 
 {% endblock both-columns %}
+
+
