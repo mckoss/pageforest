@@ -52,10 +52,18 @@ class WwwMiddleware(object):
     http://localhost:8080/         => http://www.localhost:8080/
     https://pageforest.com/sign-in => https://www.pageforest.com/sign-in
     http://PGFR.ST/apps/?tag=foo   => http://www.pgfr.st/apps/?tag=foo
+
+    Special case: the App Engine cron job runner sends requests to
+    pageforest.appspot.com but it doesn't follow redirects. So we
+    don't redirect if the User-Agent starts with AppEngine-Google.
     """
 
     def process_request(self, request):
         if 'HTTP_HOST' not in request.META:
+            return
+        user_agent = request.META.get('HTTP_USER_AGENT', '')
+        if user_agent.startswith('AppEngine-Google'):
+            # Don't redirect App Engine's cron job runner.
             return
         hostname = request.META['HTTP_HOST'].lower()
         # Remove port number if specified.
