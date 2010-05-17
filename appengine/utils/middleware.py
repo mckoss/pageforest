@@ -58,7 +58,20 @@ class WwwMiddleware(object):
         if 'HTTP_HOST' not in request.META:
             return
         hostname = request.META['HTTP_HOST'].lower()
-        if hostname.split(':')[0] in settings.DOMAINS:
+        # Remove port number if specified.
+        normalized = hostname.split(':')[0]
+        # Normalize App Engine deployment versions, e.g.
+        # 2010-05-12.latest.pageforest.appspot.com
+        parts = normalized.split('.')
+        if (len(parts) == 5 and
+            parts[1] == 'latest' and
+            parts[3] == 'appspot' and
+            parts[4] == 'com'):
+            parts[0] = 'version'
+            normalized = '.'.join(parts)
+        # Check if the domain needs a subdomain (app_id or www).
+        if normalized in settings.DOMAINS:
+            # Redirect to prepend www.
             url = request.is_secure() and 'https:' or 'http:'
             url += '//www.' + hostname + request.get_full_path()
             return redirect(url)
