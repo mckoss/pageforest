@@ -141,7 +141,7 @@ RESERVED_APPS = """
 meta ssl static auth oauth login
 doc docs document documents
 blog list note comment
-test tester testclient testserver
+test tester testclient testserver latest
 pageforest pgfrst page
 app apps application applications app_id appid
 css img images js javascript lib
