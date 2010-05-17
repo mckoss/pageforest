@@ -66,7 +66,7 @@ def app_json_get(request, app_id):
         raise Http404("App not found: " + app_id)
     if not app.is_readable(request.user):
         return AccessDenied(request)
-    content = model_to_json(app, exclude='secret'.split())
+    content = model_to_json(app)
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 

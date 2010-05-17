@@ -22,7 +22,6 @@ class DocumentTest(AppTestCase):
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": [\n    "public"\n  ]')
         self.assertContains(response, '"writers": []')
-        self.assertContains(response, '"schema": 1')
         self.assertContains(response,
             '"tags": [\n    "one",\n    "two",\n    "three"\n  ]')
         self.assertContains(response,
@@ -30,6 +29,10 @@ class DocumentTest(AppTestCase):
         self.assertContains(response,
             '"modified": {\n    "__class__": "Date",\n    "isoformat": "201')
         self.assertContains(response, '"blob": {\n    "int": 123\n  }')
+        # Check that hidden properties are not visible.
+        self.assertNotContains(response, '"schema":')
+        self.assertNotContains(response, '"created_ip":')
+        self.assertNotContains(response, '"modified_ip":')
         # Check that the document ID is case insensitive.
         canonical_content = response.content
         response = self.app_client.get('/docs/mydoc')

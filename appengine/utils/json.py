@@ -2,6 +2,8 @@ from datetime import datetime
 
 from django.utils import simplejson as json
 
+ALWAYS_EXCLUDE = ['created_ip', 'modified_ip', 'secret', 'schema']
+
 
 def model_to_json(entity, extra=None, include=None, exclude=None):
     """
@@ -25,9 +27,11 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
     """
     mapping = {}
     for name in entity.properties():
-        if include and name not in include:
+        if name in ALWAYS_EXCLUDE:
             continue
         if exclude and name in exclude:
+            continue
+        if include and name not in include:
             continue
         value = getattr(entity, name)
         if isinstance(value, datetime):
