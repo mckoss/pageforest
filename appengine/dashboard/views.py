@@ -86,6 +86,7 @@ def dashboard(request):
         'blobs_chart': chart(hours, 'blobs', 'FF0000'),
         'start_date': simple_date(start),
         'today_date': simple_date(today),
+        'now': now.strftime('%Y-%m-%d %H:%M:%S UTC'),
         'layout': LAYOUT,
         }
     return render_to_response(request, 'dashboard/index.html', dictionary)
