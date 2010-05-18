@@ -14,9 +14,13 @@ APP_ID_REGEX_MATCH = re.compile(settings.APP_ID_REGEX).match
 class WideTextInput(forms.TextInput):
 
     def __init__(self, *args, **kwargs):
-        attrs = kwargs.get('attrs', {})
-        attrs['class'] = 'wide';
-        super(WideTextInput, self).__init__(attrs=attrs, *args, **kwargs)
+        if 'attrs' not in kwargs:
+            kwargs['attrs'] = {}
+        classes = kwargs['attrs'].get('class', '').split()
+        if 'wide' not in classes:
+            classes.append('wide')
+        kwargs['attrs']['class'] = ' '.join(classes)
+        super(WideTextInput, self).__init__(*args, **kwargs)
 
 
 class AppForm(AjaxForm):
