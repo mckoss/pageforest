@@ -26,5 +26,5 @@ urlpatterns = patterns(
     (r'^app/(docs|data)/', 'utils.views.reserved_url'),
 
     # Static hosting for Pageforest apps.
-    (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)', 'blobs.views.blob'),
+    (r'^app/(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)', 'blobs.views.dispatch'),
 )
