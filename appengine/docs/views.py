@@ -1,10 +1,11 @@
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseNotModified
 from django.utils import simplejson as json
 
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
+from utils.http import http_datetime
 from auth.decorators import login_required
 
 from docs.models import Doc
@@ -42,15 +43,22 @@ def document_get(request, doc_id):
     """
     Get JSON blob with meta info for this document.
     """
+    extra = None
+    modified = request.doc.modified
     # Get extra data from blob store.
     blob = Blob.get_by_key_name(request.doc.key().name() + '/')
     if blob:
         extra = {"blob": json.loads(blob.value)}
-    else:
-        extra = None
+        modified = max(modified, blob.modified)
+    # Generate Last-Modified header and compare with If-Modified-Since.
+    last_modified = http_datetime(modified)
+    if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
+        return HttpResponseNotModified()
     # Generate pretty JSON output.
     result = model_to_json(request.doc, extra)
-    return HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
+    response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
+    response['Last-Modified'] = last_modified
+    return response
 
 
 def document_put(request, doc_id):
