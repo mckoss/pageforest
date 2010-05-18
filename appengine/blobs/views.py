@@ -1,19 +1,19 @@
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
-    Http404, HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
+    HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
 
 from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
-from utils.shortcuts import get_int
+from utils.shortcuts import get_int, lookup_or_404
 
 from blobs.models import Blob
 
 
 @jsonp
-def blob(request, doc_id, key):
+def dispatch(request, doc_id, key):
     """
     Dispatch requests to the blob storage interface.
     """
@@ -51,9 +51,7 @@ def blob_get(request):
     """
     HTTP GET request handler.
     """
-    blob = Blob.get_by_key_name(request.key_name)
-    if blob is None:
-        raise Http404("Blob not found: " + request.key_name)
+    blob = lookup_or_404(Blob, request.key_name)
     etag = blob.get_etag()
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         return HttpResponseNotModified()
@@ -92,9 +90,7 @@ def blob_delete(request):
     """
     HTTP DELETE request handler.
     """
-    blob = Blob.get_by_key_name(request.key_name)
-    if blob is None:
-        raise Http404("Blob not found: " + request.key_name)
+    blob = lookup_or_404(Blob, request.key_name)
     blob.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}',
                         mimetype=settings.JSON_MIMETYPE)

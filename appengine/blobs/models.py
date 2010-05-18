@@ -31,6 +31,11 @@ class Blob(Timestamped, Migratable, Cacheable):
         return ''.join(('http://', app_id, '.', settings.DEFAULT_DOMAIN,
                         '/docs/', key))
 
+    @classmethod
+    def lookup(cls, key_name):
+        """Make lookup an alias for get_by_key_name."""
+        return cls.get_by_key_name(key_name)
+
     def put(self):
         """
         Update sha1 and valid_json properties automatically before
