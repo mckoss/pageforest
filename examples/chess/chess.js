@@ -615,6 +615,10 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
         showMoves();
     };
 
+    ns.signIn = function () {
+        window.open('http://www.pageforest.com/sign-in/chess/', '_blank');
+    };
+
     function checkAnchor() {
         if (!document.location.hash.substr(1)) {
             // Add a random anchor to the URL if it doesn't have one.
