@@ -75,8 +75,6 @@ def document_put(request, doc_id):
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
     request.doc.normalize_lists()
-    if request.user.get_username() not in request.doc.writers:
-        request.doc.writers.insert(0, request.user.get_username())
     request.doc.put()
     # Write JSON blob to blob storage.
     if 'blob' in parsed:

@@ -109,8 +109,6 @@ def app_json_put(request, app_id):
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
     app.normalize_lists()
-    if request.user.get_username() not in app.writers:
-        app.writers.insert(0, request.user.get_username())
     app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)
