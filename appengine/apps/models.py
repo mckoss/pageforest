@@ -40,7 +40,7 @@ class App(SuperDoc):
 
     def get_details_url(self):
         """Get the URL for this app's details page on www."""
-        return reverse('app.views.details', self.get_app_id())
+        return reverse('apps.views.details', args=[self.get_app_id()])
 
     def get_app_id(self):
         """Return the key name which contains the app id."""
