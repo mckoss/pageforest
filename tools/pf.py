@@ -124,7 +124,7 @@ def upload_file(options, filename, url=None):
             urlpath = urlpath[2:]
         url = 'http://%s.%s/%s' % (
             options.application, options.server, urlpath)
-    data = open(filename).read()
+    data = open(filename, 'rb').read()
     request = PutRequest(url, data)
     request.add_header('Cookie', 'sessionkey=' + options.session_key)
     request.add_header('Referer', url)
