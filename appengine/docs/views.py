@@ -2,7 +2,7 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotModified
 from django.utils import simplejson as json
 
-from utils.json import model_to_json, assert_string, assert_string_list
+from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
@@ -71,14 +71,7 @@ def document_put(request, doc_id):
                                  request.user)
     try:
         parsed = json.loads(request.raw_post_data)
-        for key in ('title', 'doc_id'):
-            if key in parsed:
-                assert_string(key, parsed[key])
-                setattr(request.doc, key, parsed[key])
-        for key in ('tags', 'readers', 'writers'):
-            if key in parsed:
-                assert_string_list(key, parsed[key])
-                setattr(request.doc, key, parsed[key])
+        request.doc.update_from_json(parsed, user=request.user)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
