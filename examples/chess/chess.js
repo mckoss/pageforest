@@ -2,7 +2,7 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
 
     var random = namespace.lookup('com.pageforest.random');
 
-    ns.tileSize = 80;
+    ns.tileSize = 96;
     ns.anchor = '';
     ns.drag = false;
     ns.moves = [];
@@ -462,6 +462,7 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
 
     function saveMoves() {
         var data = JSON.stringify({
+            readers: ['public'],
             writers: ['public'],
             blob: ns.moves
         });
