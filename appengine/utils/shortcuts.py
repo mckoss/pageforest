@@ -8,6 +8,17 @@ def render_to_response(request, template, variables):
         template, variables, context_instance=RequestContext(request))
 
 
+def lookup_or_404(cls, key_name):
+    """
+    Try to load a model instance. If not found, raise Http404.
+    """
+    result = cls.lookup(key_name)
+    if result is None:
+        from django.http import Http404
+        raise Http404(cls.__name__ + ' not found: ' + key_name)
+    return result
+
+
 def get_int(dictionary, key, default=None, min=None, max=None):
     """
     Get an int value from a dict of strings, if possible.

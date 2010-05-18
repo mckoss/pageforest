@@ -1,9 +1,9 @@
 from django.conf import settings
-from django.http import HttpResponse, Http404
+from django.http import HttpResponse
 from django.utils import simplejson as json
 from django.shortcuts import redirect
 
-from utils.shortcuts import render_to_response
+from utils.shortcuts import render_to_response, lookup_or_404
 from utils.json import model_to_json, assert_string, assert_string_list
 from utils.decorators import jsonp, method_required
 
@@ -38,10 +38,14 @@ def details(request, app_id):
     """
     Show details for a specific app.
     """
-    app = App.get_by_key_name(app_id)
-    if app is None:
-        raise Http404("App not found: " + app_id)
+    app = lookup_or_404(App, app_id)
     return render_to_response(request, 'apps/details.html',
+                              {'app': app})
+
+
+def clone(request, app_id):
+    app = lookup_or_404(App, app_id)
+    return render_to_response(request, 'apps/clone.html',
                               {'app': app})
 
 
@@ -61,9 +65,7 @@ def app_json_get(request, app_id):
     """
     Get JSON blob with meta info for this app.
     """
-    app = App.lookup(app_id)
-    if app is None:
-        raise Http404("App not found: " + app_id)
+    app = lookup_or_404(App, app_id)
     if not app.is_readable(request.user):
         return AccessDenied(request)
     content = model_to_json(app)
