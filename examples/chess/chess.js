@@ -461,16 +461,20 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
     }
 
     function saveMoves() {
+        var data = JSON.stringify({
+            writers: ['public'],
+            blob: ns.moves
+        });
         $.ajax({type: 'PUT',
-                url: '/docs/' + ns.anchor + '/moves',
-                data: ns.moves.join(' ')});
+                url: '/docs/' + ns.anchor,
+                data: data});
         var now = new Date();
         ns.last_saved = now.getTime();
     }
 
     function loadMoves() {
         $.ajax({type: 'GET',
-                url: '/docs/' + ns.anchor + '/moves',
+                url: '/docs/' + ns.anchor,
                 success: function(message, status, xhr) {
                     // Ignore GET for 10 seconds after PUT.
                     if (ns.last_saved) {
@@ -481,7 +485,7 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
                         }
                     }
                     // Perform new moves from the server, or undo.
-                    updateMoves(message.split(' '));
+                    updateMoves(message.blob);
                 }});
     }
 
