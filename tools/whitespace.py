@@ -7,7 +7,12 @@ from optparse import OptionParser, make_option
 
 import pftool
 
-IGNORE_FILES = '*jquery-*.js *.xml *.zip .*'.split()
+IGNORE_FILES = """
+.* *~
+jquery-*.js
+*.xml *.zip
+*.gif *.png *.jpg
+""".split()
 
 
 def short_path(path):
