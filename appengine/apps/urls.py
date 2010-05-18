@@ -5,5 +5,6 @@ urlpatterns = patterns(
     'apps.views',
     (r'^$', 'index'),
     (r'^(?P<app_id>%s)/$' % settings.APP_ID_REGEX, 'details'),
+    (r'^(?P<app_id>%s)/clone/$' % settings.APP_ID_REGEX, 'clone'),
     (r'^(?P<app_id>%s)/app.json/$' % settings.APP_ID_REGEX, 'app_json'),
 )

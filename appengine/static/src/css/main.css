@@ -205,3 +205,18 @@ img.favicon16 {
     height: 16px;
     vertical-align: -2px;
 }
+
+form th {
+  text-align: right;
+  vertical-align: top;
+}
+
+input.wide {
+  width: 320px;
+}
+
+textarea.short {
+  width: 320px;
+  height: 60px;
+  padding: 2px;
+}
