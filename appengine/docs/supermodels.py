@@ -1,6 +1,7 @@
 from google.appengine.ext import db
 
 from utils.mixins import Cacheable, Migratable, Timestamped
+from utils.json import assert_string, assert_string_list
 
 
 class SuperDoc(Timestamped, Migratable, Cacheable):
@@ -52,3 +53,58 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
             return True
         username = user.get_username()
         return username == self.owner or username in self.writers
+
+    def update_tags(self, tags, **kwargs):
+        """
+        Update tags for this SuperDoc, unless they start with underscore.
+        """
+        accepted = [tag for tag in tags if not tag.startswith('_')]
+        reserved = [tag for tag in self.tags if tag.startswith('_')]
+        self.tags = accepted + reserved
+
+    def update_writers(self, writers, **kwargs):
+        """
+        Update writers for this SuperDoc, make sure that the current
+        user is not removing his own write permissions.
+        """
+        old_writers = self.writers
+        self.writers = writers
+        user = kwargs.get('user', None)
+        if user is None:
+            if 'public' in old_writers and 'public' not in self.writers:
+                # Don't let anonymous user remove public write access.
+                self.writers.append('public')
+        else:
+            username = user.get_username()
+            if (username != self.owner
+                and username not in self.writers
+                and 'public' not in self.writers
+                and 'authenticated' not in self.writers):
+                # Don't let authenticated user remove his own write access.
+                self.writers.append(username)
+
+    def update_string_property(self, parsed, key, **kwargs):
+        if key not in parsed:
+            return
+        value = parsed[key]
+        assert_string(key, value)
+        setattr(self, key, value)
+
+    def update_string_list_property(self, parsed, key, **kwargs):
+        if key not in parsed:
+            return
+        values = parsed[key]
+        assert_string_list(key, values)
+        # Check if update_key method exists. For example,
+        # update_writers contains special logic to prevent user from
+        # removing his own write access.
+        update_method = getattr(self, 'update_' + key, None)
+        if update_method:
+            update_method(values, **kwargs)
+        else:
+            setattr(self, key, values)
+
+    def update_from_json(self, parsed, **kwargs):
+        self.update_string_property(parsed, 'title', **kwargs)
+        for key in ('tags', 'readers', 'writers'):
+            self.update_string_list_property(parsed, key, **kwargs)

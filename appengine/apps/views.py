@@ -4,12 +4,11 @@ from django.utils import simplejson as json
 from django.shortcuts import redirect
 
 from utils.shortcuts import render_to_response, lookup_or_404
-from utils.json import model_to_json, assert_string, assert_string_list
+from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
 
 from auth import AuthError
 from auth.middleware import AccessDenied
-from auth.decorators import login_required
 
 from apps.models import App
 from apps.forms import AppForm
@@ -101,20 +100,7 @@ def app_json_put(request, app_id):
     # TODO: Quota check.
     try:
         parsed = json.loads(request.raw_post_data)
-        for key in ('title', ):
-            if key in parsed:
-                assert_string(key, parsed[key])
-                setattr(app, key, parsed[key])
-        for key in ('tags', 'readers', 'writers', 'trusted_urls'):
-            if key in parsed:
-                values = parsed[key]
-                assert_string_list(key, values)
-                # Special treatment if App.update_key method exists.
-                update_method = getattr(app, 'update_' + key, None)
-                if update_method:
-                    update_method(values, request.user)
-                else:
-                    setattr(app, key, values)
+        app.update_from_json(parsed, user=request.user)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)

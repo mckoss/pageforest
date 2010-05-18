@@ -99,22 +99,7 @@ class App(SuperDoc):
                    url=url, secret=crypto.random64(),
                    owner=username, readers=['public'])
 
-    def update_tags(self, tags, user):
-        """
-        Update tags for this app, unless they start with underscore.
-        """
-        accepted = [tag for tag in tags if not tag.startswith('_')]
-        reserved = [tag for tag in self.tags if tag.startswith('_')]
-        self.tags = accepted + reserved
-
-    def update_writers(self, writers, user):
-        """
-        Update writers for this app, make sure that the current user
-        is not removing his own write permissions.
-        """
-        self.writers = writers
-        username = user.get_username()
-        for attempt in ('public', 'authenticated', username):
-            if username in self.writers:
-                return
-        self.writers.append(username)
+    def update_from_json(self, parsed, **kwargs):
+        super(App, self).update_from_json(parsed, **kwargs)
+        self.update_string_property(parsed, 'url', **kwargs)
+        self.update_string_list_property(parsed, 'referers', **kwargs)
