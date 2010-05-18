@@ -14,11 +14,19 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         loaded: function (json) {
             $('#title').val(json.title);
             $('#blob').val(json.blob);
+            this.updateDocLink();
             this.status("Loaded.");
         },
 
         saved: function () {
+            this.updateDocLink();
             this.status("Saved.");
+        },
+
+        updateDocLink: function () {
+            $('#document').attr('href', 'http://' + this.client.appHost +
+                                '/docs/' + this.client.docid + '/' +
+                               '?callback=document');
         },
 
         error: function (status, message) {
@@ -37,7 +45,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
             var json = {
                 'title': $('#title').val(),
                 'blob': $('#blob').val()
-                };
+            };
             this.client.save(json);
         },
 
