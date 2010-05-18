@@ -29,7 +29,7 @@ def index(request):
 
 @jsonp
 @method_required('GET', 'PUT')
-def document(request, doc_id):
+def dispatch(request, doc_id):
     """
     Read or write document metadata.
     """
