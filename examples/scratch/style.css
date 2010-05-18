@@ -2,11 +2,12 @@ body {
 margin: padding: 0;
 font-family: Helvetica, sans-serif;
 font-size: 24px;
-background:#ebebeb url(images/backgrad.gif) repeat-x left top;
+background: #ebebeb url("images/gradient.jpg") repeat-x left top;
 }
 
 h1 {
 margin: 5px 0 0 0;
+float: left;
 }
 
 h2 {
@@ -47,6 +48,7 @@ vertical-align: top;
 
 fieldset {
 margin-bottom: 15px;
+clear: both;
 }
 
 fieldset ol {
