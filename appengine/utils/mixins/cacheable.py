@@ -110,6 +110,8 @@ class Cacheable(db.Model):
         The random jiggle of 500ms prevents a scenario where many
         machines attempt to put to the datastore at once because the
         time since history.datastore_put reaches commit_interval.
+
+        TODO: Batch put without many calls for memcache and datastore.
         """
         now = fake_time
         jiggle = 0.0
