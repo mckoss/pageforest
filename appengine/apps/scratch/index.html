@@ -16,29 +16,32 @@ $(document).ready(scratch.init);
 </script>
 </head>
 <body>
-
-<p>Title:<br />
-<input type="text" id="title" name="title" value="My Document" />
-</p>
-
-<p>Blob:<br />
-<textarea id="blob" name="blob">
-You can store a text blob in each document.
-</textarea>
-</p>
-
-<p>Current username: <span id="username"></span></p>
-<p>
+<div class="page">
+<h1><script>document.write(document.title);</script></h1>
+<div style="text-align:right">
   <input type="button" id="signin" onclick="scratch.app.client.signIn()" value="Sign in" />
   <input type="button" id="signout" onclick="scratch.app.client.signOut()" value="Sign out" />
-</p>
+  <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
+</div>
+<fieldset>
+  <legend>Data Fields</legend>
+  <ol>
+    <li>
+      <label for="title">Title:</label>
+      <input type="text" id="title" name="title" value="My Document" />
+    </li>
+    <li>
+      <label for="blob">Blob:</label>
+      <textarea id="blob" name="blob">You can store a text blob in each document.</textarea>
+    </li>
+  </ol>
+  <input type="button" onclick="scratch.app.save()" value="Save" />
+</fieldset>
 
-<p>
-<input type="button" onclick="scratch.app.save()" value="Save" />
-</p>
-
-
-<p>Results:</p>
-<div id="results" style="clear:both"></div>
+<fieldset>
+  <legend>API Status</legend>
+  <div id="results" style="clear:both"></div>
+</fieldset>
 </body>
+</div>
 </html>
