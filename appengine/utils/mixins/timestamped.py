@@ -14,7 +14,7 @@ class Timestamped(db.Model):
 
     def put(self, *args, **kwargs):
         """
-        Update the timestames before each datastore write.
+        Update the timestamps before each datastore write.
         """
         request = RequestMiddleware.get_request()
         if request and 'REMOTE_ADDR' in request.META:
