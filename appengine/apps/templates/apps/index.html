@@ -11,7 +11,7 @@
 <td><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
 class="favicon16" alt="" />
 <a href="{{ app.get_absolute_url }}">{{ app.title }}</a>
-(<a href="{% url apps.views.details app.get_app_id %}">details</a>)
+(<a href="{{ app.get_details_url }}">details</a>)
 </td>
 <td>By {% for username in app.writers %}
 <a href="/apps/?writer={{ username }}">{{ username }}</a>{% endfor %}</td>

@@ -11,14 +11,23 @@ from apps.models import App
 APP_ID_REGEX_MATCH = re.compile(settings.APP_ID_REGEX).match
 
 
+class WideTextInput(forms.TextInput):
+
+    def __init__(self, *args, **kwargs):
+        attrs = kwargs.get('attrs', {})
+        attrs['class'] = 'wide';
+        super(WideTextInput, self).__init__(attrs=attrs, *args, **kwargs)
+
+
 class AppForm(AjaxForm):
-    app_id = forms.CharField(required=True)
-    title = forms.CharField(required=True)
-    url = forms.CharField(required=True)
-    trusted_urls = forms.CharField()
-    readers = forms.CharField()
-    writers = forms.CharField()
-    tags = forms.CharField()
+    app_id = forms.CharField(label='App ID')
+    title = forms.CharField(widget=WideTextInput)
+    tags = forms.CharField(required=False, widget=WideTextInput)
+    readers = forms.CharField(required=False, widget=WideTextInput)
+    writers = forms.CharField(required=False, widget=WideTextInput)
+    url = forms.CharField(widget=WideTextInput, label='URL')
+    referers = forms.CharField(required=False, widget=forms.Textarea(
+            attrs={'class': 'short'}))
 
     def clean_app_id(self):
         """

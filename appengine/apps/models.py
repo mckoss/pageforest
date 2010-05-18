@@ -5,6 +5,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 
 from django.conf import settings
+from django.core.urlresolvers import reverse
 
 from utils import crypto
 
@@ -29,17 +30,33 @@ class App(SuperDoc):
     are trusted. The default http://app_id.pageforest.com/ is always
     trusted, it does not need to be listed here.
     """
-    url = db.StringProperty()               # Canonical URL for this app.
-    trusted_urls = db.StringListProperty()  # URL prefixes for referer check.
-    secret = db.BlobProperty()              # Pseudo-random Base64 string.
+    url = db.StringProperty()           # Canonical URL for this app.
+    referers = db.StringListProperty()  # URL prefixes for referer check.
+    secret = db.BlobProperty()          # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
         return self.url
 
+    def get_details_url(self):
+        """Get the URL for this app's details page on www."""
+        return reverse('app.views.details', self.get_app_id())
+
     def get_app_id(self):
         """Return the key name which contains the app id."""
         return self.key().name()
+
+    def get_form_dict(self):
+        """Return a dict that can be used as initial argument for a form."""
+        return {
+            'app_id': self.get_app_id(),
+            'title': self.title,
+            'tags': ' '.join(self.tags),
+            'readers': ' '.join(self.readers),
+            'writers': ' '.join(self.writers),
+            'url': self.url,
+            'referers': '\n'.join(self.referers),
+            }
 
     def is_www(self):
         """Is this app the Pageforest front-end?"""

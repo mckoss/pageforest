@@ -12,6 +12,7 @@ from auth.middleware import AccessDenied
 from auth.decorators import login_required
 
 from apps.models import App
+from apps.forms import AppForm
 
 
 @method_required('GET')
@@ -39,14 +40,21 @@ def details(request, app_id):
     Show details for a specific app.
     """
     app = lookup_or_404(App, app_id)
-    return render_to_response(request, 'apps/details.html',
-                              {'app': app})
+    return render_to_response(request, 'apps/details.html', {'app': app})
 
 
+@method_required('GET', 'POST')
 def clone(request, app_id):
     app = lookup_or_404(App, app_id)
-    return render_to_response(request, 'apps/clone.html',
-                              {'app': app})
+    if request.method == 'POST':
+        form = AppForm(request.POST)
+        if form.is_valid():
+            cloned_app = app.clone(form.cleaned_data['app_id'])
+            return redirect(cloned_app.get_details_url())
+    else:
+        form = AppForm(initial=app.get_form_dict())
+    return render_to_response(request, 'apps/clone.html', {
+            'app': app, 'form': form})
 
 
 @jsonp
