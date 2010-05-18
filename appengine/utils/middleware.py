@@ -53,17 +53,13 @@ class WwwMiddleware(object):
     https://pageforest.com/sign-in => https://www.pageforest.com/sign-in
     http://PGFR.ST/apps/?tag=foo   => http://www.pgfr.st/apps/?tag=foo
 
-    Special case: the App Engine cron job runner sends requests to
-    pageforest.appspot.com but it doesn't follow redirects. So we
-    don't redirect if the User-Agent starts with AppEngine-Google.
+    Special case: The App Engine cron job runner sends requests to
+    pageforest.appspot.com but doesn't allow redirects. So we redirect
+    internally if the User-Agent starts with AppEngine-Google.
     """
 
     def process_request(self, request):
         if 'HTTP_HOST' not in request.META:
-            return
-        user_agent = request.META.get('HTTP_USER_AGENT', '')
-        if user_agent.startswith('AppEngine-Google'):
-            # Don't redirect App Engine's cron job runner.
             return
         hostname = request.META['HTTP_HOST'].lower()
         # Remove port number if specified.
@@ -79,10 +75,15 @@ class WwwMiddleware(object):
             normalized = '.'.join(parts)
         # Check if the domain needs a subdomain (app_id or www).
         if normalized in settings.DOMAINS:
-            # Redirect to prepend www.
-            url = request.is_secure() and 'https:' or 'http:'
-            url += '//www.' + hostname + request.get_full_path()
-            return redirect(url)
+            user_agent = request.META.get('HTTP_USER_AGENT', '')
+            if user_agent.startswith('AppEngine-Google'):
+                # App Engine's cron job runner doesn't allow redirects.
+                request.META['HTTP_HOST'] = 'www.' + request.META['HTTP_HOST']
+            else:
+                # Redirect to prepend www.
+                url = request.is_secure() and 'https:' or 'http:'
+                url += '//www.' + hostname + request.get_full_path()
+                return redirect(url)
 
 
 class SlashMiddleware(object):
