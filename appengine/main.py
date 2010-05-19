@@ -1,12 +1,6 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
 
-import sys
-if 'django' in sys.modules and 'test' not in sys.argv:
-    if sys.modules['django'].VERSION[0] == 0:
-        # Remove Django 0.96 if it was loaded by appstats or shell.
-        del sys.modules['django']
-
 from google.appengine.dist import use_library
 use_library('django', '1.1')
 
@@ -16,7 +10,7 @@ from google.appengine.ext.webapp.util import run_wsgi_app
 
 from django import db
 from django.core import signals
-from  django.core.handlers import wsgi
+from django.core.handlers import wsgi
 
 # Force Django to reload its settings.
 from django.conf import settings
