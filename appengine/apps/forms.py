@@ -9,7 +9,7 @@ from utils.forms import AjaxForm
 
 from apps.models import App
 
-APP_ID_REGEX_MATCH = re.compile(settings.APP_ID_REGEX).match
+APP_ID_REGEX_COMPILED = re.compile('^%s$' % settings.APP_ID_REGEX)
 
 
 class WideTextInput(forms.TextInput):
@@ -25,7 +25,7 @@ class WideTextInput(forms.TextInput):
 
 
 class AppForm(AjaxForm):
-    app_id = forms.CharField(label='App ID')
+    app_id = forms.CharField(label='App ID', max_length=32)
     title = forms.CharField(widget=WideTextInput)
     tags = forms.CharField(required=False, widget=WideTextInput)
     readers = forms.CharField(required=False, widget=WideTextInput)
@@ -47,14 +47,18 @@ class AppForm(AjaxForm):
         if app_id[-1] not in string.lowercase + string.digits:
             raise forms.ValidationError(
                 "App ID must end with a letter or number.")
-        if not APP_ID_REGEX_MATCH(app_id):
+        if not APP_ID_REGEX_COMPILED.match(app_id):
             raise forms.ValidationError(
-                "App_Id must contain only letters, numbers and dashes.")
+                "App ID can only contain letters, numbers and dashes.")
         if app_id in settings.RESERVED_APPS:
             raise forms.ValidationError("This app ID is reserved.")
         if App.get_by_key_name(app_id):
             raise forms.ValidationError("This app ID is already taken.")
         return app_id
+
+    def clean_tags(self):
+        tags = self.cleaned_data['tags']
+        return tags
 
     def save(self, commit=True):
         """
