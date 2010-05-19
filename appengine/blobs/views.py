@@ -97,8 +97,8 @@ def blob_list(request):
             'sha1': blob.sha1,
             'size': len(blob.value),
             }
-    serialized = json.dumps(result, indent=2, separators=(',', ': '),
-                            cls=DateEncoder)
+    serialized = json.dumps(result, sort_keys=True, indent=2,
+                            separators=(',', ': '), cls=DateEncoder)
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
