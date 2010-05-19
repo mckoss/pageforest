@@ -9,6 +9,14 @@ import urllib2
 from fnmatch import fnmatch
 from optparse import OptionParser
 
+try:
+    try:
+        import json  # Python 2.6
+    except ImportError:
+        from django.utils import simpleson as json  # Django
+except ImportError:
+    import simplejson as json  # Please easy_install simplejson
+
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
@@ -91,6 +99,9 @@ def config():
             options.command = command
     if options.command not in COMMANDS:
         parser.error("Unsupported command: " + options.command)
+
+    if options.verbose:
+        print "Found simplejson in", os.path.dirname(json.__file__)
 
     if not options.server:
         options.server = "pageforest.com"
