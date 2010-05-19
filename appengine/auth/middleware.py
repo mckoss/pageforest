@@ -56,7 +56,7 @@ def check_permissions(request, resource, method_override=None):
     Check read or write permissions for the current user.
     """
     method = method_override or request.method
-    if method in ['GET', 'HEAD', 'SLICE']:
+    if method in ['GET', 'HEAD', 'LIST', 'SLICE']:
         if 'public' not in resource.readers:
             if not referer_is_trusted(request):
                 return AccessDenied(request)

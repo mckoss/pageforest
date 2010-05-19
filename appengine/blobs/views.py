@@ -1,3 +1,5 @@
+from google.appengine.ext import db
+
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
@@ -7,9 +9,13 @@ from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
+from utils.json import DateEncoder
 from utils.shortcuts import get_int, lookup_or_404
 
 from blobs.models import Blob
+
+ROOT_METHODS = ('GET', 'HEAD', 'LIST')
+INDEX_HTML_METHODS = ('GET', 'HEAD')
 
 
 @jsonp
@@ -21,9 +27,14 @@ def dispatch(request, doc_id, key):
         request.key_name = '/'.join(
             (request.app.get_app_id(), doc_id.lower(), key))
     else:
+        if not key:
+            if request.method not in ROOT_METHODS:
+                return HttpResponseNotAllowed(ROOT_METHODS)
+            if request.method in INDEX_HTML_METHODS:
+                key = 'index.html'
         # Static resources for this application.
         request.key_name = '/'.join(
-            ('apps', request.app.get_app_id(), key or 'index.html'))
+            ('apps', request.app.get_app_id(), key))
     if not request.key_name.endswith('/'):
         # Force a trailing slash to allow pre-order traversal on key
         # names, and to prevent separate documents on /foo and /foo/
@@ -65,6 +76,30 @@ def blob_get(request):
     response['Last-Modified'] = last_modified
     response['ETag'] = etag
     return response
+
+
+def blob_list(request):
+    """
+    HTTP LIST request handler.
+    """
+    query = Blob.all()
+    query.filter('__key__ >=', db.Key.from_path('Blob', request.key_name))
+    stop_key_name = request.key_name[:-1] + '0'  # chr(ord('/') + 1)
+    query.filter('__key__ <', db.Key.from_path('Blob', stop_key_name))
+    strip_levels = request.key_name.count('/')
+    result = {}
+    for blob in query.fetch(100):
+        parts = blob.key().name().split('/')
+        filename = '/'.join(parts[strip_levels:-1])
+        result[filename] = {
+            'json': blob.valid_json,
+            'modified': blob.modified,
+            'sha1': blob.sha1,
+            'size': len(blob.value),
+            }
+    serialized = json.dumps(result, indent=2, separators=(',', ': '),
+                            cls=DateEncoder)
+    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
 @login_required
