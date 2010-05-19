@@ -45,13 +45,20 @@ class ClientErrorTest(AppTestCase):
         self.assertContains(response,
             "Blob not found: myapp/mydoc/does_not_exist/", status_code=404)
 
+    def test_http_method_not_allowed_root(self):
+        """The root of an app should only allow read access."""
+        self.sign_in(self.peter)
+        response = self.app_client.put('/', 'html', content_type='text/html')
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'], 'GET, HEAD, LIST')
+
     def test_http_method_not_allowed(self):
         """Unknown HTTP method should return 405 Method Not Allowed."""
         self.sign_in(self.peter)
         response = self.app_client.options('/docs/mydoc/key')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
-                         'DELETE, GET, HEAD, PUSH, PUT, SLICE')
+                         'DELETE, GET, HEAD, LIST, PUSH, PUT, SLICE')
 
     def test_query_string_not_allowed(self):
         """Unknown query string method should return 405 Method Not Allowed."""
@@ -59,7 +66,7 @@ class ClientErrorTest(AppTestCase):
         response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
-                         'DELETE, GET, HEAD, PUSH, PUT, SLICE')
+                         'DELETE, GET, HEAD, LIST, PUSH, PUT, SLICE')
 
 
 class RestApiTest(AppTestCase):
