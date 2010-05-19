@@ -22,16 +22,17 @@ def index(request):
     """
     title = "Featured apps"
     query = App.all()
-    query.filter('readers', 'public')
     if 'writer' in request.GET:
         title = "Apps from " + request.GET['writer']
         query.filter('writers', request.GET['writer'])
+    else:
+        query.filter('readers', 'public')
     if 'tag' in request.GET:
         title = "Apps tagged " + request.GET['tag']
         query.filter('tags', request.GET['tag'])
+    apps = [app for app in query.fetch(20) if not app.is_www()]
     return render_to_response(request, 'apps/index.html', {
-            'title': title,
-            'apps_list': query.fetch(20)})
+            'title': title, 'apps': apps})
 
 
 @method_required('GET')
