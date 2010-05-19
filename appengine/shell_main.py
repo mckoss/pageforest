@@ -9,5 +9,5 @@ from django.conf import settings
 settings._target = None
 
 if __name__ == '__main__':
-    import shell
-    shell.main()
+    from shell import main
+    main()
