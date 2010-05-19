@@ -44,6 +44,20 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
                       separators=(',', ': '))
 
 
+def assert_boolean(key, value):
+    """
+    Check that the value is True or False.
+
+    >>> assert_boolean('selected', True)
+    >>> assert_boolean('selected', False)
+    >>> assert_boolean('selected', None)
+    Traceback (most recent call last):
+    ValueError: Expected true or false for selected.
+    """
+    if value not in (True, False):
+        raise ValueError("Expected true or false for %s." % key)
+
+
 def assert_string(key, value):
     """
     Check that the value is a string.
