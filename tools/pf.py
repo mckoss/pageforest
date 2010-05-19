@@ -6,6 +6,7 @@ import sys
 import hmac
 import hashlib
 import urllib2
+from datetime import datetime
 from fnmatch import fnmatch
 from optparse import OptionParser
 
@@ -13,7 +14,7 @@ try:
     try:
         import json  # Python 2.6
     except ImportError:
-        from django.utils import simpleson as json  # Django
+        from django.utils import simplejson as json  # Django
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
@@ -24,7 +25,24 @@ COMMANDS = ['get', 'put']  # TODO: Add list and delete.
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
 
-class PutRequest(urllib2.Request):
+def as_datetime(dct):
+    """Decode datetime objects from JSON dictionary."""
+    if dct.get('__class__', '') == 'Date' and 'isoformat' in dct:
+        isoformat = dct['isoformat'][:19]
+        return datetime.strptime(isoformat, '%Y-%m-%dT%H:%M:%S')
+    return dct
+
+
+class AuthRequest(urllib2.Request):
+    """HTTP request with sessionkey cookie and referer."""
+
+    def __init__(self, url, *args, **kwargs):
+        urllib2.Request.__init__(self, url, *args, **kwargs)
+        self.add_header('Referer', url)
+        self.add_header('Cookie', 'sessionkey=' + options.session_key)
+
+
+class PutRequest(AuthRequest):
     """Request to upload a file with HTTP PUT."""
 
     def get_method(self):
@@ -35,7 +53,7 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login(options, server):
+def login(server):
     appid = options.application
     url = 'http://%s/auth/challenge' % server
     if options.verbose:
@@ -69,7 +87,7 @@ def load_credentials():
         return parts
 
 
-def save_credentials(options):
+def save_credentials():
     yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
     yesno = yesno.strip().lower() or 'y'
     if yesno.startswith('y'):
@@ -101,7 +119,7 @@ def config():
         parser.error("Unsupported command: " + options.command)
 
     if options.verbose:
-        print "Found simplejson in", os.path.dirname(json.__file__)
+        print("Found simplejson in %s" % os.path.dirname(json.__file__))
 
     if not options.server:
         options.server = "pageforest.com"
@@ -109,7 +127,8 @@ def config():
     options.application = load_application()
     if not options.application:
         parser.error('Missing "application" key in app.json.')
-    print("Application: %s" % options.application)
+    if options.verbose:
+        print("Application: %s" % options.application)
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
@@ -125,7 +144,7 @@ def config():
     return options, args
 
 
-def upload_file(options, filename, url=None):
+def upload_file(filename, url=None):
     """
     Upload one file to the server.
     """
@@ -136,27 +155,21 @@ def upload_file(options, filename, url=None):
         url = 'http://%s.%s/%s' % (
             options.application, options.server, urlpath)
     data = open(filename, 'rb').read()
-    request = PutRequest(url, data)
-    request.add_header('Cookie', 'sessionkey=' + options.session_key)
-    request.add_header('Referer', url)
     if not options.quiet:
-        print("Uploading: %s" % url)
-    response = urllib2.urlopen(request)
-    if response.code != 200:
-        print("Error upload file: %s" % response.code)
-        print response.read()
-    elif options.verbose:
-        print response.read()
+        print("Uploading: %s (%d bytes)" % (url, len(data)))
+    response = urllib2.urlopen(PutRequest(url, data))
+    if options.verbose:
+        print(response.read())
 
 
-def upload_meta_file(options):
+def upload_meta_file():
     """
     Upload app.json to www.pageforest.com (or www.<server>)
     """
     app_id = options.application
-    options.session_key = login(options, 'www.' + options.server)
+    options.session_key = login('www.' + options.server)
     url = 'http://www.%s/apps/%s/app.json' % (options.server, app_id)
-    upload_file(options, META_FILENAME, url)
+    upload_file(META_FILENAME, url)
 
 
 def filename_matches(filename, patterns):
@@ -168,7 +181,7 @@ def filename_matches(filename, patterns):
             return True
 
 
-def upload_dir(options, path):
+def upload_dir(path):
     """
     Upload a directory, including all files and subdirectories.
     """
@@ -179,14 +192,49 @@ def upload_dir(options, path):
         for filename in filenames:
             if filename_matches(filename, IGNORE_FILENAMES):
                 continue
-            upload_file(options, dirpath + '/' + filename)
+            upload_file(dirpath + '/' + filename)
 
 
-def get(options, args):
-    raise NotImplementedError
+def sha1_file(filename):
+    """
+    Hash the contents of a file with SHA-1.
+    Return the hexdigest, or None if file not found.
+    """
+    if not os.path.exists(filename):
+        return None
+    infile = open(filename, 'rb')
+    content = infile.read()
+    infile.close()
+    return hashlib.sha1(content).hexdigest()
 
 
-def put(options, args):
+def get(args):
+    """
+    Download all files for an app, except files that are already
+    up-to-date (same SHA-1 hash as remote).
+    """
+    options.session_key = login(options.application + '.' + options.server)
+    url = 'http://%s.%s/?method=list' % (options.application, options.server)
+    response = urllib2.urlopen(url)
+    listing = json.loads(response.read(), object_hook=as_datetime)
+    filenames = listing.keys()
+    filenames.sort()
+    for filename in filenames:
+        info = listing[filename]
+        if info['sha1'] == sha1_file(filename):
+            if options.verbose:
+                print("Already up-to-date: %s" % filename)
+            continue
+        url = 'http://%s.%s/%s' % (
+            options.application, options.server, filename)
+        print("Downloading: %s (%d bytes)" % (url, info['size']))
+        response = urllib2.urlopen(AuthRequest(url))
+        outfile = open(filename, 'wb')
+        outfile.write(response.read())
+        outfile.close()
+
+
+def put(args):
     if not args:
         args = [name for name in os.listdir('.')
                 if not name.startswith('.')
@@ -196,24 +244,24 @@ def put(options, args):
     # Should we require that "pf put" is always run in the same folder
     # where META_FILENAME lives?
     if META_FILENAME in args:
-        upload_meta_file(options)
+        upload_meta_file()
         args.remove(META_FILENAME)
     if not args:
         return
-    options.session_key = login(options,
-                                options.application + '.' + options.server)
+    options.session_key = login(options.application + '.' + options.server)
     for path in args:
         if os.path.isdir(path):
-            upload_dir(options, path)
+            upload_dir(path)
         elif os.path.isfile(path):
-            upload_file(options, path)
+            upload_file(path)
 
 
 def main():
+    global options
     options, args = config()
-    globals()[options.command](options, args)
+    globals()[options.command](args)
     if options.save:
-        save_credentials(options)
+        save_credentials()
 
 
 if __name__ == '__main__':
@@ -222,4 +270,4 @@ if __name__ == '__main__':
     except urllib2.HTTPError, e:
         print("%s: %s" % (e, e.url))
         for line in e.fp.readlines()[:140]:
-            print line.rstrip()
+            print(line.rstrip())
