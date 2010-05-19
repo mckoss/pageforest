@@ -9,6 +9,7 @@ from utils.decorators import jsonp, method_required
 
 from auth import AuthError
 from auth.middleware import AccessDenied
+from auth.decorators import login_required
 
 from apps.models import App
 from apps.forms import AppForm
@@ -39,17 +40,32 @@ def details(request, app_id):
     Show details for a specific app.
     """
     app = lookup_or_404(App, app_id)
-    return render_to_response(request, 'apps/details.html', {'app': app})
+    static_blobs = ['/'.join(blob.key().name().split('/')[2:-1])
+                    for blob in app.fetch_static_blobs()]
+    return render_to_response(request, 'apps/details.html', {
+            'app': app, 'static_blobs': static_blobs})
 
 
+@login_required
 @method_required('GET', 'POST')
 def clone(request, app_id):
     app = lookup_or_404(App, app_id)
     if request.method == 'POST':
         form = AppForm(request.POST)
         if form.is_valid():
-            cloned_app = app.clone(form.cleaned_data['app_id'])
-            return redirect(cloned_app.get_details_url())
+            form.cleaned_data['owner'] = request.user.get_username()
+            new_app = form.save()
+            new_app_id = new_app.get_app_id()
+            for blob in app.fetch_static_blobs():
+                parts = blob.key().name().split('/')
+                parts[1] = new_app_id
+                new_blob = blob.clone('/'.join(parts))
+                new_blob.put()
+            # TODO: Save everything with only one datastore
+            # round-trip. We can't simply use db.put(entity_list)
+            # because that ignores the overriden model.put() methods
+            # in the Cacheable and Timestamped mixins.
+            return redirect(new_app.get_details_url())
     else:
         form = AppForm(initial=app.get_form_dict())
     return render_to_response(request, 'apps/clone.html', {
