@@ -1,7 +1,7 @@
 from google.appengine.ext import db
 
 from utils.mixins import Cacheable, Migratable, Timestamped
-from utils.json import assert_string, assert_string_list
+from utils.json import assert_boolean, assert_string, assert_string_list
 
 
 class SuperDoc(Timestamped, Migratable, Cacheable):
@@ -82,6 +82,15 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
                 and 'authenticated' not in self.writers):
                 # Don't let authenticated user remove his own write access.
                 self.writers.append(username)
+
+    def update_boolean_property(self, parsed, key, **kwargs):
+        # TODO: Merge update_*_property methods into one and detect
+        # the property type automatically.
+        if key not in parsed:
+            return
+        value = parsed[key]
+        assert_boolean(key, value)
+        setattr(self, key, value)
 
     def update_string_property(self, parsed, key, **kwargs):
         if key not in parsed:
