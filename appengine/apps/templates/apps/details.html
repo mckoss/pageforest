@@ -7,7 +7,7 @@
 
 <p><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
 class="favicon16" alt="" />
-<a href="{{ app.get_absolute_url }}">{{ app.get_absolute_url }}</a></p>
+<a href="{{ app.url }}" target="_blank">{{ app.url }}</a></p>
 
 {% if app.tags %}
 <p>Tags:{% for tag in app.tags %}
