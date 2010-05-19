@@ -4,6 +4,7 @@ import string
 from django import forms
 from django.conf import settings
 
+from utils import crypto
 from utils.forms import AjaxForm
 
 from apps.models import App
@@ -29,7 +30,6 @@ class AppForm(AjaxForm):
     tags = forms.CharField(required=False, widget=WideTextInput)
     readers = forms.CharField(required=False, widget=WideTextInput)
     writers = forms.CharField(required=False, widget=WideTextInput)
-    url = forms.CharField(widget=WideTextInput, label='URL')
     referers = forms.CharField(required=False, widget=forms.Textarea(
             attrs={'class': 'short'}))
 
@@ -52,18 +52,27 @@ class AppForm(AjaxForm):
                 "App_Id must contain only letters, numbers and dashes.")
         if app_id in settings.RESERVED_APPS:
             raise forms.ValidationError("This app ID is reserved.")
+        if App.get_by_key_name(app_id):
+            raise forms.ValidationError("This app ID is already taken.")
         return app_id
 
-    def save(self):
+    def save(self, commit=True):
         """
         Create a new app with the form data.
         """
-        app = App(key_name=self.cleaned_data['app_id'],
-                  title=self.cleaned_data['title'],
-                  url=self.cleaned_data['url'],
-                  trusted_urls=self.cleaned_data['trusted_urls'],
-                  tags=self.cleaned_data['tags'],
-                  readers=self.cleaned_data['readers'],
-                  writers=self.cleaned_data['writers'])
-        app.put()
+        if 'url' not in self.cleaned_data:
+            self.cleaned_data['url'] = 'http://%s.%s/' % (
+                self.cleaned_data['app_id'], settings.DEFAULT_DOMAIN)
+        app = App(
+            key_name=self.cleaned_data['app_id'],
+            title=self.cleaned_data['title'],
+            tags=self.cleaned_data['tags'].split(),
+            owner=self.cleaned_data['owner'],
+            readers=self.cleaned_data['readers'].split(),
+            writers=self.cleaned_data['writers'].split(),
+            url=self.cleaned_data['url'],
+            referers=self.cleaned_data['referers'].split(),
+            secret=crypto.random64())
+        if commit:
+            app.put()
         return app
