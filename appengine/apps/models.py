@@ -10,6 +10,7 @@ from django.core.urlresolvers import reverse
 from utils import crypto
 
 from docs.supermodels import SuperDoc
+from blobs.models import Blob
 
 CACHE_PREFIX = 'GBH1~'
 
@@ -32,6 +33,7 @@ class App(SuperDoc):
     """
     url = db.StringProperty()           # Canonical URL for this app.
     referers = db.StringListProperty()  # URL prefixes for referer check.
+    cloneable = db.BooleanProperty()    # Opt-in to let others clone this app.
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
@@ -103,3 +105,11 @@ class App(SuperDoc):
         super(App, self).update_from_json(parsed, **kwargs)
         self.update_string_property(parsed, 'url', **kwargs)
         self.update_string_list_property(parsed, 'referers', **kwargs)
+        self.update_boolean_property(parsed, 'cloneable', **kwargs)
+
+    def fetch_static_blobs(self, limit=100):
+        key_name = 'apps/' + self.get_app_id()
+        query = Blob.all()
+        query.filter('__key__ >=', db.Key.from_path('Blob', key_name + '/'))
+        query.filter('__key__ <', db.Key.from_path('Blob', key_name + '0'))
+        return query.fetch(limit)
