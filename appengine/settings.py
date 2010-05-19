@@ -113,7 +113,7 @@ MEDIA_ROOT = ''
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = '/static/'
-MEDIA_VERSION = '1'
+MEDIA_VERSION = '2'
 
 LIB_URL = '/lib/'
 LIB_VERSION = '0.5.2'
