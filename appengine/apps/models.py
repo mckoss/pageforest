@@ -38,10 +38,6 @@ class App(SuperDoc):
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
-        return self.url
-
-    def get_details_url(self):
-        """Get the URL for this app's details page on www."""
         return reverse('apps.views.details', args=[self.get_app_id()])
 
     def get_app_id(self):

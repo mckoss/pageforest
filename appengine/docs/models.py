@@ -22,7 +22,7 @@ class Doc(SuperDoc):
         if app is None:
             return 'http://%s.%s/docs/%s' % (
                 app_id, settings.DEFAULT_DOMAIN, self.doc_id)
-        return app.get_absolute_url() + '#' + self.doc_id
+        return app.url + '#' + self.doc_id
 
     @classmethod
     def create(cls, app_id, doc_id, user):

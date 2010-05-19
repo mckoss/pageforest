@@ -28,11 +28,11 @@ class="favicon16" alt="" />
 
 {% if static_blobs %}
 <ul>{% for blob in static_blobs %}
-<li><a href="{{ app.get_absolute_url }}{{ blob }}">{{ blob }}</a></li>{% endfor %}
+<li><a href="{{ app.url }}{{ blob }}">{{ blob }}</a></li>{% endfor %}
 </ul>
 {% endif %}
 
 {% if app.cloneable and request.user %}
-<p><a href="{{ app.get_details_url }}clone/">Clone this app</a></p>
+<p><a href="{{ app.get_absolute_url }}clone/">Clone this app</a></p>
 {% endif %}
 {% endblock %}
