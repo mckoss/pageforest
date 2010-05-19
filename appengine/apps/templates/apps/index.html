@@ -6,14 +6,15 @@
 <h1>{{ title }}</h1>
 
 <table>
-{% for app in apps_list %}
+{% for app in apps %}
 <tr>
 <td><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
 class="favicon16" alt="" />
 <a href="{{ app.get_details_url }}">{{ app.title }}</a>
+({{ app.get_app_id }})
 </td>
-<td>By <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a></td>
-<td>Tagged {% for tag in app.tags %}
+<td>by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a></td>
+<td>tagged {% for tag in app.tags %}
 <a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% endfor %}</td>
 </tr>
 {% endfor %}
