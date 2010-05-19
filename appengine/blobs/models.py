@@ -31,10 +31,27 @@ class Blob(Timestamped, Migratable, Cacheable):
         return ''.join(('http://', app_id, '.', settings.DEFAULT_DOMAIN,
                         '/docs/', key))
 
+    def get_etag(self):
+        return '"%s"' % self.sha1
+
     @classmethod
     def lookup(cls, key_name):
         """Make lookup an alias for get_by_key_name."""
         return cls.get_by_key_name(key_name)
+
+    def clone(self, key_name):
+        """
+        Return a copy of this blob with a new key name.
+
+        Mixin properties like schema and modified are not cloned,
+        they will be set automatically for the new entity.
+        """
+        return Blob(
+            key_name=key_name,
+            value=self.value,
+            sha1=self.sha1,
+            valid_json=self.valid_json,
+            directory=self.directory)
 
     def put(self):
         """
@@ -50,6 +67,3 @@ class Blob(Timestamped, Migratable, Cacheable):
         except ValueError:
             self.valid_json = False
         super(Blob, self).put()
-
-    def get_etag(self):
-        return '"%s"' % self.sha1
