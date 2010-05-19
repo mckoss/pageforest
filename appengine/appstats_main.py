@@ -9,5 +9,5 @@ from django.conf import settings
 settings._target = None
 
 if __name__ == '__main__':
-    import google.appengine.ext.appstats.ui
-    google.appengine.ext.appstats.ui.main()
+    from google.appengine.ext.appstats.ui import main
+    main()
