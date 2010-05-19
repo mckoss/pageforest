@@ -5,7 +5,16 @@ from django.utils import simplejson as json
 ALWAYS_EXCLUDE = ['created_ip', 'modified_ip', 'secret', 'schema']
 
 
-def model_to_json(entity, extra=None, include=None, exclude=None):
+class DateEncoder(json.JSONEncoder):
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {"__class__": "Date",
+                    "isoformat": obj.isoformat() + 'Z'}
+        return json.JSONEncoder.default(self, obj)
+
+
+def model_to_json(entity, extra=None, include=None, exclude=None, indent=2):
     """
     Serialize a datastore entity to JSON.
 
@@ -25,7 +34,7 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
       }
     }
     """
-    mapping = {}
+    result = {}
     for name in entity.properties():
         if name in ALWAYS_EXCLUDE:
             continue
@@ -33,15 +42,15 @@ def model_to_json(entity, extra=None, include=None, exclude=None):
             continue
         if include and name not in include:
             continue
-        value = getattr(entity, name)
-        if isinstance(value, datetime):
-            value = {"__class__": "Date",
-                     "isoformat": value.isoformat() + 'Z'}
-        mapping[name] = value
+        result[name] = getattr(entity, name)
     if extra:
-        mapping.update(extra)
-    return json.dumps(mapping, sort_keys=True, indent=2,
-                      separators=(',', ': '))
+        result.update(extra)
+    if indent is None:
+        separators = (', ', ': ')
+    else:
+        separators = (',', ': ')
+    return json.dumps(result, sort_keys=True, indent=indent,
+                      separators=separators, cls=DateEncoder)
 
 
 def assert_boolean(key, value):
