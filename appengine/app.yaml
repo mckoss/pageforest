@@ -12,7 +12,7 @@ handlers:
   static_dir: lib
 
 - url: /shell/.*
-  script: shell.py
+  script: shell_main.py
   secure: optional
   login: admin
 
@@ -22,7 +22,7 @@ handlers:
   login: admin
 
 - url: /stats/.*
-  script: $PYTHON_LIB/google/appengine/ext/appstats/ui.py
+  script: appstats_main.py
 
 - url: /.*
   script: main.py
