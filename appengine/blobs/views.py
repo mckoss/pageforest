@@ -1,9 +1,9 @@
-from google.appengine.ext import db
-
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
     HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
+
+from google.appengine.ext import db
 
 from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
