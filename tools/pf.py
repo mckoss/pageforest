@@ -221,10 +221,18 @@ def get(args):
     filenames.sort()
     for filename in filenames:
         info = listing[filename]
+        # Check if the file is already up-to-date.
         if info['sha1'] == sha1_file(filename):
             if options.verbose:
                 print("Already up-to-date: %s" % filename)
             continue
+        # Make directory if needed.
+        dirname = os.path.dirname(filename)
+        if dirname and not os.path.exists(dirname):
+            if options.verbose:
+                print("Making directory: %s" % dirname)
+            os.makedirs(dirname)
+        # Download file from Pageforest backend server.
         url = 'http://%s.%s/%s' % (
             options.application, options.server, filename)
         print("Downloading: %s (%d bytes)" % (url, info['size']))
