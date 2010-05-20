@@ -80,17 +80,45 @@ def blob_get(request):
 
 def blob_list(request):
     """
-    HTTP LIST request handler.
+    List children of the selected blob, including size, modification
+    timestamp, valid JSON flag and SHA-1 hash.
+
+    The depth option sets a limit on recursive subdirectories. The
+    default is 1, which means only direct children, and is optimized
+    using the directory index. Setting depth to 'unlimited' or 0
+    returns all children, >1 returns all children up to that depth.
+
+    Example:
+    http://scratch.pageforest.com/?method=list&depth=2 returns
+    index.html (depth 1)
+    images/gradient.jpg (depth 2)
+    but not style/css/main.css (depth 3)
     """
+    depth = request.GET.get('depth', '1')
+    depth = depth.isdigit() and int(depth) or 0
     query = Blob.all()
-    query.filter('__key__ >=', db.Key.from_path('Blob', request.key_name))
-    stop_key_name = request.key_name[:-1] + '0'  # chr(ord('/') + 1)
-    query.filter('__key__ <', db.Key.from_path('Blob', stop_key_name))
+    if depth == 1:
+        query.filter('directory', request.key_name)
+    else:
+        query.filter('__key__ >=', db.Key.from_path('Blob', request.key_name))
+        stop_key_name = request.key_name[:-1] + '0'  # chr(ord('/') + 1)
+        query.filter('__key__ <', db.Key.from_path('Blob', stop_key_name))
     strip_levels = request.key_name.count('/')
     result = {}
+    # FIXME: This fetches only 100 blobs with one datastore query.
+    # With depth=2, deeply nested blobs will be ignored, so we may
+    # return only few results even if there are more at depth 1 and 2.
+    # To solve this, recursively run a datastore query for each child
+    # up to the requested level. However, that may be very expensive.
+    # To solve this, introduce a separate model to store the blob
+    # meta-info and tree structure, with memcache support.
     for blob in query.fetch(100):
         parts = blob.key().name().split('/')
-        filename = '/'.join(parts[strip_levels:-1])
+        parts = parts[strip_levels:-1]
+        if depth and len(parts) > depth:
+            # Ignore blobs that are deeper than maximum depth.
+            continue
+        filename = '/'.join(parts)
         result[filename] = {
             'json': blob.valid_json,
             'modified': blob.modified,
