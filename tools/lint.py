@@ -42,6 +42,7 @@ Unused argument 'args'
 Unused argument 'kwargs'
 Use super on an old style class
 Access to a protected member _rollback_on_exception
+An attribute inherited from JSONEncoder hide this method
 """.strip().splitlines()
 
 DEPRECATED_MODULES = sorted(set("""
