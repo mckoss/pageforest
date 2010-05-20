@@ -1,5 +1,6 @@
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseNotModified
+from django.http import \
+    HttpResponse, HttpResponseNotModified, HttpResponseNotAllowed
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
@@ -13,6 +14,7 @@ from auth.middleware import AccessDenied
 
 from docs.models import Doc
 from blobs.models import Blob
+from blobs.views import blob_list
 
 
 @login_required
@@ -61,18 +63,22 @@ def app_docs(request):
 
 
 @jsonp
-@method_required('GET', 'PUT')
 def dispatch(request, doc_id):
     """
     Read or write document metadata.
     """
-    if request.method == 'GET':
-        return document_get(request, doc_id)
-    elif request.method == 'PUT':
-        return document_put(request, doc_id)
+    function_name = 'doc_' + request.method.lower()
+    if function_name not in globals():
+        allow = [name[4:].upper() for name in globals()
+                 if name.startswith('doc_')]
+        allow.sort()
+        return HttpResponseNotAllowed(allow)
+    view_function = globals()[function_name]
+    response = view_function(request, doc_id)
+    return response
 
 
-def document_get(request, doc_id):
+def doc_get(request, doc_id):
     """
     Get JSON blob with meta info for this document.
     """
@@ -94,7 +100,7 @@ def document_get(request, doc_id):
     return response
 
 
-def document_put(request, doc_id):
+def doc_put(request, doc_id):
     """
     Parse incoming JSON blob and update meta info for this document.
     """
@@ -117,3 +123,11 @@ def document_put(request, doc_id):
         Blob(key_name=key_name, value=value).put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)
+
+
+def doc_list(request, doc_id):
+    """
+    List blobs inside a document, using the blob list interface.
+    """
+    request.key_name = request.doc.key().name() + '/'
+    return blob_list(request)
