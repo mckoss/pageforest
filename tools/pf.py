@@ -155,6 +155,12 @@ def upload_file(filename, url=None):
         url = 'http://%s.%s/%s' % (
             options.application, options.server, urlpath)
     data = open(filename, 'rb').read()
+    if hasattr(options, 'listing') and filename in options.listing:
+        sha1 = hashlib.sha1(data).hexdigest()
+        if options.listing[filename]['sha1'] == sha1:
+            if options.verbose:
+                print("Already up-to-date: %s" % filename)
+            return
     if not options.quiet:
         print("Uploading: %s (%d bytes)" % (url, len(data)))
     response = urllib2.urlopen(PutRequest(url, data))
@@ -208,19 +214,27 @@ def sha1_file(filename):
     return hashlib.sha1(content).hexdigest()
 
 
+def list_remote_files():
+    """
+    Get the list of files on the remote server, with metadata.
+    """
+    url = 'http://%s.%s/?method=list&depth=unlimited' % (
+        options.application, options.server)
+    response = urllib2.urlopen(AuthRequest(url))
+    options.listing = json.loads(response.read(), object_hook=as_datetime)
+
+
 def get(args):
     """
     Download all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
     """
     options.session_key = login(options.application + '.' + options.server)
-    url = 'http://%s.%s/?method=list' % (options.application, options.server)
-    response = urllib2.urlopen(url)
-    listing = json.loads(response.read(), object_hook=as_datetime)
-    filenames = listing.keys()
+    list_remote_files()
+    filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
-        info = listing[filename]
+        info = options.listing[filename]
         # Check if the file is already up-to-date.
         if info['sha1'] == sha1_file(filename):
             if options.verbose:
@@ -257,6 +271,7 @@ def put(args):
     if not args:
         return
     options.session_key = login(options.application + '.' + options.server)
+    list_remote_files()
     for path in args:
         if os.path.isdir(path):
             upload_dir(path)
