@@ -1,4 +1,5 @@
-from datetime import datetime
+import datetime
+from mock import Mock
 
 from google.appengine.api import memcache
 
@@ -282,7 +283,7 @@ class JsonArrayTest(AppTestCase):
 
     def test_push(self):
         """Test that push appends to the end af the array."""
-        started = datetime.now()
+        started = datetime.datetime.now()
         self.sign_in(self.peter)
         response = self.app_client.post('/docs/mydoc/chat?method=PUSH',
                                         data='bye', content_type="text/plain")
@@ -296,7 +297,7 @@ class JsonArrayTest(AppTestCase):
 
     def test_push_empty(self):
         """Test that push creates the array if it didn't exist."""
-        started = datetime.now()
+        started = datetime.datetime.now()
         self.sign_in(self.peter)
         response = self.app_client.post('/docs/mydoc/chat2?method=PUSH',
                                         data='hi', content_type="text/plain")
@@ -315,3 +316,107 @@ class JsonArrayTest(AppTestCase):
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
         self.assertContent('/docs/mydoc/chat', '["hi", "howdy", "bye"]')
+
+
+class ListTest(AppTestCase):
+
+    def setUp(self):
+        super(ListTest, self).setUp()
+        original = datetime.datetime
+        try:
+            datetime.datetime = Mock()
+            datetime.datetime.now.return_value = original(
+                2010, 5, 10, 11, 12, 13)
+            Doc(key_name='myapp/1234', doc_id='1234', owner='peter').put()
+            Blob(key_name='myapp/1234/', value='zero').put()
+            Blob(key_name='myapp/1234/one/', value='one').put()
+            Blob(key_name='myapp/1234/one/two/', value='two').put()
+            Blob(key_name='myapp/1234/one/two/three/', value='three').put()
+            Blob(key_name='myapp/1234/one/two/three/four/', value='four').put()
+        finally:
+            datetime.datetime = original
+        self.sign_in(self.peter)
+
+    def test_depth_1(self):
+        """List method with depth=1 should return only direct children."""
+        for url in [
+            '/docs/1234?method=list',
+            '/docs/1234/?method=LIST',
+            '/docs/1234?method=list&depth=1',
+            ]:
+            self.assertContains(self.app_client.get(url), """\
+{
+  "one": {
+    "json": false,
+    "modified": {
+      "__class__": "Date",
+      "isoformat": "2010-05-10T11:12:13Z"
+    },
+    "sha1": "fe05bcdcdc4928012781a5f1a2a77cbb5398e106",
+    "size": 3
+  }
+}""")
+
+    def test_depth_2(self):
+        """List method with depth=2 should return only two levels."""
+        for url in [
+            '/docs/1234?method=list&depth=2',
+            '/docs/1234/?depth=2&method=LIST',
+            '/docs/1234?method=list&depth=2&callback=foo',
+            ]:
+            response = self.app_client.get(url)
+            self.assertContains(response, '"one": {')
+            self.assertContains(response, '"one/two": {')
+            self.assertNotContains(response, 'three')
+            self.assertNotContains(response, 'four')
+
+    def test_depth_unlimited(self):
+        """List method with depth=unlimited should return all sub-children."""
+        for url in [
+            '/docs/1234?method=list&depth=0',
+            '/docs/1234/?method=LIST&depth=unlimited',
+            '/docs/1234?method=list&depth=foo&callback=foo',
+            '/docs/1234?method=list&depth=4',
+            '/docs/1234?method=list&depth=5',
+            ]:
+            response = self.app_client.get(url)
+            self.assertContains(response, '"one": {')
+            self.assertContains(response, '"one/two": {')
+            self.assertContains(response, '"one/two/three": {')
+            self.assertContains(response, '"one/two/three/four": {')
+
+    def test_relative(self):
+        """List method with relative depth should show three but not four."""
+        for url in [
+            '/docs/1234?method=list&depth=3',
+            '/docs/1234/?method=list&depth=3',
+            '/docs/1234/one?method=list&depth=2',
+            '/docs/1234/one/?method=list&depth=2',
+            '/docs/1234/one/two?method=list&depth=1',
+            '/docs/1234/one/two?method=list',
+            ]:
+            response = self.app_client.get(url)
+            self.assertContains(response, 'three": {')
+            self.assertNotContains(response, 'four')
+
+    def test_app_doc_list(self):
+        """The app_doc_list function should show Peter's documents."""
+        for url in [
+            '/docs?method=list',
+            ]:
+            self.assertContains(self.app_client.get(url), """\
+{
+  "1234": {
+    "json": true,
+    "modified": {
+      "__class__": "Date",
+      "isoformat": "2010-05-10T11:12:13Z"
+    },
+    "sha1": "aa8c41330509455ee5679d04ed41535d280d9a89",
+    "size": 4
+  },
+  "MyDoc": {
+    "json": true,
+    "modified": {
+      "__class__": "Date",
+""")
