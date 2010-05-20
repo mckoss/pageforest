@@ -15,6 +15,19 @@ class DocumentTest(AppTestCase):
         self.assertEqual(self.doc.get_absolute_url(),
                          'http://myapp.pageforest.com/#MyDoc')
 
+    def test_http_method_not_allowed(self):
+        """The /docs/doc_id/ URL should report allowed methods."""
+        self.sign_in(self.peter)
+        for url in [
+            '/docs/mydoc',
+            '/docs/MyDoc',
+            '/docs/mydoc/',
+            '/docs/MyDoc/',
+            ]:
+            response = self.app_client.post(url, {'key': 'value'})
+            self.assertEqual(response.status_code, 405)
+            self.assertEqual(response['Allow'], 'GET, LIST, PUT')
+
     def test_json(self):
         """Test JSON serializer for document."""
         response = self.app_client.get('/docs/MyDoc/')
