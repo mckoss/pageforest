@@ -2,11 +2,14 @@ from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotModified
 from django.utils import simplejson as json
 
-from utils.json import model_to_json
+from google.appengine.ext import db
+
+from utils.json import model_to_json, DateEncoder
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
 from auth.decorators import login_required
+from auth.middleware import AccessDenied
 
 from docs.models import Doc
 from blobs.models import Blob
@@ -25,6 +28,36 @@ def index(request):
     return render_to_response(request, 'docs/index.html', {
             'title': title,
             'docs_list': query.fetch(20)})
+
+
+@login_required
+@method_required('LIST')
+def app_docs(request):
+    """
+    List the current user's documents within the current app.
+    """
+    query = Doc.all()
+    query.filter('owner', request.user.get_username())
+    key_name = request.app.get_app_id()
+    query.filter('__key__ >=', db.Key.from_path('Doc', key_name + '/'))
+    query.filter('__key__ <', db.Key.from_path('Doc', key_name + '0'))
+    docs = query.fetch(100)
+    blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
+                 for doc in docs]
+    blobs = db.get(blob_keys)
+    result = {}
+    for doc, blob in zip(docs, blobs):
+        info = {'json': True}
+        if blob:
+            info['modified'] = max(doc.modified, blob.modified)
+            info['sha1'] = blob.sha1
+            info['size'] = len(blob.value)
+        else:
+            info['modified'] = doc.modified
+        result[doc.doc_id] = info
+    serialized = json.dumps(result, sort_keys=True, indent=2,
+                            separators=(',', ': '), cls=DateEncoder)
+    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
 @jsonp
