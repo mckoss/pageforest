@@ -94,7 +94,8 @@ def doc_get(request, doc_id):
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     # Generate pretty JSON output.
-    result = request.doc.to_json(extra)
+    result = request.doc.to_json(exclude=settings.HIDDEN_PROPERTIES,
+                                 extra=extra)
     response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
     response['Last-Modified'] = last_modified
     return response

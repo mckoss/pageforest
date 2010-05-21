@@ -121,6 +121,14 @@ LIB_VERSION = '0.5.2'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 
+# Don't include these properties in user-facing JSON output.
+HIDDEN_PROPERTIES = (
+    'secret',
+    'created_ip',
+    'modified_ip',
+    'schema',
+    )
+
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """
@@ -187,7 +195,6 @@ TEMPLATE_LOADERS = (
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
-    # 'django.contrib.auth.context_processors.auth',
     # 'django.core.context_processors.debug',
     # 'django.core.context_processors.media',
     'django.core.context_processors.request',
@@ -230,6 +237,7 @@ INSTALLED_APPS = (
     'apps',
     'docs',
     'blobs',
+    'backups',
     'dashboard',
     'utils',
 )
