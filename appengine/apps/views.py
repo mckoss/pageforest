@@ -91,7 +91,9 @@ def app_json_get(request, app_id):
     app = lookup_or_404(App, app_id)
     if not app.is_readable(request.user):
         return AccessDenied(request)
-    content = app.to_json(exclude=settings.HIDDEN_PROPERTIES)
+    extra = {"application": app.get_app_id(),
+             "cloneable": bool(app.cloneable)}
+    content = app.to_json(exclude=settings.HIDDEN_PROPERTIES, extra=extra)
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 

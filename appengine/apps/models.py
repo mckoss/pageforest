@@ -33,7 +33,7 @@ class App(SuperDoc):
     """
     url = db.StringProperty()           # Canonical URL for this app.
     referers = db.StringListProperty()  # URL prefixes for referer check.
-    cloneable = db.BooleanProperty()    # Opt-in to let others clone this app.
+    cloneable = db.BooleanProperty(default=False)  # Opt-in to allow clones.
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
 
     def get_absolute_url(self):
