@@ -74,13 +74,25 @@ def login(server):
 
 
 def load_application():
-    for line in file(META_FILENAME):
-        match = APP_REGEX.match(line)
-        if match:
-            return match.group(1)
+    """
+    Load application from app.json, or ask the user for it.
+    """
+    if os.path.exists('app.json'):
+        parsed = json.loads(open(META_FILENAME, 'r').read())
+    else:
+        parsed = {}
+    if 'application' in parsed:
+        application = parsed['application']
+        print("Application: " + application)
+    else:
+        application = raw_input("Application: ")
+    return application
 
 
 def load_credentials():
+    """
+    Load username and password from base64-encoded .passwd file.
+    """
     credentials = open(PASSWORD_FILENAME).readline().decode('base64')
     parts = credentials.split(':')
     if len(parts) == 2:
@@ -88,6 +100,9 @@ def load_credentials():
 
 
 def save_credentials():
+    """
+    Save username and password to base64-encoded .passwd file.
+    """
     yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
     yesno = yesno.strip().lower() or 'y'
     if yesno.startswith('y'):
@@ -96,6 +111,9 @@ def save_credentials():
 
 
 def config():
+    """
+    Get configuration from command line, app.json and user input.
+    """
     usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
@@ -125,10 +143,6 @@ def config():
         options.server = "pageforest.com"
 
     options.application = load_application()
-    if not options.application:
-        parser.error('Missing "application" key in app.json.')
-    if options.verbose:
-        print("Application: %s" % options.application)
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
