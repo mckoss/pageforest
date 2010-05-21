@@ -25,7 +25,7 @@ def index(request):
     """
     title = "My documents"
     query = Doc.all()
-    query.filter('writers', request.user.username.lower())
+    query.filter('owner', request.user.get_username())
     query.order('-modified')
     return render_to_response(request, 'docs/index.html', {
             'title': title,
