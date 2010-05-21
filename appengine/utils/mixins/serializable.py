@@ -5,10 +5,13 @@ from google.appengine.ext import db
 from utils.json import ModelEncoder
 
 
-ALWAYS_EXCLUDE = ['created_ip', 'modified_ip', 'secret', 'schema']
-
-
 class Serializable(db.Model):
+
+    def to_protobuf(self):
+        """
+        Serialize a datastore entity to a protocol buffer.
+        """
+        return db.model_to_protobuf(self).Encode()
 
     def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
@@ -16,8 +19,6 @@ class Serializable(db.Model):
         """
         result = {}
         for name in self.properties():
-            if name in ALWAYS_EXCLUDE:
-                continue
             if exclude and name in exclude:
                 continue
             if include and name not in include:
