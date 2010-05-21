@@ -46,8 +46,10 @@ def incremental_backup(request, model, limit):
     # Generate a zip file that contains a file for each modified user.
     temp = StringIO()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
+    key_name = '%ss-%s.zip' % (
+        kind.lower(), datetime.now().strftime('%y%m%d-%H%M%S'))
     backup = Backup(
-        key_name=kind + datetime.now().strftime('/%Y-%m-%d/%H:%M:%S'),
+        key_name=key_name,
         model=kind,
         oldest=datetime(2100, 1, 1),
         youngest=datetime(2000, 1, 1))
