@@ -1,10 +1,10 @@
 from google.appengine.ext import db
 
-from utils.mixins import Timestamped, Migratable, Serializable, Cacheable
+from utils.mixins import Timestamped, Migratable, Cacheable
 from utils.json import assert_boolean, assert_string, assert_string_list
 
 
-class SuperDoc(Timestamped, Migratable, Serializable, Cacheable):
+class SuperDoc(Timestamped, Migratable, Cacheable):
     """
     Parent class for App and Doc with shared functionality.
 
