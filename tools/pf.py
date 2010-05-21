@@ -169,12 +169,14 @@ def upload_file(filename, url=None):
         url = 'http://%s.%s/%s' % (
             options.application, options.server, urlpath)
     data = open(filename, 'rb').read()
+    # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and filename in options.listing:
         sha1 = hashlib.sha1(data).hexdigest()
         if options.listing[filename]['sha1'] == sha1:
             if options.verbose:
                 print("Already up-to-date: %s" % filename)
             return
+    # Upload file to Pageforest backend.
     if not options.quiet:
         print("Uploading: %s (%d bytes)" % (url, len(data)))
     response = urllib2.urlopen(PutRequest(url, data))
@@ -182,14 +184,55 @@ def upload_file(filename, url=None):
         print(response.read())
 
 
+def download_file(filename, url=None):
+    """
+    Download a file from the server.
+    """
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = 'http://%s.%s/%s' % (
+            options.application, options.server, urlpath)
+    # Check if the local file is already up-to-date.
+    info = {}
+    if hasattr(options, 'listing') and filename in options.listing:
+        info = options.listing[filename]
+        if info['sha1'] == sha1_file(filename):
+            if options.verbose:
+                print("Already up-to-date: %s" % filename)
+            return
+    # Download file from Pageforest backend.
+    if not options.quiet:
+        if 'size' in info:
+            print("Downloading: %s (%d bytes)" % (url, info['size']))
+        else:
+            print("Downloading: %s" % url)
+    response = urllib2.urlopen(AuthRequest(url))
+    outfile = open(filename, 'wb')
+    outfile.write(response.read())
+    outfile.close()
+
+
 def upload_meta_file():
     """
     Upload app.json to www.pageforest.com (or www.<server>)
     """
+    options.session_key = login('www.' + options.server)
+    url = 'http://www.%s/apps/%s/app.json' % (
+        options.server, options.application)
+    upload_file(META_FILENAME, url)
+
+
+def download_meta_file():
+    """
+    Download app.json from www.pageforest.com (or www.<server>)
+    """
     app_id = options.application
     options.session_key = login('www.' + options.server)
-    url = 'http://www.%s/apps/%s/app.json' % (options.server, app_id)
-    upload_file(META_FILENAME, url)
+    url = 'http://www.%s/apps/%s/app.json' % (
+        options.server, options.application)
+    download_file(META_FILENAME, url)
 
 
 def filename_matches(filename, patterns):
@@ -243,17 +286,12 @@ def get(args):
     Download all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
     """
+    download_meta_file()
     options.session_key = login(options.application + '.' + options.server)
     list_remote_files()
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
-        info = options.listing[filename]
-        # Check if the file is already up-to-date.
-        if info['sha1'] == sha1_file(filename):
-            if options.verbose:
-                print("Already up-to-date: %s" % filename)
-            continue
         # Make directory if needed.
         dirname = os.path.dirname(filename)
         if dirname and not os.path.exists(dirname):
@@ -261,13 +299,7 @@ def get(args):
                 print("Making directory: %s" % dirname)
             os.makedirs(dirname)
         # Download file from Pageforest backend server.
-        url = 'http://%s.%s/%s' % (
-            options.application, options.server, filename)
-        print("Downloading: %s (%d bytes)" % (url, info['size']))
-        response = urllib2.urlopen(AuthRequest(url))
-        outfile = open(filename, 'wb')
-        outfile.write(response.read())
-        outfile.close()
+        download_file(filename)
 
 
 def put(args):
