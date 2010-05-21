@@ -8,6 +8,8 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.datastore import entity_pb
 
+from utils.mixins.serializable import Serializable
+
 
 class CacheHistory(object):
     """
@@ -46,7 +48,7 @@ class CacheHistory(object):
         return {self.chm_key: ' '.join(timestamps)}
 
 
-class Cacheable(db.Model):
+class Cacheable(Serializable):
     """
     Memcache mixin for App Engine datastore models.
     Usage: class MyModel(Cacheable)
@@ -62,7 +64,6 @@ class Cacheable(db.Model):
     * @classmethod get_or_insert(key_name, **kwargs)
 
     Cacheable introduces the following new methods:
-    * serialize()
     * cache_put()
     * cache_delete()
     * @classmethod cache_get_by_key_name()
@@ -74,7 +75,7 @@ class Cacheable(db.Model):
         # Make sure that Cacheable is the last mixin in the MRO.
         found = False
         for cls in self.__class__.__mro__:
-            if found and cls not in (db.Model, object):
+            if found and cls not in (Serializable, db.Model, object):
                 mro = [c.__name__ for c in self.__class__.__mro__]
                 mro.insert(0, "Cacheable must be the last mixin in the MRO:")
                 raise TypeError(' '.join(mro))
@@ -82,19 +83,10 @@ class Cacheable(db.Model):
                 found = True
         super(Cacheable, self).__init__(*args, **kwargs)
 
-    def serialize(self):
-        """
-        Return a mapping for memcache.set_multi, containing the cache
-        key and protocol buffer for this entity.
-        """
-        cache_key = self.get_cache_key()
-        protobuf = db.model_to_protobuf(self)
-        binary = protobuf.Encode()
-        return {cache_key: binary}
-
     def cache_put(self):
         """Save this entity to memcache, using protocol buffers."""
-        key, value = self.serialize().items()[0]
+        key = self.get_cache_key()
+        value = self.to_protobuf()
         return memcache.set(key, value)
 
     def put(self, commit_interval=2.0, fake_time=None):
@@ -129,7 +121,7 @@ class Cacheable(db.Model):
         elif history.average_put_interval() > commit_interval:
             commit = True  # Infrequent updates or not enough confidence.
         # Save entity and history to memcache.
-        mapping = self.serialize()
+        mapping = {self.get_cache_key(): self.to_protobuf()}
         mapping.update(history.serialize_memcache_puts())
         if commit:
             history.datastore_put = now
