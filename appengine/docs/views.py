@@ -5,7 +5,7 @@ from django.utils import simplejson as json
 
 from google.appengine.ext import db
 
-from utils.json import model_to_json, DateEncoder
+from utils.json import ModelEncoder
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
@@ -58,7 +58,7 @@ def app_docs(request):
             info['modified'] = doc.modified
         result[doc.doc_id] = info
     serialized = json.dumps(result, sort_keys=True, indent=2,
-                            separators=(',', ': '), cls=DateEncoder)
+                            separators=(',', ': '), cls=ModelEncoder)
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
@@ -94,7 +94,7 @@ def doc_get(request, doc_id):
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified()
     # Generate pretty JSON output.
-    result = model_to_json(request.doc, extra)
+    result = request.doc.to_json(extra)
     response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
     response['Last-Modified'] = last_modified
     return response

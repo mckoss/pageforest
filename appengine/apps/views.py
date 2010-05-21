@@ -4,7 +4,6 @@ from django.utils import simplejson as json
 from django.shortcuts import redirect
 
 from utils.shortcuts import render_to_response, lookup_or_404
-from utils.json import model_to_json
 from utils.decorators import jsonp, method_required
 
 from auth import AuthError
@@ -92,7 +91,7 @@ def app_json_get(request, app_id):
     app = lookup_or_404(App, app_id)
     if not app.is_readable(request.user):
         return AccessDenied(request)
-    content = model_to_json(app)
+    content = app.to_json()
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 

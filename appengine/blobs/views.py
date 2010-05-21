@@ -9,7 +9,7 @@ from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
-from utils.json import DateEncoder
+from utils.json import ModelEncoder
 from utils.shortcuts import get_int, lookup_or_404
 
 from blobs.models import Blob
@@ -127,7 +127,7 @@ def blob_list(request):
             'size': len(blob.value),
             }
     serialized = json.dumps(result, sort_keys=True, indent=2,
-                            separators=(',', ': '), cls=DateEncoder)
+                            separators=(',', ': '), cls=ModelEncoder)
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
