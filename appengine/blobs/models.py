@@ -32,7 +32,15 @@ class Blob(Timestamped, Migratable, Cacheable):
                         '/docs/', key))
 
     def get_etag(self):
+        """Return ETag for use in the HTTP header."""
         return '"%s"' % self.sha1
+
+    def to_backup(self):
+        """
+        Return file contents for zipfile backup. Modification time is
+        stored in zipinfo, other properties will be restored by put.
+        """
+        return self.value
 
     @classmethod
     def lookup(cls, key_name):

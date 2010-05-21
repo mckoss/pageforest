@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Backup - Dashboard{% endblock %}
+
+{% block content %}
+<p>
+key_name: {{ backup.key.name }}<br />
+model: {{ backup.model }}<br />
+created: {{ backup.created }}<br />
+oldest: {{ backup.oldest }}<br />
+youngest: {{ backup.youngest }}
+</p>
+
+<ul>{% for key_name in backup.keys %}
+<li>{{ key_name }}</li>{% endfor %}
+</ul>
+{% endblock content %}

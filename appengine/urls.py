@@ -12,6 +12,7 @@ urlpatterns = patterns(
     # Include separate urls.py for Django apps.
     (r'^apps/', include('apps.urls')),
     (r'^docs/', include('docs.urls')),
+    (r'^backups/', include('backups.urls')),
     (r'^dashboard/', include('dashboard.urls')),
 
     # Auth uses top-level URLs like /sign-in/ and /email-verify/.
