@@ -27,8 +27,7 @@ class Serializable(db.Model):
         if extra:
             result.update(extra)
         if indent is None:
-            separators = (', ', ': ')
+            return json.dumps(result, sort_keys=True, cls=ModelEncoder)
         else:
-            separators = (',', ': ')
-        return json.dumps(result, sort_keys=True, indent=indent,
-                          separators=separators, cls=ModelEncoder)
+            return json.dumps(result, sort_keys=True, cls=ModelEncoder,
+                              indent=indent, separators=(',', ': ')) + '\n'
