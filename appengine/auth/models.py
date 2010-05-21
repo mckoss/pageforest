@@ -3,7 +3,7 @@ import time
 from google.appengine.ext import db
 from google.appengine.api import memcache
 
-from utils.mixins import Timestamped, Migratable, Serializable, Cacheable
+from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
 
 from auth import AuthError, SignatureError
@@ -15,7 +15,7 @@ CHALLENGE_EXPIRATION = 60  # Seconds.
 CHALLENGE_CACHE_PREFIX = 'CR1~'
 
 
-class User(db.Expando, Timestamped, Migratable, Serializable, Cacheable):
+class User(db.Expando, Timestamped, Migratable, Cacheable):
     """
     The entity key name is username.lower() for case-insensitive matching.
     The password is hmac_sha1(key=raw_password, message=username.lower()).
