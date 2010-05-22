@@ -5,13 +5,46 @@ from datetime import datetime
 
 from django.http import HttpResponse
 
-from utils.shortcuts import render_to_response
+from utils.shortcuts import render_to_response, lookup_or_404
 
 from auth.models import User
 from apps.models import App
 from docs.models import Doc
 from blobs.models import Blob
 from backups.models import Backup
+
+
+def index(request):
+    groups = []
+    for model in ('User', 'App', 'Doc', 'Blob'):
+        query = Backup.all().filter('model', model).order('-youngest')
+        backups = query.fetch(20)
+        groups.append((model, backups))
+    return render_to_response(request, 'backups/index.html',
+                              {'groups': groups})
+
+
+def download(request, key_name):
+    backup = lookup_or_404(Backup, key_name)
+    response = HttpResponse(backup.zipfile, content_type='application/zip')
+    response['Content-Disposition'] = 'attachment'
+    return response
+
+
+def backup_users(request):
+    return incremental_backup(request, User, 400)
+
+
+def backup_apps(request):
+    return incremental_backup(request, App, 400)
+
+
+def backup_docs(request):
+    return incremental_backup(request, Doc, 200)
+
+
+def backup_blobs(request):
+    return incremental_backup(request, Blob, 200)
 
 
 def incremental_backup(request, model, limit):
@@ -71,19 +104,3 @@ def incremental_backup(request, model, limit):
     backup.put()
     return render_to_response(request, 'backups/cron.html',
                               {'backup': backup})
-
-
-def backup_users(request):
-    return incremental_backup(request, User, 400)
-
-
-def backup_apps(request):
-    return incremental_backup(request, App, 400)
-
-
-def backup_docs(request):
-    return incremental_backup(request, Doc, 200)
-
-
-def backup_blobs(request):
-    return incremental_backup(request, Blob, 200)

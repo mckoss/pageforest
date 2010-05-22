@@ -1,5 +1,5 @@
 application: pageforest
-version: dev
+version: 2010-05-21
 runtime: python
 api_version: 1
 default_expiration: 1d
@@ -23,6 +23,11 @@ handlers:
 
 - url: /stats/.*
   script: appstats_main.py
+
+- url: /backups/.*
+  script: main.py
+  secure: optional
+  login: admin
 
 - url: /.*
   script: main.py

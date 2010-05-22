@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Backup - Dashboard{% endblock %}
+
+{% block content %}
+{% for model, backups in groups %}
+<h2>{{ model }} backups</h2>
+<ul>{% for backup in backups %}
+<li><a href="{% url backups.views.download backup.key.name %}">{{ backup.key.name }}</a></li>{% endfor %}
+</ul>
+{% endfor %}
+
+{% endblock content %}
