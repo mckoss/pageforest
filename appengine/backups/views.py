@@ -1,4 +1,3 @@
-import logging
 import zipfile
 from StringIO import StringIO
 from datetime import datetime
@@ -13,12 +12,16 @@ from docs.models import Doc
 from blobs.models import Blob
 from backups.models import Backup
 
+MAX_ZIPFILE_BYTES = 5 * 1024 * 1024  # Five mebibytes.
+
 
 def index(request):
     groups = []
     for model in ('User', 'App', 'Doc', 'Blob'):
-        query = Backup.all().filter('model', model).order('-youngest')
-        backups = query.fetch(20)
+        query = Backup.all()
+        query.filter('model', model)
+        query.order('-youngest')
+        backups = query.fetch(10)
         groups.append((model, backups))
     return render_to_response(request, 'backups/index.html',
                               {'groups': groups})
@@ -76,7 +79,7 @@ def incremental_backup(request, model, limit):
     if not entities:
         return HttpResponse("No %ss modified since %s." % (
                 kind.lower(), youngest.isoformat()), content_type='text/plain')
-    # Generate a zip file that contains a file for each modified user.
+    # Generate a zip archive that contains a file for each modified entity.
     temp = StringIO()
     archive = zipfile.ZipFile(temp, 'w', zipfile.ZIP_DEFLATED)
     key_name = '%ss-%s.zip' % (
@@ -89,7 +92,6 @@ def incremental_backup(request, model, limit):
     for entity in entities:
         key_name = entity.key().name()
         data = serialize(entity)
-        logging.info('serialized %s %s to %s', kind, key_name, data)
         info = zipfile.ZipInfo(
             filename=key_name.rstrip('/').encode('utf-8'),
             date_time=entity.modified.timetuple()[:6])
@@ -98,6 +100,8 @@ def incremental_backup(request, model, limit):
         backup.keys.append(key_name)
         backup.oldest = min(backup.oldest, entity.modified)
         backup.youngest = max(backup.youngest, entity.modified)
+        if temp.tell() > MAX_ZIPFILE_BYTES:
+            break
     archive.close()
     backup.zipfile = temp.getvalue()
     temp.close()
