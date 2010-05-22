@@ -97,10 +97,10 @@ class SlashMiddleware(object):
         if path.endswith('/'):
             # URL already ends with a slash.
             return
-        if path in ('/stats', '/shell'):
-            # Redirect to add trailing slash for app.yaml handlers.
-            return redirect(path + '/')
         # Add a trailing slash (internal redirect).
         request.path_info += '/'
         request.META['PATH_INFO'] = request.path_info
         request.path = request.META['SCRIPT_NAME'] + request.path_info
+        if path in ('/stats', '/shell', '/backups'):
+            # External redirect for app.yaml handlers.
+            return redirect(request.get_full_path())
