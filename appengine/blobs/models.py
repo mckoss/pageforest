@@ -42,11 +42,6 @@ class Blob(Timestamped, Migratable, Cacheable):
         """
         return self.value
 
-    @classmethod
-    def lookup(cls, key_name):
-        """Make lookup an alias for get_by_key_name."""
-        return cls.get_by_key_name(key_name)
-
     def clone(self, key_name):
         """
         Return a copy of this blob with a new key name.

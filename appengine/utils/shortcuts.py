@@ -12,7 +12,10 @@ def lookup_or_404(cls, key_name):
     """
     Try to load a model instance. If not found, raise Http404.
     """
-    result = cls.lookup(key_name)
+    if hasattr(cls, 'lookup'):
+        result = cls.lookup(key_name)
+    else:
+        result = cls.get_by_key_name(key_name)
     if result is None:
         from django.http import Http404
         raise Http404(cls.__name__ + ' not found: ' + key_name)
