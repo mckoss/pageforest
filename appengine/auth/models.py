@@ -98,11 +98,11 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
                      time=expires - now + 10)
         return user
 
-    def generate_session_key(self, app, seconds=None):
+    def generate_session_key(self, app, subdomain=None, seconds=None):
         """
         Generate a signed session key for this user and app.
 
-            app_id/user/expires/HMAC(user_password, app_secret)
+        subdomain.app_id/user/expires/HMAC(user_password, app_secret)
 
         This routine can generate a reauth cookie by passing in
         seconds=settings.REAUTH_COOKIE_AGE.
@@ -110,11 +110,13 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         We use the user.password in the key, so when a user changes his
         password, all of his existing session keys are invalidated.
         """
+        app_id = app.get_app_id()
+        if subdomain:
+            app_id = subdomain + '.' + app_id
         seconds = seconds or settings.SESSION_COOKIE_AGE
         expires = int(time.time() + seconds)
         secret = crypto.join(self.password, app.secret)
-        return crypto.sign(
-            app.get_app_id(), self.get_username(), expires, secret)
+        return crypto.sign(app_id, self.get_username(), expires, secret)
 
     @classmethod
     def verify_session_key(cls, session_key, app):
@@ -125,7 +127,8 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         parts = session_key.split(crypto.SEPARATOR)
         if len(parts) != 4:
             raise SignatureError("Expected 4 parts.")
-        (app_id, username, expires) = parts[:3]
+        (subdomain, username, expires) = parts[:3]
+        app_id = subdomain.split('.')[-1]
         # Check that the session key is for the same app.
         if app_id != app.get_app_id():
             raise SignatureError("Different app.")

@@ -282,8 +282,8 @@ def verify(request, signature):
             "Invalid signature: " + unicode(error), content_type='text/plain')
     # Return fresh session key and reauth cookie.
     session_key = user.generate_session_key(request.app)
-    reauth_cookie = user.generate_session_key(request.app,
-            settings.REAUTH_COOKIE_AGE)
+    reauth_cookie = user.generate_session_key(
+        request.app, seconds=settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
                         max_age=settings.REAUTH_COOKIE_AGE)
