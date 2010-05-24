@@ -56,13 +56,16 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         transferSession: function(sessionKey) {
             // Send a valid appId sessionKey to the app domain
             // to get it installed on a cookie.
-            ns.getString(ns.appAuthURL + "set-session/" + sessionKey, function (s) {
+            var url = ns.appAuthURL + "set-session/" + sessionKey;
+            ns.getString(url, function (s) {
                 if (typeof(s) != 'string') {
                     return;
                 }
-                // Close the window if this was used to sign in to the app.
-                if (sessionKey)
+                // Close the window if this was used to
+                // sign in to the app.
+                if (sessionKey) {
                     ns.closeForm();
+                }
             });
         },
 
@@ -70,10 +73,12 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         // pageforest.com -> app.pageforest.com
         getAppDomain: function(appId) {
             var parts = window.location.host.split('.');
-            if (parts[0] == 'www')
+            if (parts[0] == 'www') {
                 parts[0] = appId;
-            else
+            }
+            else {
                 parts.splice(0, 0, appId);
+            }
             return parts.join('.');
         },
 
@@ -86,7 +91,7 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
                 dataType: "jsonp",
                 success: fn,
                 error: function() {
-                    fn({status:500});
+                    fn({status: 500});
                 }
             });
         },
@@ -97,8 +102,9 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
                 // Close the window if we were opened by a cross-site script
                 window.close();
             }
-            if (ns.appId)
+            if (ns.appId) {
                 $(".have_app").show();
+            }
             $(".want_app").hide();
             setTimeout(closeFinal, 2000);
         }

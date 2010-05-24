@@ -1,3 +1,5 @@
+/*jslint evil:true */
+
 namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
     var util = namespace.util;
 
@@ -92,7 +94,8 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
                 });
 
             ut.assertEq(ns._referenced.length, 1);
-            ut.assertIdent(ns._referenced[0], namespace.lookup('org.startpad.required'));
+            ut.assertIdent(ns._referenced[0],
+                           namespace.lookup('org.startpad.required'));
         });
 
         ts.addTest("fnMethod and fnArgs", function (ut) {

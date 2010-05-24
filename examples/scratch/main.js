@@ -12,7 +12,8 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     function updateDocLink() {
         $('#document').attr('href', client.getDocURL() + '?callback=document');
         $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
-        $('#app-details').attr('href', 'http://' + client.wwwHost + '/apps/' + client.appid);
+        $('#app-details').attr('href', 'http://' + client.wwwHost +
+                               '/apps/' + client.appid);
     }
 
     // Display a status message for the most recent activity.

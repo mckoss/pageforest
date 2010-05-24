@@ -44,7 +44,8 @@ namespace.lookup('org.startpad.timer').defineOnce(function(ns) {
             }
         },
 
-        // Calling Active resets the timer so that next call to ping will be in this.ms milliseconds from NOW
+        // Calling Active resets the timer so that next call to ping
+        // will be in this.ms milliseconds from NOW
         active: function(fActive) {
             if (fActive === undefined) {
                 fActive = true;

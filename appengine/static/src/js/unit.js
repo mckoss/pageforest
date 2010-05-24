@@ -12,6 +12,9 @@
 // Requires: base.js, timer.js
 // UnitTest - Each unit test calls a function which in turn calls
 // back assert's on the unit test object.
+
+/*jslint evil:true */
+
 namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var util = namespace.util;
     var timer = namespace.lookup('org.startpad.timer');
@@ -72,7 +75,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.state = ns.UnitTest.states.running;
             console.log("=== Running test: " + this.stName + " ===");
             if (this.cAsync) {
-                this.tm = new timer.Timer(this.msTimeout, this.timeout.fnMethod(this)).active();
+                this.tm = new timer.Timer(this.msTimeout,
+                                          this.timeout.fnMethod(this)).active();
             }
             try {
                 this.fn(this);
@@ -85,7 +89,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assertException(this.e, this.stThrows, this.fThrows);
             }
             if (this.fThrows && !fCaught) {
-                this.assert(false, "Missing expected Exception: " + this.stThrows);
+                this.assert(false, "Missing expected Exception: " +
+                            this.stThrows);
             }
             if (!this.cAsync) {
                 this.state = ns.UnitTest.states.completed;
@@ -116,23 +121,35 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         // async(true) -> +1
         // async(0) -> set cAsync to zero
         // async(c) -> +c
-        // TODO: Could use Expected number of calls to assert to terminate an async test
-        // instead of relying on the cAsync count going to zero.
+
+        // TODO: Could use Expected number of calls to assert to
+        // terminate an async test instead of relying on the cAsync
+        // count going to zero.
         async: function(dc, msTimeout) {
-            if (dc == undefined || dc === true) dc = 1;
-            if (dc === false) dc = -1;
+            if (dc == undefined || dc === true) {
+                dc = 1;
+            }
+            if (dc === false) {
+                dc = -1;
+            }
             if (msTimeout) {
-                // Don't call assert unless we have a failure - would mess up user counts for numbers
-                // of asserts expected.
-                if (this.cAsync != 0 || this.state == ns.UnitTest.states.running) {
-                    this.assert(false, "Test error: async timeout only allowed at test initialization.");
+                // Don't call assert unless we have a failure - would
+                // mess up user counts for numbers of asserts
+                // expected.
+                if (this.cAsync != 0 ||
+                    this.state == ns.UnitTest.states.running) {
+                    this.assert(false,
+                                "Async timeout only allowed at " +
+                                "test initialization.");
                 }
                 this.msTimeout = msTimeout;
             }
             if (dc == 0) {
                 this.cAsync = 0;
             }
-            else this.cAsync += dc;
+            else {
+                this.cAsync += dc;
+            }
             if (this.cAsync < 0) {
                 this.assert(false, "Test error: unbalanced calls to async");
                 this.cAsync = 0;
@@ -168,7 +185,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         checkValid: function() {
             if (this.cAsync > 0 && this.fThrows) {
-                this.assert(false, "Test error: can't test async thrown exceptions.");
+                this.assert(false, "Can't test async thrown exceptions.");
             }
         },
 
@@ -181,10 +198,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         // Eror line pattern "N. [Trace] Note (Note2)"
         assert: function(f, stNote, stNote2) {
             // TODO: is there a way to get line numbers out of the callers?
-            // A backtrace (outside of unit.js) would be the best way to designate
-            // the location of failing asserts.
+            // A backtrace (outside of unit.js) would be the best way to
+            // designate the location of failing asserts.
             if (this.stTrace) {
-                stNote = (this.cAsserts + 1) + ". [" + this.stTrace + "] " + stNote;
+                stNote = (this.cAsserts + 1) + ". [" + this.stTrace + "] " +
+                    stNote;
             }
             else {
                 stNote = (this.cAsserts + 1) + ". " + stNote;
@@ -192,8 +210,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (stNote2) {
                 stNote += " (" + stNote2 + ")";
             }
-            // Allow the user to set a breakpoint when we hit a particular failing test
-            if (!f && (this.cBreakOn == -1 || this.cBreakOn == this.cAsserts + 1)) {
+            // Allow the user to set a breakpoint when we hit a particular
+            // failing test
+            if (!f && (this.cBreakOn == -1 ||
+                       this.cBreakOn == this.cAsserts + 1)) {
                 this.breakpoint(stNote);
             }
             var res = new ns.TestResult(f, this, stNote);
@@ -202,11 +222,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.cErrors++;
             }
             this.cAsserts++;
-            // We don't throw an exception on stopFail if we already have thrown one!
-            if (this.fStopFail && this.cErrors > this.cErrorsExpected && !this.e) {
+            // We don't throw an exception on stopFail if we already have
+            // thrown one!
+            if (this.fStopFail && this.cErrors > this.cErrorsExpected &&
+                !this.e) {
                 this.fStopFail = false;
                 this.async(0);
-                throw new Error("stopFail - test terminates on first (unexpected) failure.");
+                throw new Error("stopFail - test terminates on first " +
+                                "(unexpected) failure.");
             }
         },
 
@@ -234,25 +257,34 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         // v1 is the quantity to be tested against the "known" quantity, v2.
         assertEq: function(v1, v2, stNote) {
             if (typeof v1 != typeof v2) {
-                this.assert(false, "Comparing values of different type: " + typeof v1 + ", " + typeof v2, stNote);
+                this.assert(false, "Comparing values of different type: " +
+                            typeof v1 + ", " + typeof v2, stNote);
                 return;
             }
             switch (typeof v1) {
             case "string":
-                pos = "";
-                if (v1 != v2) for (var i = 0; i < v2.length; i++) {
-                    if (v1[i] != v2[i]) {
-                        pos += "@" + i + " x" + v1.charCodeAt(i).toString(16) + " != x" + v2.charCodeAt(i).toString(16) + ", ";
-                        break;
+                var pos = "";
+                if (v1 != v2) {
+                    for (var i = 0; i < v2.length; i++) {
+                        if (v1[i] != v2[i]) {
+                            pos += "@" + i + " x" +
+                                v1.charCodeAt(i).toString(16) + " != x" +
+                                v2.charCodeAt(i).toString(16) + ", ";
+                            break;
+                        }
                     }
                 }
-                this.assert(v1 == v2, "\"" + v1 + "\" == \"" + v2 + "\" (" + pos + "len: " + v1.length + ", " + v2.length + ")", stNote);
+                this.assert(v1 == v2, "\"" + v1 + "\" == \"" + v2 +
+                            "\" (" + pos + "len: " + v1.length + ", " +
+                            v2.length + ")", stNote);
                 break;
             case "object":
                 this.assertContains(v1, v2);
                 var cProp1 = this.propCount(v1);
                 var cProp2 = this.propCount(v2);
-                this.assert(cProp1 == cProp2, "Objects have different property counts (" + cProp1 + " != " + cProp2 + ")");
+                this.assert(cProp1 == cProp2,
+                            "Objects have different property counts (" +
+                            cProp1 + " != " + cProp2 + ")");
                 // Make sure Dates match
                 if (v1.constructor == Date) {
                     this.assertEq(v2.constructor, Date);
@@ -262,7 +294,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
                 break;
             default:
-                this.assert(v1 == v2, v1 + " == " + v2 + " (type: " + typeof v1 + ")", stNote);
+                this.assert(v1 == v2, v1 + " == " +
+                            v2 + " (type: " + typeof v1 + ")", stNote);
                 break;
             }
         },
@@ -292,10 +325,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         assertTypes: function(obj, mTypes) {
             for (var prop in mTypes) {
-                if (!mTypes.hasOwnProperty(prop)) {
-                    continue;
+                if (mTypes.hasOwnProperty(prop)) {
+                    this.assertType(obj[prop], mTypes[prop],
+                                    prop + " should be type " + mTypes[prop]);
                 }
-                this.assertType(obj[prop], mTypes[prop], prop + " should be type " + mTypes[prop]);
             }
         },
 
@@ -303,42 +336,47 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         assertContains: function(objAll, objSome) {
             var prop;
             if (typeof objAll != "object" || typeof objSome != "object") {
-                this.assert(false, "AssertContains expects objects: " + typeof objAll + " ~ " + typeof objSome);
+                this.assert(false, "AssertContains expects objects: " +
+                            typeof objAll + " ~ " + typeof objSome);
                 return;
             }
-            // For arrays, just confirm that the elements of the 2nd array are included as members of the first
+            // For arrays, just confirm that the elements of the 2nd array
+            // are included as members of the first
             if (objSome instanceof Array) {
                 if (!(objAll instanceof Array)) {
-                    this.assert(false, "assertContains unmatched Array: " + objAll.constructor);
+                    this.assert(false, "assertContains unmatched Array: " +
+                                objAll.constructor);
                     return;
                 }
                 var map1 = {};
                 for (prop in objAll) {
-                    if (!objAll.hasOwnProperty(prop)) {
-                        continue;
-                    }
-                    if (typeof(objAll[prop]) != 'object') {
-                        map1[objAll[prop]] = true;
+                    if (objAll.hasOwnProperty(prop)) {
+                        if (typeof(objAll[prop]) != 'object') {
+                            map1[objAll[prop]] = true;
+                        }
                     }
                 }
                 for (prop in objSome) {
-                    if (!objSome.hasOwnProperty(prop)) {
-                        continue;
-                    }
-                    if (typeof(objSome[prop]) != 'object') {
-                        this.assert(map1[objSome[prop]], "Missing array value: " + objSome[prop] + " (type: " + typeof(objSome[prop]) + ")");
-                    }
-                    else {
-                        this.assert(false, "assertContains does shallow compare only");
+                    if (objSome.hasOwnProperty(prop)) {
+                        if (typeof(objSome[prop]) != 'object') {
+                            this.assert(map1[objSome[prop]],
+                                        "Missing array value: " +
+                                        objSome[prop] + " (type: " +
+                                        typeof(objSome[prop]) + ")");
+                        }
+                        else {
+                            this.assert(false,
+                                        "assertContains does " +
+                                        "shallow compare only");
+                        }
                     }
                 }
                 return;
             }
             for (prop in objSome) {
-                if (!objSome.hasOwnProperty(prop)) {
-                    continue;
+                if (objSome.hasOwnProperty(prop)) {
+                    this.assertEq(objAll[prop], objSome[prop], "prop: " + prop);
                 }
-                this.assertEq(objAll[prop], objSome[prop], "prop: " + prop);
             }
         },
 
@@ -360,7 +398,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         assertFn: function(fn) {
             var stFn = fn.toString();
-            stFn = stFn.substring(stFn.indexOf("{") + 1, stFn.lastIndexOf("}") - 1);
+            stFn = stFn.substring(stFn.indexOf("{") + 1,
+                                  stFn.lastIndexOf("}") - 1);
             this.assert(fn(), stFn);
         },
 
@@ -392,7 +431,13 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 if (stExpected) {
                     stExpected = stExpected.toLowerCase();
                 }
-                this.assert(!stExpected || e.name.indexOf(stExpected) != -1 || e.message.indexOf(stExpected) != -1, "Exception: " + e.name + " (" + e.message + ")" + (stExpected ? " Expecting: " + stExpected : ""));
+                this.assert(!stExpected ||
+                            e.name.indexOf(stExpected) != -1 ||
+                            e.message.indexOf(stExpected) != -1,
+                            "Exception: " + e.name +
+                            " (" + e.message + ")" +
+                            (stExpected ? " Expecting: " +
+                             stExpected : ""));
                 this.cThrows++;
             }
             else {
@@ -431,12 +476,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
         },
 
-        // Wrap asynchronous function calls so we can catch are report exception errors
+        // Wrap asynchronous function calls so we can catch are report
+        // exception errors
         fnWrap: function(fn) {
             var ut = this;
-            return (
-
-            function() {
+            return function() {
                 try {
                     fn.apply(undefined, arguments);
                 }
@@ -445,7 +489,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                     // Advance to next function in sequence
                     ut.nextFn();
                 }
-            });
+            };
         }
     }); // UnitTest
 
@@ -497,10 +541,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             return this;
         },
 
-        // We support asynchronous tests - so we use a timer to kick off tests when the current one
-        // is complete.
+        // We support asynchronous tests - so we use a timer to kick off
+        // tests when the current one is complete.
         run: function() {
-            this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this)).repeat().active(false);
+            this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this));
+            this.tmRun.repeat().active(false);
             this.iCur = 0;
             // Don't wait for timer - start right away.
             this.runNext();
@@ -510,10 +555,13 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.iCur == this.rgut.length) {
                 return;
             }
-            loop: while (this.iCur < this.rgut.length) {
+            loop:
+            while (this.iCur < this.rgut.length) {
                 var ut = this.rgut[this.iCur];
                 var state = ut.state;
-                if (!ut.fEnable || this.fTerminateAll || this.iCur < this.iutNext) {
+                if (!ut.fEnable ||
+                    this.fTerminateAll ||
+                    this.iCur < this.iutNext) {
                     state = ns.UnitTest.states.completed;
                 }
                 switch (state) {
@@ -533,8 +581,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
             }
             // Only way out is to be running an async test.
-            if (this.iCur < this.rgut.length)
+            if (this.iCur < this.rgut.length) {
                 this.tmRun.active(true);
+            }
         },
 
         allComplete: function() {
@@ -542,7 +591,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         dwOutputDiv: function() {
-            ns.DW("<DIV style=\"font-family: Courier;border:1px solid red;\" id=\"divUnit\">Unit Test Output</DIV>");
+            ns.DW("<div style=\"font-family: Courier;border:1px solid red;\" " +
+                  "id=\"divUnit\">Unit Test Output</DIV>");
         },
 
         out: function(st) {
@@ -556,7 +606,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 return;
             }
             if (this.divOut) {
-                this.out("<A target=\"_blank\" href=\"" + url + "\">" + st + "</A>");
+                this.out("<A target=\"_blank\" href=\"" + url + "\">" +
+                         st + "</A>");
             }
             else {
                 if (st != url) {
@@ -635,7 +686,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.cFailures++;
                 break;
             case ns.UnitTest.states.completed:
-                if (ut.cErrors == ut.cErrorsExpected && (ut.cTestsExpected == undefined || ut.cTestsExpected == ut.cAsserts)) {
+                if (ut.cErrors == ut.cErrorsExpected &&
+                    (ut.cTestsExpected == undefined ||
+                     ut.cTestsExpected == ut.cAsserts)) {
                     this.out("PASS");
                 }
                 else {
@@ -648,7 +701,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.outRef(ut.stName, ut.urlRef);
             this.out("] ");
             if (ut.state != ns.UnitTest.states.created) {
-                this.out(ut.cErrors + " errors " + "out of " + ut.cAsserts + " tests");
+                this.out(ut.cErrors + " errors " +
+                         "out of " + ut.cAsserts + " tests");
                 if (ut.cTestsExpected && ut.cTestsExpected != ut.cAsserts) {
                     this.out(" (" + ut.cTestsExpected + " expected)");
                 }
@@ -664,10 +718,13 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         reportSummary: function() {
             if (this.cFailures == 0) {
-                this.out("Summary: All (" + this.rgut.length + ") tests pass.").newLine();
+                this.out("Summary: All (" + this.rgut.length + ") tests pass.");
+                this.newLine();
             }
             else {
-                this.out("Summary: " + this.cFailures + " failures out of " + this.rgut.length + " tests.").newLine();
+                this.out("Summary: " + this.cFailures + " failures out of " +
+                         this.rgut.length + " tests.");
+                this.newLine();
             }
         },
 
@@ -676,14 +733,17 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (!this.allComplete()) {
                 return;
             }
-            if (typeof window != 'undefined' && window.opener && window.opener.masterTest) {
+            if (typeof window != 'undefined' &&
+                window.opener && window.opener.masterTest) {
                 var iUnit = parseInt(window.name.replace(/^Unit_/, ""));
-                window.opener.masterTest(iUnit, this.cFailures, this.rgut.length);
+                window.opener.masterTest(iUnit, this.cFailures,
+                                         this.rgut.length);
             }
         },
 
         addSubTest: function(stPath) {
-            var ut = this.addTest(stPath, this.runSubTest.fnMethod(this)).async(true).reference(stPath);
+            var ut = this.addTest(stPath, this.runSubTest.fnMethod(this));
+            ut.async(true).reference(stPath);
             ut.stPath = stPath;
             ut.iUnit = this.rgut.length - 1;
             return ut;

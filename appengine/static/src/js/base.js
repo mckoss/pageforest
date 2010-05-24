@@ -23,8 +23,9 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         getName: function(value) {
             for (var prop in this) {
                 if (this.hasOwnProperty(prop)) {
-                    if (this[prop] == value)
+                    if (this[prop] == value) {
                         return prop;
+                    }
                 }
             }
         }

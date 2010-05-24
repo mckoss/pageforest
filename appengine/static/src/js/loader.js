@@ -1,5 +1,7 @@
 /*jslint rhino: true */
 namespace.lookup('org.startpad.loader').defineOnce(function(ns) {
+    var iTimer;
+    var callbacks = [];
 
     // Load a script - and call callback when loaded.
     function loadScript(url, fnCallback) {
@@ -19,6 +21,38 @@ namespace.lookup('org.startpad.loader').defineOnce(function(ns) {
         if (fnCallback) {
             script.addEventListener('load', fnCallback);
         }
+    }
+
+    function checkLoaded() {
+        for (var i = 0; i < callbacks.length;) {
+            var callback = callbacks[i];
+            if (callback[0]._isDefined) {
+                var fn = callback[1];
+                callbacks.splice(i);
+                fn();
+            }
+            else {
+                i++;
+            }
+        }
+        if (callbacks.length == 0) {
+            clearInterval(iTimer);
+            iTimer = undefined;
+        }
+    }
+
+    // Call the callback once the namespace has been defined
+    function waitForNamespace(targetNamespace, fnCallback) {
+        if (targetNamespace._isDefined) {
+            fnCallback();
+            return;
+        }
+
+        if (iTimer == undefined) {
+            iTimer = setInterval(checkLoaded, 500);
+        }
+
+        callbacks.push([targetNamespace, fnCallback]);
     }
 
     // Load a namespace if it's not already defined. Uses a location
@@ -64,41 +98,6 @@ namespace.lookup('org.startpad.loader').defineOnce(function(ns) {
             var name = nsList[i]._path;
             loadNamespace(name, locations, decrementCount);
         }
-    }
-
-    var iTimer;
-    var callbacks = [];
-
-    function checkLoaded() {
-        for (var i = 0; i < callbacks.length;) {
-            var callback = callbacks[i];
-            if (callback[0]._isDefined) {
-                fn = callback[1];
-                callbacks.splice(i);
-                fn();
-            }
-            else {
-                i++;
-            }
-        }
-        if (callbacks.length == 0) {
-            clearInterval(iTimer);
-            iTimer = undefined;
-        }
-    }
-
-    // Call the callback once the namespace has been defined
-    function waitForNamespace(targetNamespace, fn) {
-        if (targetNamespace._isDefined) {
-            fnCallback();
-            return;
-        }
-
-        if (iTimer == undefined) {
-            iTimer = setInterval(checkLoaded, 500);
-        }
-
-        callbacks.push([targetNamespace, fn]);
     }
 
     // Exports.
