@@ -4,6 +4,5 @@
   "tags": ["demo", "sample"],
   "readers": ["public"],
   "writers": ["mike", "mckoss", "johann", "jcrocholl"],
-  "url": "http://scratch.pageforest.com/",
-  "cloneable": true
+  "url": "http://scratch.pageforest.com/"
 }
