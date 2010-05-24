@@ -16,6 +16,46 @@ from apps.middleware import app_id_from_trusted_domain
 TAG_REGEX = re.compile(r'<[/!\w][^>]*>')
 
 
+class AuthClient(Client):
+    """
+    Test client with AJAX request authentication support.
+    """
+
+    def sign_in(self, app, user, subdomain=None):
+        self.session_key = user.generate_session_key(app, subdomain=subdomain)
+
+    def add_auth_headers(self, url, headers):
+        # request_id = crypto.random64(8)
+        # headers['HTTP_X_REQUEST_ID'] = request_id
+        # headers['HTTP_AUTHORIZATION'] = 'PF1 ' + crypto.hmac_sha1(
+        #     url, request_id, secret)
+        headers['HTTP_AUTHORIZATION'] = 'PFSK1 ' + self.session_key
+
+    def head(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).head(url, *args, **kwargs)
+
+    def get(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).get(url, *args, **kwargs)
+
+    def put(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).put(url, *args, **kwargs)
+
+    def delete(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).delete(url, *args, **kwargs)
+
+    def post(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).post(url, *args, **kwargs)
+
+    def options(self, url, *args, **kwargs):
+        self.add_auth_headers(url, kwargs)
+        return super(AuthClient, self).options(url, *args, **kwargs)
+
+
 class AppTestCase(TestCase):
     """
     Reusable TestCase with automatic users, apps, documents.
@@ -60,6 +100,8 @@ class AppTestCase(TestCase):
                                  HTTP_REFERER='http://www.pageforest.com/')
         self.app_client = Client(HTTP_HOST='myapp.pageforest.com',
                                  HTTP_REFERER='http://myapp.pageforest.com/')
+        self.docs_client = AuthClient(HTTP_HOST='docs.myapp.pageforest.com')
+        self.dev_client = AuthClient(HTTP_HOST='dev.myapp.pageforest.com')
 
     def sign_in(self, user):
         """
@@ -67,8 +109,10 @@ class AppTestCase(TestCase):
         """
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             user.generate_session_key(self.www)
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            user.generate_session_key(self.app)
+        app_session_key = user.generate_session_key(self.app)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = app_session_key
+        self.docs_client.session_key = app_session_key
+        self.dev_client.sign_in(self.app, user, 'dev')
 
     def sign_out(self):
         """
