@@ -1,3 +1,5 @@
+/*jslint rhino:true */
+
 load("../namespace.js");
 load("../base.js");
 load("../unit.js");
@@ -13,7 +15,7 @@ load("../format.js");
     var msStart;
     var fQuiet = false;
 
-    function msNow () {
+    function msNow() {
         var d = new Date();
         return d.getTime();
     }
@@ -45,7 +47,7 @@ load("../format.js");
         var target = a[index];
 
         if (target.indexOf('-') === 0) {
-            option = target.substr(1);
+            var option = target.substr(1);
             if (option != 'q') {
                 print("Unsupported option: " + target);
                 quit(1);

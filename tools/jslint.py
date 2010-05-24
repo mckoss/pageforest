@@ -36,6 +36,8 @@ Redefinition of 'console'
 Use '!==' to compare with 'undefined'
 Use '===' to compare with 'undefined'
 Use '===' to compare with '0'
+Use '!==' to compare with '0'
+Missing radix parameter
 """.strip().splitlines(),
 
     'strict': """

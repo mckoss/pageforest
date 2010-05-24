@@ -4,11 +4,11 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
 
     ns.addTests = function(ts) {
         ts.addTest("Copy", function(ut) {
-            a = [1, 2, 3];
-            b = vector.copy(a);
+            var a = [1, 2, 3];
+            var b = vector.copy(a);
             ut.assert(vector.equal(a, b));
             ut.assert(a !== b);
-            c = vector.append(a, b, [7, 8, 9]);
+            var c = vector.append(a, b, [7, 8, 9]);
             ut.assert(vector.equal(c, [1, 2, 3, 1, 2, 3, 7, 8, 9]));
             ut.assert(vector.equal(vector.subFrom([2, 2], [1, 1]), [1, 1]));
         });
@@ -83,7 +83,9 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             ut.assertEq(rc, [10, 10, 100, 100]);
             ut.assertEq(V.ptCenter(rc, [0.5, 0.2]), [55, 28]);
             ut.assertEq(V.boundingBox([0, 1], [1, 0]), [0, 0, 1, 1]);
-            ut.assertEq(V.boundingBox([0, 0, 1, 1], [2, 2, 4, 4]), [0, 0, 4, 4]);
+            ut.assertEq(V.boundingBox([0, 0, 1, 1],
+                                      [2, 2, 4, 4]),
+                        [0, 0, 4, 4]);
         });
     }; // addTests
 });

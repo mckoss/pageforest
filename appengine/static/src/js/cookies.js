@@ -9,8 +9,7 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
     */
     var base = namespace.lookup('org.startpad.base');
 
-    ns.extend({
-    setCookie: function(name, value, days, path) {
+    function setCookie(name, value, days, path) {
         var expires = '';
         if (days) {
             var date = new Date();
@@ -18,33 +17,42 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
             expires = '; expires=' + date.toGMTString();
         }
         path = '; path=' + (path || '/');
-        document.cookie =
-            encodeURIComponent(name) + '=' + encodeURIComponent(value)
-            + expires + path;
-    },
+        document.cookie = encodeURIComponent(name) + '=' +
+            encodeURIComponent(value) + expires + path;
+    }
 
-    getCookie: function(name) {
+    function getCookie(name) {
         return ns.getCookies()[name];
-    },
+    }
 
-    getCookies: function(name) {
+    function getCookies(name) {
         var st = document.cookie;
         var rgPairs = st.split(";");
 
         var obj = {};
         for (var i = 0; i < rgPairs.length; i++) {
-            // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
+            // document.cookie never returns ;max-age, ;secure, etc. -
+            // just name value pairs
             rgPairs[i] = base.strip(rgPairs[i]);
             var rgC = rgPairs[i].split("=");
             var val = decodeURIComponent(rgC[1]);
-            // Remove quotes around value string if any (and also replaces \" with ")
+            // Remove quotes around value string if any (and also
+            // replaces \" with ")
             var rg = val.match('^"(.*)"$');
-            if (rg)
+            if (rg) {
                 val = rg[1].replace('\\"', '"');
+            }
             obj[decodeURIComponent(rgC[0])] = val;
         }
         return obj;
+    }
 
-    }}); // ns
+
+    // Exports
+    ns.extend({
+        setCookie: setCookie,
+        getCookie: getCookie,
+        getCookies: getCookies
+    });
 
 }); // org.startpad.cookies

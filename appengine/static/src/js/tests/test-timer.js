@@ -13,13 +13,15 @@ namespace.lookup('org.startpad.timer.test').defineOnce(function(ns) {
         start: function() {
             this.msTest = 20 * this.iTest;
             this.msStart = timer.msNow();
-            this.tm = new timer.Timer(this.msTest, this.end.fnMethod(this)).active();
+            this.tm = new timer.Timer(this.msTest,
+                                      this.end.fnMethod(this)).active();
         },
         end: function() {
             var ms = timer.msNow() - this.msStart;
             console.log(this.iTest);
             this.ut.assert(ms > (this.msTest * 0.9) && ms < (this.msTest * 1.1),
-                           "Timer accuracy " + ms + " vs. " + this.msTest + " " +
+                           "Timer accuracy " + ms + " vs. " +
+                           this.msTest + " " +
                            Math.floor(ms / this.msTest * 100) + "%");
             if (--this.iTest > 0) {
                 this.start();
@@ -62,6 +64,7 @@ namespace.lookup('org.startpad.timer.test').defineOnce(function(ns) {
 
         ts.addTest("Repeat", function(ut) {
             var c = 20;
+            var tm;
 
             function Callback() {
                 c--;
@@ -71,15 +74,17 @@ namespace.lookup('org.startpad.timer.test').defineOnce(function(ns) {
                     ut.async(false);
                 }
             }
-
-            var tm = new timer.Timer(100, Callback).repeat().active();
+            tm = new timer.Timer(100, Callback).repeat().active();
         }).async().enable(true).expect(0, 20);
 
         ts.addTest("Restart Timer", function(ut) {
             var c = 0;
+            var tm;
 
             function Start() {
-                if (c == 0) {tm.active();}
+                if (c == 0) {
+                    tm.active();
+                }
                 c++;
                 ut.assert(c <= 2, "Should just call twice");
             }
@@ -88,7 +93,7 @@ namespace.lookup('org.startpad.timer.test').defineOnce(function(ns) {
                 ut.assertEq(c, 2);
                 ut.async(false);
             }
-            var tm = new timer.Timer(100, Start).active();
+            tm = new timer.Timer(100, Start).active();
             new timer.Timer(500, Eval).active();
         }).async().expect(0, 3);
     }; // addTests
