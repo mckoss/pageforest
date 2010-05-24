@@ -86,14 +86,19 @@ def main():
          "python %s -e %s %s" %
          (pftool.tool_path('lint.py'), pftool.app_dir, pftool.tools_dir)),
 
-        ('jslint',
+        ('jslint-tools',
          "python %s --strong --ignore beautify* --ignore fulljslint.js %s" %
          (pftool.tool_path('jslint.py'), pftool.tools_dir)),
 
-        ('jslint-weak',
-         "python %s --weak %s" %
+        ('jslint-static',
+         "python %s --strong %s" %
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.app_dir, 'static', 'src', 'js'))),
+
+        ('jslint-examples',
+         "python %s --strong %s" %
+         (pftool.tool_path('jslint.py'),
+          os.path.join(pftool.root_dir, 'examples'))),
 
         ('unittest', "python %s test -v0" %
          (os.path.join(pftool.app_dir, 'manage.py'))),
