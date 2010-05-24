@@ -1,65 +1,74 @@
 namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
-    var client = namespace.lookup('com.pageforest.client');
+    var clientLib = namespace.lookup('com.pageforest.client');
+    var client;
 
-    function App() {
-        this.client = new client.Client(this);
+    // Initialize the document - create a client helper object
+    function onReady() {
+        ns.client = client = new clientLib.Client(ns);
+        client.setLogging();
     }
 
-    function init() {
-        ns.app = new App();
-        ns.app.client.setLogging();
+    // Update the link to the current document for the UI
+    function updateDocLink() {
+        $('#document').attr('href', client.getDocURL() + '?callback=document');
+        $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
+        $('#app-details').attr('href', 'http://' + client.wwwHost + '/apps/' + client.appid);
     }
 
-    App.methods({
-        loaded: function (json) {
-            $('#title').val(json.title);
-            $('#blob').val(json.blob);
-            this.updateDocLink();
-            this.status("Loaded.");
-        },
+    // Display a status message for the most recent activity.
+    function updateStatus(message) {
+        $('#results').prepend('<div>' + message +
+                              ' (' +
+                              clientLib.Client.states.getName(client.state) +
+                              ')' +
+                              '</div>');
+    }
 
-        saved: function () {
-            this.updateDocLink();
-            this.status("Saved.");
-        },
+    // This function is called whenever your document should be reloaded.
+    function onLoad(json) {
+        $('#title').val(json.title);
+        $('#blob').val(json.blob);
+        updateDocLink();
+        updateStatus("Loaded.");
+    }
 
-        updateDocLink: function () {
-            $('#document').attr('href', 'http://' + this.client.appHost +
-                                '/docs/' + this.client.docid + '/' +
-                               '?callback=document');
-        },
+    // Convert your current state to JSON with title and blob properties,
+    // these will then be saved to pageforest's storage.
+    function onSave() {
+        var json = {
+            'title': $('#title').val(),
+            'blob': $('#blob').val()
+        };
+        return json;
+    }
 
-        error: function (status, message) {
-            this.status(status + ": " + message);
-        },
+    // Called when our save is successful.
+    function onSaveSuccess() {
+        updateDocLink();
+        updateStatus("Saved.");
+    }
 
-        status: function (message) {
-            $('#results').prepend('<div>' + message +
-              '(' +
-              client.Client.states.getName(this.client.state) +
-              ')' +
-              '</div>');
-        },
+    // Called on any api errors.
+    function onError(status, message) {
+        updateStatus(status + ": " + message);
+    }
 
-        save: function () {
-            var json = {
-                'title': $('#title').val(),
-                'blob': $('#blob').val()
-            };
-            this.client.save(json);
-        },
-
-        userChanged: function (username) {
-            $('#username').text(username);
-            var isSignedIn = username != 'anonymous';
-            $('#signin').attr('disabled', isSignedIn);
-            $('#signout').attr('disabled', !isSignedIn);
-        }
-    });
+    // Called when the current user changes (signs in or out)
+    function onUserChanged(username) {
+        $('#username').text(username);
+        var isSignedIn = username != 'anonymous';
+        $('#signin').attr('disabled', isSignedIn);
+        $('#signout').attr('disabled', !isSignedIn);
+    }
 
     // Exported functions
     ns.extend({
-        init: init
+        onReady: onReady,
+        onLoad: onLoad,
+        onSave: onSave,
+        onSaveSuccess: onSaveSuccess,
+        onError: onError,
+        onUserChanged: onUserChanged
     });
 
 });

@@ -8,19 +8,19 @@
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="/lib/0.5/js/json2.min.js"></script>
-<script type="text/javascript" src="/lib/0.5.2/js/utils.min.js"></script>
+<script type="text/javascript" src="/lib/0.5.3/js/utils.js"></script>
 <script type="text/javascript" src="main.js"></script>
 <script type="text/javascript">
 var scratch = namespace.lookup("com.pageforest.examples.scratch");
-$(document).ready(scratch.init);
+$(document).ready(scratch.onReady);
 </script>
 </head>
 <body>
 <div class="page">
 <h1><script>document.write(document.title);</script></h1>
 <div style="text-align:right">
-  <input type="button" id="signin" onclick="scratch.app.client.signIn()" value="Sign in" />
-  <input type="button" id="signout" onclick="scratch.app.client.signOut()" value="Sign out" />
+  <input type="button" id="signin" onclick="scratch.client.signIn()" value="Sign in" />
+  <input type="button" id="signout" onclick="scratch.client.signOut()" value="Sign out" />
   <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
 </div>
 <fieldset>
@@ -35,7 +35,7 @@ $(document).ready(scratch.init);
       <textarea id="blob" name="blob">You can store a text blob in each document.</textarea>
     </li>
   </ol>
-  <input type="button" onclick="scratch.app.save()" value="Save" />
+  <input type="button" onclick="scratch.client.save()" value="Save" />
 </fieldset>
 
 <fieldset>
@@ -46,9 +46,10 @@ $(document).ready(scratch.init);
 <fieldset>
   <legend>Explore</legend>
   <ol>
-    <li><a id="document" target="_blank">JSON data for this document</a></li>
-    <li><a target="_blank" href="http://www.pageforest.com/docs">My Pageforest documents</a></li>
-    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/scratch">Source code for this application</a></li>
+    <li><a id="document" target="_blank">JSON data for this document</a> - See how this document is saved on Pageforest.</li>
+    <li><a id="mydocs" target="_blank" href="http://www.pageforest.com/docs/">My Pageforest documents</a> - A directory of all your saved documents on Pageforest.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/scratch">Scratch application source code</a> - view the code for this application.</li>
+    <li><a id="app-details" target="_blank" href="http://www.pageforest.com/apps/scratch/">Application Details</a> - Clone this application to start your own Pageforest application.</li>
   </ol>
 </fieldset>
 </body>
