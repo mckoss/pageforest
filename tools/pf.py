@@ -18,6 +18,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
+SUBDOMAIN = 'dev'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
@@ -53,9 +54,8 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login(server):
-    appid = options.application
-    url = 'http://%s/auth/challenge' % server
+def login():
+    url = options.root_url + 'auth/challenge'
     if options.verbose:
         print("Getting %s" % url)
     challenge = urllib2.urlopen(url).read()
@@ -64,7 +64,7 @@ def login(server):
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
     reply = '/'.join((options.username, challenge, signature))
-    url = 'http://%s/auth/verify/%s' % (server, reply)
+    url = options.root_url + 'auth/verify/' + reply
     if options.verbose:
         print("Response: %s" % url)
     session_key = urllib2.urlopen(url).read()
@@ -166,8 +166,7 @@ def upload_file(filename, url=None):
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
             urlpath = urlpath[2:]
-        url = 'http://%s.%s/%s' % (
-            options.application, options.server, urlpath)
+        url = options.root_url + urlpath
     data = open(filename, 'rb').read()
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and filename in options.listing:
@@ -192,8 +191,7 @@ def download_file(filename, url=None):
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
             urlpath = urlpath[2:]
-        url = 'http://%s.%s/%s' % (
-            options.application, options.server, urlpath)
+        url = options.root_url + urlpath
     # Check if the local file is already up-to-date.
     info = {}
     if hasattr(options, 'listing') and filename in options.listing:
@@ -212,27 +210,6 @@ def download_file(filename, url=None):
     outfile = open(filename, 'wb')
     outfile.write(response.read())
     outfile.close()
-
-
-def upload_meta_file():
-    """
-    Upload app.json to www.pageforest.com (or www.<server>)
-    """
-    options.session_key = login('www.' + options.server)
-    url = 'http://www.%s/apps/%s/app.json' % (
-        options.server, options.application)
-    upload_file(META_FILENAME, url)
-
-
-def download_meta_file():
-    """
-    Download app.json from www.pageforest.com (or www.<server>)
-    """
-    app_id = options.application
-    options.session_key = login('www.' + options.server)
-    url = 'http://www.%s/apps/%s/app.json' % (
-        options.server, options.application)
-    download_file(META_FILENAME, url)
 
 
 def filename_matches(filename, patterns):
@@ -275,8 +252,7 @@ def list_remote_files():
     """
     Get the list of files on the remote server, with metadata.
     """
-    url = 'http://%s.%s/?method=list&depth=unlimited' % (
-        options.application, options.server)
+    url = options.root_url + '?method=list&depth=unlimited'
     response = urllib2.urlopen(AuthRequest(url))
     options.listing = json.loads(response.read(), object_hook=as_datetime)
 
@@ -286,8 +262,7 @@ def get(args):
     Download all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
     """
-    download_meta_file()
-    options.session_key = login(options.application + '.' + options.server)
+    download_file(META_FILENAME)
     list_remote_files()
     filenames = options.listing.keys()
     filenames.sort()
@@ -312,11 +287,10 @@ def put(args):
     # Should we require that "pf put" is always run in the same folder
     # where META_FILENAME lives?
     if META_FILENAME in args:
-        upload_meta_file()
+        upload_file(META_FILENAME)
         args.remove(META_FILENAME)
     if not args:
         return
-    options.session_key = login(options.application + '.' + options.server)
     list_remote_files()
     for path in args:
         if os.path.isdir(path):
@@ -328,6 +302,9 @@ def put(args):
 def main():
     global options
     options, args = config()
+    options.root_url = 'http://%s.%s.%s/' % (
+        SUBDOMAIN, options.application, options.server)
+    options.session_key = login()
     globals()[options.command](args)
     if options.save:
         save_credentials()
