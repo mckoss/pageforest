@@ -146,7 +146,7 @@ everybody anybody nobody private owner
 # Prevent app registration with some special app names.
 # Note that 'www' is the default PF app - always available.
 RESERVED_APPS = """
-meta ssl static auth oauth login
+meta ssl static auth oauth login dev
 doc docs document documents
 blog list note comment
 test tester testclient testserver latest
