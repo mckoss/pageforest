@@ -71,8 +71,10 @@ INITIAL_UNPICKLABLES = [
   'import os',
   'import sys',
   'from google.appengine.ext import db',
-  'from google.appengine.api import users',
-  'class Foo(db.Expando):\n  pass',
+  'from auth.models import User',
+  'from apps.models import App',
+  'from docs.models import Doc',
+  'from blobs.models import Blob',
   ]
 
 
@@ -191,6 +193,7 @@ class FrontPageHandler(webapp.RequestHandler):
              'user': users.get_current_user(),
              'login_url': users.create_login_url(session_url),
              'logout_url': users.create_logout_url(session_url),
+             'imported': [line.split()[-1] for line in INITIAL_UNPICKLABLES],
              }
     rendered = webapp.template.render(template_file, vars, debug=_DEBUG)
     self.response.out.write(rendered)
