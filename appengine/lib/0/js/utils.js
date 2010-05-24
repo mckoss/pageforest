@@ -640,11 +640,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var discardMessage = "You will lose your document changes if you continue.";
 
     // The application calls Client, and implements the following methods:
-    // app.loaded(jsonDocument) - Called when a new document is loaded
-    // app.saved() - successfully saved
+    // app.onLoad(jsonDocument) - Called when a new document is loaded.
+    // app.onSave() - Called to get the json data to be saved.
+    // app.onSaveSuccess() - successfully saved.
     // app.error(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
-    // app.userChanged(username) - Called when the user signs in or signs out
+    // app.onUserChanged(username) - Called when the user signs in or signs out
     //     ('anonymous').
     function Client(app) {
         this.app = app;
@@ -690,14 +691,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.log("loading: " + docid);
             $.ajax({
                 dataType: 'json',
-                url: 'http://' + this.appHost + '/docs/' + docid,
+                url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
                     this.setCleanDoc(docid);
                     // Required
-                    this.app.loaded(document);
+                    this.app.onLoad(document);
                 }.fnMethod(this)
             });
+        },
+
+        getDocURL: function(docid) {
+            if (docid == undefined) {
+                docid = this.docid;
+            }
+            return 'http://' + this.appHost + '/docs/' + docid + '/';
         },
 
         save: function (json, docid) {
@@ -706,7 +714,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (json == undefined) {
-                json = this.app.getData();
+                json = this.app.onSave();
             }
 
             if (docid == undefined) {
@@ -737,8 +745,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
-                    if (this.app.saved) {
-                        this.app.saved();
+                    if (this.app.onSaveSuccess) {
+                        this.app.onSaveSuccess();
                     }
                 }.fnMethod(this)
             });
@@ -837,9 +845,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             else {
                 this.username = undefined;
             }
-            if (this.app.userChanged && usernameLast != this.username) {
+            if (this.app.onUserChanged && usernameLast != this.username) {
                 this.log('found user: ' + this.username);
-                this.app.userChanged(this.username || 'anonymous');
+                this.app.onUserChanged(this.username || 'anonymous');
             }
         },
 
