@@ -39,8 +39,9 @@ class AuthRequest(urllib2.Request):
 
     def __init__(self, url, *args, **kwargs):
         urllib2.Request.__init__(self, url, *args, **kwargs)
-        self.add_header('Referer', url)
-        self.add_header('Cookie', 'sessionkey=' + options.session_key)
+        self.add_header('Referer', 'http://%s.%s/' % (
+                options.application, options.server))
+        self.add_header('Authorization', 'PFSK1 ' + options.session_key)
 
 
 class PutRequest(AuthRequest):
@@ -54,7 +55,7 @@ def hmac_sha1(key, message):
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
-def login():
+def sign_in():
     url = options.root_url + 'auth/challenge'
     if options.verbose:
         print("Getting %s" % url)
@@ -304,7 +305,7 @@ def main():
     options, args = config()
     options.root_url = 'http://%s.%s.%s/' % (
         SUBDOMAIN, options.application, options.server)
-    options.session_key = login()
+    options.session_key = sign_in()
     globals()[options.command](args)
     if options.save:
         save_credentials()
