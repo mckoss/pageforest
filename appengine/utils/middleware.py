@@ -67,6 +67,8 @@ class WwwMiddleware(object):
         # Normalize App Engine deployment versions, e.g.
         # 2010-05-12.latest.pageforest.appspot.com
         parts = normalized.split('.')
+        # REVIEW: Similar code in app_id_from_trusted_domain - should
+        # be factored together.
         if (len(parts) == 5 and
             parts[1] == 'latest' and
             parts[3] == 'appspot' and

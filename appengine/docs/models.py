@@ -19,6 +19,8 @@ class Doc(SuperDoc):
         """
         app_id = self.key().name().split('/')[0]
         app = App.get_by_key_name(app_id)
+        # REVIEW: Why do we have this fallback.  Note that DEFAULT_DOMAIN
+        # is not correct for the localhost case.
         if app is None:
             return 'http://%s.%s/docs/%s' % (
                 app_id, settings.DEFAULT_DOMAIN, self.doc_id)
