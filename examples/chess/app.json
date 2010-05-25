@@ -1,5 +1,6 @@
 {
 "application": "chess",
 "title": "Chess",
-"tags": ["chess", "game", "multiplayer"]
+"tags": ["chess", "game", "multiplayer", "touch"],
+"readers": ["public"]
 }
