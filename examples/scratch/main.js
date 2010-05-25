@@ -6,33 +6,49 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     function onReady() {
         $('#title').focus();
         ns.client = client = new clientLib.Client(ns);
-        client.setLogging();
     }
 
     // This function is called whenever your document should be reloaded.
     function setData(json) {
         $('#title').val(json.title);
         $('#blob').val(json.blob);
-        ns.updateStatus("Loaded.");
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
     function getData() {
-        var json = {
+        return {
             'title': $('#title').val(),
             'blob': $('#blob').val()
         };
-        return json;
     }
 
-    // Display a status message for the most recent activity.
-    function updateStatus(message) {
-        $('#results').prepend('<div>' + message +
-                              ' (document is ' +
-                              clientLib.Client.states.getName(client.state) +
-                              ')' +
-                              '</div>');
+    // Called on any api errors.
+    function onError(status, message) {
+        $('#error').text(message);
+    }
+
+    // Called when the current user changes (signs in or out)
+    function onUserChange(username) {
+        var isSignedIn = username != undefined;
+        $('#username').text(isSignedIn ? username : 'anonymous');
+        $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
+    }
+
+    // Sign in (or out) depending on current user state.
+    function signInOut() {
+        var isSignedIn = client.username != undefined;
+        if (isSignedIn) {
+            client.signOut();
+        }
+        else {
+            client.signIn();
+        }
+    }
+
+    function onStateChange(newState, oldState) {
+        $('#doc-state').text(clientLib.Client.states.getName(newState));
+        $('#error').text('');
 
         // Refresh links on the page, too
         $('#document').attr('href', client.getDocURL() + '?callback=document');
@@ -41,38 +57,15 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
                                '/apps/' + client.appid);
     }
 
-    // Called when our save is successful.
-    function onSaveSuccess() {
-        updateStatus("Saved.");
-    }
-
-    // Called on any api errors.
-    function onError(status, message) {
-        updateStatus(status + ": " + message);
-    }
-
-    // Called when the current user changes (signs in or out)
-    function onUserChange(username) {
-        $('#username').text(username);
-        var isSignedIn = username != 'anonymous';
-        $('#signin').attr('disabled', isSignedIn);
-        $('#signout').attr('disabled', !isSignedIn);
-    }
-
-    function onStateChange(newState, oldState) {
-        $('#doc-state').html(clientLib.Client.states.getName(newState));
-    }
-
     // Exported functions
     ns.extend({
         onReady: onReady,
-        updateStatus: updateStatus,
         getData: getData,
         setData: setData,
-        onSaveSuccess: onSaveSuccess,
         onError: onError,
         onUserChange: onUserChange,
-        onStateChange: onStateChange
+        onStateChange: onStateChange,
+        signInOut: signInOut
     });
 
 });

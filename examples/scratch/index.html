@@ -19,8 +19,7 @@ $(document).ready(scratch.onReady);
 <div class="page">
 <h1><script>document.write(document.title);</script></h1>
 <div style="text-align:right">
-  <input type="button" id="signin" onclick="scratch.client.signIn()" value="Sign in" />
-  <input type="button" id="signout" onclick="scratch.client.signOut()" value="Sign out" />
+  <input type="button" id="signin" onclick="scratch.signInOut()" value="Sign in" />
   <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
 </div>
 <fieldset>
@@ -43,7 +42,7 @@ $(document).ready(scratch.onReady);
 
 <fieldset>
   <legend>API Status</legend>
-  <div id="results" style="clear:both"></div>
+  <div id="error"></div>
 </fieldset>
 
 <fieldset>
