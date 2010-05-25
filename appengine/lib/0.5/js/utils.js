@@ -295,8 +295,9 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         getName: function(value) {
             for (var prop in this) {
                 if (this.hasOwnProperty(prop)) {
-                    if (this[prop] == value)
+                    if (this[prop] == value) {
                         return prop;
+                    }
                 }
             }
         }
@@ -325,109 +326,120 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     });
 
+    function extendIfMissing(oDest, var_args) {
+        if (oDest == undefined) {
+            oDest = {};
+        }
+        for (var i = 1; i < arguments.length; i++) {
+            var oSource = arguments[i];
+            for (var prop in oSource) {
+                if (oSource.hasOwnProperty(prop) &&
+                    oDest[prop] == undefined) {
+                    oDest[prop] = oSource[prop];
+                }
+            }
+        }
+        return oDest;
+    }
+
+    // Deep copy properties in turn into dest object
+    function extendDeep(dest) {
+        for (var i = 1; i < arguments.length; i++) {
+            var src = arguments[i];
+            for (var prop in src) {
+                if (src.hasOwnProperty(prop)) {
+                    if (src[prop] instanceof Array) {
+                        dest[prop] = [];
+                        ns.extendDeep(dest[prop], src[prop]);
+                    }
+                    else if (src[prop] instanceof Object) {
+                        dest[prop] = {};
+                        ns.extendDeep(dest[prop], src[prop]);
+                    }
+                    else {
+                        dest[prop] = src[prop];
+                    }
+                }
+            }
+        }
+    }
+
+    function randomInt(n) {
+        return Math.floor(Math.random() * n);
+    }
+
+    function strip(s) {
+        return (s || "").replace(/^\s+|\s+$/g, "");
+    }
+
+    /* Return new object with just the listed properties "projected"
+       into the new object */
+    function project(obj, asProps) {
+        var objT = {};
+        for (var i = 0; i < asProps.length; i++) {
+            objT[asProps[i]] = obj[asProps[i]];
+        }
+        return objT;
+    }
+
+    /* Sort elements and remove duplicates from array (modified in place) */
+    function uniqueArray(a) {
+        if (!a) {
+            return;
+        }
+        a.sort();
+        for (var i = 1; i < a.length; i++) {
+            if (a[i - 1] == a[i]) {
+                a.splice(i, 1);
+            }
+        }
+    }
+
+    function map(a, fn) {
+        var aRes = [];
+        for (var i = 0; i < a.length; i++) {
+            aRes.push(fn(a[i]));
+        }
+        return aRes;
+    }
+
+    function filter(a, fn) {
+        var aRes = [];
+        for (var i = 0; i < a.length; i++) {
+            if (fn(a[i])) {
+                aRes.push(a[i]);
+            }
+        }
+        return aRes;
+    }
+
+    function reduce(a, fn) {
+        if (a.length < 2) {
+            return a[0];
+        }
+        var res = a[0];
+        for (var i = 1; i < a.length - 1; i++) {
+            res = fn(res, a[i]);
+        }
+        return res;
+    }
+
     ns.extend({
         extendObject: util.extendObject,
         Enum: Enum,
         StBuf: StBuf,
 
-        extendIfMissing: function(oDest, var_args) {
-            if (oDest == undefined) {
-                oDest = {};
-            }
-            for (var i = 1; i < arguments.length; i++) {
-                var oSource = arguments[i];
-                for (var prop in oSource) {
-                    if (oSource.hasOwnProperty(prop) &&
-                        oDest[prop] == undefined) {
-                        oDest[prop] = oSource[prop];
-                    }
-                }
-            }
-            return oDest;
-        },
-
-        // Deep copy properties in turn into dest object
-        extendDeep: function(dest) {
-            for (var i = 1; i < arguments.length; i++) {
-                var src = arguments[i];
-                for (var prop in src) {
-                    if (src.hasOwnProperty(prop)) {
-                        if (src[prop] instanceof Array) {
-                            dest[prop] = [];
-                            ns.extendDeep(dest[prop], src[prop]);
-                        }
-                        else if (src[prop] instanceof Object) {
-                            dest[prop] = {};
-                            ns.extendDeep(dest[prop], src[prop]);
-                        }
-                        else {
-                            dest[prop] = src[prop];
-                        }
-                    }
-                }
-            }
-        },
-
-        randomInt: function(n) {
-            return Math.floor(Math.random() * n);
-        },
-
-        strip: function(s) {
-            return (s || "").replace(/^\s+|\s+$/g, "");
-        },
-
-        /* Return new object with just the listed properties "projected"
-         into the new object */
-        project: function(obj, asProps) {
-            var objT = {};
-            for (var i = 0; i < asProps.length; i++) {
-                objT[asProps[i]] = obj[asProps[i]];
-            }
-            return objT;
-        },
-
-        /* Sort elements and remove duplicates from array (modified in place) */
-        uniqueArray: function(a) {
-            if (!a) {
-                return;
-            }
-            a.sort();
-            for (var i = 1; i < a.length; i++) {
-                if (a[i - 1] == a[i]) {
-                    a.splice(i, 1);
-                }
-            }
-        },
-
-        map: function(a, fn) {
-            var aRes = [];
-            for (var i = 0; i < a.length; i++) {
-                aRes.push(fn(a[i]));
-            }
-            return aRes;
-        },
-
-        filter: function(a, fn) {
-            var aRes = [];
-            for (var i = 0; i < a.length; i++) {
-                if (fn(a[i])) {
-                    aRes.push(a[i]);
-                }
-            }
-            return aRes;
-        },
-
-        reduce: function(a, fn) {
-            if (a.length < 2) {
-                return a[0];
-            }
-            var res = a[0];
-            for (var i = 1; i < a.length - 1; i++) {
-                res = fn(res, a[i]);
-            }
-            return res;
-        }
+        extendIfMissing: extendIfMissing,
+        extendDeep: extendDeep,
+        randomInt: randomInt,
+        strip: strip,
+        project: project,
+        uniqueArray: uniqueArray,
+        map: map,
+        filter: filter,
+        reduce: reduce
     });
+
 
 
 }); // startpad.base
@@ -466,8 +478,7 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
     */
     var base = namespace.lookup('org.startpad.base');
 
-    ns.extend({
-    setCookie: function(name, value, days, path) {
+    function setCookie(name, value, days, path) {
         var expires = '';
         if (days) {
             var date = new Date();
@@ -475,34 +486,43 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
             expires = '; expires=' + date.toGMTString();
         }
         path = '; path=' + (path || '/');
-        document.cookie =
-            encodeURIComponent(name) + '=' + encodeURIComponent(value)
-            + expires + path;
-    },
+        document.cookie = encodeURIComponent(name) + '=' +
+            encodeURIComponent(value) + expires + path;
+    }
 
-    getCookie: function(name) {
+    function getCookie(name) {
         return ns.getCookies()[name];
-    },
+    }
 
-    getCookies: function(name) {
+    function getCookies(name) {
         var st = document.cookie;
         var rgPairs = st.split(";");
 
         var obj = {};
         for (var i = 0; i < rgPairs.length; i++) {
-            // document.cookie never returns ;max-age, ;secure, etc. - just name value pairs
+            // document.cookie never returns ;max-age, ;secure, etc. -
+            // just name value pairs
             rgPairs[i] = base.strip(rgPairs[i]);
             var rgC = rgPairs[i].split("=");
             var val = decodeURIComponent(rgC[1]);
-            // Remove quotes around value string if any (and also replaces \" with ")
+            // Remove quotes around value string if any (and also
+            // replaces \" with ")
             var rg = val.match('^"(.*)"$');
-            if (rg)
+            if (rg) {
                 val = rg[1].replace('\\"', '"');
+            }
             obj[decodeURIComponent(rgC[0])] = val;
         }
         return obj;
+    }
 
-    }}); // ns
+
+    // Exports
+    ns.extend({
+        setCookie: setCookie,
+        getCookie: getCookie,
+        getCookies: getCookies
+    });
 
 }); // org.startpad.cookies
 /* Begin file: format.js */
@@ -636,17 +656,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
     // TODO: Add alert if jQuery is not present.
 
-    var pollInterval = 500;
+    var pollInterval = 1000;
     var discardMessage = "You will lose your document changes if you continue.";
 
     // The application calls Client, and implements the following methods:
-    // app.onLoad(jsonDocument) - Called when a new document is loaded.
-    // app.onSave() - Called to get the json data to be saved.
+    // app.setData(jsonDocument) - Called when a new document is loaded.
+    // app.getData() - Called to get the json data to be saved.
     // app.onSaveSuccess() - successfully saved.
-    // app.error(errorMessage) - Called when we get an error reading or
+    // app.onError(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
-    // app.onUserChanged(username) - Called when the user signs in or signs out
+    // app.onUserChange(username) - Called when the user signs in or signs out
     //     ('anonymous').
+    // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
         this.app = app;
 
@@ -660,6 +681,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.state = Client.states.clean;
         this.username = undefined;
         this.fLogging = false;
+        // Auto save every 60 seconds
+        this.saveInterval = 60;
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -675,18 +698,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document
         load: function (docid) {
             // Your data is on notice.
-            if (this.state == Client.states.dirty) {
+            if (this.isDirty()) {
                 if (!this.confirmDiscard()) {
                     return;
                 }
                 // Your data is dead to me.
-                this.state = Client.states.clean;
+                this.changeState(Client.states.clean);
             }
 
             // REVIEW: What to do about race condition if already
             // loading or saving?
             this.stateSave = this.state;
-            this.state = Client.states.loading;
+            this.changeState(Client.states.loading);
 
             this.log("loading: " + docid);
             $.ajax({
@@ -694,9 +717,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
+                    this.app.setData(document);
                     this.setCleanDoc(docid);
-                    // Required
-                    this.app.onLoad(document);
                 }.fnMethod(this)
             });
         },
@@ -711,10 +733,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         save: function (json, docid) {
             if (this.username == undefined) {
                 this.errorReport('no_username', "You must sign in to save.");
+                return;
             }
 
             if (json == undefined) {
-                json = this.app.onSave();
+                json = this.app.getData();
             }
 
             if (docid == undefined) {
@@ -722,13 +745,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             // First save?  Assign docid like username-slug
+            // FIXME: We could over-write a previously existing document
+            // with the same name.  We should do one of:
+            // - Check for existence first
+            // - Ask the server for a unique docid
+            // - Add some randomness to the docid
+            // - Use PUT if_not_exists
             if (docid == undefined) {
                 docid = this.username + '-' + json.title;
                 docid = format.slugify(docid);
             }
 
             this.stateSave = this.state;
-            this.state = Client.states.saving;
+            this.changeState(Client.states.saving);
 
             // Default permissions to be public readable.
             if (!json.readers) {
@@ -754,10 +783,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         setCleanDoc: function(docid) {
             this.docid = docid;
-            this.state = Client.states.clean;
+            this.changeState(Client.states.clean);
             location.hash = this.docid;
             // Don't trigger a load after we just saved.
             this.lastHash = location.hash;
+            // Remember the clean state of the document
+            this.lastJSON = JSON.stringify(this.app.getData());
         },
 
         setLogging: function(f) {
@@ -778,7 +809,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
-            this.state = this.stateSave;
+            this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
             this.log(message + ' (' + code + ')', xmlhttp);
@@ -786,8 +817,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorReport: function(status, message) {
-            if (this.app.error) {
-                this.app.error(status, message);
+            if (this.app.onError) {
+                this.app.onError(status, message);
             }
             else {
                 alert(status + ': ' + message);
@@ -801,13 +832,37 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return confirm(discardMessage);
         },
 
-        makeDirty: function(fDirty) {
+        setDirty: function(fDirty) {
             if (fDirty == undefined) {
                 fDirty = true;
             }
+
+            // Save the first dirty time
+            if (!this.isDirty() && fDirty) {
+                this.dirtyTime = new Date().getTime();
+            }
+
             // REVIEW: What if we are loading or saving? Does this
-            // canel a load?
-            this.state = fDirty ? Client.states.dirty : Client.states.clean;
+            // cancel a load?
+            this.changeState(fDirty ? Client.states.dirty :
+                             Client.states.clean);
+        },
+
+        isDirty: function() {
+            return this.state == Client.states.dirty;
+        },
+
+        changeState: function(state) {
+            if (state == this.state) {
+                return;
+            }
+
+            var stateOld = this.state;
+            this.state = state;
+
+            if (this.app.onStateChange) {
+                this.app.onStateChange(state, stateOld);
+            }
         },
 
         // The user is about to navigate away from the page - we want to
@@ -822,14 +877,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
-        // TODO: If the document is dirty, we don't want to overwrite it
-        // without getting permission?
         poll: function () {
             if (this.lastHash != location.hash) {
                 this.lastHash = location.hash;
                 this.load(location.hash.substr(1));
             }
             this.checkUsername();
+            this.checkData();
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -845,9 +899,42 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             else {
                 this.username = undefined;
             }
-            if (this.app.onUserChanged && usernameLast != this.username) {
+            if (this.app.onUserChange && usernameLast != this.username) {
                 this.log('found user: ' + this.username);
-                this.app.onUserChanged(this.username || 'anonymous');
+                this.app.onUserChange(this.username || 'anonymous');
+            }
+        },
+
+        // See if the document data has changed - assume this is not
+        // expensive as we execute this every second.
+        checkData: function() {
+            // No auto-saving - do nothing
+            if (this.saveInterval == 0) {
+                return;
+            }
+
+            // See if it's time to do an auto-save
+            if (this.isDirty()) {
+                if (this.username == undefined) {
+                    return;
+                }
+                var now = new Date().getTime();
+                if (now - this.dirtyTime > this.saveInterval * 1000) {
+                    this.save();
+                }
+                return;
+            }
+
+            // Don't do anything if we're saving or loading.
+            if (this.state != Client.states.clean) {
+                return;
+            }
+
+            // Document looks clean - see if it's changed since we last
+            // checked.
+            var json = JSON.stringify(this.app.getData());
+            if (json != this.lastJSON) {
+                this.setDirty();
             }
         },
 

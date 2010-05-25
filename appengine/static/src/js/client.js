@@ -15,17 +15,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
     // TODO: Add alert if jQuery is not present.
 
-    var pollInterval = 500;
+    var pollInterval = 1000;
     var discardMessage = "You will lose your document changes if you continue.";
 
     // The application calls Client, and implements the following methods:
-    // app.onLoad(jsonDocument) - Called when a new document is loaded.
-    // app.onSave() - Called to get the json data to be saved.
+    // app.setData(jsonDocument) - Called when a new document is loaded.
+    // app.getData() - Called to get the json data to be saved.
     // app.onSaveSuccess() - successfully saved.
-    // app.error(errorMessage) - Called when we get an error reading or
+    // app.onError(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
-    // app.onUserChanged(username) - Called when the user signs in or signs out
+    // app.onUserChange(username) - Called when the user signs in or signs out
     //     ('anonymous').
+    // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
         this.app = app;
 
@@ -39,6 +40,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.state = Client.states.clean;
         this.username = undefined;
         this.fLogging = false;
+        // Auto save every 60 seconds
+        this.saveInterval = 60;
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -54,18 +57,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document
         load: function (docid) {
             // Your data is on notice.
-            if (this.state == Client.states.dirty) {
+            if (this.isDirty()) {
                 if (!this.confirmDiscard()) {
                     return;
                 }
                 // Your data is dead to me.
-                this.state = Client.states.clean;
+                this.changeState(Client.states.clean);
             }
 
             // REVIEW: What to do about race condition if already
             // loading or saving?
             this.stateSave = this.state;
-            this.state = Client.states.loading;
+            this.changeState(Client.states.loading);
 
             this.log("loading: " + docid);
             $.ajax({
@@ -73,9 +76,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
+                    this.app.setData(document);
                     this.setCleanDoc(docid);
-                    // Required
-                    this.app.onLoad(document);
                 }.fnMethod(this)
             });
         },
@@ -90,10 +92,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         save: function (json, docid) {
             if (this.username == undefined) {
                 this.errorReport('no_username', "You must sign in to save.");
+                return;
             }
 
             if (json == undefined) {
-                json = this.app.onSave();
+                json = this.app.getData();
             }
 
             if (docid == undefined) {
@@ -101,13 +104,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             // First save?  Assign docid like username-slug
+            // FIXME: We could over-write a previously existing document
+            // with the same name.  We should do one of:
+            // - Check for existence first
+            // - Ask the server for a unique docid
+            // - Add some randomness to the docid
+            // - Use PUT if_not_exists
             if (docid == undefined) {
                 docid = this.username + '-' + json.title;
                 docid = format.slugify(docid);
             }
 
             this.stateSave = this.state;
-            this.state = Client.states.saving;
+            this.changeState(Client.states.saving);
 
             // Default permissions to be public readable.
             if (!json.readers) {
@@ -133,10 +142,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         setCleanDoc: function(docid) {
             this.docid = docid;
-            this.state = Client.states.clean;
+            this.changeState(Client.states.clean);
             location.hash = this.docid;
             // Don't trigger a load after we just saved.
             this.lastHash = location.hash;
+            // Remember the clean state of the document
+            this.lastJSON = JSON.stringify(this.app.getData());
         },
 
         setLogging: function(f) {
@@ -157,7 +168,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
-            this.state = this.stateSave;
+            this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
             this.log(message + ' (' + code + ')', xmlhttp);
@@ -165,8 +176,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorReport: function(status, message) {
-            if (this.app.error) {
-                this.app.error(status, message);
+            if (this.app.onError) {
+                this.app.onError(status, message);
             }
             else {
                 alert(status + ': ' + message);
@@ -180,13 +191,37 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return confirm(discardMessage);
         },
 
-        makeDirty: function(fDirty) {
+        setDirty: function(fDirty) {
             if (fDirty == undefined) {
                 fDirty = true;
             }
+
+            // Save the first dirty time
+            if (!this.isDirty() && fDirty) {
+                this.dirtyTime = new Date().getTime();
+            }
+
             // REVIEW: What if we are loading or saving? Does this
-            // canel a load?
-            this.state = fDirty ? Client.states.dirty : Client.states.clean;
+            // cancel a load?
+            this.changeState(fDirty ? Client.states.dirty :
+                             Client.states.clean);
+        },
+
+        isDirty: function() {
+            return this.state == Client.states.dirty;
+        },
+
+        changeState: function(state) {
+            if (state == this.state) {
+                return;
+            }
+
+            var stateOld = this.state;
+            this.state = state;
+
+            if (this.app.onStateChange) {
+                this.app.onStateChange(state, stateOld);
+            }
         },
 
         // The user is about to navigate away from the page - we want to
@@ -201,14 +236,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
-        // TODO: If the document is dirty, we don't want to overwrite it
-        // without getting permission?
         poll: function () {
             if (this.lastHash != location.hash) {
                 this.lastHash = location.hash;
                 this.load(location.hash.substr(1));
             }
             this.checkUsername();
+            this.checkData();
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -224,9 +258,42 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             else {
                 this.username = undefined;
             }
-            if (this.app.onUserChanged && usernameLast != this.username) {
+            if (this.app.onUserChange && usernameLast != this.username) {
                 this.log('found user: ' + this.username);
-                this.app.onUserChanged(this.username || 'anonymous');
+                this.app.onUserChange(this.username || 'anonymous');
+            }
+        },
+
+        // See if the document data has changed - assume this is not
+        // expensive as we execute this every second.
+        checkData: function() {
+            // No auto-saving - do nothing
+            if (this.saveInterval == 0) {
+                return;
+            }
+
+            // See if it's time to do an auto-save
+            if (this.isDirty()) {
+                if (this.username == undefined) {
+                    return;
+                }
+                var now = new Date().getTime();
+                if (now - this.dirtyTime > this.saveInterval * 1000) {
+                    this.save();
+                }
+                return;
+            }
+
+            // Don't do anything if we're saving or loading.
+            if (this.state != Client.states.clean) {
+                return;
+            }
+
+            // Document looks clean - see if it's changed since we last
+            // checked.
+            var json = JSON.stringify(this.app.getData());
+            if (json != this.lastJSON) {
+                this.setDirty();
             }
         },
 

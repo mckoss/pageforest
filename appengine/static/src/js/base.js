@@ -54,109 +54,120 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     });
 
+    function extendIfMissing(oDest, var_args) {
+        if (oDest == undefined) {
+            oDest = {};
+        }
+        for (var i = 1; i < arguments.length; i++) {
+            var oSource = arguments[i];
+            for (var prop in oSource) {
+                if (oSource.hasOwnProperty(prop) &&
+                    oDest[prop] == undefined) {
+                    oDest[prop] = oSource[prop];
+                }
+            }
+        }
+        return oDest;
+    }
+
+    // Deep copy properties in turn into dest object
+    function extendDeep(dest) {
+        for (var i = 1; i < arguments.length; i++) {
+            var src = arguments[i];
+            for (var prop in src) {
+                if (src.hasOwnProperty(prop)) {
+                    if (src[prop] instanceof Array) {
+                        dest[prop] = [];
+                        ns.extendDeep(dest[prop], src[prop]);
+                    }
+                    else if (src[prop] instanceof Object) {
+                        dest[prop] = {};
+                        ns.extendDeep(dest[prop], src[prop]);
+                    }
+                    else {
+                        dest[prop] = src[prop];
+                    }
+                }
+            }
+        }
+    }
+
+    function randomInt(n) {
+        return Math.floor(Math.random() * n);
+    }
+
+    function strip(s) {
+        return (s || "").replace(/^\s+|\s+$/g, "");
+    }
+
+    /* Return new object with just the listed properties "projected"
+       into the new object */
+    function project(obj, asProps) {
+        var objT = {};
+        for (var i = 0; i < asProps.length; i++) {
+            objT[asProps[i]] = obj[asProps[i]];
+        }
+        return objT;
+    }
+
+    /* Sort elements and remove duplicates from array (modified in place) */
+    function uniqueArray(a) {
+        if (!a) {
+            return;
+        }
+        a.sort();
+        for (var i = 1; i < a.length; i++) {
+            if (a[i - 1] == a[i]) {
+                a.splice(i, 1);
+            }
+        }
+    }
+
+    function map(a, fn) {
+        var aRes = [];
+        for (var i = 0; i < a.length; i++) {
+            aRes.push(fn(a[i]));
+        }
+        return aRes;
+    }
+
+    function filter(a, fn) {
+        var aRes = [];
+        for (var i = 0; i < a.length; i++) {
+            if (fn(a[i])) {
+                aRes.push(a[i]);
+            }
+        }
+        return aRes;
+    }
+
+    function reduce(a, fn) {
+        if (a.length < 2) {
+            return a[0];
+        }
+        var res = a[0];
+        for (var i = 1; i < a.length - 1; i++) {
+            res = fn(res, a[i]);
+        }
+        return res;
+    }
+
     ns.extend({
         extendObject: util.extendObject,
         Enum: Enum,
         StBuf: StBuf,
 
-        extendIfMissing: function(oDest, var_args) {
-            if (oDest == undefined) {
-                oDest = {};
-            }
-            for (var i = 1; i < arguments.length; i++) {
-                var oSource = arguments[i];
-                for (var prop in oSource) {
-                    if (oSource.hasOwnProperty(prop) &&
-                        oDest[prop] == undefined) {
-                        oDest[prop] = oSource[prop];
-                    }
-                }
-            }
-            return oDest;
-        },
-
-        // Deep copy properties in turn into dest object
-        extendDeep: function(dest) {
-            for (var i = 1; i < arguments.length; i++) {
-                var src = arguments[i];
-                for (var prop in src) {
-                    if (src.hasOwnProperty(prop)) {
-                        if (src[prop] instanceof Array) {
-                            dest[prop] = [];
-                            ns.extendDeep(dest[prop], src[prop]);
-                        }
-                        else if (src[prop] instanceof Object) {
-                            dest[prop] = {};
-                            ns.extendDeep(dest[prop], src[prop]);
-                        }
-                        else {
-                            dest[prop] = src[prop];
-                        }
-                    }
-                }
-            }
-        },
-
-        randomInt: function(n) {
-            return Math.floor(Math.random() * n);
-        },
-
-        strip: function(s) {
-            return (s || "").replace(/^\s+|\s+$/g, "");
-        },
-
-        /* Return new object with just the listed properties "projected"
-         into the new object */
-        project: function(obj, asProps) {
-            var objT = {};
-            for (var i = 0; i < asProps.length; i++) {
-                objT[asProps[i]] = obj[asProps[i]];
-            }
-            return objT;
-        },
-
-        /* Sort elements and remove duplicates from array (modified in place) */
-        uniqueArray: function(a) {
-            if (!a) {
-                return;
-            }
-            a.sort();
-            for (var i = 1; i < a.length; i++) {
-                if (a[i - 1] == a[i]) {
-                    a.splice(i, 1);
-                }
-            }
-        },
-
-        map: function(a, fn) {
-            var aRes = [];
-            for (var i = 0; i < a.length; i++) {
-                aRes.push(fn(a[i]));
-            }
-            return aRes;
-        },
-
-        filter: function(a, fn) {
-            var aRes = [];
-            for (var i = 0; i < a.length; i++) {
-                if (fn(a[i])) {
-                    aRes.push(a[i]);
-                }
-            }
-            return aRes;
-        },
-
-        reduce: function(a, fn) {
-            if (a.length < 2) {
-                return a[0];
-            }
-            var res = a[0];
-            for (var i = 1; i < a.length - 1; i++) {
-                res = fn(res, a[i]);
-            }
-            return res;
-        }
+        extendIfMissing: extendIfMissing,
+        extendDeep: extendDeep,
+        randomInt: randomInt,
+        strip: strip,
+        project: project,
+        uniqueArray: uniqueArray,
+        map: map,
+        filter: filter,
+        reduce: reduce
     });
+
 
 
 }); // startpad.base
