@@ -4,38 +4,21 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
 
     // Initialize the document - create a client helper object
     function onReady() {
+        $('#title').focus();
         ns.client = client = new clientLib.Client(ns);
         client.setLogging();
     }
 
-    // Update the link to the current document for the UI
-    function updateDocLink() {
-        $('#document').attr('href', client.getDocURL() + '?callback=document');
-        $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
-        $('#app-details').attr('href', 'http://' + client.wwwHost +
-                               '/apps/' + client.appid);
-    }
-
-    // Display a status message for the most recent activity.
-    function updateStatus(message) {
-        $('#results').prepend('<div>' + message +
-                              ' (' +
-                              clientLib.Client.states.getName(client.state) +
-                              ')' +
-                              '</div>');
-    }
-
     // This function is called whenever your document should be reloaded.
-    function onLoad(json) {
+    function setData(json) {
         $('#title').val(json.title);
         $('#blob').val(json.blob);
-        updateDocLink();
-        updateStatus("Loaded.");
+        ns.updateStatus("Loaded.");
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
-    function onSave() {
+    function getData() {
         var json = {
             'title': $('#title').val(),
             'blob': $('#blob').val()
@@ -43,9 +26,23 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         return json;
     }
 
+    // Display a status message for the most recent activity.
+    function updateStatus(message) {
+        $('#results').prepend('<div>' + message +
+                              ' (document is ' +
+                              clientLib.Client.states.getName(client.state) +
+                              ')' +
+                              '</div>');
+
+        // Refresh links on the page, too
+        $('#document').attr('href', client.getDocURL() + '?callback=document');
+        $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
+        $('#app-details').attr('href', 'http://' + client.wwwHost +
+                               '/apps/' + client.appid);
+    }
+
     // Called when our save is successful.
     function onSaveSuccess() {
-        updateDocLink();
         updateStatus("Saved.");
     }
 
@@ -55,21 +52,27 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     }
 
     // Called when the current user changes (signs in or out)
-    function onUserChanged(username) {
+    function onUserChange(username) {
         $('#username').text(username);
         var isSignedIn = username != 'anonymous';
         $('#signin').attr('disabled', isSignedIn);
         $('#signout').attr('disabled', !isSignedIn);
     }
 
+    function onStateChange(newState, oldState) {
+        $('#doc-state').html(clientLib.Client.states.getName(newState));
+    }
+
     // Exported functions
     ns.extend({
         onReady: onReady,
-        onLoad: onLoad,
-        onSave: onSave,
+        updateStatus: updateStatus,
+        getData: getData,
+        setData: setData,
         onSaveSuccess: onSaveSuccess,
         onError: onError,
-        onUserChanged: onUserChanged
+        onUserChange: onUserChange,
+        onStateChange: onStateChange
     });
 
 });
