@@ -53,6 +53,24 @@ class DocumentTest(AppTestCase):
         response = self.docs_client.get('/MYDOC')
         self.assertEqual(response.content, canonical_content)
 
+    def test_404(self):
+        """Test that missing document prevents blob access."""
+        response = self.docs_client.get('/unknown/')
+        self.assertContains(response, 'Document not found: myapp/unknown',
+                            status_code=404)
+        # Writing a blob under this document should fail.
+        response = self.docs_client.put('/unknown/blob/', 'data',
+                                       content_type='text/plain')
+        self.assertContains(response, 'Document not found: myapp/unknown',
+                            status_code=404)
+        # Reading a blob under this document should fail.
+        response = self.docs_client.get('/unknown/blob/')
+        self.assertContains(response, 'Document not found: myapp/unknown',
+                            status_code=404)
+
+
+class PermissionTest(AppTestCase):
+
     def test_read_permissions(self):
         """Test access control in document_get."""
         # Document owner should have read permission.
@@ -104,58 +122,45 @@ class DocumentTest(AppTestCase):
         self.assertContains(response, "Write permission denied.",
                             status_code=403)
 
-    def test_404(self):
-        """Test that missing document prevents blob access."""
-        response = self.docs_client.get('/unknown/')
-        self.assertContains(response, 'Document not found: myapp/unknown',
-                            status_code=404)
-        # Writing a blob under this document should fail.
-        response = self.docs_client.put('/unknown/blob/', 'data',
-                                       content_type='text/plain')
-        self.assertContains(response, 'Document not found: myapp/unknown',
-                            status_code=404)
-        # Reading a blob under this document should fail.
-        response = self.docs_client.get('/unknown/blob/')
-        self.assertContains(response, 'Document not found: myapp/unknown',
-                            status_code=404)
+
+class TimestampedTest(AppTestCase):
+
+    def setUp(self):
+        super(TimestampedTest, self).setUp()
+        self.datetime = datetime.datetime
+        datetime.datetime = Mock()
+
+    def tearDown(self):
+        datetime.datetime = self.datetime
 
     def test_timestamped_mixin(self):
         """Timestamps and IP addresses should be updated automatically."""
-        original = datetime.datetime
-        try:
-            datetime.datetime = Mock()
-            datetime.datetime.now.return_value = original(
-                2010, 5, 10, 11, 12, 13)
-            self.docs_client.session_key = \
-                self.peter.generate_session_key(self.app)
-            self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
-            response = self.docs_client.put(
-                '/foo/', '{"title": "Created Document"}',
-                content_type='text/plain')
-            self.assertContains(response, 'Saved')
-            entity = Doc.get_by_key_name('myapp/foo')
-            self.assertEqual(entity.title, 'Created Document')
-            self.assertEqual(entity.created_ip, '10.11.12.13')
-            self.assertEqual(entity.modified_ip, '10.11.12.13')
-            self.assertEqual(entity.created.isoformat(),
-                             '2010-05-10T11:12:13')
-            self.assertEqual(entity.modified.isoformat(),
-                             '2010-05-10T11:12:13')
-            # Update same entity from a different IP address.
-            datetime.datetime.now.return_value = original(
-                2010, 5, 10, 11, 12, 14)
-            self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
-            response = self.docs_client.put(
-                '/foo/', '{"title": "Modified Document"}',
-                content_type='text/plain')
-            self.assertContains(response, 'Saved')
-            entity = Doc.get_by_key_name('myapp/foo')
-            self.assertEqual(entity.title, 'Modified Document')
-            self.assertEqual(entity.created_ip, '10.11.12.13')
-            self.assertEqual(entity.modified_ip, '10.11.12.14')
-            self.assertEqual(entity.created.isoformat(),
-                             '2010-05-10T11:12:13')
-            self.assertEqual(entity.modified.isoformat(),
-                             '2010-05-10T11:12:14')
-        finally:
-            datetime.datetime = original
+        datetime.datetime.now.return_value = \
+            self.datetime(2010, 5, 10, 11, 12, 13)
+        self.docs_client.session_key = \
+            self.peter.generate_session_key(self.app)
+        self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
+        response = self.docs_client.put(
+            '/foo/', '{"title": "Created Document"}',
+            content_type='text/plain')
+        self.assertContains(response, 'Saved')
+        entity = Doc.get_by_key_name('myapp/foo')
+        self.assertEqual(entity.title, 'Created Document')
+        self.assertEqual(entity.created_ip, '10.11.12.13')
+        self.assertEqual(entity.modified_ip, '10.11.12.13')
+        self.assertEqual(entity.created.isoformat(), '2010-05-10T11:12:13')
+        self.assertEqual(entity.modified.isoformat(), '2010-05-10T11:12:13')
+        # Update same entity from a different IP address.
+        datetime.datetime.now.return_value = \
+            self.datetime(2010, 5, 10, 11, 12, 14)
+        self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
+        response = self.docs_client.put(
+            '/foo/', '{"title": "Modified Document"}',
+            content_type='text/plain')
+        self.assertContains(response, 'Saved')
+        entity = Doc.get_by_key_name('myapp/foo')
+        self.assertEqual(entity.title, 'Modified Document')
+        self.assertEqual(entity.created_ip, '10.11.12.13')
+        self.assertEqual(entity.modified_ip, '10.11.12.14')
+        self.assertEqual(entity.created.isoformat(), '2010-05-10T11:12:13')
+        self.assertEqual(entity.modified.isoformat(), '2010-05-10T11:12:14')
