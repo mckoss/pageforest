@@ -25,7 +25,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onError(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
     // app.onUserChange(username) - Called when the user signs in or signs out
-    //     ('anonymous').
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
         this.app = app;
@@ -36,12 +35,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.appid = this.appHost.substr(0, dot);
         this.wwwHost = 'www' + this.appHost.substr(dot);
 
-        this.lastHash = '';
         this.state = Client.states.clean;
         this.username = undefined;
         this.fLogging = false;
         // Auto save every 60 seconds
         this.saveInterval = 60;
+        this.setCleanDoc();
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -143,11 +142,20 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         setCleanDoc: function(docid) {
             this.docid = docid;
             this.changeState(Client.states.clean);
-            location.hash = this.docid;
-            // Don't trigger a load after we just saved.
-            this.lastHash = location.hash;
             // Remember the clean state of the document
             this.lastJSON = JSON.stringify(this.app.getData());
+
+            // If we have a new document - don't destroy the url hash so
+            // our polling can kick in to load the document.
+            if (docid == undefined) {
+                this.lastHash = '';
+                return;
+            }
+
+            location.hash = docid;
+            this.lastHash = location.hash;
+            // Chrome has a bug where the location bar is not updated
+            location.href = location.href;
         },
 
         setLogging: function(f) {
@@ -260,7 +268,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             if (this.app.onUserChange && usernameLast != this.username) {
                 this.log('found user: ' + this.username);
-                this.app.onUserChange(this.username || 'anonymous');
+                this.app.onUserChange(this.username);
             }
         },
 
