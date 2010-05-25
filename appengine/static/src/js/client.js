@@ -15,7 +15,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 
-    var pollInterval = 1000;
+    ns.pollInterval = 1000;
 
     // Error messages
     var discardMessage = "You will lose your document changes if you continue.";
@@ -43,7 +43,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.appid = this.appHost.substr(0, dot);
         this.wwwHost = 'www' + this.appHost.substr(dot);
 
-        this.state = Client.states.clean;
+        this.state = 'clean';
         this.username = undefined;
         this.fLogging = false;
         // Auto save every 60 seconds
@@ -52,7 +52,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
-        setInterval(this.poll.fnMethod(this), pollInterval);
+        setInterval(this.poll.fnMethod(this), ns.pollInterval);
 
         if (typeof $ != 'function' || $ != jQuery) {
             this.errorReport('jQuery_required', jQueryMessage);
@@ -63,8 +63,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
     }
 
-    Client.states = new base.Enum('clean', 'dirty', 'loading', 'saving');
-
     Client.methods({
         // Load a document
         load: function (docid) {
@@ -74,13 +72,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     return;
                 }
                 // Your data is dead to me.
-                this.changeState(Client.states.clean);
+                this.changeState('clean');
             }
 
             // REVIEW: What to do about race condition if already
             // loading or saving?
             this.stateSave = this.state;
-            this.changeState(Client.states.loading);
+            this.changeState('loading');
 
             this.log("loading: " + docid);
             $.ajax({
@@ -134,7 +132,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             this.stateSave = this.state;
-            this.changeState(Client.states.saving);
+            this.changeState('saving');
 
             // Default permissions to be public readable.
             if (!json.readers) {
@@ -169,7 +167,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // If preserveHash, we don't modify the URL
         setCleanDoc: function(docid, preserveHash) {
             this.docid = docid;
-            this.changeState(Client.states.clean);
+            this.changeState('clean');
             // Remember the clean state of the document
             this.lastJSON = JSON.stringify(this.app.getData());
 
@@ -256,12 +254,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // REVIEW: What if we are loading or saving? Does this
             // cancel a load?
-            this.changeState(fDirty ? Client.states.dirty :
-                             Client.states.clean);
+            this.changeState(fDirty ? 'dirty' : 'clean');
         },
 
         isDirty: function() {
-            return this.state == Client.states.dirty;
+            return this.state == 'dirty';
         },
 
         changeState: function(state) {
@@ -280,7 +277,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // The user is about to navigate away from the page - we want to
         // alert the user if he might lose changes.
         beforeUnload: function(evt) {
-            if (this.state != Client.states.clean) {
+            if (this.state != 'clean') {
                 evt.returnValue = unloadMessage;
                 return evt.returnValue;
             }
@@ -337,7 +334,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             // Don't do anything if we're saving or loading.
-            if (this.state != Client.states.clean) {
+            if (this.state != 'clean') {
                 return;
             }
 
