@@ -8,15 +8,24 @@
   It needs to be modified to support remote hosting and local filesystem
   testing.
  */
+
+/*global jQuery $ */
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var cookies = namespace.lookup('org.startpad.cookies');
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 
-    // TODO: Add alert if jQuery is not present.
-
     var pollInterval = 1000;
+
+    // Error messages
     var discardMessage = "You will lose your document changes if you continue.";
+    var jQueryMessage = "jQuery must be installed to use this library.";
+    var signInMessage = "You must sign in to save a document.";
+    var unloadMessage = "You will lose your changes if you leave " +
+        "the document without saving.";
+    var objectMessage = "Document data is missing.";
+    var titleMessage = "Document is missing a title.";
+    var blobMessage = "Document is missing a blob property.";
 
     // The application calls Client, and implements the following methods:
     // app.setData(jsonDocument) - Called when a new document is loaded.
@@ -29,7 +38,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     function Client(app) {
         this.app = app;
 
-        // TODO: Support remote and local filesytem hosting.
         this.appHost = location.host;
         var dot = this.appHost.indexOf('.');
         this.appid = this.appHost.substr(0, dot);
@@ -40,11 +48,16 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.fLogging = false;
         // Auto save every 60 seconds
         this.saveInterval = 60;
-        this.setCleanDoc();
+        this.setCleanDoc(undefined, true);
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
         setInterval(this.poll.fnMethod(this), pollInterval);
+
+        if (typeof $ != 'function' || $ != jQuery) {
+            this.errorReport('jQuery_required', jQueryMessage);
+            return;
+        }
 
         // Catch window unload if the user tries to close an unsaved window
         $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
@@ -81,21 +94,26 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
-        getDocURL: function(docid) {
-            if (docid == undefined) {
-                docid = this.docid;
-            }
-            return 'http://' + this.appHost + '/docs/' + docid + '/';
-        },
-
         save: function (json, docid) {
             if (this.username == undefined) {
-                this.errorReport('no_username', "You must sign in to save.");
+                this.errorReport('no_username', signInMessage);
                 return;
             }
 
             if (json == undefined) {
                 json = this.app.getData();
+                if (typeof json != 'object') {
+                    this.errorReport('missing_object', objectMessage);
+                    return;
+                }
+                if (json.title == undefined) {
+                    this.errorReport('missing_title', titleMessage);
+                    return;
+                }
+                if (json.blob == undefined) {
+                    this.errorReport('missing_blob', blobMessage);
+                    return;
+                }
             }
 
             if (docid == undefined) {
@@ -110,7 +128,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // - Add some randomness to the docid
             // - Use PUT if_not_exists
             if (docid == undefined) {
-                docid = this.username + '-' + json.title;
+                docid = this.username + '-' + json.title + '-' +
+                    base.randomInt(10000);
                 docid = format.slugify(docid);
             }
 
@@ -139,23 +158,46 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
-        setCleanDoc: function(docid) {
+        // Detach the current document from it's storage.
+        detach: function() {
+            this.setCleanDoc();
+            this.setDirty();
+        },
+
+        // Set the document to the clean state.
+        // If docid is undefined, set to the "new" document state.
+        // If preserveHash, we don't modify the URL
+        setCleanDoc: function(docid, preserveHash) {
             this.docid = docid;
             this.changeState(Client.states.clean);
             // Remember the clean state of the document
             this.lastJSON = JSON.stringify(this.app.getData());
 
-            // If we have a new document - don't destroy the url hash so
-            // our polling can kick in to load the document.
-            if (docid == undefined) {
+            // Enable polling to kick off a load().
+            if (preserveHash) {
                 this.lastHash = '';
                 return;
             }
 
+            if (docid == undefined) {
+                docid = '';
+            }
+
             location.hash = docid;
             this.lastHash = location.hash;
-            // Chrome has a bug where the location bar is not updated
+            // Chrome has a bug where the location bar is not updated unless
+            // the whole thing is set.
             location.href = location.href;
+        },
+
+        getDocURL: function(docid) {
+            if (docid == undefined) {
+                docid = this.docid;
+            }
+            if (docid == undefined) {
+                return undefined;
+            }
+            return 'http://' + this.appHost + '/docs/' + docid + '/';
         },
 
         setLogging: function(f) {
@@ -188,7 +230,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.app.onError(status, message);
             }
             else {
-                alert(status + ': ' + message);
+                var formatted = "client error: " + message +
+                    ' (' + status + ')';
+                console.log(formatted);
+                alert(formatted);
             }
         },
 
@@ -236,8 +281,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // alert the user if he might lose changes.
         beforeUnload: function(evt) {
             if (this.state != Client.states.clean) {
-                evt.returnValue = "You will lose your changes if you leave " +
-                    "the document without saving.";
+                evt.returnValue = unloadMessage;
                 return evt.returnValue;
             }
         },
@@ -307,8 +351,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Direct the user to the Pageforest sign-in page.
         signIn: function () {
-            window.open('http://' + this.wwwHost + "/sign-in/" +
-                        this.appid + "/", '_blank');
+            window.open('http://' + this.wwwHost + '/sign-in/' +
+                        this.appid + '/', '_blank');
         },
 
         // Expire the session key to remove the sign-in for the user.
