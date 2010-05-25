@@ -726,6 +726,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 dataType: 'json',
                 url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
+                beforeSend: function(xhr) {
+                    var sessionKey = cookies.getCookie('sessionkey');
+                    if (sessionKey) {
+                        xhr.setRequestHeader("Authorization",
+                                             'PFSK1 ' + sessionKey);
+                    }
+                },
                 success: function (document, textStatus, xmlhttp) {
                     this.app.setData(document);
                     this.setCleanDoc(docid);
@@ -781,12 +788,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var data = JSON.stringify(json);
-            this.log('saving: ' + docid, json);
+            this.log('saving: ' + this.getDocURL(docid), json);
             $.ajax({
                 type: 'PUT',
-                url: '/docs/' + docid,
+                url: this.getDocURL(docid),
                 data: data,
                 error: this.errorHandler.fnMethod(this),
+                beforeSend: function(xhr) {
+                    var sessionKey = cookies.getCookie('sessionkey');
+                    if (sessionKey) {
+                        xhr.setRequestHeader("Authorization",
+                                             'PFSK1 ' + sessionKey);
+                    }
+                },
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
@@ -836,7 +850,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (docid == undefined) {
                 return undefined;
             }
-            return 'http://' + this.appHost + '/docs/' + docid + '/';
+            return 'http://docs.' + this.appHost + '/' + docid + '/';
         },
 
         setLogging: function(f) {
@@ -900,6 +914,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         isDirty: function() {
             return this.state == 'dirty';
+        },
+
+        isSaved: function() {
+            return this.state == 'clean' && this.docid != undefined;
         },
 
         changeState: function(state) {
