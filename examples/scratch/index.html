@@ -35,7 +35,8 @@ $(document).ready(scratch.onReady);
     </li>
   </ol>
   <div style="float:right;">
-    <input type="button" onclick="scratch.client.save()" value="Save" />
+    <input type="button" onclick="scratch.client.detach();" value="Make a Copy" />
+    <input type="button" onclick="scratch.client.save();" value="Save" />
   </div>
   <p><i>Document is <span id="doc-state">clean</span>.</i></p>
 </fieldset>
