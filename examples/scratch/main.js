@@ -51,7 +51,14 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         $('#error').text('');
 
         // Refresh links on the page, too
-        $('#document').attr('href', client.getDocURL() + '?callback=document');
+        var url = client.getDocURL();
+        var link = $('#document');
+        if (url) {
+            link.attr('href', url + '?callback=document').show();
+        }
+        else {
+            link.hide();
+        }
         $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
         $('#app-details').attr('href', 'http://' + client.wwwHost +
                                '/apps/' + client.appid);
