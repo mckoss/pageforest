@@ -27,6 +27,7 @@ eval is evil
 Expected a 'break' statement before 'case'
 Bad assignment
 Redefinition of 'console'
+Do not use 'new' for side effects
 """.strip().splitlines(),
 
     'strong': """
@@ -37,6 +38,7 @@ Use '!==' to compare with 'undefined'
 Use '===' to compare with 'undefined'
 Use '===' to compare with '0'
 Use '!==' to compare with '0'
+Do not use 'new' for side effects
 Missing radix parameter
 """.strip().splitlines(),
 
