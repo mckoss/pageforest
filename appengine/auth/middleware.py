@@ -5,7 +5,6 @@ from auth import SignatureError
 from auth.models import User
 from apps.middleware import app_id_from_trusted_domain
 
-WITHOUT_SUBDOMAIN_METHODS = ('GET', 'HEAD')
 READ_METHODS = ('GET', 'HEAD', 'LIST', 'SLICE')
 
 
@@ -110,14 +109,16 @@ class AuthMiddleware(object):
                 assert request.user is None
 
         # Allow authentication attempts.
-        if (request.path_info == '/app/dev/auth/challenge/'
-            or request.path_info.startswith('/app/dev/auth/verify/')):
+        if (request.path_info == '/app/admin/auth/challenge/'
+            or request.path_info.startswith('/app/admin/auth/verify/')):
             return
 
         # Only allow GET and HEAD for app_id.pageforest.com.
+        app_id_methods = ('GET', 'HEAD')
         if (request.subdomain is None and not request.app.is_www()
-            and request.method not in WITHOUT_SUBDOMAIN_METHODS):
-            return HttpResponseNotAllowed(WITHOUT_SUBDOMAIN_METHODS)
+            and not request.path_info.startswith('/app/docs/')
+            and request.method not in app_id_methods):
+            return HttpResponseNotAllowed(app_id_methods)
 
         # Check permissions for the current document.
         if hasattr(request, 'doc'):
@@ -135,7 +136,8 @@ class AuthMiddleware(object):
         # Let authenticated user create an app by uploading app.json.
         if (request.app.owner == ''
             and request.method == 'PUT'
-            and request.path_info == '/app/dev/app.json/'
+            and request.path_info == '/app/%s/app.json/' %
+                settings.ADMIN_SUBDOMAIN
             and request.user is not None):
             return
 

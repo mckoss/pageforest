@@ -37,7 +37,7 @@ class AppMiddleware(object):
         # Extract special subdomains from hostname.
         request.subdomain = None
         parts = hostname.split('.')
-        if parts[0] in ('dev', 'docs'):
+        if parts[0] == settings.ADMIN_SUBDOMAIN:
             request.subdomain = parts[0]
             hostname = '.'.join(parts[1:])
         # Extract app_id from hostname.
@@ -64,7 +64,7 @@ class AppMiddleware(object):
                 logging.info(" original URL: http://" +
                              request.META.get('HTTP_HOST', '') +
                              request.get_full_path())
-            # Prefix path with /docs or /dev for matching with urls.py.
+            # Prefix path with special subdomains.
             if request.subdomain:
                 request.path_info = '/' + request.subdomain + request.path_info
             # Prefix path with /app for matching with urls.py.

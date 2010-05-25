@@ -92,6 +92,10 @@ DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]{,99}"
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
 
+# Separate subdomain for uploading app.json and app source (HTML, JS, CSS).
+# Example: admin.scratch.pageforest.com
+ADMIN_SUBDOMAIN = 'admin'
+
 # Trusted domains (for app_id.domain.tld lookup).
 DOMAINS = [
     'pageforest.com',
@@ -146,7 +150,7 @@ everybody anybody nobody private owner
 # Prevent app registration with some special app names.
 # Note that 'www' is the default PF app - always available.
 RESERVED_APPS = """
-meta ssl static auth oauth login dev
+meta ssl static auth oauth login dev admin
 doc docs document documents
 blog list note comment
 test tester testclient testserver latest
