@@ -47,7 +47,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     }
 
     function onStateChange(newState, oldState) {
-        $('#doc-state').text(clientLib.Client.states.getName(newState));
+        $('#doc-state').text(newState);
         $('#error').text('');
 
         // Refresh links on the page, too
