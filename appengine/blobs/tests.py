@@ -30,7 +30,7 @@ class BlobTest(AppTestCase):
     def test_get_absolute_url(self):
         """The get_absolute_url method should return the correct path."""
         self.assertEqual(self.blob.get_absolute_url(),
-                         'http://docs.myapp.pageforest.com/mydoc/key/')
+                         'http://myapp.pageforest.com/docs/mydoc/key/')
 
     def test_directory(self):
         """The parent key should be the key_name without the last level."""
@@ -41,7 +41,7 @@ class ClientErrorTest(AppTestCase):
 
     def test_get_404(self):
         """Non-existent blob access should return 404 Not Found."""
-        response = self.docs_client.get('/mydoc/does_not_exist/')
+        response = self.app_client.get('/docs/mydoc/does_not_exist/')
         self.assertContains(response,
             "Blob not found: myapp/mydoc/does_not_exist/", status_code=404)
 
@@ -53,14 +53,14 @@ class ClientErrorTest(AppTestCase):
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'], 'GET, HEAD')
         # Only allow GET, HEAD, LIST on dev.app_id.pageforest.com.
-        response = self.dev_client.put('/', 'html', content_type='text/html')
+        response = self.admin_client.put('/', 'html', content_type='text/html')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'], 'GET, HEAD, LIST')
 
     def test_not_allowed(self):
         """Unknown HTTP method should return 405 Method Not Allowed."""
         self.sign_in(self.peter)
-        response = self.docs_client.options('/mydoc/key')
+        response = self.app_client.options('/docs/mydoc/key')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
                          'DELETE, GET, HEAD, LIST, PUSH, PUT, SLICE')
@@ -68,7 +68,7 @@ class ClientErrorTest(AppTestCase):
     def test_query_string_not_allowed(self):
         """Unknown query string method should return 405 Method Not Allowed."""
         self.sign_in(self.peter)
-        response = self.docs_client.get('/mydoc/key?method=FOOBAR')
+        response = self.app_client.get('/docs/mydoc/key?method=FOOBAR')
         self.assertEqual(response.status_code, 405)
         self.assertEqual(response['Allow'],
                          'DELETE, GET, HEAD, LIST, PUSH, PUT, SLICE')
@@ -81,23 +81,23 @@ class RestApiTest(AppTestCase):
         key_name = 'myapp/mydoc/key/'
         self.assertEqual(Blob.get_by_key_name(key_name), None)
         self.sign_in(self.peter)
-        url = '/mydoc/key'
+        url = '/docs/mydoc/key'
         # Create.
-        response = self.docs_client.put(
+        response = self.app_client.put(
             url, 'data', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'data')
         # Read.
-        response = self.docs_client.get(url)
+        response = self.app_client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, 'data')
         # Update.
-        response = self.docs_client.put(
+        response = self.app_client.put(
             url, 'updated', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'updated')
         # Delete.
-        response = self.docs_client.delete(url)
+        response = self.app_client.delete(url)
         self.assertContains(response, '"statusText": "Deleted"')
         self.assertEqual(Blob.get_by_key_name(key_name), None)
 
@@ -109,22 +109,22 @@ class JsonpApiTest(AppTestCase):
         key_name = 'myapp/mydoc/key/'
         self.assertEqual(Blob.get_by_key_name(key_name), None)
         self.sign_in(self.peter)
-        url = '/mydoc/key'
+        url = '/docs/mydoc/key'
         # Create.
-        response = self.docs_client.get(url + '?method=PUT&value=data')
+        response = self.app_client.get(url + '?method=PUT&value=data')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'data')
         # Read.
-        response = self.docs_client.get(url + '?method=GET&callback=func')
+        response = self.app_client.get(url + '?method=GET&callback=func')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, 'func("data")')
         self.assertEqual(response['Content-Type'], 'application/javascript')
         # Update.
-        response = self.docs_client.get(url + '?method=PUT&value=updated')
+        response = self.app_client.get(url + '?method=PUT&value=updated')
         self.assertContains(response, '"statusText": "Saved"')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'updated')
         # Delete.
-        response = self.docs_client.get(url + '?method=DELETE')
+        response = self.app_client.get(url + '?method=DELETE')
         self.assertContains(response, '"statusText": "Deleted"')
         self.assertEqual(Blob.get_by_key_name(key_name), None)
 
@@ -142,14 +142,14 @@ class HostTest(AppTestCase):
                             owner='peter')
         self.otherdoc.put()
         self.other_client = AuthClient(
-            HTTP_HOST='docs.other.pageforest.com',
+            HTTP_HOST='other.pageforest.com',
             HTTP_REFERER=self.other.url)
         self.other_client.session_key = \
             self.peter.generate_session_key(self.other)
 
     def test_host(self):
         """Test namespace isolation with Host header."""
-        url = '/mydoc/key'
+        url = '/docs/mydoc/key'
         response = self.other_client.put(
             url, 'otherdata', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
@@ -160,7 +160,7 @@ class HostTest(AppTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, 'otherdata')
         # GET without host header should fail with 404 Not Found.
-        response = self.docs_client.get(url)
+        response = self.app_client.get(url)
         self.assertEqual(response.status_code, 404)
 
 
@@ -181,31 +181,31 @@ class MemcacheTest(AppTestCase):
 
     def test_crud(self):
         """Tests create, read, update, delete with memcache."""
-        url = '/mydoc/key/with/slashes'
+        url = '/docs/mydoc/key/with/slashes'
         key_name = 'myapp/mydoc/key/with/slashes/'
         cache_key = settings.CACHEABLE_PREFIX + '~Blob~' + key_name
         self.assertEqual(memcache.get(cache_key), None)
         self.sign_in(self.peter)
         # Create.
-        self.docs_client.put(url, 'data', content_type='text/plain')
+        self.app_client.put(url, 'data', content_type='text/plain')
         self.assertEqual(Blob.get_by_key_name(key_name).value, 'data')
         binary = memcache.get(cache_key)
         self.assertProtoBuf(binary, 'data')
         # Make sure it reads from memcache if possible.
         binary = binary.replace('data', 'ofop')
         memcache.set(cache_key, binary, 300)
-        response = self.docs_client.get(url)
+        response = self.app_client.get(url)
         self.assertEqual(response.content, 'ofop')
         # Make sure that GET saves to memcache if necessary.
         memcache.delete(cache_key)
         self.assertEqual(memcache.get(cache_key), None)
-        response = self.docs_client.get(url)
+        response = self.app_client.get(url)
         self.assertProtoBuf(memcache.get(cache_key))
         # Update.
-        self.docs_client.put(url, 'updated', content_type='text/plain')
+        self.app_client.put(url, 'updated', content_type='text/plain')
         self.assertProtoBuf(memcache.get(cache_key), 'updated')
         # Delete.
-        self.docs_client.delete(url)
+        self.app_client.delete(url)
         self.assertEqual(memcache.get(cache_key), None)
 
 
@@ -214,8 +214,8 @@ class MimeTest(AppTestCase):
     def put_and_get(self, path):
         """Helper function for MIME tests."""
         self.sign_in(self.peter)
-        self.dev_client.put(path, 'data', content_type='text/plain')
-        return self.dev_client.get(path)
+        self.admin_client.put(path, 'data', content_type='text/plain')
+        return self.admin_client.get(path)
 
     def test_html(self):
         """Test that the mime type is guessed correctly for HTML."""
@@ -223,7 +223,7 @@ class MimeTest(AppTestCase):
         self.assertContains(response, 'data')
         self.assertEqual(response['Content-Type'], 'text/html')
         # Try again with the top-level alias for index.html.
-        response = self.dev_client.get('/')
+        response = self.admin_client.get('/')
         self.assertContains(response, 'data')
         self.assertEqual(response['Content-Type'], 'text/html')
 
@@ -269,13 +269,13 @@ class JsonArrayTest(AppTestCase):
 
     def assertContent(self, url, content):
         """Get array content and compare with expected value."""
-        response = self.docs_client.get(url)
+        response = self.app_client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.content, content)
 
     def test_last(self):
         """Test that the end of the array can be retrieved."""
-        url = '/mydoc/chat'
+        url = '/docs/mydoc/chat'
         self.assertContent(url + '?method=SLICE', '["hello", "hi", "howdy"]')
         self.assertContent(url + '?method=SLICE&start=-1', '["howdy"]')
         self.assertContent(url + '?method=SLICE&start=-2', '["hi", "howdy"]')
@@ -290,11 +290,12 @@ class JsonArrayTest(AppTestCase):
         """Test that push appends to the end af the array."""
         started = datetime.datetime.now()
         self.sign_in(self.peter)
-        response = self.docs_client.post(
-            '/mydoc/chat?method=PUSH', data='bye', content_type="text/plain")
+        response = self.app_client.post(
+            '/docs/mydoc/chat?method=PUSH',
+            data='bye', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 4')
-        self.assertContent('/mydoc/chat?method=SLICE&start=-2',
+        self.assertContent('/docs/mydoc/chat?method=SLICE&start=-2',
                            '["howdy", "bye"]')
         chat = Blob.get_by_key_name('myapp/mydoc/chat/')
         self.assertTrue(chat.created <= started)
@@ -304,11 +305,12 @@ class JsonArrayTest(AppTestCase):
         """Test that push creates the array if it didn't exist."""
         started = datetime.datetime.now()
         self.sign_in(self.peter)
-        response = self.docs_client.post(
-            '/mydoc/chat2?method=PUSH', data='hi', content_type="text/plain")
+        response = self.app_client.post(
+            '/docs/mydoc/chat2?method=PUSH',
+            data='hi', content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 1')
-        self.assertContent('/mydoc/chat2', '["hi"]')
+        self.assertContent('/docs/mydoc/chat2', '["hi"]')
         newchat = Blob.get_by_key_name('myapp/mydoc/chat2/')
         self.assertTrue(newchat.created >= started)
         self.assertTrue(newchat.modified >= started)
@@ -316,12 +318,12 @@ class JsonArrayTest(AppTestCase):
     def test_push_max(self):
         """Test that push appends to the end af the array."""
         self.sign_in(self.peter)
-        response = self.docs_client.post(
-            '/mydoc/chat?method=PUSH&max=3', data='bye',
+        response = self.app_client.post(
+            '/docs/mydoc/chat?method=PUSH&max=3', data='bye',
             content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
-        self.assertContent('/mydoc/chat', '["hi", "howdy", "bye"]')
+        self.assertContent('/docs/mydoc/chat', '["hi", "howdy", "bye"]')
 
 
 class ListTest(AppTestCase):
@@ -346,11 +348,11 @@ class ListTest(AppTestCase):
     def test_depth_1(self):
         """List method with depth=1 should return only direct children."""
         for url in [
-            '/1234?method=list',
-            '/1234/?method=LIST',
-            '/1234?method=list&depth=1',
+            '/docs/1234?method=list',
+            '/docs/1234/?method=LIST',
+            '/docs/1234?method=list&depth=1',
             ]:
-            self.assertContains(self.docs_client.get(url), """\
+            self.assertContains(self.app_client.get(url), """\
 {
   "one": {
     "json": false,
@@ -366,11 +368,11 @@ class ListTest(AppTestCase):
     def test_depth_2(self):
         """List method with depth=2 should return only two levels."""
         for url in [
-            '/1234?method=list&depth=2',
-            '/1234/?depth=2&method=LIST',
-            '/1234?method=list&depth=2&callback=foo',
+            '/docs/1234?method=list&depth=2',
+            '/docs/1234/?depth=2&method=LIST',
+            '/docs/1234?method=list&depth=2&callback=foo',
             ]:
-            response = self.docs_client.get(url)
+            response = self.app_client.get(url)
             self.assertContains(response, '"one": {')
             self.assertContains(response, '"one/two": {')
             self.assertNotContains(response, 'three')
@@ -379,13 +381,13 @@ class ListTest(AppTestCase):
     def test_depth_unlimited(self):
         """List method with depth=unlimited should return all sub-children."""
         for url in [
-            '/1234?method=list&depth=0',
-            '/1234/?method=LIST&depth=unlimited',
-            '/1234?method=list&depth=foo&callback=foo',
-            '/1234?method=list&depth=4',
-            '/1234?method=list&depth=5',
+            '/docs/1234?method=list&depth=0',
+            '/docs/1234/?method=LIST&depth=unlimited',
+            '/docs/1234?method=list&depth=foo&callback=foo',
+            '/docs/1234?method=list&depth=4',
+            '/docs/1234?method=list&depth=5',
             ]:
-            response = self.docs_client.get(url)
+            response = self.app_client.get(url)
             self.assertContains(response, '"one": {')
             self.assertContains(response, '"one/two": {')
             self.assertContains(response, '"one/two/three": {')
@@ -394,23 +396,24 @@ class ListTest(AppTestCase):
     def test_relative(self):
         """List method with relative depth should show three but not four."""
         for url in [
-            '/1234?method=list&depth=3',
-            '/1234/?method=list&depth=3',
-            '/1234/one?method=list&depth=2',
-            '/1234/one/?method=list&depth=2',
-            '/1234/one/two?method=list&depth=1',
-            '/1234/one/two?method=list',
+            '/docs/1234?method=list&depth=3',
+            '/docs/1234/?method=list&depth=3',
+            '/docs/1234/one?method=list&depth=2',
+            '/docs/1234/one/?method=list&depth=2',
+            '/docs/1234/one/two?method=list&depth=1',
+            '/docs/1234/one/two?method=list',
             ]:
-            response = self.docs_client.get(url)
+            response = self.app_client.get(url)
             self.assertContains(response, 'three": {')
             self.assertNotContains(response, 'four')
 
     def test_app_doc_list(self):
         """The app_doc_list function should show Peter's documents."""
         for url in [
-            '/?method=list',
+            '/docs?method=list',
+            '/docs/?method=LIST',
             ]:
-            self.assertContains(self.docs_client.get(url), """\
+            self.assertContains(self.app_client.get(url), """\
 {
   "1234": {
     "json": true,

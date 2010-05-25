@@ -454,9 +454,9 @@ class AnonymousTest(AppTestCase):
 
     def test_app_json(self):
         """Anonymous user should have read-only access to public app.json."""
-        self.assertContains(self.dev_client.get('/app.json'),
+        self.assertContains(self.admin_client.get('/app.json'),
                             '"readers": [')
-        self.assertContains(self.dev_client.put('/app.json'),
+        self.assertContains(self.admin_client.put('/app.json'),
                             'Write permission denied.', status_code=403)
 
     def test_app(self):
@@ -469,15 +469,15 @@ class AnonymousTest(AppTestCase):
 
     def test_doc(self):
         """Anonymous user should have read-only access to public docs."""
-        self.assertContains(self.docs_client.get('/mydoc'), '"readers"')
-        self.assertContains(self.docs_client.put('/mydoc'),
+        self.assertContains(self.app_client.get('/docs/mydoc'), '"readers"')
+        self.assertContains(self.app_client.put('/docs/mydoc'),
                             'Write permission denied.', status_code=403)
-        self.assertContains(self.docs_client.put('/newdoc'),
+        self.assertContains(self.app_client.put('/docs/newdoc'),
                             'Write permission denied.', status_code=403)
-        self.assertContains(self.docs_client.get('/mydoc/myblob'), 'json')
-        self.assertContains(self.docs_client.put('/mydoc/myblob'),
+        self.assertContains(self.app_client.get('/docs/mydoc/myblob'), 'json')
+        self.assertContains(self.app_client.put('/docs/mydoc/myblob'),
                             'Write permission denied.', status_code=403)
-        self.assertContains(self.docs_client.put('/mydoc/newblob'),
+        self.assertContains(self.app_client.put('/docs/mydoc/newblob'),
                             'Write permission denied.', status_code=403)
 
 
@@ -488,7 +488,8 @@ class AppCreatorTest(AppTestCase):
 
     def sign_in(self, app_id, user):
         self.client = AuthClient(
-            HTTP_HOST='dev.%s.pageforest.com' % app_id,
+            HTTP_HOST='%s.%s.pageforest.com' % (
+                settings.ADMIN_SUBDOMAIN, app_id),
             HTTP_REFERER='http://www.pageforest.com/')
         # Get auth challenge from dev.app_id.pageforest.com.
         response = self.client.get('/auth/challenge')
