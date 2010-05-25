@@ -119,7 +119,7 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         return crypto.sign(app_id, self.get_username(), expires, secret)
 
     @classmethod
-    def verify_session_key(cls, session_key, app):
+    def verify_session_key(cls, session_key, app, subdomain=None):
         """
         Verify the session key and return the user object. If the
         session key is invalid, raise SignatureError with explanation.
@@ -127,8 +127,17 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         parts = session_key.split(crypto.SEPARATOR)
         if len(parts) != 4:
             raise SignatureError("Expected 4 parts.")
-        (subdomain, username, expires) = parts[:3]
-        app_id = subdomain.split('.')[-1]
+        (subdomain_app_id, username, expires) = parts[:3]
+        app_id = subdomain_app_id.split('.')[-1]
+        # Check the subdomain.
+        if subdomain == 'docs' or not subdomain:
+            if '.' in subdomain_app_id:
+                raise SignatureError("Unexpected subdomain.")
+        else:
+            if '.' not in subdomain_app_id:
+                raise SignatureError("Missing subdomain.")
+            elif subdomain_app_id != '%s.%s' % (subdomain, app_id):
+                raise SignatureError("Different subdomain.")
         # Check that the session key is for the same app.
         if app_id != app.get_app_id():
             raise SignatureError("Different app.")

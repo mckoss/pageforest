@@ -77,25 +77,22 @@ class App(SuperDoc):
         return app
 
     @classmethod
-    def create(cls, app_id, user):
+    def create(cls, app_id, user=None):
         """
         All App creation should go through this method.
 
         TODO: Check quotas and permissions.
         """
-        if user is None:
-            raise ValueError("The user is None.")
         if app_id in settings.RESERVED_APPS:
             raise ValueError("Application %s is reserved." % app_id)
-        username = user.get_username()
+        username = user and user.get_username() or ''
         title = app_id.capitalize()
         url = 'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN)
         logging.info("Creating app: %s" % app_id)
-        # A new application has public read access by default,
+        # A new application has private read and write access by default,
         # but may be updated immediately by app.json upload.
-        return App(key_name=app_id, title=title,
-                   url=url, secret=crypto.random64(),
-                   owner=username, readers=['public'])
+        return App(key_name=app_id, owner=username, title=title,
+                   url=url, secret=crypto.random64())
 
     def update_from_json(self, parsed, **kwargs):
         super(App, self).update_from_json(parsed, **kwargs)

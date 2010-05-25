@@ -29,7 +29,8 @@ class AuthClient(Client):
         # headers['HTTP_X_REQUEST_ID'] = request_id
         # headers['HTTP_AUTHORIZATION'] = 'PF1 ' + crypto.hmac_sha1(
         #     url, request_id, secret)
-        headers['HTTP_AUTHORIZATION'] = 'PFSK1 ' + self.session_key
+        if hasattr(self, 'session_key') and self.session_key:
+            headers['HTTP_AUTHORIZATION'] = 'PFSK1 ' + self.session_key
 
     def head(self, url, *args, **kwargs):
         self.add_auth_headers(url, kwargs)
@@ -69,6 +70,7 @@ class AppTestCase(TestCase):
         self.peter.set_password('peter_secret')
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul')
+        self.paul.set_password('paul_secret')
         self.paul.put()
         # Create a test application.
         self.www = App.lookup('www')
@@ -96,12 +98,18 @@ class AppTestCase(TestCase):
         self.blob = Blob(key_name='myapp/mydoc/myblob/', value='["json"]')
         self.blob.put()
         # Create test clients for www and app.
-        self.www_client = Client(HTTP_HOST='www.pageforest.com',
-                                 HTTP_REFERER='http://www.pageforest.com/')
-        self.app_client = Client(HTTP_HOST='myapp.pageforest.com',
-                                 HTTP_REFERER='http://myapp.pageforest.com/')
-        self.docs_client = AuthClient(HTTP_HOST='docs.myapp.pageforest.com')
-        self.dev_client = AuthClient(HTTP_HOST='dev.myapp.pageforest.com')
+        self.www_client = Client(
+            HTTP_HOST='www.pageforest.com',
+            HTTP_REFERER='http://www.pageforest.com/')
+        self.app_client = Client(
+            HTTP_HOST='myapp.pageforest.com',
+            HTTP_REFERER='http://myapp.pageforest.com/')
+        self.docs_client = AuthClient(
+            HTTP_HOST='docs.myapp.pageforest.com',
+            HTTP_REFERER='http://myapp.pageforest.com/')
+        self.dev_client = AuthClient(
+            HTTP_HOST='dev.myapp.pageforest.com',
+            HTTP_REFERER='http://myapp.pageforest.com/')
 
     def sign_in(self, user):
         """
@@ -112,7 +120,7 @@ class AppTestCase(TestCase):
         app_session_key = user.generate_session_key(self.app)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = app_session_key
         self.docs_client.session_key = app_session_key
-        self.dev_client.sign_in(self.app, user, 'dev')
+        self.dev_client.sign_in(self.app, user, subdomain='dev')
 
     def sign_out(self):
         """
@@ -148,12 +156,11 @@ class AppTestCase(TestCase):
 
 class AppJsonTest(AppTestCase):
 
-    def test_app_json_update(self, app_id='myapp'):
+    def test_app_json_update(self):
         """HTTP PUT app.json should update meta info."""
-        url = '/apps/%s/app.json' % app_id
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(self.www)
-        response = self.www_client.put(url, """\
+        url = '/app.json'
+        self.sign_in(self.peter)
+        response = self.dev_client.put(url, """\
 {
 "title": "My Application",
 "tags": ["test", "myapp"]
@@ -161,73 +168,92 @@ class AppJsonTest(AppTestCase):
 """, content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
         # Retrieve updated meta info.
-        response = self.www_client.get(url)
+        response = self.dev_client.get(url)
         self.assertContains(response, '"title": "My Application"')
         self.assertContains(response, '"tags": [\n    "test",\n    "myapp"')
 
-    def test_app_json_create(self):
-        """HTTP PUT app.json should create an app if it didn't exist."""
-        self.test_app_json_update(app_id='newapp')
-
     def test_app_json_get_auth(self):
         """The app_json_get view function should check read permissions."""
-        url = '/apps/myapp/app.json'
+        url = '/app.json'
         self.app.readers = []
         self.app.put()
         # Application owner should have read permission.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(self.www)
-        response = self.www_client.get(url)
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app, subdomain='dev')
+        response = self.dev_client.get(url)
         self.assertContains(
             response, '"url": "http://myapp.pageforest.com/"')
+        # Session key for other subdomain should not have read permission.
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app, subdomain='docs')
+        response = self.dev_client.get(url)
+        self.assertContains(response, "Different subdomain.", status_code=403)
+        # Session key without subdomain should not have read permission.
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app)
+        response = self.dev_client.get(url)
+        self.assertContains(response, "Missing subdomain.", status_code=403)
         # Other users should not have read permission.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.paul.generate_session_key(self.www)
-        response = self.www_client.get(url)
-        self.assertContains(response, "Access denied.", status_code=403)
+        self.dev_client.session_key = \
+            self.paul.generate_session_key(self.app, subdomain='dev')
+        response = self.dev_client.get(url)
+        self.assertContains(response, "Read permission denied.",
+                            status_code=403)
         # Invalid session key should return a helpful error message.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.www_client.get(url)
+        self.dev_client.session_key = 'bogus'
+        response = self.dev_client.get(url)
         self.assertContains(
             response, "Invalid sessionkey cookie: Expected 4 parts.",
             status_code=403)
         # Anonymous should not have read permission.
-        del self.www_client.cookies[settings.SESSION_COOKIE_NAME]
-        response = self.www_client.get(url)
-        self.assertContains(response, "Access denied.", status_code=403)
+        self.dev_client.session_key = None
+        response = self.dev_client.get(url)
+        self.assertContains(response, "Read permission denied.",
+                            status_code=403)
 
     def test_app_json_put_auth(self):
         """The app_json_put view function should check write permissions."""
-        url = '/apps/myapp/app.json'
+        url = '/app.json'
         # Application owner should have write permission.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(self.www)
-        response = self.www_client.put(url, '{}', content_type='text/plain')
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app, subdomain='dev')
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
         self.assertContains(response, '"statusText": "Saved"')
+        # Session key for other subdomain should not have write permission.
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app, subdomain='docs')
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
+        self.assertContains(response, "Different subdomain.", status_code=403)
+        # Session key without subdomain should not have write permission.
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app)
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
+        self.assertContains(response, "Missing subdomain.", status_code=403)
         # Other users should not have write permission.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.paul.generate_session_key(self.www)
-        response = self.www_client.put(url, '{}', content_type='text/plain')
-        self.assertContains(response, "Access denied.", status_code=403)
+        self.dev_client.session_key = \
+            self.paul.generate_session_key(self.app, subdomain='dev')
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
+        self.assertContains(response, "Write permission denied.",
+                            status_code=403)
         # Invalid session key should return a helpful error message.
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.www_client.put(url, '{}', content_type='text/plain')
+        self.dev_client.session_key = 'bogus'
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
         self.assertContains(
             response, "Invalid sessionkey cookie: Expected 4 parts.",
             status_code=403)
         # Anonymous should not have write permission.
-        del self.www_client.cookies[settings.SESSION_COOKIE_NAME]
-        response = self.www_client.put(url, '{}', content_type='text/plain')
-        self.assertContains(response, "Access denied.", status_code=403)
+        self.dev_client.session_key = None
+        response = self.dev_client.put(url, '{}', content_type='text/plain')
+        self.assertContains(response, "Write permission denied.",
+                            status_code=403)
 
     def test_app_json_put_tags(self):
         """The app_json_put view function should update non-reserved tags."""
-        url = '/apps/myapp/app.json'
-        self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
-            self.peter.generate_session_key(self.www)
+        self.dev_client.session_key = \
+            self.peter.generate_session_key(self.app, subdomain='dev')
         self.assertEquals(App.get_by_key_name('myapp').tags,
                           ['mytag', '_featured'])
-        self.www_client.put(url, '{"tags": ["newtag", "_ignorethis"]}',
+        self.dev_client.put('/app.json', '{"tags": ["newtag", "_ignorethis"]}',
                             content_type='application/json')
         self.assertEquals(App.get_by_key_name('myapp').tags,
                           ['newtag', '_featured'])

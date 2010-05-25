@@ -12,9 +12,6 @@ def app_id_from_trusted_domain(hostname):
     settings.DOMAINS (ignoring optional port numbers like :8080).
     """
     parts = hostname.split(':')[0].split('.')
-    # Remove well-known subdomains.
-    if parts[0] in ('dev', 'docs'):
-        parts = parts[1:]
     # Normalize App Engine deployment versions, e.g.
     # app_id.2010-05-12.latest.pageforest.appspot.com
     if (len(parts) == 6 and
@@ -37,12 +34,23 @@ class AppMiddleware(object):
         """
         default = 'www.' + settings.DEFAULT_DOMAIN
         hostname = request.META.get('HTTP_HOST', default)
+        # Extract special subdomains from hostname.
+        request.subdomain = None
+        parts = hostname.split('.')
+        if parts[0] in ('dev', 'docs'):
+            request.subdomain = parts[0]
+            hostname = '.'.join(parts[1:])
+        # Extract app_id from hostname.
         app_id = app_id_from_trusted_domain(hostname)
         if app_id is None:
             return HttpResponseNotFound(
                 "Domain not in settings.DOMAINS: " + hostname)
 
         request.app = App.lookup(app_id)
+        if request.app is None and request.path_info == '/auth/challenge/':
+            # Create a dummy app with a secret for challenge authentication.
+            request.app = App.create(app_id)
+            request.app.put()
         if request.app is None:
             return HttpResponseNotFound(
                 "Application not found for hostname: " + hostname)
@@ -57,6 +65,8 @@ class AppMiddleware(object):
                 logging.info(" original URL: http://" +
                              request.META.get('HTTP_HOST', '') +
                              request.get_full_path())
+            if request.subdomain:
+                request.path_info = '/' + request.subdomain + request.path_info
             request.path_info = '/app' + request.path_info
             request.META['PATH_INFO'] = request.path_info
             request.path = request.META['SCRIPT_NAME'] + request.path_info

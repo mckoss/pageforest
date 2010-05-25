@@ -1,13 +1,12 @@
-import re
-
 from django.conf import settings
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 
 from auth import SignatureError
 from auth.models import User
 from apps.middleware import app_id_from_trusted_domain
 
-APP_JSON_REGEX = re.compile(r'^/apps/(%s)/app.json/$' % settings.APP_ID_REGEX)
+WITHOUT_SUBDOMAIN_METHODS = ('GET', 'HEAD')
+READ_METHODS = ('GET', 'HEAD', 'LIST', 'SLICE')
 
 
 class AccessDenied(HttpResponseForbidden):
@@ -17,6 +16,8 @@ class AccessDenied(HttpResponseForbidden):
             message += ' ' + request.referer_error
         if hasattr(request, 'session_key_error'):
             message += ' ' + request.session_key_error
+        elif request.user is None:
+            message += " Please sign in and try again."
         super(AccessDenied, self).__init__(message)
 
 
@@ -42,9 +43,9 @@ def referer_is_trusted(request):
     if app_id == request.app.get_app_id():
         # Trust the default domain for this app.
         return True
-    for trusted_url in request.app.trusted_urls:
+    for referer in request.app.referers:
         # TODO: Accept https: if trusted_url starts with http:
-        if referer.startswith(trusted_url):
+        if referer.startswith(referer):
             # Explicitly trusted by the app developer.
             return True
     request.referer_error = "Untrusted Referer domain: %s." % hostname
@@ -56,17 +57,17 @@ def check_permissions(request, resource, method_override=None):
     Check read or write permissions for the current user.
     """
     method = method_override or request.method
-    if method in ['GET', 'HEAD', 'LIST', 'SLICE']:
+    if method in READ_METHODS:
         if 'public' not in resource.readers:
             if not referer_is_trusted(request):
                 return AccessDenied(request)
         if not resource.is_readable(request.user):
-            return AccessDenied(request)
+            return AccessDenied(request, "Read permission denied.")
     else:
         if not referer_is_trusted(request):
             return AccessDenied(request)
         if not resource.is_writable(request.user):
-            return AccessDenied(request)
+            return AccessDenied(request, "Write permission denied.")
 
 
 class AuthMiddleware(object):
@@ -87,31 +88,56 @@ class AuthMiddleware(object):
         is returned with status 403 Forbidden.
         """
         request.user = None
-        if settings.SESSION_COOKIE_NAME in request.COOKIES:
+        session_key = None
+
+        # Extract session key from cookie or HTTP header.
+        if (settings.SESSION_COOKIE_NAME in request.COOKIES
+            and request.subdomain is None):
+            session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
+        else:
+            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
+            if auth_header.startswith('PFSK1'):
+                session_key = auth_header.split()[1]
+
+        # Verify the session key, save error message for later.
+        if session_key:
             try:
                 request.user = User.verify_session_key(
-                    request.COOKIES[settings.SESSION_COOKIE_NAME],
-                    request.app)
+                    session_key, request.app, request.subdomain)
             except SignatureError, error:
                 request.session_key_error = "Invalid %s cookie: %s" % (
                     settings.SESSION_COOKIE_NAME, unicode(error))
                 assert request.user is None
 
-        if APP_JSON_REGEX.match(request.path_info):
-            # Permissions will be checked in the view function.
+        # Allow authentication attempts.
+        if (request.path_info == '/app/dev/auth/challenge/'
+            or request.path_info.startswith('/app/dev/auth/verify/')):
             return
 
+        # Only allow GET and HEAD for app_id.pageforest.com.
+        if (request.subdomain is None and not request.app.is_www()
+            and request.method not in WITHOUT_SUBDOMAIN_METHODS):
+            return HttpResponseNotAllowed(WITHOUT_SUBDOMAIN_METHODS)
+
+        # Check permissions for the current document.
         if hasattr(request, 'doc'):
             if request.doc is None:
-                assert request.method == 'PUT'
                 # Check app read permissions before creating a document.
-                # Application readers = document creators.
+                assert request.method == 'PUT'
                 if request.user is None:
-                    return AccessDenied(request)
+                    return AccessDenied(request, "Write permission denied.")
+                # Application readers = document creators.
                 return check_permissions(request, request.app, 'GET')
             else:
                 # Check permissions for current document or its blob store.
                 return check_permissions(request, request.doc)
+
+        # Let authenticated user create an app by uploading app.json.
+        if (request.app.owner == ''
+            and request.method == 'PUT'
+            and request.path_info == '/app/dev/app.json/'
+            and request.user is not None):
+            return
 
         # Check permissions for the current app.
         return check_permissions(request, request.app)
