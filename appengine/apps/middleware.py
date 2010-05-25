@@ -60,13 +60,14 @@ class AppMiddleware(object):
             if request.path_info.startswith('/app/'):
                 return HttpResponseNotFound("URL reserved for internal use.")
         else:
-            # Prefix path with /app for matching with urls.py.
             if settings.DEBUG:
                 logging.info(" original URL: http://" +
                              request.META.get('HTTP_HOST', '') +
                              request.get_full_path())
+            # Prefix path with /docs or /dev for matching with urls.py.
             if request.subdomain:
                 request.path_info = '/' + request.subdomain + request.path_info
+            # Prefix path with /app for matching with urls.py.
             request.path_info = '/app' + request.path_info
             request.META['PATH_INFO'] = request.path_info
             request.path = request.META['SCRIPT_NAME'] + request.path_info
