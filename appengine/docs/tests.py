@@ -16,21 +16,21 @@ class DocumentTest(AppTestCase):
                          'http://myapp.pageforest.com/#MyDoc')
 
     def test_http_method_not_allowed(self):
-        """The /docs/doc_id/ URL should report allowed methods."""
+        """The /doc_id/ URL should report allowed methods."""
         self.sign_in(self.peter)
         for url in [
-            '/docs/mydoc',
-            '/docs/MyDoc',
-            '/docs/mydoc/',
-            '/docs/MyDoc/',
+            '/mydoc',
+            '/MyDoc',
+            '/mydoc/',
+            '/MyDoc/',
             ]:
-            response = self.app_client.post(url, {'key': 'value'})
+            response = self.docs_client.post(url, {'key': 'value'})
             self.assertEqual(response.status_code, 405)
             self.assertEqual(response['Allow'], 'GET, LIST, PUT')
 
     def test_json(self):
         """Test JSON serializer for document."""
-        response = self.app_client.get('/docs/MyDoc/')
+        response = self.docs_client.get('/MyDoc/')
         self.assertContains(response, '"doc_id": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": [\n    "public"\n  ]')
@@ -48,30 +48,30 @@ class DocumentTest(AppTestCase):
         self.assertNotContains(response, '"modified_ip":')
         # Check that the document ID is case insensitive.
         canonical_content = response.content
-        response = self.app_client.get('/docs/mydoc')
+        response = self.docs_client.get('/mydoc')
         self.assertEqual(response.content, canonical_content)
-        response = self.app_client.get('/docs/MYDOC')
+        response = self.docs_client.get('/MYDOC')
         self.assertEqual(response.content, canonical_content)
 
     def test_read_permissions(self):
         """Test access control in document_get."""
         # Document owner should have read permission.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+        self.docs_client.session_key = \
             self.peter.generate_session_key(self.app)
-        response = self.app_client.get('/docs/MyDoc/')
+        response = self.docs_client.get('/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Other users should have read permission.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+        self.docs_client.session_key = \
             self.paul.generate_session_key(self.app)
-        response = self.app_client.get('/docs/MyDoc/')
+        response = self.docs_client.get('/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Invalid session key should have read permission.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.app_client.get('/docs/MyDoc/')
+        self.docs_client.session_key = 'bogus'
+        response = self.docs_client.get('/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Anonymous should have read permission.
-        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
-        response = self.app_client.get('/docs/MyDoc/')
+        del self.docs_client.session_key
+        response = self.docs_client.get('/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
 
     def test_write_permissions(self):
@@ -79,42 +79,43 @@ class DocumentTest(AppTestCase):
         self.doc.writers = ['authenticated']
         self.doc.put()
         # Document owner should have write permission.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+        self.docs_client.session_key = \
             self.peter.generate_session_key(self.app)
-        response = self.app_client.put('/docs/MyDoc/', '{}',
+        response = self.docs_client.put('/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, '"statusText": "Saved"')
         # Other authenticated users should have write permission.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+        self.docs_client.session_key = \
             self.paul.generate_session_key(self.app)
-        response = self.app_client.put('/docs/MyDoc/', '{}',
+        response = self.docs_client.put('/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, '"statusText": "Saved"')
         # Invalid session key should return a helpful error message.
-        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.app_client.put('/docs/MyDoc/', '{}',
+        self.docs_client.session_key = 'bogus'
+        response = self.docs_client.put('/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(
             response, "Invalid sessionkey cookie: Expected 4 parts.",
             status_code=403)
         # Anonymous should not have write permission.
-        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
-        response = self.app_client.put('/docs/MyDoc/', '{}',
+        del self.docs_client.session_key
+        response = self.docs_client.put('/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
-        self.assertContains(response, 'Access denied.', status_code=403)
+        self.assertContains(response, "Write permission denied.",
+                            status_code=403)
 
     def test_404(self):
         """Test that missing document prevents blob access."""
-        response = self.app_client.get('/docs/unknown/')
+        response = self.docs_client.get('/unknown/')
         self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
         # Writing a blob under this document should fail.
-        response = self.app_client.put('/docs/unknown/blob/', 'data',
+        response = self.docs_client.put('/unknown/blob/', 'data',
                                        content_type='text/plain')
         self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
         # Reading a blob under this document should fail.
-        response = self.app_client.get('/docs/unknown/blob/')
+        response = self.docs_client.get('/unknown/blob/')
         self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
 
@@ -125,11 +126,11 @@ class DocumentTest(AppTestCase):
             datetime.datetime = Mock()
             datetime.datetime.now.return_value = original(
                 2010, 5, 10, 11, 12, 13)
-            self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.docs_client.session_key = \
                 self.peter.generate_session_key(self.app)
-            self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
-            response = self.app_client.put(
-                '/docs/foo/', '{"title": "Created Document"}',
+            self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
+            response = self.docs_client.put(
+                '/foo/', '{"title": "Created Document"}',
                 content_type='text/plain')
             self.assertContains(response, 'Saved')
             entity = Doc.get_by_key_name('myapp/foo')
@@ -143,9 +144,9 @@ class DocumentTest(AppTestCase):
             # Update same entity from a different IP address.
             datetime.datetime.now.return_value = original(
                 2010, 5, 10, 11, 12, 14)
-            self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
-            response = self.app_client.put(
-                '/docs/foo/', '{"title": "Modified Document"}',
+            self.docs_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
+            response = self.docs_client.put(
+                '/foo/', '{"title": "Modified Document"}',
                 content_type='text/plain')
             self.assertContains(response, 'Saved')
             entity = Doc.get_by_key_name('myapp/foo')

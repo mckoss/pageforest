@@ -74,55 +74,54 @@ def clone(request, app_id):
 
 @jsonp
 @method_required('GET', 'PUT')
-def app_json(request, app_id):
+def app_json(request):
     """
     Read and write application info with REST API.
     """
     if request.method == 'GET':
-        return app_json_get(request, app_id)
+        return app_json_get(request)
     if request.method == 'PUT':
-        return app_json_put(request, app_id)
+        return app_json_put(request)
 
 
-def app_json_get(request, app_id):
+def app_json_get(request):
     """
     Get JSON blob with meta info for this app.
     """
-    app = lookup_or_404(App, app_id)
-    if not app.is_readable(request.user):
+    if not request.app.is_readable(request.user):
         return AccessDenied(request)
-    extra = {"application": app.get_app_id(),
-             "cloneable": bool(app.cloneable)}
-    content = app.to_json(exclude=settings.HIDDEN_PROPERTIES, extra=extra)
+    extra = {"application": request.app.get_app_id(),
+             "cloneable": bool(request.app.cloneable)}
+    content = request.app.to_json(exclude=settings.HIDDEN_PROPERTIES,
+                                  extra=extra)
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
-def app_json_put(request, app_id):
+def app_json_put(request):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
-    app = App.lookup(app_id)
-    if app is None:
+    if not request.app.owner:
         # Check session key.
         if request.user is None:
-            return AccessDenied(request)
+            return AccessDenied(request, "Not signed in.")
         # Check app creator permission.
         try:
             request.user.assert_authorized(App.create)
         except AuthError, error:
             return AccessDenied(request, error.message)
-        # Create a new App with this app_id.
-        app = App.create(app_id, request.user)
-    if not app.is_writable(request.user):
-        return AccessDenied(request)
-    # TODO: Quota check.
+        # Update the dummy app to be owned by the current user.
+        request.app.owner = request.user.get_username()
+    if not request.app.is_writable(request.user):
+        return AccessDenied(request, "No write permission.")
+    # Update app from uploaded JSON data.
     try:
         parsed = json.loads(request.raw_post_data)
-        app.update_from_json(parsed, user=request.user)
+        request.app.update_from_json(parsed, user=request.user)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
-    app.normalize_lists()
-    app.put()
+    request.app.normalize_lists()
+    request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE)

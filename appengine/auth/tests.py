@@ -6,8 +6,9 @@ from django.conf import settings
 from google.appengine.api import mail
 
 from auth.models import User
+from apps.models import App
 
-from apps.tests import AppTestCase
+from apps.tests import AppTestCase, AuthClient
 from utils import crypto
 
 # Default pageforest domain url
@@ -365,18 +366,18 @@ class SimpleAuthTest(AppTestCase):
 
     def setUp(self):
         super(SimpleAuthTest, self).setUp()
-        self.doc.readers = []
-        self.doc.put()
+        self.app.readers = []
+        self.app.put()
         self.session_key = self.peter.generate_session_key(self.app)
 
     def test_bogus_session_key(self):
         """Bogus session key should return error message."""
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
         session_key = crypto.join(self.session_key, 'bogus')
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
 
     def test_session_key_expired(self):
@@ -385,7 +386,7 @@ class SimpleAuthTest(AppTestCase):
         parts[2] = int(time.time() - 10)
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Session key expired.", status_code=403)
 
     def test_different_app(self):
@@ -394,15 +395,16 @@ class SimpleAuthTest(AppTestCase):
         parts[0] = 'other'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Different app.", status_code=403)
 
     def test_different_user(self):
         """Session key for different user should return error message."""
         session_key = self.paul.generate_session_key(self.app)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
-        self.assertContains(response, "Access denied.", status_code=403)
+        response = self.app_client.get('/')
+        self.assertContains(response, "Read permission denied.",
+                            status_code=403)
 
     def test_unknown_user(self):
         """Session key with unknown user should return error message."""
@@ -410,7 +412,7 @@ class SimpleAuthTest(AppTestCase):
         parts[1] = 'unknown'
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Unknown user.", status_code=403)
 
     def test_incorrect_session_key(self):
@@ -419,7 +421,7 @@ class SimpleAuthTest(AppTestCase):
         parts[-1] = parts[-1][::-1]  # Backwards.
         session_key = crypto.join(parts)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = session_key
-        response = self.app_client.get('/docs/mydoc/')
+        response = self.app_client.get('/')
         self.assertContains(response, "Password incorrect.", status_code=403)
 
 
@@ -452,34 +454,31 @@ class AnonymousTest(AppTestCase):
 
     def test_app_json(self):
         """Anonymous user should have read-only access to public app.json."""
-        self.assertContains(self.www_client.get('/apps/myapp/app.json'),
+        self.assertContains(self.dev_client.get('/app.json'),
                             '"readers": [')
-        self.assertContains(self.www_client.put('/apps/myapp/app.json'),
-                            'Access denied.', status_code=403)
+        self.assertContains(self.dev_client.put('/app.json'),
+                            'Write permission denied.', status_code=403)
 
     def test_app(self):
         """Anonymous user should have read-only access to public apps."""
         self.assertContains(self.app_client.get('/'), '<html>')
-        self.assertContains(self.app_client.put('/'),
-                            'Access denied.', status_code=403)
         self.assertContains(self.app_client.get('/index.html'), '<html>')
-        self.assertContains(self.app_client.put('/index.html'),
-                            'Access denied.', status_code=403)
-        self.assertContains(self.app_client.put('/newpage.html'),
-                            'Access denied.', status_code=403)
+        self.assertEquals(self.app_client.put('/').status_code, 405)
+        self.assertEquals(self.app_client.put('/index.html').status_code, 405)
+        self.assertEquals(self.app_client.put('/new.html').status_code, 405)
 
     def test_doc(self):
         """Anonymous user should have read-only access to public docs."""
-        self.assertContains(self.app_client.get('/docs/mydoc'), '"readers"')
-        self.assertContains(self.app_client.put('/docs/mydoc'),
-                            'Access denied.', status_code=403)
-        self.assertContains(self.app_client.put('/docs/newdoc'),
-                            'Access denied.', status_code=403)
-        self.assertContains(self.app_client.get('/docs/mydoc/myblob'), 'json')
-        self.assertContains(self.app_client.put('/docs/mydoc/myblob'),
-                            'Access denied.', status_code=403)
-        self.assertContains(self.app_client.put('/docs/mydoc/newblob'),
-                            'Access denied.', status_code=403)
+        self.assertContains(self.docs_client.get('/mydoc'), '"readers"')
+        self.assertContains(self.docs_client.put('/mydoc'),
+                            'Write permission denied.', status_code=403)
+        self.assertContains(self.docs_client.put('/newdoc'),
+                            'Write permission denied.', status_code=403)
+        self.assertContains(self.docs_client.get('/mydoc/myblob'), 'json')
+        self.assertContains(self.docs_client.put('/mydoc/myblob'),
+                            'Write permission denied.', status_code=403)
+        self.assertContains(self.docs_client.put('/mydoc/newblob'),
+                            'Write permission denied.', status_code=403)
 
 
 class AppCreatorTest(AppTestCase):
@@ -487,22 +486,35 @@ class AppCreatorTest(AppTestCase):
     Test permissions for app creators.
     """
 
+    def sign_in(self, app_id, user):
+        self.client = AuthClient(
+            HTTP_HOST='dev.%s.pageforest.com' % app_id,
+            HTTP_REFERER='http://www.pageforest.com/')
+        # Get auth challenge from dev.app_id.pageforest.com.
+        response = self.client.get('/auth/challenge')
+        self.assertEqual(response.status_code, 200)
+        challenge = response.content
+        # Sign challenge and authenticate.
+        signature = crypto.hmac_sha1(challenge, user.password)
+        response = self.client.get('/'.join((
+                '/auth/verify', user.get_username(), challenge, signature)))
+        self.assertEqual(response.status_code, 200)
+        self.client.session_key = response.content
+
     def test_email_not_verified(self):
-        self.sign_in(self.paul)
-        response = self.www_client.put('/apps/myapp10/app.json', '{}',
-                                       content_type='application/json')
+        self.sign_in('paulsapp', self.paul)
+        response = self.client.put('/app.json', '{}',
+                                   content_type='application/json')
         self.assertContains(response, 'Please verify your email address.',
                             status_code=403)
 
     def test_eleven_apps(self):
-        self.sign_in(self.peter)
-        for index in range(2, 11):
-            response = self.www_client.put(
-                '/apps/myapp%d/app.json' % index, '{}',
-                content_type='application/json')
-            self.assertContains(response, 'Saved')
-        response = self.www_client.put(
-            '/apps/myapp11/app.json', '{}',
-            content_type='application/json')
-        self.assertContains(response, 'You have already created 10 apps.',
-                            status_code=403)
+        for index in range(2, 12):
+            self.sign_in('myapp%d' % index, self.peter)
+            response = self.client.put('/app.json', '{}',
+                                       content_type='application/json')
+            if index < 11:
+                self.assertContains(response, 'Saved')
+        self.assertContains(
+            response, 'You have already created 10 apps.',
+            status_code=403)
