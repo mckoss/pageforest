@@ -29,6 +29,20 @@ def ensure_dir(dirname):
     os.makedirs(dirname)
 
 
+def empty_dir(dirname):
+    """
+    Delete all files and subdirectories.
+    """
+    for filename in os.listdir(dirname):
+        full_path = os.path.join(dirname, filename)
+        if os.path.isdir(full_path):
+            empty_dir(full_path)
+            os.rmdir(full_path)
+        else:
+            os.remove(full_path)
+        # print "Removed:", full_path
+
+
 def combine_files(output_root, version, file_dict):
     """
     Combine and minify static files.
@@ -45,7 +59,7 @@ def combine_files(output_root, version, file_dict):
 
         output_dir = os.path.join(output_root, version, file_type)
         ensure_dir(output_dir)
-        levels = version.split('.')
+        empty_dir(output_dir)
 
         for alias, file_list in file_dict[file_type].items():
             output_name = alias + file_ext
@@ -76,20 +90,25 @@ def combine_files(output_root, version, file_dict):
             if file_type == 'js':
                 raw_output_file.close()
 
-            # Copy latest version in each of the parent version folders
-            for level in range(len(levels) - 1, 0, -1):
-                copy_dir = os.path.join(output_root,
-                                         '.'.join(levels[:level]),
-                                         file_type)
-                ensure_dir(copy_dir)
-                if options.verbose:
-                    print(" Copy to %s" % copy_dir)
-                shutil.copyfile(os.path.join(output_dir, output_name),
-                                os.path.join(copy_dir, output_name))
 
-                if file_type == 'js':
-                    shutil.copyfile(os.path.join(output_dir, alias + '.js'),
-                                    os.path.join(copy_dir, alias + '.js'))
+def copy_files(output_root, source, version):
+    """
+    Copy files from source to version and prefix version folders.
+    If version is '0.6.0', it will also copy to '0.6' and '0'.
+    """
+    levels = version.split('.')
+    source_dir = os.path.join(output_root, source)
+    for file_type in os.listdir(source_dir):
+        type_dir = os.path.join(source_dir, file_type)
+        for level in range(len(levels), 0, -1):
+            copy_dir = os.path.join(
+                output_root, '.'.join(levels[:level]), file_type)
+            ensure_dir(copy_dir)
+            if options.verbose:
+                print(" Copy to %s" % copy_dir)
+            for filename in os.listdir(type_dir):
+                shutil.copyfile(os.path.join(type_dir, filename),
+                                os.path.join(copy_dir, filename))
 
 
 def trim(docstring):
@@ -133,12 +152,25 @@ def main():
     parser = OptionParser(
         usage="%prog [options]",
         description=trim(main.__doc__))
-    parser.add_option('-v', '--verbose', action='store_true')
+    parser.add_option('-v', '--verbose', action='store_true',
+                      help="Show each file or directory action.")
+    parser.add_option('-r', '--release', action='store_true',
+                      help="Create a new LIB_VERSION directory.")
+    parser.add_option('-f', '--force', action='store_true',
+                      help="Update LIB_VERSION directory even if it exists.")
     (options, args) = parser.parse_args()
 
     os.chdir(pftool.root_dir)
-    combine_files(LIB_DIR, settings.LIB_VERSION, settings.LIB_FILES)
+    options.release = options.release or options.force
+    if options.release:
+        release_dir = os.path.join(LIB_DIR, settings.LIB_VERSION)
+        if os.path.exists(release_dir) and not options.force:
+            parser.error("Directory %s already exists." % release_dir)
+
     combine_files(MEDIA_DIR, settings.MEDIA_VERSION, settings.MEDIA_FILES)
+    combine_files(LIB_DIR, 'beta', settings.LIB_FILES)
+    if options.release:
+        copy_files(LIB_DIR, 'beta', settings.LIB_VERSION)
 
 
 if __name__ == '__main__':
