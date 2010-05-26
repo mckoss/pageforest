@@ -13,6 +13,8 @@ if __name__ == '__main__':
     option_list = (
         make_option('-q', '--quiet', action='store_true',
                     help="just display error summary"),
+        make_option('-a', '--all', action='store_true',
+                    help="run all (applicable) tests"),
         make_option('-d', '--debug', action='store_true',
                     help="run rhino debugger over tests"),
         )
@@ -23,6 +25,8 @@ if __name__ == '__main__':
     command += ' ' + os.path.join(pftool.js_test_dir, 'test-runner-cl.js')
     if options.quiet:
         command += ' -q'
+    if options.all:
+        command += ' -a'
     command += ' ' + ' '.join(args)
     os.chdir(pftool.js_test_dir)
     code = os.system(command)

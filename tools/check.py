@@ -13,8 +13,6 @@ LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
 PEP8_EXCLUDE = 'jsmin.py shell.py'.split()
 TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
 
-JS_UNIT_TESTS = ['namespace', 'base', 'vector']
-
 # Remove these when they pass strong jslint
 IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'dom', 'events', 'json2',
                   'pfclient', 'save-dialog']
@@ -110,8 +108,7 @@ def main():
          (os.path.join(pftool.app_dir, 'manage.py'))),
 
         ('jstest',
-         "python %s -q %s" %
-         (pftool.tool_path('jstest.py'), ' '.join(JS_UNIT_TESTS))),
+         "python %s -q -a" % pftool.tool_path('jstest.py')),
 
         ('pep8', "pep8 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
