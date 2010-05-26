@@ -651,7 +651,6 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
                 return;
             }
 
-
             // Check (once) if we're also currently logged in @ appId
             // without having to sign-in again.
             // REVIEW: Isn't this insecure?
