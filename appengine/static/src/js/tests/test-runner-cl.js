@@ -32,9 +32,6 @@ load("../timer.js");
         var targetNamespace = namespace.lookup(name);
         if (!targetNamespace._isDefined) {
             var fileName = modules.locations[name];
-            if (!fQuiet) {
-                print("Loading " + fileName);
-            }
             load(fileName);
         }
         return targetNamespace;
@@ -56,6 +53,14 @@ load("../timer.js");
             var option = target.substr(1);
             switch (option) {
             case 'a':
+                for (var module in modules.namespaces) {
+                    if (modules.namespaces.hasOwnProperty(module)) {
+                        var attrs = modules.testAttrs[module];
+                        if (attrs && attrs.noui) {
+                            a.push(module);
+                        }
+                    }
+                }
                 break;
             case 'q':
                 fQuiet = true;
