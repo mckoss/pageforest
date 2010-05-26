@@ -168,12 +168,15 @@ class SignInTest(AppTestCase):
 
     def test_success(self):
         """Sign-in form success - cookie and redirect - sign-out."""
-        response = self.www_client.post(SIGN_IN,
-                                 {'username': 'peter',
-                                  'password': 'peter_secret'})
+        response = self.www_client.post(SIGN_IN, {
+                'username': 'peter',
+                'password': 'peter_secret'})
         self.assertRedirects(response, WWW + SIGN_IN)
-        cookie = response.cookies['sessionkey'].value
-        self.assertTrue(cookie.startswith('www/peter/12'))
+        cookie = response.cookies['sessionkey']
+        cookie.debug()
+        self.assertTrue(cookie.value.startswith('www/peter/12'))
+        self.assertEqual(cookie['max-age'], 2592000)
+        self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect after POST
         response = self.www_client.post(SIGN_IN)
@@ -186,6 +189,7 @@ class SignInTest(AppTestCase):
         cookie = response.cookies['sessionkey']
         self.assertEqual(cookie.value, '')
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
+        self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect after GET
         response = self.www_client.post(SIGN_IN)
@@ -230,12 +234,14 @@ class AppSignInTest(AppTestCase):
                                   'password': 'peter_secret',
                                   'app_auth': 'checked'})
         self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
-        cookie = response.cookies['sessionkey'].value
-        app_cookie = response.cookies['myapp-sessionkey'].value
         # Expect a first-party session cookie to www.pageforest.com
-        self.assertTrue(cookie.startswith('www/peter/12'))
+        cookie = response.cookies['sessionkey']
+        self.assertTrue(cookie.value.startswith('www/peter/12'))
+        self.assertTrue(cookie['httponly'])
         # And a copy of the app session to pass to myapp.pageforest.com
-        self.assertTrue(app_cookie.startswith('myapp/peter/12'))
+        app_cookie = response.cookies['myapp-sessionkey']
+        self.assertTrue(app_cookie.value.startswith('myapp/peter/12'))
+        self.assertTrue(app_cookie['httponly'])
 
         # Simulate the redirect to the form
         response = self.www_client.post(SIGN_IN + 'myapp/')
@@ -262,8 +268,8 @@ class AppSignInTest(AppTestCase):
         del self.app_client.defaults['HTTP_REFERER']
         self.assertEqual(response.content,
                          'jsonp123("' + myapp_session_key + '")')
-        cookie = response.cookies['sessionkey'].value
-        self.assertTrue(cookie.startswith('myapp/peter/12'))
+        cookie = response.cookies['sessionkey']
+        self.assertTrue(cookie.value.startswith('myapp/peter/12'))
         # And confirm the username api returns the user
         response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")
