@@ -90,7 +90,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                         xhr.setRequestHeader("Authorization",
                                              'PFSK1 ' + this.sessionKey);
                     }
-                },
+                }.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
                     this.app.setData(document);
                     this.setCleanDoc(docid);
@@ -157,7 +157,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                         xhr.setRequestHeader("Authorization",
                                              'PFSK1 ' + this.sessionKey);
                     }
-                },
+                }.fnMethod(this),
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
@@ -207,7 +207,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (docid == undefined) {
                 return undefined;
             }
-            return 'http://docs.' + this.appHost + '/' + docid + '/';
+            return 'http://' + this.appHost + '/docs/' + docid + '/';
         },
 
         setLogging: function(f) {
@@ -317,26 +317,31 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var sessionKeyExists = cookies.getCookie('sessionkey_exists');
             var usernameLast = this.username;
 
-            if (sessionKeyExists !== undefined) {
-                var sessionKey = cookies.getCookie('sessionkey');
-                $.ajax({
-                    dataType: 'text',
-                    url: this.appHost + '/auth/get-session/',
-                    error: this.errorHandler.fnMethod(this),
-                    success: function (sessionKey, textStatus, xmlhttp) {
-                        this.sessionKey = sessionKey;
-                        this.username = sessionKey.split('/')[1];
-                        this.log('signed in as ' + this.username);
-                        if (this.app.onUserChange &&
-                            usernameLast != this.username) {
-                            this.app.onUserChange(this.username);
-                        }
-                    }.fnMethod(this)
-                });
+            if (sessionKeyExists != undefined) {
+                if (!this.sessionKey) {
+                    $.ajax({
+                        dataType: 'text',
+                        url: 'http://' + this.appHost + '/auth/get-session/',
+                        error: this.errorHandler.fnMethod(this),
+                        success: function (sessionKey, textStatus, xmlhttp) {
+                            this.sessionKey = sessionKey;
+                            this.username = sessionKey.split('/')[1];
+                            this.log('signed in as ' + this.username);
+                            if (this.app.onUserChange &&
+                                usernameLast != this.username) {
+                                this.app.onUserChange(this.username);
+                            }
+                        }.fnMethod(this)
+                    });
+                }
 
             }
             else {
                 this.username = undefined;
+                this.sessionKey = undefined;
+                if (this.app.onUserChange && usernameLast != this.username) {
+                    this.app.onUserChange(this.username);
+                }
             }
         },
 
