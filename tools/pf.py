@@ -64,7 +64,7 @@ def sign_in():
         print("Challenge: %s" % challenge)
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
-    reply = '/'.join((options.username, challenge, signature))
+    reply = '|'.join((options.username, challenge, signature))
     url = options.root_url + 'auth/verify/' + reply
     if options.verbose:
         print("Response: %s" % url)
