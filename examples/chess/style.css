@@ -1,0 +1,13 @@
+body, input {
+  font-family: sans-serif;
+  font-size: 20px;
+}
+
+th { text-align: left; }
+
+div.light { background: white; }
+div.dark { background: #ccc; }
+div.light.legal { background: #afb; }
+div.dark.legal { background: #7d8; }
+div.light.illegal { background: #f9a; }
+div.dark.illegal { background: #d78; }
