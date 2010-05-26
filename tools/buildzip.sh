@@ -6,6 +6,8 @@ ZIPFILE=scratch-$VERSION-$TIMESTAMP.zip
 echo building: $ZIPFILE
 cp -r examples/scratch $DIR || exit
 rm -f $DIR/.passwd
+find $DIR -name "*.orig" | xargs rm
+find $DIR -name "*.rej" | xargs rm
 cp tools/pf.py $DIR
 rm -f $ZIPFILE
 zip -r $ZIPFILE $DIR
