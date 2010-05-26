@@ -325,7 +325,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                         error: this.errorHandler.fnMethod(this),
                         success: function (sessionKey, textStatus, xmlhttp) {
                             this.sessionKey = sessionKey;
-                            this.username = sessionKey.split('/')[1];
+                            this.username = sessionKey.split('|')[1];
                             this.log('signed in as ' + this.username);
                             if (this.app.onUserChange &&
                                 usernameLast != this.username) {
