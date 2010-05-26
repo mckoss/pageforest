@@ -23,8 +23,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
     // Run the selected tests in the browser
     function runTest(moduleName, locations) {
+        console.log("runTest: ", moduleName);
         loader.loadNamespace(moduleName + '.test', locations, function () {
-            var ts = new ns.TestSuite();
             var testModule = namespace.lookup(moduleName + '.test');
             if (!testModule.addTests) {
                 alert("Either module " + moduleName + " did not load or " +
@@ -32,10 +32,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 return;
             }
 
+            var ts = new ns.TestSuite();
             testModule.addTests(ts);
-
             ts.run();
             ts.report();
+            ts.out(moduleName + " Test").newLine();
+            ts.newLine();
         });
     }
 
@@ -631,7 +633,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 txt.innerHTML = this.stOut;
                 this.divOut.appendChild(txt);
             }
-            else if (typeof print != 'undefined') {
+            // Detect Rhino - use print command
+            else if (typeof load != 'undefined') {
                 print(this.stOut);
             }
             else if (typeof console != 'undefined') {
