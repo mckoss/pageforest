@@ -62,7 +62,6 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
                 else {
                     ns.x = 1;
                 }
-                console.log(ns.x);
             }
 
             for (i = 0; i < 5; i++) {

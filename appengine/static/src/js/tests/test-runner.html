@@ -17,6 +17,14 @@ var unit = namespace.lookup('org.startpad.unit');
 var modules = namespace.lookup('com.pageforest.modules');
 var runner = namespace.lookup('com.pageforest.test.runner.html');
 runner.define(function (ns) {
+    function testModule(module) {
+        var targetNamespace = modules.namespaces[module];
+
+        if (modules.locations[targetNamespace + '.test']) {
+            unit.runTest(targetNamespace, modules.locations);
+        }
+    }
+
     ns.run = function () {
         var target = location.hash;
         if (!target) {
@@ -26,18 +34,22 @@ runner.define(function (ns) {
             target = target.substr(1);
         }
 
-        if (target != 'all' && !modules.locations[target + '.test']) {
-            alert("No test defined for " + target);
+        if (target != 'all') {
+            testModule(target);
             return;
         }
 
-        unit.runTest(target, modules.locations);
+        for (module in modules.namespaces) {
+            if (modules.namespaces.hasOwnProperty(module)) {
+                testModule(module);
+            }
+        }
+
     };
 });
 </script>
 
 <div id="divUnit" style="font-family: Courier;">
-<h2>Unit Test Output</h2>
 </div>
 
 </body>
