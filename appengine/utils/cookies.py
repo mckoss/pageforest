@@ -45,20 +45,6 @@ class SimpleCookie(Cookie.SimpleCookie):
         self.__set(key, rval, cval)
 
 
-# REVIEW: Our sessionkey cookie is quoted with double quotes (")
-# because it contains forward slash (/). According to RFC 2068, the
-# following characters are not allowed in tokens:
-#
-#          tspecials      = "(" | ")" | "<" | ">" | "@"
-#                         | "," | ";" | ":" | "\" | <">
-#                         | "/" | "[" | "]" | "?" | "="
-#                         | "{" | "}" | SP | HT
-#
-# According to the Cookie module in the Python 2.5 stdlib, the
-# following characters are legal and don't need quotes:
-# _LegalChars = string.ascii_letters + string.digits + "!#$%&'*+-.^_`|~"
-
-
 class HttpOnlyMiddleware:
 
     def process_response(self, request, response):
