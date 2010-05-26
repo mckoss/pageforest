@@ -492,7 +492,6 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
             pushMove(piece, x1, y1, captured, x2, y2);
             movePiece(piece, x1, y1, x2, y2, true);
             showMoves();
-            saveMoves();
         } else {
             piece.animate({
                 left: (piece.data('x') - 1) * ns.tileSize + 'px',
@@ -578,9 +577,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     };
 
     ns.undo = function () {
-        if (undoMove(true)) {
-            saveMoves();
-        }
+        undoMove(true);
         showMoves();
     };
 
@@ -588,27 +585,14 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         window.open('http://www.pageforest.com/sign-in/chess/', '_blank');
     };
 
-    function checkAnchor() {
-        if (!document.location.hash.substr(1)) {
-            // Add a random anchor to the URL if it doesn't have one.
-            var randomModule = namespace.lookup('com.pageforest.random');
-            document.location.hash = '#' + randomModule.randomString(5);
-        }
-        if (ns.anchor != document.location.hash.substr(1)) {
-            // Update the anchor if it has changed.
-            ns.anchor = document.location.hash.substr(1);
-            loadMoves();
-        }
-    }
-
     function onReady() {
         var clientModule = namespace.lookup('com.pageforest.client');
         ns.client = new clientModule.Client(ns);
         makeBoard();
         makePieces();
-        checkAnchor();
-        window.setInterval(checkAnchor, 200); // Five times per second.
-        window.setInterval(loadMoves, 5000); // Every five seconds.
+        // checkAnchor();
+        // window.setInterval(checkAnchor, 200); // Five times per second.
+        // window.setInterval(loadMoves, 5000); // Every five seconds.
         $(window).mouseup(function() {
             window.getSelection().removeAllRanges();
         });
@@ -618,16 +602,16 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         console.warn(message);
     }
 
-    function setDocument(json) {
+    function setDoc(doc) {
         updateMoves(doc.blob);
     }
 
-    function getDocument() {
+    function getDoc() {
         return {
             readers: ['public'],
             writers: ['public'],
-            blob: ns.moves;
-        }
+            blob: ns.moves
+        };
     }
 
     ns.extend({
