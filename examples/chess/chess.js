@@ -1,6 +1,4 @@
-namespace.lookup('com.pageforest.chess').define(function (ns) {
-
-    var random = namespace.lookup('com.pageforest.random');
+namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
 
     ns.tileSize = 96;
     ns.anchor = '';
@@ -460,36 +458,6 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
         showMoves();
     }
 
-    function saveMoves() {
-        var data = JSON.stringify({
-            readers: ['public'],
-            writers: ['public'],
-            blob: ns.moves
-        });
-        $.ajax({type: 'PUT',
-                url: '/docs/' + ns.anchor,
-                data: data});
-        var now = new Date();
-        ns.last_saved = now.getTime();
-    }
-
-    function loadMoves() {
-        $.ajax({type: 'GET',
-                url: '/docs/' + ns.anchor,
-                success: function(message, status, xhr) {
-                    // Ignore GET for 10 seconds after PUT.
-                    if (ns.last_saved) {
-                        var now = new Date();
-                        var milliseconds = now.getTime() - ns.last_saved;
-                        if (milliseconds < 10000) {
-                            return;
-                        }
-                    }
-                    // Perform new moves from the server, or undo.
-                    updateMoves(message.blob);
-                }});
-    }
-
     function pieceStart(e, ui) {
         var piece = $(this);
         // console.log('pieceStart ' + this + ' ' + piece.data('kind'));
@@ -623,7 +591,8 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
     function checkAnchor() {
         if (!document.location.hash.substr(1)) {
             // Add a random anchor to the URL if it doesn't have one.
-            document.location.hash = '#' + random.randomString(5);
+            var randomModule = namespace.lookup('com.pageforest.random');
+            document.location.hash = '#' + randomModule.randomString(5);
         }
         if (ns.anchor != document.location.hash.substr(1)) {
             // Update the anchor if it has changed.
@@ -632,7 +601,9 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
         }
     }
 
-    ns.ready = function() {
+    function onReady() {
+        var clientModule = namespace.lookup('com.pageforest.client');
+        ns.client = new clientModule.Client(ns);
         makeBoard();
         makePieces();
         checkAnchor();
@@ -641,6 +612,29 @@ namespace.lookup('com.pageforest.chess').define(function (ns) {
         $(window).mouseup(function() {
             window.getSelection().removeAllRanges();
         });
-    };
+    }
+
+    function onError(message) {
+        console.warn(message);
+    }
+
+    function setDocument(json) {
+        updateMoves(doc.blob);
+    }
+
+    function getDocument() {
+        return {
+            readers: ['public'],
+            writers: ['public'],
+            blob: ns.moves;
+        }
+    }
+
+    ns.extend({
+        onReady: onReady,
+        onError: onError,
+        getDocument: getDocument,
+        setDocument: setDocument
+    });
 
 }); // com.pageforest.chess
