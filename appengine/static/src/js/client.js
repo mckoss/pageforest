@@ -28,8 +28,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var blobMessage = "Document is missing a blob property.";
 
     // The application calls Client, and implements the following methods:
-    // app.setData(jsonDocument) - Called when a new document is loaded.
-    // app.getData() - Called to get the json data to be saved.
+    // app.setDoc(jsonDocument) - Called when a new document is loaded.
+    // app.getDoc() - Called to get the json data to be saved.
     // app.onSaveSuccess() - successfully saved.
     // app.onError(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
@@ -42,6 +42,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         }
 
         this.app = app;
+
+        // Map deprecated function names.
+        var deprecated = {
+            "getData": "getDoc",
+            "setData": "setDoc"
+        };
+        for (var oldName in deprecated) {
+            var newName = deprecated[oldName];
+            if (app[oldName] && !app[newName]) {
+                app[newName] = app[oldName];
+            }
+        }
 
         this.appHost = location.host;
         var dot = this.appHost.indexOf('.');
@@ -57,7 +69,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
-        // Note that we cannot kick off a poll() until this contstuctor
+        // Note that we cannot kick off a poll() until this constructor
         // returns as the app's callbacks likely depend on completing their
         // initialization.
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
@@ -95,7 +107,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     }
                 }.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
-                    this.app.setData(document);
+                    this.app.setDoc(document);
                     this.setCleanDoc(docid);
                 }.fnMethod(this)
             });
@@ -108,7 +120,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (json == undefined) {
-                json = this.app.getData();
+                json = this.app.getDoc();
                 if (typeof json != 'object') {
                     this.errorReport('missing_object', objectMessage);
                     return;
@@ -184,7 +196,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.docid = docid;
             this.changeState('clean');
             // Remember the clean state of the document
-            this.lastJSON = JSON.stringify(this.app.getData());
+            this.lastJSON = JSON.stringify(this.app.getDoc());
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -374,7 +386,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Document looks clean - see if it's changed since we last
             // checked.
-            var json = JSON.stringify(this.app.getData());
+            var json = JSON.stringify(this.app.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
             }
