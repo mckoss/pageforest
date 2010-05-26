@@ -18,7 +18,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-SUBDOMAIN = 'dev'
+SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
