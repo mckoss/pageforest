@@ -5,8 +5,6 @@ load("modules.js");
 load("../base.js");
 load("../unit.js");
 load("../timer.js");
-load("../vector.js");
-load("../format.js");
 
 (function(a) {
     var unit = namespace.lookup('org.startpad.unit');
@@ -28,6 +26,18 @@ load("../format.js");
 
     function printSummary() {
         print("Ran " + cTests + " tests in " + secs(msNow() - msStart) + 's');
+    }
+
+    function ensureNamespaceLoaded(name) {
+        var targetNamespace = namespace.lookup(name);
+        if (!targetNamespace._isDefined) {
+            var fileName = modules.locations[name];
+            if (!fQuiet) {
+                print("Loading " + fileName);
+            }
+            load(fileName);
+        }
+        return targetNamespace;
     }
 
     msStart = msNow();
@@ -55,17 +65,13 @@ load("../format.js");
             print("Running test: " + target);
         }
 
-        var moduleNamespace = modules.namespaces[target];
-        var testNamespace = moduleNamespace + '.test';
-        var testFilePath = modules.locations[testNamespace];
-        print('m:' + moduleNamespace);
-        print('f:' + testFilePath);
-        load(testFilePath);
+        var targetNamespace = modules.namespaces[target];
+        ensureNamespaceLoaded(targetNamespace);
+        var testModule = ensureNamespaceLoaded(targetNamespace + '.test');
 
         var ts = new unit.TestSuite();
         ts.fQuiet = fQuiet;
 
-        var testModule = namespace.lookup(testNamespace);
 
         testModule.addTests(ts);
         ts.run();
