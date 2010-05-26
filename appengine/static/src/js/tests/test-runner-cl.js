@@ -43,8 +43,9 @@ load("../timer.js");
     msStart = msNow();
 
     if (a.length < 1) {
-        print("Usage: test-runner-cl.js [-q] module ...");
+        print("Usage: test-runner-cl.js [-q] [-a] module ...");
         print("-q: quiet mode - print only final summary.");
+        print("-a: all - run all test");
         quit(1);
     }
 
@@ -53,11 +54,16 @@ load("../timer.js");
 
         if (target.indexOf('-') === 0) {
             var option = target.substr(1);
-            if (option != 'q') {
+            switch (option) {
+            case 'a':
+                break;
+            case 'q':
+                fQuiet = true;
+                break;
+            default:
                 print("Unsupported option: " + target);
                 quit(1);
             }
-            fQuiet = true;
             continue;
         }
 
