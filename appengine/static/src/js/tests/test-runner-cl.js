@@ -1,6 +1,7 @@
 /*jslint rhino:true */
 
 load("../namespace.js");
+load("modules.js");
 load("../base.js");
 load("../unit.js");
 load("../timer.js");
@@ -9,6 +10,7 @@ load("../format.js");
 
 (function(a) {
     var unit = namespace.lookup('org.startpad.unit');
+    var modules = namespace.lookup('com.pageforest.modules');
 
     var cTests = 0;
     var cFailures = 0;
@@ -29,13 +31,6 @@ load("../format.js");
     }
 
     msStart = msNow();
-
-    var tests = {
-        namespace: {ns: 'org.startpad.namespace.test'},
-        base: {ns: 'org.startpad.base.test'},
-        vector: {ns: 'org.startpad.vector.test'},
-        format: {ns: 'org.startpad.format.test'}
-    };
 
     if (a.length < 1) {
         print("Usage: test-runner-cl.js [-q] module ...");
@@ -59,11 +54,18 @@ load("../format.js");
         if (!fQuiet) {
             print("Running test: " + target);
         }
+
+        var moduleNamespace = modules.namespaces[target];
+        var testNamespace = moduleNamespace + '.test';
+        var testFilePath = modules.locations[testNamespace];
+        print('m:' + moduleNamespace);
+        print('f:' + testFilePath);
+        load(testFilePath);
+
         var ts = new unit.TestSuite();
         ts.fQuiet = fQuiet;
 
-        load('test-' + target + '.js');
-        var testModule = namespace.lookup(tests[target].ns);
+        var testModule = namespace.lookup(testNamespace);
 
         testModule.addTests(ts);
         ts.run();
