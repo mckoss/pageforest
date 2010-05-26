@@ -9,11 +9,11 @@
 // ts.Ru(nests);
 // ts.report();
 //
-// Requires: base.js, timer.js
 // UnitTest - Each unit test calls a function which in turn calls
 // back assert's on the unit test object.
 
 /*jslint evil:true */
+/*globals load */
 
 namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var util = namespace.util;

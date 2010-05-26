@@ -6,7 +6,6 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     function onReady() {
         $('#title').focus();
         ns.client = client = new clientLib.Client(ns);
-        client.setLogging();
     }
 
     // This function is called whenever your document should be reloaded.
