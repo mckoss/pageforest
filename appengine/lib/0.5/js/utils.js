@@ -1028,8 +1028,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Expire the session key to remove the sign-in for the user.
         signOut: function () {
             // checkUsername will update the user state in a jiffy
-            document.cookie = 'sessionkey=expired; path=/; expires=' +
-                'Sat, 01 Jan 2000 00:00:00 GMT';
+            cookies.setCookie('sessionkey_exists', 'expired', -1);
+
+            // We can't delete the Http-Only sessionkey locally -
+            // use the server to do it.
+            $.ajax({
+                dataType: 'text',
+                url: 'http://' + this.appHost + '/auth/set-session/expired/',
+                error: this.errorHandler.fnMethod(this),
+                success: function (sessionKey, textStatus, xmlhttp) {
+                    this.log("sessionkey deleted");
+                }.fnMethod(this)
+            });
         }
 
     });
