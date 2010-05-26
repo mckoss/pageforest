@@ -5,33 +5,22 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <meta name="viewport" content="width=768" />
 <title>Chess - PageForest</title>
+<link rel="stylesheet" type="text/css" href="style.css" />
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-<script type="text/javascript" src="/lib/0.5/js/utils.js"></script>
-<script type="text/javascript" src="chess.js"></script>
+<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/0.6/js/utils.js"></script>
+<script type="text/javascript" src="main.js"></script>
 <script type="text/javascript">
-var chess = namespace.lookup("com.pageforest.chess");
-$(document).ready(chess.ready);
+var chess = namespace.lookup("com.pageforest.examples.chess");
+$(document).ready(chess.onReady);
 </script>
-<style type="text/css">
-body, input {
-  font-family: sans-serif;
-  font-size: 20px;
-}
-th { text-align: left; }
-div.light { background: white; }
-div.dark { background: #ccc; }
-div.light.legal { background: #afb; }
-div.dark.legal { background: #7d8; }
-div.light.illegal { background: #f9a; }
-div.dark.illegal { background: #d78; }
-</style>
 </head>
 <body>
 <div id="board"></div>
 <div id="buttons">
 <input type="button" onclick="chess.undo()" value="Undo" />
-<input type="button" onclick="chess.signIn()" value="Sign in" />
+<input type="button" onclick="chess.signInOut()" value="Sign in" />
 </div>
 <table id="moves">
 <tfoot>
