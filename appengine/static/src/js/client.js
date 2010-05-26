@@ -246,7 +246,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 var formatted = "client error: " + message +
                     ' (' + status + ')';
                 console.log(formatted);
-                alert(formatted);
             }
         },
 
