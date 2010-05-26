@@ -174,7 +174,7 @@ class SignInTest(AppTestCase):
         self.assertRedirects(response, WWW + SIGN_IN)
         cookie = response.cookies['sessionkey']
         cookie.debug()
-        self.assertTrue(cookie.value.startswith('www/peter/12'))
+        self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertEqual(cookie['max-age'], 2592000)
         self.assertTrue(cookie['httponly'])
 
@@ -236,11 +236,11 @@ class AppSignInTest(AppTestCase):
         self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
         # Expect a first-party session cookie to www.pageforest.com
         cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('www/peter/12'))
+        self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertTrue(cookie['httponly'])
         # And a copy of the app session to pass to myapp.pageforest.com
         app_cookie = response.cookies['myapp-sessionkey']
-        self.assertTrue(app_cookie.value.startswith('myapp/peter/12'))
+        self.assertTrue(app_cookie.value.startswith('myapp|peter|12'))
         self.assertTrue(app_cookie['httponly'])
 
         # Simulate the redirect to the form
@@ -250,7 +250,7 @@ class AppSignInTest(AppTestCase):
         groups = re.search(r'transferSession\("(.*)"\)', response.content)
         self.assertTrue(groups is not None)
         myapp_session_key = groups.group(1)
-        self.assertTrue(myapp_session_key.startswith("myapp/peter/12"))
+        self.assertTrue(myapp_session_key.startswith("myapp|peter|12"))
 
         # Should not be logged in yet
         response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
@@ -269,7 +269,7 @@ class AppSignInTest(AppTestCase):
         self.assertEqual(response.content,
                          'jsonp123("' + myapp_session_key + '")')
         cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('myapp/peter/12'))
+        self.assertTrue(cookie.value.startswith('myapp|peter|12'))
         # And confirm the username api returns the user
         response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")
@@ -302,9 +302,9 @@ class ChallengeVerifyTest(AppTestCase):
         self.assertEqual(response.status_code, 200)
         challenge = response.content
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'myapp/peter/', status_code=200)
+        self.assertContains(response, 'myapp|peter|12', status_code=200)
         cookie = response.cookies['reauth'].value
-        self.assertTrue(cookie.startswith('myapp/peter/'))
+        self.assertTrue(cookie.startswith('myapp|peter|12'))
 
     def test_invalid_challenge(self):
         """The challenge must have a valid HMAC."""
@@ -342,7 +342,7 @@ class ChallengeVerifyTest(AppTestCase):
         challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         # First login should be successful.
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'myapp/peter/', status_code=200)
+        self.assertContains(response, 'myapp|peter|12', status_code=200)
         # Replay should fail with 403 Forbidden.
         response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Already used.', status_code=403)
@@ -503,8 +503,8 @@ class AppCreatorTest(AppTestCase):
         challenge = response.content
         # Sign challenge and authenticate.
         signature = crypto.hmac_sha1(challenge, user.password)
-        response = self.client.get('/'.join((
-                '/auth/verify', user.get_username(), challenge, signature)))
+        reply = crypto.join(user.get_username(), challenge, signature)
+        response = self.client.get('/auth/verify/' + reply)
         self.assertEqual(response.status_code, 200)
         self.client.session_key = response.content
 

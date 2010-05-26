@@ -3,7 +3,7 @@ import random
 import hmac
 import hashlib
 
-SEPARATOR = '/'
+SEPARATOR = '|'
 HEX = string.hexdigits[:16]  # Without uppercase.
 BASE62 = string.uppercase + string.lowercase + string.digits
 BASE64 = BASE62 + '+/'
@@ -32,11 +32,11 @@ def join(*args):
     canonical string representation.
 
     >>> join('a', 'b', 'c')
-    'a/b/c'
+    'a|b|c'
     >>> join(1, 2, 3)
-    '1/2/3'
+    '1|2|3'
     >>> join(['a', 'b', 'c'], 'd')
-    'a/b/c/d'
+    'a|b|c|d'
     >>> join(1.0 / 9.0)
     '0.1111111'
     """
@@ -57,7 +57,7 @@ def hmac_sha1(*args):
     The last item in args is the secret key for HMAC.
 
     >>> hmac_sha1('a', 'b', 'c')
-    '353b2e5fb7afb93637bc22480a0fd6365127970b'
+    'edbb934dd24e2bc149ade2b812aac877b7cb6723'
     """
     args = list(args)
     key = str(args.pop())
@@ -70,7 +70,7 @@ def sign(*args):
     The last item in args is the secret key for HMAC.
 
     >>> sign('a', 'b', 'c')
-    'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b'
+    'a|b|edbb934dd24e2bc149ade2b812aac877b7cb6723'
     """
     args = list(args)
     args[-1] = hmac_sha1(*args)
@@ -81,17 +81,17 @@ def verify(signed, key):
     """
     Verify a properly signed string - the last argument is the HMAC.
 
-    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    >>> verify('a|b|edbb934dd24e2bc149ade2b812aac877b7cb6723', 'c')
     True
-    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'c')
+    >>> verify(u'a|b|edbb934dd24e2bc149ade2b812aac877b7cb6723', 'c')
     True
-    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'c')
+    >>> verify(['a', 'b', 'edbb934dd24e2bc149ade2b812aac877b7cb6723'], 'c')
     True
-    >>> verify('a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    >>> verify('a|b|edbb934dd24e2bc149ade2b812aac877b7cb6723', 'd')
     False
-    >>> verify(u'a/b/353b2e5fb7afb93637bc22480a0fd6365127970b', 'd')
+    >>> verify(u'a|b|edbb934dd24e2bc149ade2b812aac877b7cb6723', 'd')
     False
-    >>> verify(['a', 'b', '353b2e5fb7afb93637bc22480a0fd6365127970b'], 'd')
+    >>> verify(['a', 'b', 'edbb934dd24e2bc149ade2b812aac877b7cb6723'], 'd')
     False
     """
     if isinstance(signed, basestring):
