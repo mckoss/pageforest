@@ -1,11 +1,13 @@
 namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
-    var client;
 
     // Initialize the document - create a client helper object
     function onReady() {
         $('#title').focus();
-        ns.client = client = new clientLib.Client(ns);
+        ns.client = new clientLib.Client(ns);
+        // Quick call to poll - don't wait a whole second to try loading
+        // the doc and logging in the user.
+        ns.client.poll();
     }
 
     // This function is called whenever your document should be reloaded.
@@ -37,12 +39,12 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
 
     // Sign in (or out) depending on current user state.
     function signInOut() {
-        var isSignedIn = client.username != undefined;
+        var isSignedIn = ns.client.username != undefined;
         if (isSignedIn) {
-            client.signOut();
+            ns.client.signOut();
         }
         else {
-            client.signIn();
+            ns.client.signIn();
         }
     }
 
@@ -51,7 +53,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         $('#error').text('');
 
         // Allow save if doc is dirty OR not bound (yet) to a document.
-        if (client.isSaved()) {
+        if (ns.client.isSaved()) {
             $('#save').attr('disabled', 'disabled');
         }
         else {
@@ -59,7 +61,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         }
 
         // Refresh links on the page, too
-        var url = client.getDocURL();
+        var url = ns.client.getDocURL();
         var link = $('#document');
         if (url) {
             link.attr('href', url + '?callback=document').show();
@@ -67,9 +69,9 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
         else {
             link.hide();
         }
-        $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
-        $('#app-details').attr('href', 'http://' + client.wwwHost +
-                               '/apps/' + client.appid);
+        $('#mydocs').attr('href', 'http://' + ns.client.wwwHost + '/docs/');
+        $('#app-details').attr('href', 'http://' + ns.client.wwwHost +
+                               '/apps/' + ns.client.appid);
     }
 
     // Exported functions

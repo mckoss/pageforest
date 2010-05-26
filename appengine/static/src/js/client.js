@@ -36,6 +36,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
+        if (typeof $ != 'function' || $ != jQuery) {
+            this.errorReport('jQuery_required', jQueryMessage);
+            return;
+        }
+
         this.app = app;
 
         this.appHost = location.host;
@@ -52,12 +57,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
+        // Note that we cannot kick off a poll() until this contstuctor
+        // returns as the app's callbacks likely depend on completing their
+        // initialization.
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
-
-        if (typeof $ != 'function' || $ != jQuery) {
-            this.errorReport('jQuery_required', jQueryMessage);
-            return;
-        }
 
         // Catch window unload if the user tries to close an unsaved window
         $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
