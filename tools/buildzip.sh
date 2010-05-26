@@ -1,7 +1,7 @@
 #!/bin/sh
 DIR=scratch
 VERSION=`grep ^LIB_VERSION appengine/settings.py | cut -d\' -f2`
-TIMESTAMP=`date +%y%m%d-%H%M%S`
+TIMESTAMP=`date +%Y.%m.%d-%H.%M.%S`
 ZIPFILE=scratch-$VERSION-$TIMESTAMP.zip
 echo building: $ZIPFILE
 cp -r examples/scratch $DIR || exit
