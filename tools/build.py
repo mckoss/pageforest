@@ -18,7 +18,18 @@ SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src')
 LIB_DIR = os.path.join(pftool.app_dir, 'lib')
 
 
-def combine_files(file_dict, output_root, version, verbose=False):
+def ensure_dir(dirname):
+    """
+    Create directory (and its parents) if necessary.
+    """
+    if os.path.exists(dirname):
+        return
+    if options.verbose:
+        print("Creating %s" % dirname)
+    os.makedirs(dirname)
+
+
+def combine_files(output_root, version, file_dict):
     """
     Combine and minify static files.
 
@@ -33,6 +44,7 @@ def combine_files(file_dict, output_root, version, verbose=False):
             file_ext = '.' + file_type
 
         output_dir = os.path.join(output_root, version, file_type)
+        ensure_dir(output_dir)
         levels = version.split('.')
 
         for alias, file_list in file_dict[file_type].items():
@@ -41,7 +53,7 @@ def combine_files(file_dict, output_root, version, verbose=False):
             if file_type == 'js':
                 raw_output_path = os.path.join(output_dir, alias + '.js')
 
-            if verbose:
+            if options.verbose:
                 print("Building %s" % output_path)
 
             output_file = open(output_path, 'w')
@@ -69,7 +81,8 @@ def combine_files(file_dict, output_root, version, verbose=False):
                 copy_dir = os.path.join(output_root,
                                          '.'.join(levels[:level]),
                                          file_type)
-                if verbose:
+                ensure_dir(copy_dir)
+                if options.verbose:
                     print(" Copy to %s" % copy_dir)
                 shutil.copyfile(os.path.join(output_dir, output_name),
                                 os.path.join(copy_dir, output_name))
@@ -110,61 +123,13 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 
-def get_version(name, max_depth, options, verbose):
-    """ Get fully expanded version string.
-
-    The version string is padded with '0' parts up to the max_depth.
-    """
-    settings_name = name.upper() + "_VERSION"
-    version = getattr(settings, settings_name)
-    if version is None:
-        levels = []
-    else:
-        levels = version.split('.')
-    levels.extend(['0' for i in range(max_depth - len(levels))])
-    if len(levels) > max_depth:
-        sys.exit("Version number too long: %s", version)
-
-    version = '.'.join(levels)
-    if verbose:
-        print("%s = %s" % (settings_name, version))
-    return version
-
-
-def ensure_version_dirs(root, version, file_types, verbose):
-    """ Make sure the versioned directories exists.
-
-    e.g., ensure_dir(root, '1.0.5')
-
-    will ensure that all directories:
-
-        root/1
-        root/1.0
-        root/1.0.5
-
-    all exist or are created.
-    """
-    levels = version.split('.')
-    for level in range(1, len(levels) + 1):
-        version_path = os.path.join(root, '.'.join(levels[:level]))
-        if not os.path.isdir(version_path):
-            if verbose:
-                print("Creating directory: %s" % version_path)
-            os.mkdir(version_path)
-        for file_type in file_types:
-            path = os.path.join(version_path, file_type)
-            if not os.path.isdir(path):
-                if verbose:
-                    print("Creating directory %s" % path)
-                os.mkdir(path)
-
-
 def main():
     """
     Builds deployment files for pageforest.com.
 
     Files are combined from settings.FILE_GROUPS and settings.MEDIA_GROUPS.
     """
+    global options
     parser = OptionParser(
         usage="%prog [options]",
         description=trim(main.__doc__))
@@ -172,13 +137,8 @@ def main():
     (options, args) = parser.parse_args()
 
     os.chdir(pftool.root_dir)
-    for (name, depth, output_dir, file_dict) in \
-            (('lib', 3, LIB_DIR, settings.LIB_FILES),
-             ('media', 1, MEDIA_DIR, settings.MEDIA_FILES)):
-        version = get_version(name, depth, options, options.verbose)
-        ensure_version_dirs(output_dir, version, ('css', 'js'),
-                            options.verbose)
-        combine_files(file_dict, output_dir, version, options.verbose)
+    combine_files(LIB_DIR, settings.LIB_VERSION, settings.LIB_FILES)
+    combine_files(MEDIA_DIR, settings.MEDIA_VERSION, settings.MEDIA_FILES)
 
 
 if __name__ == '__main__':
