@@ -17,12 +17,12 @@ from django.template import RequestContext
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils import crypto
-from utils.http import Http403
 
 from auth import SignatureError
 from auth.forms import RegistrationForm, SignInForm
 from auth.models import User, CHALLENGE_EXPIRATION
 from auth.middleware import AccessDenied
+from auth.decorators import login_required
 
 from apps.models import App
 
@@ -172,7 +172,7 @@ def sign_in(request, app_id=None):
             # If we've authorized the cross-app, set the
             if app and 'app_auth' in form.cleaned_data and \
                     form.cleaned_data['app_auth']:
-                # Cookie names cannot unicode!
+                # Cookie names cannot contain unicode!
                 app_session_key = user.generate_session_key(app)
                 cookie_name = "%s-%s" % (str(app_id),
                                         settings.SESSION_COOKIE_NAME)
@@ -202,7 +202,7 @@ def get_username(request):
 
 
 @jsonp
-@method_required('GET', 'POST')
+@method_required('GET')
 def set_session_cookie(request, session_key):
     """
     When passed a valid session key for the current application,
@@ -211,16 +211,46 @@ def set_session_cookie(request, session_key):
     response = HttpResponse(session_key, content_type='text/plain')
     if session_key == 'expired':
         logging.info("Deleting session cookie")
-        response.delete_cookie(settings.SESSION_COOKIE_NAME)
+        response.delete_cookie(settings.SESSION_COOKIE_NAME + '_exists')
+        response.delete_cookie(settings.SESSION_COOKIE_NAME,
+                               path=settings.SESSION_COOKIE_PATH)
     else:
         try:
             User.verify_session_key(session_key, request.app)
         except SignatureError, error:
             return AccessDenied(request,
                                 "Invalid session key: %s" % unicode(error))
-        response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
-                            max_age=settings.SESSION_COOKIE_AGE)
+        response.set_cookie(
+            settings.SESSION_COOKIE_NAME + '_exists', 'true',
+            max_age=settings.SESSION_COOKIE_AGE)
+        response.set_cookie(
+            settings.SESSION_COOKIE_NAME, session_key,
+            path=settings.SESSION_COOKIE_PATH,
+            max_age=settings.SESSION_COOKIE_AGE)
+            # FIXME: httponly=True is not supported in Django 1.1.
     return response
+
+
+@login_required
+@method_required('GET')
+def get_session_cookie(request):
+    """
+    Retrieve the session key from the cookie and make it available to
+    the JavaScript application, but only for trusted pages.
+    """
+    # Disallow cookie retrieval for user-generated pages.
+    referer = request.META.get('HTTP_REFERER', '/app/docs/')
+    if referer.startswith('/app/docs/'):
+        return AccessDenied(
+            request, "The %s cookie is not available inside documents." %
+            settings.SESSION_COOKIE_NAME)
+    # Check if the cookie was transmitted by the browser.
+    if settings.SESSION_COOKIE_NAME not in request.COOKIES:
+        return AccessDenied(
+            request, "Missing %s cookie." % settings.SESSION_COOKIE_NAME)
+    # Extract and return the session key.
+    session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
+    return HttpResponse(session_key, content_type='text/plain')
 
 
 @method_required('GET')

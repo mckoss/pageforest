@@ -185,6 +185,7 @@ RESERVED_APP_KEYS = (
 # TODO: For now - 30 days - with reauth, set to 24 hours.
 SESSION_COOKIE_NAME = 'sessionkey'
 SESSION_COOKIE_AGE = 30 * 24 * 60 * 60
+SESSION_COOKIE_PATH = '/auth/'
 
 # Name of the reauth cookie on app_id.pageforest.com
 # TODO: We currently don't support reauthorization.
@@ -217,6 +218,7 @@ MIDDLEWARE_CLASSES = [
     'apps.middleware.AppMiddleware',         # Get the app.
     'docs.middleware.DocMiddleware',         # Get the document.
     'auth.middleware.AuthMiddleware',        # Check access permissions.
+    'utils.cookies.HttpOnlyMiddleware',      # Adjust cookies to HttpOnly.
 ]
 
 if USE_APPSTATS:
