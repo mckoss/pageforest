@@ -173,7 +173,6 @@ class SignInTest(AppTestCase):
                 'password': 'peter_secret'})
         self.assertRedirects(response, WWW + SIGN_IN)
         cookie = response.cookies['sessionkey']
-        cookie.debug()
         self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertEqual(cookie['max-age'], 2592000)
         self.assertTrue(cookie['httponly'])
