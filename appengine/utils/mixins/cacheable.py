@@ -142,6 +142,13 @@ class Cacheable(Serializable):
         super(Cacheable, self).delete()
 
     @classmethod
+    def get(cls, keys):
+        """
+        TODO: Use memcache here.
+        """
+        return super(Cacheable, cls).get(keys)
+
+    @classmethod
     def cache_get_by_key_name(cls, key_name):
         """
         Get a model instance from memcache, using protocol buffers.
@@ -156,13 +163,6 @@ class Cacheable(Serializable):
         if settings.CACHEABLE_LOGGING:
             logging.info("get_by_key_name used memcache: " + cache_key)
         return instance
-
-    @classmethod
-    def get(cls, keys):
-        """
-        TODO: Use memcache here.
-        """
-        return super(Cacheable, cls).get(keys)
 
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):

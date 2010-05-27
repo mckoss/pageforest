@@ -1,9 +1,13 @@
+import time
+import logging
+
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import \
-    HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified
+    HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified, Http404
 
 from google.appengine.ext import db
+from google.appengine.runtime import DeadlineExceededError
 
 from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
@@ -59,21 +63,56 @@ def blob_head(request):
     return response
 
 
+def wait_for_update(request, blob):
+    """
+    Wait for blob update, if wait option specified in query string.
+    Otherwise, return 304 Not Modified.
+    """
+    wait = request.GET.get('wait', '')
+    if not wait.isdigit():
+        return blob
+    start = time.time()
+    deadline = start + int(wait)
+    original_sha1 = blob.sha1
+    try:
+        while time.time() < deadline:
+            # Sleep two seconds.
+            time.sleep(2)
+            # Try to read updated blob from memcache.
+            logging.info("Checking memcache for blob update after %.1fs" %
+                         (time.time() - start))
+            blob = Blob.cache_get_by_key_name(request.key_name)
+            # Detect changes.
+            if blob is None or blob.sha1 != original_sha1:
+                break
+    except DeadlineExceededError:
+        logging.info("Caught DeadlineExceededError after %.1fs" %
+                     (time.time() - start))
+    return blob
+
+
 def blob_get(request):
     """
     HTTP GET request handler.
     """
     blob = lookup_or_404(Blob, request.key_name)
     etag = blob.get_etag()
-    if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
-        return HttpResponseNotModified()
     last_modified = http_datetime(blob.modified)
-    if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
-        return HttpResponseNotModified()
-    mimetype = guess_mimetype(request.key_name.rstrip('/'))
-    if mimetype == 'text/plain' and blob.valid_json:
-        mimetype = settings.JSON_MIMETYPE
-    response = HttpResponse(blob.value, mimetype=mimetype)
+    if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
+        or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
+        blob = wait_for_update(request, blob)
+        if blob is None:
+            raise Http404("Blob deleted: " + request.key_name)
+        etag = blob.get_etag()
+        last_modified = http_datetime(blob.modified)
+    if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
+        or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
+        response = HttpResponseNotModified()
+    else:
+        mimetype = guess_mimetype(request.key_name.rstrip('/'))
+        if mimetype == 'text/plain' and blob.valid_json:
+            mimetype = settings.JSON_MIMETYPE
+        response = HttpResponse(blob.value, mimetype=mimetype)
     response['Last-Modified'] = last_modified
     response['ETag'] = etag
     return response
