@@ -5,6 +5,7 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     function onReady() {
         $('#title').focus();
         ns.client = new clientLib.Client(ns);
+        ns.client.setLogging(true);
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
