@@ -1,11 +1,39 @@
 namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
 
+    // Long polling for new chat messages from remote users.
+    function comet() {
+        if (!ns.client.docid) {
+            return; // We have not entered a chatroom yet.
+        }
+        if (ns.xhr) {
+            return; // The previous poll is still in progress.
+        }
+        ns.xhr = $.ajax({
+            url: '/docs/' + ns.client.docid + '/messages?wait=10&slice=-20:',
+            dataType: 'json',
+            success: function(json, status, xhr) {
+                var history = '';
+                for (var index = 0; index < json.length; index++) {
+                    history += json[index] + '\n';
+                }
+                var textarea = $('#messages');
+                textarea.val(history);
+                textarea.scrollTop = textarea.scrollHeight;
+            },
+            complete: function() {
+                ns.xhr = false;
+            }
+        });
+    }
+
     // Initialize the document - create a client helper object.
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(ns);
         ns.client.setLogging(true);
         $('#message').focus();
+        // Start a new long poll request whenever necessary.
+        setInterval(comet, 1000);
     }
 
     // Called on any api errors.
@@ -38,12 +66,14 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
         };
     }
 
+    // Respond to document load success.
     function setDoc(doc) {
         $('#status').html('Entered chatroom ' + JSON.stringify(doc));
     }
 
-    // Create a named chatroom.
-    function create() {
+    // Join a chatroom by name.
+    // This creates the chatroom if it didn't exist already.
+    function join() {
         ns.client.save(undefined, $('#docid').val());
     }
 
@@ -71,7 +101,7 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
         signInOut: signInOut,
         getDoc: getDoc,
         setDoc: setDoc,
-        create: create,
+        join: join,
         submit: submit
     });
 
