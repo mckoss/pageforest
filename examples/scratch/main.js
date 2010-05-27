@@ -12,17 +12,18 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     }
 
     // This function is called whenever your document should be reloaded.
-    function setData(json) {
+    function setDoc(json) {
         $('#title').val(json.title);
         $('#blob').val(json.blob);
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
-    function getData() {
+    function getDoc() {
         return {
-            'title': $('#title').val(),
-            'blob': $('#blob').val()
+            "title": $('#title').val(),
+            "blob": $('#blob').val(),
+            "readers": ["public"]
         };
     }
 
@@ -78,8 +79,8 @@ namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
     // Exported functions
     ns.extend({
         onReady: onReady,
-        getData: getData,
-        setData: setData,
+        getDoc: getDoc,
+        setDoc: setDoc,
         onError: onError,
         onUserChange: onUserChange,
         onStateChange: onStateChange,
