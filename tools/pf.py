@@ -41,7 +41,7 @@ class AuthRequest(urllib2.Request):
         urllib2.Request.__init__(self, url, *args, **kwargs)
         self.add_header('Referer', 'http://%s.%s/' % (
                 options.application, options.server))
-        self.add_header('Authorization', 'PFSK1 ' + options.session_key)
+        self.add_header('Cookie', 'sessionkey=' + options.session_key)
 
 
 class PutRequest(AuthRequest):
