@@ -563,7 +563,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         runNext: function() {
             if (this.iCur == this.rgut.length) {
                 if (this.fnCallback) {
-                    fnCallback();
+                    this.fnCallback();
                 }
                 return;
             }
