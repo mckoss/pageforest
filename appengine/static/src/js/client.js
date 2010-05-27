@@ -108,12 +108,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 dataType: 'json',
                 url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
-                beforeSend: function(xhr) {
-                    if (this.sessionKey) {
-                        xhr.setRequestHeader("Authorization",
-                                             'PFSK1 ' + this.sessionKey);
-                    }
-                }.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
                     this.app.setDoc(document);
                     this.setCleanDoc(docid);
@@ -175,12 +169,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL(docid),
                 data: data,
                 error: this.errorHandler.fnMethod(this),
-                beforeSend: function(xhr) {
-                    if (this.sessionKey) {
-                        xhr.setRequestHeader("Authorization",
-                                             'PFSK1 ' + this.sessionKey);
-                    }
-                }.fnMethod(this),
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
@@ -341,33 +329,23 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // TODO: Need to do a JSONP call to get the username if not hosting
         // on appid.pageforest.com.
         checkUsername: function () {
-            var sessionKeyExists = cookies.getCookie('sessionkey_exists');
+            var sessionUser = cookies.getCookie('sessionuser');
             var usernameLast = this.username;
 
-            if (sessionKeyExists != undefined) {
-                if (!this.sessionKey) {
-                    $.ajax({
-                        dataType: 'text',
-                        url: 'http://' + this.appHost + '/auth/get-session/',
-                        error: this.errorHandler.fnMethod(this),
-                        success: function (sessionKey, textStatus, xmlhttp) {
-                            this.sessionKey = sessionKey;
-                            this.username = sessionKey.split('|')[1];
-                            this.log('signed in as ' + this.username);
-                            if (this.app.onUserChange &&
-                                usernameLast != this.username) {
-                                this.app.onUserChange(this.username);
-                            }
-                        }.fnMethod(this)
-                    });
+            if (sessionUser != undefined) {
+                if (sessionUser != this.username) {
+                    this.username = sessionUser;
+                    this.log('signed in as ' + this.username);
+                    if (this.app.onUserChange) {
+                        this.app.onUserChange(this.username);
+                    }
                 }
-
-            }
-            else {
-                this.username = undefined;
-                this.sessionKey = undefined;
-                if (this.app.onUserChange && usernameLast != this.username) {
-                    this.app.onUserChange(this.username);
+            } else {
+                if (this.username) {
+                    this.username = undefined;
+                    if (this.app.onUserChange) {
+                        this.app.onUserChange(this.username);
+                    }
                 }
             }
         },
@@ -414,9 +392,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Expire the session key to remove the sign-in for the user.
         signOut: function () {
             // checkUsername will update the user state in a jiffy
-            cookies.setCookie('sessionkey_exists', 'expired', -1);
+            cookies.setCookie('sessionuser', 'expired', -1);
+            cookies.setCookie('sessionkey', 'expired', -1);
 
-            // We can't delete the Http-Only sessionkey locally -
+            // Some browsers don't allow writing to HttpOnly cookies -
             // use the server to do it.
             $.ajax({
                 dataType: 'text',
