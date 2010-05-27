@@ -707,7 +707,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 if (app[oldName] && !app[newName]) {
                     this.log("deprecated function " + oldName +
                              " should be renamed to " + newName,
-                             undefined, 'warn');
+                             {'level': 'warn'});
                     app[newName] = app[oldName];
                 }
             }
@@ -810,7 +810,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var data = JSON.stringify(json);
-            this.log('saving: ' + this.getDocURL(docid), json);
+            this.log('saving: ' + this.getDocURL(docid), {'obj': json});
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -900,7 +900,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
-            this.log(message + ' (' + code + ')', xmlhttp);
+            this.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.errorReport(code, message);
         },
 
@@ -975,7 +975,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.load(location.hash.substr(1));
             }
             this.checkUsername();
-            this.checkData();
+            this.checkDoc();
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -1015,7 +1015,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // See if the document data has changed - assume this is not
         // expensive as we execute this every second.
-        checkData: function() {
+        checkDoc: function() {
             // No auto-saving - do nothing
             if (this.saveInterval == 0) {
                 return;
