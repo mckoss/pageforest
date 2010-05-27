@@ -74,21 +74,21 @@ class PermissionTest(AppTestCase):
     def test_read_permissions(self):
         """Test access control in document_get."""
         # Document owner should have read permission.
-        self.app_client.session_key = \
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Other users should have read permission.
-        self.app_client.session_key = \
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.paul.generate_session_key(self.app)
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Invalid session key should have read permission.
-        self.app_client.session_key = 'bogus'
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
         # Anonymous should have read permission.
-        del self.app_client.session_key
+        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
         response = self.app_client.get('/docs/MyDoc/')
         self.assertContains(response, '"title": "My Document"')
 
@@ -97,26 +97,26 @@ class PermissionTest(AppTestCase):
         self.doc.writers = ['authenticated']
         self.doc.put()
         # Document owner should have write permission.
-        self.app_client.session_key = \
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)
         response = self.app_client.put('/docs/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, '"statusText": "Saved"')
         # Other authenticated users should have write permission.
-        self.app_client.session_key = \
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.paul.generate_session_key(self.app)
         response = self.app_client.put('/docs/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, '"statusText": "Saved"')
         # Invalid session key should return a helpful error message.
-        self.app_client.session_key = 'bogus'
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
         response = self.app_client.put('/docs/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(
             response, "Invalid sessionkey cookie: Expected 4 parts.",
             status_code=403)
         # Anonymous should not have write permission.
-        del self.app_client.session_key
+        del self.app_client.cookies[settings.SESSION_COOKIE_NAME]
         response = self.app_client.put('/docs/MyDoc/', '{}',
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, "Write permission denied.",
@@ -137,7 +137,7 @@ class TimestampedTest(AppTestCase):
         """Timestamps and IP addresses should be updated automatically."""
         datetime.datetime.now.return_value = \
             self.datetime(2010, 5, 10, 11, 12, 13)
-        self.app_client.session_key = \
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.app)
         self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.13'
         response = self.app_client.put(
