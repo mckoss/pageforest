@@ -43,18 +43,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.app = app;
 
-        // Map deprecated function names.
-        var deprecated = {
-            "getData": "getDoc",
-            "setData": "setDoc"
-        };
-        for (var oldName in deprecated) {
-            var newName = deprecated[oldName];
-            if (app[oldName] && !app[newName]) {
-                app[newName] = app[oldName];
-            }
-        }
-
         this.appHost = location.host;
         var dot = this.appHost.indexOf('.');
         this.appid = this.appHost.substr(0, dot);
@@ -62,9 +50,29 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.state = 'clean';
         this.username = undefined;
-        this.fLogging = false;
+        this.fLogging = true;
+
         // Auto save every 60 seconds
         this.saveInterval = 60;
+
+        // Map deprecated function names.
+        var deprecated = {
+            "getData": "getDoc",
+            "setData": "setDoc"
+        };
+        for (var oldName in deprecated) {
+            if (deprecated.hasOwnProperty(oldName)) {
+                var newName = deprecated[oldName];
+                if (app[oldName] && !app[newName]) {
+                    this.log("deprecated function " + oldName +
+                             " should be renamed to " + newName,
+                             {'level': 'warn'});
+                    app[newName] = app[oldName];
+                }
+            }
+        }
+
+        // REVIEW:
         this.setCleanDoc(undefined, true);
 
         // REVIEW: When we support multiple clients per page, we can
@@ -161,7 +169,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var data = JSON.stringify(json);
-            this.log('saving: ' + this.getDocURL(docid), json);
+            this.log('saving: ' + this.getDocURL(docid), {'obj': json});
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -230,14 +238,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.fLogging = f;
         },
 
-        log: function(message, obj) {
+        log: function(message, options) {
+            if (options == undefined) {
+                options = {};
+            }
+            if (options.level == undefined) {
+                options.level = 'log';
+            }
             if (this.fLogging) {
                 // BUG: console.log.apply(undefined, arguments) work in Chrome!
-                if (obj != undefined) {
-                    console.log(message, obj);
-                }
-                else {
-                    console.log(message);
+                if (options.obj != undefined) {
+                    console[options.level](message, options.obj);
+                } else {
+                    console[options.level](message);
                 }
             }
         },
@@ -246,7 +259,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
-            this.log(message + ' (' + code + ')', xmlhttp);
+            this.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.errorReport(code, message);
         },
 
