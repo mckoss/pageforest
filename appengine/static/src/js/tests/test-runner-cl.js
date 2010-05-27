@@ -72,15 +72,11 @@ load("../timer.js");
             continue;
         }
 
-        if (!fQuiet) {
-            print("Running test: " + target);
-        }
-
         var targetNamespace = modules.namespaces[target];
         ensureNamespaceLoaded(targetNamespace);
         var testModule = ensureNamespaceLoaded(targetNamespace + '.test');
 
-        var ts = new unit.TestSuite();
+        var ts = new unit.TestSuite(targetNamespace + '.test');
         ts.fQuiet = fQuiet;
 
         testModule.addTests(ts);

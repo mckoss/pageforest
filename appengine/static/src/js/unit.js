@@ -31,9 +31,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 return;
             }
 
-            var ts = new ns.TestSuite();
-            ts.out(moduleName + " Test").newLine();
-            ts.newLine();
+            var ts = new ns.TestSuite(moduleName + '.test');
             testModule.addTests(ts);
             ts.run(fnCallback);
         });
@@ -548,9 +546,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         // We support asynchronous tests - so we use a timer to kick off
         // tests when the current one is complete.
         run: function(fnCallback) {
+            this.out("Test Suite: " + this.stName).newLine();
+            this.out("===========================================").newLine();
             this.cFailures = 0;
-            this.iReport = 0;
-            this.reportWhenReady();
 
             this.fnCallback = fnCallback;
             this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this));
@@ -562,9 +560,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         runNext: function() {
             if (this.iCur == this.rgut.length) {
-                if (this.fnCallback) {
-                    this.fnCallback();
-                }
+                this.endOfSuite();
                 return;
             }
             loop:
@@ -583,8 +579,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 case UnitTest.states.running:
                     break loop;
                 case UnitTest.states.completed:
+                    this.reportOne(this.iCur);
                     this.iCur++;
-                    this.reportWhenReady();
                     // Skip all remaining tests on failure if stopFail
                     if (this.fStopFail && ut.cErrors != ut.cErrorsExpected) {
                         this.fTerminateAll = true;
@@ -592,13 +588,19 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                     break;
                 }
             }
-            // Only way out is to be running an async test.
             if (this.iCur < this.rgut.length) {
+                // We must be running an async test.
                 this.tmRun.active(true);
             } else {
-                if (this.fnCallback) {
-                    this.fnCallback();
-                }
+                this.endOfSuite();
+            }
+        },
+
+        endOfSuite: function() {
+            this.tmRun.active(false);
+            this.reportSummary();
+            if (this.fnCallback) {
+                this.fnCallback();
             }
         },
 
@@ -656,21 +658,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             return this;
         },
 
-        reportWhenReady: function() {
-            // Reporting not enabled
-            if (this.iReport == -1) {
-                return;
-            }
-            while (this.iReport < this.iCur) {
-                this.reportOne(this.iReport++);
-            }
-            if (!this.allComplete()) {
-                return;
-            }
-            this.reportSummary();
-            this.reportOut();
-        },
-
         reportOne: function(i) {
             var ut = this.rgut[i];
             this.out((i + 1) + ". ");
@@ -719,6 +706,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         reportSummary: function() {
+            this.out("===========================================").newLine();
             if (this.cFailures == 0) {
                 this.out("Summary: All (" + this.rgut.length + ") tests pass.");
                 this.newLine();
@@ -728,6 +716,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                          this.rgut.length + " tests.");
                 this.newLine();
             }
+            this.newLine();
         },
 
         // Report results to master unit test, if any.
