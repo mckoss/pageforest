@@ -10,5 +10,4 @@ urlpatterns = patterns(
     (r'^verify/(.+)/$', 'verify'),
     (r'^username/$', 'get_username'),
     (r'^set-session/(.+)/$', 'set_session_cookie'),
-    (r'^get-session/$', 'get_session_cookie'),
 )
