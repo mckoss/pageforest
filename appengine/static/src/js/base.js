@@ -110,6 +110,17 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return objT;
     }
 
+    function keys(map) {
+        var list = [];
+
+        for (var prop in map) {
+            if (map.hasOwnProperty(prop)) {
+                list.push(prop);
+            }
+        }
+        return list;
+    }
+
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
         if (!a) {
@@ -157,15 +168,16 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         Enum: Enum,
         StBuf: StBuf,
 
-        extendIfMissing: extendIfMissing,
-        extendDeep: extendDeep,
-        randomInt: randomInt,
-        strip: strip,
-        project: project,
-        uniqueArray: uniqueArray,
-        map: map,
-        filter: filter,
-        reduce: reduce
+        'extendIfMissing': extendIfMissing,
+        'extendDeep': extendDeep,
+        'randomInt': randomInt,
+        'strip': strip,
+        'project': project,
+        'uniqueArray': uniqueArray,
+        'map': map,
+        'filter': filter,
+        'reduce': reduce,
+        'keys': keys
     });
 
 

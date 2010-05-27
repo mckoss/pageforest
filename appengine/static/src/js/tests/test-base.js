@@ -4,8 +4,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
 
     ns.addTests = function (ts) {
 
-        ts.addTest("String Buffer", function(ut)
-        {
+        ts.addTest("String Buffer", function(ut) {
             var stb1 = new base.StBuf();
             ut.assertEq(stb1.toString(), "");
 
@@ -29,8 +28,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             ut.assertEq(stb4.toString(), "initial value");
         });
 
-        ts.addTest("Object Extension", function(ut)
-        {
+        ts.addTest("Object Extension", function(ut) {
             var obj1 = {a: 1, b: "hello"};
             util.extendObject(obj1, {c: 3});
             ut.assertEq(obj1, {a: 1, b: "hello", c: 3});
@@ -58,8 +56,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             ut.assertEq(o2, {a: 1, b: {c: 2}});
         });
 
-        ts.addTest("strip", function(ut)
-        {
+        ts.addTest("strip", function(ut) {
             ut.assertEq(base.strip(" hello, mom "), "hello, mom");
             ut.assertEq(base.strip(" leading"), "leading");
             ut.assertEq(base.strip("trailing "), "trailing");
@@ -68,8 +65,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             ut.assertEq(base.strip("   \r\nWORD\r\n  "), "WORD");
         });
 
-        ts.addTest("Enum", function(ut)
-        {
+        ts.addTest("Enum", function(ut) {
             var e = new base.Enum("a", "b", "c");
             ut.assertEq(e, {a: 0, b: 1, c: 2});
             e = new base.Enum(1, "a", "b", 5, "c");
@@ -77,6 +73,11 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             e = new base.Enum();
             ut.assertEq(e, {});
 
+        });
+
+        ts.addTest("keys", function(ut) {
+            var map = {'a': 1, 'b': 2};
+            ut.assertEq(base.keys(map), ['a', 'b']);
         });
 
     }; // addTests

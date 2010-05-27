@@ -2,12 +2,11 @@
 // Copyright (c) 2007-2010, Mike Koss (mckoss@startpad.org)
 //
 // Usage:
-// ts = new ns.TestSuite("Suite Name");
+// ts = new TestSuite("Suite Name");
 // ts.DWOutputDiv();
 // ts.addTest("Test Name", function(ut) { ... ut.assert() ... });
 // ...
-// ts.Ru(nests);
-// ts.report();
+// ts.run(nests);
 //
 // UnitTest - Each unit test calls a function which in turn calls
 // back assert's on the unit test object.
@@ -22,7 +21,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var loader = namespace.lookup('org.startpad.loader');
 
     // Run the selected tests in the browser
-    function runTest(moduleName, locations) {
+    function runTest(moduleName, locations, fnCallback) {
         console.log("runTest: ", moduleName);
         loader.loadNamespace(moduleName + '.test', locations, function () {
             var testModule = namespace.lookup(moduleName + '.test');
@@ -33,21 +32,20 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
 
             var ts = new ns.TestSuite();
-            testModule.addTests(ts);
-            ts.run();
-            ts.report();
             ts.out(moduleName + " Test").newLine();
             ts.newLine();
+            testModule.addTests(ts);
+            ts.run(fnCallback);
         });
     }
 
-    ns.UnitTest = function(stName, fn) {
+    function UnitTest(stName, fn) {
         this.stName = stName;
         this.fn = fn;
         this.rgres = [];
-    };
+    }
 
-    util.extendObject(ns.UnitTest, {
+    util.extendObject(UnitTest, {
         states: {
             created: 0,
             running: 1,
@@ -55,8 +53,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         }
     });
 
-    util.extendObject(ns.UnitTest.prototype, {
-        state: ns.UnitTest.states.created,
+    UnitTest.methods({
+        state: UnitTest.states.created,
         cErrors: 0,
         cErrorsExpected: 0,
         cAsserts: 0,
@@ -74,7 +72,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (!this.fEnable) {
                 return;
             }
-            this.state = ns.UnitTest.states.running;
+            this.state = UnitTest.states.running;
             console.log("=== Running test: " + this.stName + " ===");
             if (this.cAsync) {
                 this.tm = new timer.Timer(this.msTimeout,
@@ -95,12 +93,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                             this.stThrows);
             }
             if (!this.cAsync) {
-                this.state = ns.UnitTest.states.completed;
+                this.state = UnitTest.states.completed;
             }
         },
 
         isComplete: function() {
-            return !this.fEnable || this.state == ns.UnitTest.states.completed;
+            return !this.fEnable || this.state == UnitTest.states.completed;
         },
 
         assertThrown: function() {
@@ -139,7 +137,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 // mess up user counts for numbers of asserts
                 // expected.
                 if (this.cAsync != 0 ||
-                    this.state == ns.UnitTest.states.running) {
+                    this.state == UnitTest.states.running) {
                     this.assert(false,
                                 "Async timeout only allowed at " +
                                 "test initialization.");
@@ -157,8 +155,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.cAsync = 0;
             }
             // When cAsync goes to zero, the aynchronous test is complete
-            if (this.cAsync == 0 && this.state == ns.UnitTest.states.running) {
-                this.state = ns.UnitTest.states.completed;
+            if (this.cAsync == 0 && this.state == UnitTest.states.running) {
+                this.state = UnitTest.states.completed;
             }
             this.checkValid();
             return this;
@@ -497,33 +495,37 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
 
     // TestResult - a single result from the test
-    ns.TestResult = function(f, ut, stNote) {
+    function TestResult(f, ut, stNote) {
         this.f = f;
         this.ut = ut;
         this.stNote = stNote;
-    };
-
+    }
 
     // ------------------------------------------------------------------------
     // Test Suite - Holds, executes, and reports on a collection of unit tests.
     // ------------------------------------------------------------------------
-    ns.TestSuite = function(stName) {
+    function TestSuite(stName) {
+        try {
+            this.divOut = this.divOut || document.getElementById("divUnit");
+        }
+        catch (e) {}
+
         this.stName = stName;
         this.rgut = [];
         this.stOut = "";
         this.fQuiet = false;
-    };
+    }
 
-    util.extendObject(ns.TestSuite.prototype, {
+    TestSuite.methods({
         cFailures: 0,
-        iReport: -1,
+        iReport: 0,
         fStopFail: false,
         fTerminateAll: false,
         iutNext: 0,
 
         // Will auto-disable any unit test less than iutNext (see skipTo)
         addTest: function(stName, fn) {
-            var ut = new ns.UnitTest(stName, fn);
+            var ut = new UnitTest(stName, fn);
             this.rgut.push(ut);
             // Global setting - stop all unit tests on first failure.
             if (this.fStopFail) {
@@ -545,7 +547,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         // We support asynchronous tests - so we use a timer to kick off
         // tests when the current one is complete.
-        run: function() {
+        run: function(fnCallback) {
+            this.cFailures = 0;
+            this.iReport = 0;
+            this.reportWhenReady();
+
+            this.fnCallback = fnCallback;
             this.tmRun = new timer.Timer(100, this.runNext.fnMethod(this));
             this.tmRun.repeat().active(false);
             this.iCur = 0;
@@ -555,6 +562,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         runNext: function() {
             if (this.iCur == this.rgut.length) {
+                if (this.fnCallback) {
+                    fnCallback();
+                }
                 return;
             }
             loop:
@@ -564,15 +574,15 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 if (!ut.fEnable ||
                     this.fTerminateAll ||
                     this.iCur < this.iutNext) {
-                    state = ns.UnitTest.states.completed;
+                    state = UnitTest.states.completed;
                 }
                 switch (state) {
-                case ns.UnitTest.states.created:
+                case UnitTest.states.created:
                     ut.run();
                     break;
-                case ns.UnitTest.states.running:
+                case UnitTest.states.running:
                     break loop;
-                case ns.UnitTest.states.completed:
+                case UnitTest.states.completed:
                     this.iCur++;
                     this.reportWhenReady();
                     // Skip all remaining tests on failure if stopFail
@@ -585,16 +595,15 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             // Only way out is to be running an async test.
             if (this.iCur < this.rgut.length) {
                 this.tmRun.active(true);
+            } else {
+                if (this.fnCallback) {
+                    this.fnCallback();
+                }
             }
         },
 
         allComplete: function() {
             return (this.iCur == this.rgut.length);
-        },
-
-        dwOutputDiv: function() {
-            ns.DW("<div style=\"font-family: Courier;border:1px solid red;\" " +
-                  "id=\"divUnit\">Unit Test Output</DIV>");
         },
 
         out: function(st) {
@@ -647,16 +656,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             return this;
         },
 
-        report: function() {
-            try {
-                this.divOut = this.divOut || document.getElementById("divUnit");
-            }
-            catch (e) {}
-            this.cFailures = 0;
-            this.iReport = 0;
-            this.reportWhenReady();
-        },
-
         reportWhenReady: function() {
             // Reporting not enabled
             if (this.iReport == -1) {
@@ -676,10 +675,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             var ut = this.rgut[i];
             this.out((i + 1) + ". ");
             switch (ut.state) {
-            case ns.UnitTest.states.created:
+            case UnitTest.states.created:
                 this.out("N/A");
                 break;
-            case ns.UnitTest.states.running:
+            case UnitTest.states.running:
                 if (ut.cAsync > 0) {
                     this.out("RUNNING");
                 }
@@ -688,7 +687,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
                 this.cFailures++;
                 break;
-            case ns.UnitTest.states.completed:
+            case UnitTest.states.completed:
                 if (ut.cErrors == ut.cErrorsExpected &&
                     (ut.cTestsExpected == undefined ||
                      ut.cTestsExpected == ut.cAsserts)) {
@@ -703,7 +702,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.out(" [");
             this.outRef(ut.stName, ut.urlRef);
             this.out("] ");
-            if (ut.state != ns.UnitTest.states.created) {
+            if (ut.state != UnitTest.states.created) {
                 this.out(ut.cErrors + " errors " +
                          "out of " + ut.cAsserts + " tests");
                 if (ut.cTestsExpected && ut.cTestsExpected != ut.cAsserts) {
@@ -776,10 +775,10 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     }); // TestSuite
 
     ns.extend({
-        DW: function(st) {
-            document.write(st);
-        },
-        runTest: runTest
+        runTest: runTest,
+        'TestSuite': TestSuite,
+        'UnitTest': UnitTest,
+        'TestResult': TestResult
     });
 
 }); // startpad.unit

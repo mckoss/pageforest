@@ -83,12 +83,10 @@ load("../timer.js");
         var ts = new unit.TestSuite();
         ts.fQuiet = fQuiet;
 
-
         testModule.addTests(ts);
         ts.run();
         cTests += ts.rgut.length;
         cFailures = ts.cFailures;
-        ts.report();
         if (ts.cFailures > 0) {
             printSummary();
             quit(1);
