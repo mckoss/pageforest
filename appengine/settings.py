@@ -120,7 +120,7 @@ MEDIA_URL = '/static/'
 MEDIA_VERSION = '2'
 
 LIB_URL = '/lib/'
-LIB_VERSION = '0.6.1'
+LIB_VERSION = '0.6.2'
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
@@ -181,16 +181,21 @@ RESERVED_APP_KEYS = (
     'admin',         # Future admin pages
     )
 
-# Name of the session cookie for simple request authentication.
-SESSION_COOKIE_NAME = 'sessionkey'
-SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
-SESSION_COOKIE_PATH = '/'
-
 # Name of the reauth cookie on app_id.pageforest.com
 # TODO: We currently don't support reauthorization.
 REAUTH_COOKIE_NAME = 'reauth'
 REAUTH_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 REAUTH_COOKIE_PATH = '/auth/'
+
+# Name of the session cookie for simple request authentication.
+SESSION_COOKIE_NAME = 'sessionkey'
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
+SESSION_COOKIE_PATH = '/'
+
+# The name of the session user cookie. It contains only the username
+# and is readable from JavaScript (without HttpOnly).
+SESSION_USER_NAME = 'sessionuser'
+JAVASCRIPT_READABLE_COOKIES = [SESSION_USER_NAME]
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (

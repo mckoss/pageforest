@@ -205,29 +205,28 @@ def get_username(request):
 @method_required('GET')
 def set_session_cookie(request, session_key):
     """
-    When passed a valid session key for the current application,
-    set the cookie for the session key.
+    When a valid session key for the current application is passed on
+    the URL, set the cookie for the session key.
     """
     response = HttpResponse(session_key, content_type='text/plain')
     if session_key == 'expired':
         logging.info("Deleting session cookie")
-        response.delete_cookie(settings.SESSION_COOKIE_NAME + '_exists')
+        response.delete_cookie(settings.SESSION_USER_NAME,
+                               path=settings.SESSION_COOKIE_PATH)
         response.delete_cookie(settings.SESSION_COOKIE_NAME,
                                path=settings.SESSION_COOKIE_PATH)
     else:
         try:
-            User.verify_session_key(session_key, request.app)
+            user = User.verify_session_key(session_key, request.app)
         except SignatureError, error:
             return AccessDenied(request,
                                 "Invalid session key: %s" % unicode(error))
-        response.set_cookie(
-            settings.SESSION_COOKIE_NAME + '_exists', 'true',
-            max_age=settings.SESSION_COOKIE_AGE)
-        response.set_cookie(
-            settings.SESSION_COOKIE_NAME, session_key,
-            path=settings.SESSION_COOKIE_PATH,
-            max_age=settings.SESSION_COOKIE_AGE)
-            # FIXME: httponly=True is not supported in Django 1.1.
+        response.set_cookie(settings.SESSION_USER_NAME, user.get_username(),
+                            path=settings.SESSION_COOKIE_PATH,
+                            max_age=settings.SESSION_COOKIE_AGE)
+        response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                            path=settings.SESSION_COOKIE_PATH,
+                            max_age=settings.SESSION_COOKIE_AGE)
     return response
 
 

@@ -1,5 +1,7 @@
 import Cookie
 
+from django.conf import settings
+
 
 class NewMorsel(Cookie.Morsel):
     """
@@ -46,6 +48,6 @@ class HttpOnlyMiddleware:
         for name in original:
             response.cookies[name] = original[name].value
             response.cookies[name].update(original[name])
-            if not name.endswith('_exists'):
+            if name not in settings.JAVASCRIPT_READABLE_COOKIES:
                 response.cookies[name]['httponly'] = "true"
         return response
