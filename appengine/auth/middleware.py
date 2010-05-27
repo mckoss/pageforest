@@ -97,16 +97,9 @@ class AuthMiddleware(object):
         request.user = None
         session_key = None
 
-        # Extract session key from cookie or HTTP header.
-        if (settings.SESSION_COOKIE_NAME in request.COOKIES
-            and request.subdomain is None
-            and (request.app.is_www()
-                 or request.path_info.startswith('/app/auth/'))):
+        # Extract session key from cookie.
+        if settings.SESSION_COOKIE_NAME in request.COOKIES:
             session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-        else:
-            auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-            if auth_header.startswith('PFSK1'):
-                session_key = auth_header.split()[1]
 
         # Verify the session key, save error message for later.
         if session_key:

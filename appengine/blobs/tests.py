@@ -4,8 +4,9 @@ from mock import Mock
 from google.appengine.api import memcache
 
 from django.conf import settings
+from django.test import Client
 
-from apps.tests import AppTestCase, AuthClient
+from apps.tests import AppTestCase
 
 from apps.models import App
 from docs.models import Doc
@@ -141,10 +142,10 @@ class HostTest(AppTestCase):
         self.otherdoc = Doc(key_name='other/mydoc', doc_id='MyDoc',
                             owner='peter')
         self.otherdoc.put()
-        self.other_client = AuthClient(
+        self.other_client = Client(
             HTTP_HOST='other.pageforest.com',
             HTTP_REFERER=self.other.url)
-        self.other_client.session_key = \
+        self.other_client.cookies[settings.SESSION_COOKIE_NAME] = \
             self.peter.generate_session_key(self.other)
 
     def test_host(self):

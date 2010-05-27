@@ -2,13 +2,13 @@ import time
 import re
 
 from django.conf import settings
+from django.test import Client
 
 from google.appengine.api import mail
 
 from auth.models import User
-from apps.models import App
 
-from apps.tests import AppTestCase, AuthClient
+from apps.tests import AppTestCase
 from utils import crypto
 
 # Default pageforest domain url
@@ -378,11 +378,12 @@ class SimpleAuthTest(AppTestCase):
     def test_bogus_session_key(self):
         """Bogus session key should return error message."""
         # Not enough parts.
-        self.app_client.session_key = 'bogus'
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = 'bogus'
         response = self.app_client.get('/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
         # Too many parts.
-        self.app_client.session_key = crypto.join(self.session_key, 'bogus')
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            crypto.join(self.session_key, 'bogus')
         response = self.app_client.get('/')
         self.assertContains(response, "Expected 4 parts.", status_code=403)
 
@@ -390,7 +391,8 @@ class SimpleAuthTest(AppTestCase):
         """Expired session key should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[2] = int(time.time() - 10)
-        self.app_client.session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            crypto.join(parts)
         response = self.app_client.get('/')
         self.assertContains(response, "Session key expired.", status_code=403)
 
@@ -398,13 +400,15 @@ class SimpleAuthTest(AppTestCase):
         """Session key for a different app should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[0] = 'other'
-        self.app_client.session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            crypto.join(parts)
         response = self.app_client.get('/')
         self.assertContains(response, "Different app.", status_code=403)
 
     def test_different_user(self):
         """Session key for different user should return error message."""
-        self.app_client.session_key = self.paul.generate_session_key(self.app)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.paul.generate_session_key(self.app)
         response = self.app_client.get('/')
         self.assertContains(response, "Read permission denied.",
                             status_code=403)
@@ -413,7 +417,8 @@ class SimpleAuthTest(AppTestCase):
         """Session key with unknown user should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[1] = 'unknown'
-        self.app_client.session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            crypto.join(parts)
         response = self.app_client.get('/')
         self.assertContains(response, "Unknown user.", status_code=403)
 
@@ -421,7 +426,8 @@ class SimpleAuthTest(AppTestCase):
         """Incorrect password should return error message."""
         parts = self.session_key.split(crypto.SEPARATOR)
         parts[-1] = parts[-1][::-1]  # Backwards.
-        self.app_client.session_key = crypto.join(parts)
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            crypto.join(parts)
         response = self.app_client.get('/')
         self.assertContains(response, "Password incorrect.", status_code=403)
 
@@ -488,7 +494,7 @@ class AppCreatorTest(AppTestCase):
     """
 
     def sign_in(self, app_id, user):
-        self.client = AuthClient(
+        self.client = Client(
             HTTP_HOST='%s.%s.pageforest.com' % (
                 settings.ADMIN_SUBDOMAIN, app_id),
             HTTP_REFERER='http://www.pageforest.com/')
@@ -501,7 +507,7 @@ class AppCreatorTest(AppTestCase):
         reply = crypto.join(user.get_username(), challenge, signature)
         response = self.client.get('/auth/verify/' + reply)
         self.assertEqual(response.status_code, 200)
-        self.client.session_key = response.content
+        self.client.cookies[settings.SESSION_COOKIE_NAME] = response.content
 
     def test_email_not_verified(self):
         self.sign_in('paulsapp', self.paul)
@@ -541,21 +547,7 @@ class CookieTest(AppTestCase):
                 response, content, status_code=status_code)
 
     def test_owner_read(self):
-        """The Authorization header should work for all resources."""
-        self.app.readers = []
-        self.app.put()
-        self.doc.readers = []
-        self.doc.put()
-        self.app_client.session_key = \
-            self.peter.generate_session_key(self.app)
-        for url in self.resources:
-            response = self.app_client.get(url)
-            (status_code, content) = self.resources[url]
-            self.assertContains(
-                response, content, status_code=status_code)
-
-    def test_cookie_path(self):
-        """The sessionkey cookie should only work on /auth/."""
+        """The sessionkey cookie should work for all resources."""
         self.app.readers = []
         self.app.put()
         self.doc.readers = []
@@ -564,5 +556,20 @@ class CookieTest(AppTestCase):
             self.peter.generate_session_key(self.app)
         for url in self.resources:
             response = self.app_client.get(url)
+            (status_code, content) = self.resources[url]
             self.assertContains(
-                response, 'Read permission denied.', status_code=403)
+                response, content, status_code=status_code)
+
+    def test_docs_referer(self):
+        """The referer check should deny /docs/."""
+        self.app.readers = []
+        self.app.put()
+        self.doc.readers = []
+        self.doc.put()
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.app)
+        for url in self.resources:
+            response = self.app_client.get(
+                url, HTTP_REFERER='http://myapp.pageforest.com/docs/')
+            self.assertContains(
+                response, 'Untrusted Referer path: /docs/', status_code=403)
