@@ -524,3 +524,51 @@ class AppCreatorTest(AppTestCase):
         self.assertContains(
             response, 'You have already created 10 apps.',
             status_code=403)
+
+
+class CookieTest(AppTestCase):
+    resources = {
+        '/': (200, '<html>'),
+        '/index.html': (200, '<html>'),
+        '/does/not/exist.txt': (404, 'Blob not found'),
+        '/docs/mydoc/': (200, '"title":'),
+        '/docs/mydoc/myblob/': (200, '["json"]'),
+        '/docs/mydoc/?method=list': (200, '"myblob":'),
+        }
+
+    def test_public_read(self):
+        """The anonymous user should have read access."""
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.paul.generate_session_key(self.app)
+        for url in self.resources:
+            response = self.app_client.get(url)
+            (status_code, content) = self.resources[url]
+            self.assertContains(
+                response, content, status_code=status_code)
+
+    def test_owner_read(self):
+        """The Authorization header should work for all resources."""
+        self.app.readers = []
+        self.app.put()
+        self.doc.readers = []
+        self.doc.put()
+        self.app_client.session_key = \
+            self.peter.generate_session_key(self.app)
+        for url in self.resources:
+            response = self.app_client.get(url)
+            (status_code, content) = self.resources[url]
+            self.assertContains(
+                response, content, status_code=status_code)
+
+    def test_cookie_path(self):
+        """The sessionkey cookie should only work on /auth/."""
+        self.app.readers = []
+        self.app.put()
+        self.doc.readers = []
+        self.doc.put()
+        self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.peter.generate_session_key(self.app)
+        for url in self.resources:
+            response = self.app_client.get(url)
+            self.assertContains(
+                response, 'Read permission denied.', status_code=403)
