@@ -1,25 +1,19 @@
 namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
 
-    ns.tileSize = 96;
-    ns.anchor = '';
-    ns.drag = false;
-    ns.moves = [];
-    ns.tiles = [];
-    ns.pieces = [];
+    var TILESIZE = 96;
+    var FILE_X = {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8};
+    var X_FILE = "_abcdefgh";
 
-    ns.fileX = {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8};
-    ns.xFile = "_abcdefgh";
+    var X_KIND = ['_', 'rook', 'knight', 'bishop', 'queen',
+                  'king', 'bishop', 'knight', 'rook'];
 
-    ns.xKind = ['_', 'rook', 'knight', 'bishop', 'queen',
-                'king', 'bishop', 'knight', 'rook'];
+    var KIND_LETTER = {king: 'K', queen: 'Q', bishop: 'B',
+                       knight: 'N', rook: 'R', pawn: 'P'};
 
-    ns.kindLetter = {king: 'K', queen: 'Q', bishop: 'B',
-                     knight: 'N', rook: 'R', pawn: 'P'};
+    var LETTER_KIND = {K: 'king', Q: 'queen', B: 'bishop',
+                       N: 'knight', R: 'rook', P: 'pawn'};
 
-    ns.letterKind = {K: 'king', Q: 'queen', B: 'bishop',
-                     N: 'knight', R: 'rook', P: 'pawn'};
-
-    ns.unicode = {
+    var UNICODE = {
         king:   {white: '&#9812;', black: '&#9818;'},
         queen:  {white: '&#9813;', black: '&#9819;'},
         rook:   {white: '&#9814;', black: '&#9820;'},
@@ -28,37 +22,43 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         pawn:   {white: '&#9817;', black: '&#9823;'}
     };
 
+    var dragging = false;
+    var moves = [];
+    var tiles = [];
+    var pieces = [];
+
+
     function makePiece(x, y, player, kind) {
         var piece = $(document.createElement('div'));
         piece.addClass('piece ' + player + ' ' + kind);
         piece.data({x: x, y: y, player: player, kind: kind});
-        piece.html(ns.unicode[kind][player]);
+        piece.html(UNICODE[kind][player]);
         piece.css({position: 'absolute',
-                   left: (x - 1) * ns.tileSize + 'px',
-                   top: (8 - y) * ns.tileSize + 'px',
-                   width: ns.tileSize + 'px',
-                   height: ns.tileSize + 'px',
+                   left: (x - 1) * TILESIZE + 'px',
+                   top: (8 - y) * TILESIZE + 'px',
+                   width: TILESIZE + 'px',
+                   height: TILESIZE + 'px',
                    cursor: 'move',
-                   'font-size': (2 * ns.tileSize / 3) + 'px',
+                   'font-size': (2 * TILESIZE / 3) + 'px',
                    'text-align': 'center'});
         piece.bind('mousedown touchstart', ns.touchStart);
-        ns.pieces[x][y] = piece;
+        pieces[x][y] = piece;
         return piece;
     }
 
     function makePieces() {
         var board = $("#board");
         for (var x = 1; x <= 8; x++) {
-            board.append(makePiece(x, 8, 'black', ns.xKind[x]));
+            board.append(makePiece(x, 8, 'black', X_KIND[x]));
             board.append(makePiece(x, 7, 'black', 'pawn'));
             board.append(makePiece(x, 2, 'white', 'pawn'));
-            board.append(makePiece(x, 1, 'white', ns.xKind[x]));
+            board.append(makePiece(x, 1, 'white', X_KIND[x]));
         }
     }
 
     function resetBoard() {
         $('.piece').remove();
-        ns.moves = [];
+        moves = [];
         makePieces();
     }
 
@@ -67,14 +67,14 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         $("body").css({margin: 0, padding: 0});
         $(document).bind('mousemove touchmove', ns.touchMove);
         $(document).bind('mouseup touchend touchcancel', ns.touchEnd);
-        var style = {width: 8 * ns.tileSize + 'px',
-                     height: 8 * ns.tileSize + 'px',
+        var style = {width: 8 * TILESIZE + 'px',
+                     height: 8 * TILESIZE + 'px',
                      position: 'relative',
                      'float': 'left'};
         var board = $("#board").css(style);
         for (var x = 1; x <= 8; x++) {
-            ns.tiles[x] = [null];
-            ns.pieces[x] = [null];
+            tiles[x] = [null];
+            pieces[x] = [null];
             for (var y = 1; y <= 8; y++) {
                 var tile = $(document.createElement('div'));
                 var shade = (x + y) % 2 ? 'light' : 'dark';
@@ -82,14 +82,14 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
                 tile.data({x: x, y: y});
                 tile.css({
                     position: 'absolute',
-                    left: (x - 1) * ns.tileSize + 'px',
-                    top: (8 - y) * ns.tileSize + 'px',
-                    width: ns.tileSize + 'px',
-                    height: ns.tileSize + 'px'
+                    left: (x - 1) * TILESIZE + 'px',
+                    top: (8 - y) * TILESIZE + 'px',
+                    width: TILESIZE + 'px',
+                    height: TILESIZE + 'px'
                 });
                 board.append(tile);
-                ns.tiles[x][y] = tile;
-                ns.pieces[x][y] = null;
+                tiles[x][y] = tile;
+                pieces[x][y] = null;
             }
         }
     }
@@ -97,7 +97,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     function showLegalCastling(player, xList, y) {
         // Check that the rook is still in the corner.
         var rookX = xList.pop();
-        var rook = ns.pieces[rookX][y];
+        var rook = pieces[rookX][y];
         if (!rook || rook.data('kind') != 'rook' ||
             rook.data('player') != player) {
             return false;
@@ -105,12 +105,12 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         // Check that all tiles between king and rook are free.
         for (var index = 0; index < xList.length; index++) {
             var x = xList[index];
-            if (ns.pieces[x][y]) {
+            if (pieces[x][y]) {
                 return false;
             }
         }
         // Mark the king's destination as a legal move.
-        ns.tiles[xList[1]][y].addClass('legal');
+        tiles[xList[1]][y].addClass('legal');
         return true;
     }
 
@@ -119,7 +119,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         if (x < 1 || x > 8 || y < 1 || y > 8) {
             return false;
         }
-        var captured = ns.pieces[x][y];
+        var captured = pieces[x][y];
         var captured_player = captured ? captured.data('player') : '';
         // Don't capture your own pieces.
         if (player == captured_player) {
@@ -134,7 +134,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
             return false;
         }
         // Mark this destination as a legal move.
-        ns.tiles[x][y].addClass('legal');
+        tiles[x][y].addClass('legal');
         // Cannot continue after capture.
         if (captured_player) {
             return false;
@@ -240,23 +240,23 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     function pushMove(piece, x1, y1, captured, x2, y2) {
         var kind = piece.data('kind');
         if (kind == 'king' && x1 == 5 && x2 == 7) {
-            ns.moves.push('O-O');
+            moves.push('O-O');
             return;
         }
         if (kind == 'king' && x1 == 5 && x2 == 3) {
-            ns.moves.push('O-O-O');
+            moves.push('O-O-O');
             return;
         }
-        var move = ns.kindLetter[kind];
+        var move = KIND_LETTER[kind];
         if (move == 'P') {
             move = '';  // P for pawn is omitted.
         }
-        move += ns.xFile[x1] + y1;
+        move += X_FILE[x1] + y1;
         if (captured) {
             move += 'x';
         }
-        move += ns.xFile[x2] + y2;
-        ns.moves.push(move);
+        move += X_FILE[x2] + y2;
+        moves.push(move);
     }
 
     function castleMove(x1, y1, x2, y2) {
@@ -278,8 +278,8 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
 
     function movePiece(piece, x1, y1, x2, y2, animate) {
         var css = {
-            left: (x2 - 1) * ns.tileSize + 'px',
-            top: (8 - y2) * ns.tileSize + 'px'
+            left: (x2 - 1) * TILESIZE + 'px',
+            top: (8 - y2) * TILESIZE + 'px'
         };
         if (animate) {
             piece.animate(css);
@@ -288,12 +288,12 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         }
         piece.data('x', x2);
         piece.data('y', y2);
-        ns.pieces[x1][y1] = null;
-        ns.pieces[x2][y2] = piece;
+        pieces[x1][y1] = null;
+        pieces[x2][y2] = piece;
         if (piece.data('kind') == 'king' &&
             y1 == y2 && Math.abs(x2 - x1) == 2) {
             var r = castleMove(x1, y1, x2, y2);
-            var rook = ns.pieces[r.x1][r.y1];
+            var rook = pieces[r.x1][r.y1];
             movePiece(rook, r.x1, r.y1, r.x2, r.y2, animate);
         }
     }
@@ -316,32 +316,32 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         }
         return {
             kind: matches[1] || 'P',
-            x1: ns.fileX[matches[2]],
+            x1: FILE_X[matches[2]],
             y1: parseInt(matches[3], 10),
             captured: !!matches[4],
-            x2: ns.fileX[matches[5]],
+            x2: FILE_X[matches[5]],
             y2: parseInt(matches[6], 10)
         };
     }
 
     function redoMove(move, animate) {
-        var player = ns.moves.length % 2 ? 'black' : 'white';
+        var player = moves.length % 2 ? 'black' : 'white';
         var m = parseMove(player, move);
         if (!m) {
             return false;
         }
-        var piece = ns.pieces[m.x1][m.y1];
+        var piece = pieces[m.x1][m.y1];
         if (!piece) {
             console.error("move %s starts on an empty tile", move);
             return false;
         }
-        var piece_kind = ns.kindLetter[piece.data('kind')];
+        var piece_kind = KIND_LETTER[piece.data('kind')];
         if (m.kind != piece_kind) {
             console.error("move %s expected piece %s, found %s",
                           move, m.kind, piece_kind);
             return false;
         }
-        var captured = ns.pieces[m.x2][m.y2];
+        var captured = pieces[m.x2][m.y2];
         if (m.captured && !captured) {
             console.warn("move %s expected capture, not found", move);
         }
@@ -355,11 +355,11 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
 
     function resurrectPiece(x, y) {
         // Create a piece that was captured here earlier.
-        var tile_name = ns.xFile[x] + y;
+        var tile_name = X_FILE[x] + y;
         var player, kind;
         if (y == 8) {
             player = 'black';
-            kind = ns.xKind[x];
+            kind = X_KIND[x];
         }
         if (y == 7) {
             player = 'black';
@@ -371,13 +371,13 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         }
         if (y == 1) {
             player = 'white';
-            kind = ns.xKind[x];
+            kind = X_KIND[x];
         }
-        for (var index = ns.moves.length - 1; index >= 0; index--) {
-            var move = ns.moves[index];
+        for (var index = moves.length - 1; index >= 0; index--) {
+            var move = moves[index];
             if (move.substr(-2) == tile_name) {
-                player = ns.moves.length % 2 ? 'white' : 'black';
-                kind = ns.letterKind[move[0]] || 'pawn';
+                player = moves.length % 2 ? 'white' : 'black';
+                kind = LETTER_KIND[move[0]] || 'pawn';
                 break;
             }
         }
@@ -390,27 +390,27 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     }
 
     function undoMove(animate) {
-        if (!ns.moves.length) {
+        if (!moves.length) {
             return false;
         }
-        var move = ns.moves.pop();
-        var player = ns.moves.length % 2 ? 'black' : 'white';
+        var move = moves.pop();
+        var player = moves.length % 2 ? 'black' : 'white';
         var m = parseMove(player, move);
         if (!m) {
             return false;
         }
-        var piece = ns.pieces[m.x2][m.y2];
+        var piece = pieces[m.x2][m.y2];
         if (!piece) {
             console.error("move %s piece not found", move);
             return false;
         }
-        var piece_kind = ns.kindLetter[piece.data('kind')];
+        var piece_kind = KIND_LETTER[piece.data('kind')];
         if (m.kind != piece_kind) {
             console.error("move %s expected piece %s, found %s",
                           move, m.kind, piece_kind);
             return false;
         }
-        var origin = ns.pieces[m.x1][m.y1];
+        var origin = pieces[m.x1][m.y1];
         if (origin) {
             console.error("move %s origin not empty", move);
             return false;
@@ -424,9 +424,9 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
 
     function showMoves() {
         var index = 0, html = '';
-        while (index < ns.moves.length) {
-            var white = ns.moves[index];
-            var black = ns.moves[index + 1] || '';
+        while (index < moves.length) {
+            var white = moves[index];
+            var black = moves[index + 1] || '';
             html = '<tr><td>' + (1 + index / 2) + '.</td><td>' +
                 white + '</td><td>' + black + '</td></tr>' + html;
             index += 2;
@@ -445,14 +445,14 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     }
 
     function updateMoves(moves) {
-        if (!identicalPrefix(moves, ns.moves)) {
+        if (!identicalPrefix(moves, moves)) {
             resetBoard(); // Replay all moves from a fresh board.
         }
-        var animate = Math.abs(moves.length - ns.moves.length) == 1;
-        for (var index = ns.moves.length; index < moves.length; index++) {
+        var animate = Math.abs(moves.length - moves.length) == 1;
+        for (var index = moves.length; index < moves.length; index++) {
             redoMove(moves[index], animate);
         }
-        while (ns.moves.length > moves.length) {
+        while (moves.length > moves.length) {
             undoMove(animate);
         }
         showMoves();
@@ -461,10 +461,10 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     function pieceStart(e, ui) {
         var piece = $(this);
         // console.log('pieceStart ' + this + ' ' + piece.data('kind'));
-        if (piece.hasClass('white') && ns.moves.length % 2 === 1) {
+        if (piece.hasClass('white') && moves.length % 2 === 1) {
             return false; // Black player's turn, don't move white pieces.
         }
-        if (piece.hasClass('black') && ns.moves.length % 2 === 0) {
+        if (piece.hasClass('black') && moves.length % 2 === 0) {
             return false; // White player's turn, don't move black pieces.
         }
         showLegalMoves(piece);
@@ -485,7 +485,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
             var y1 = piece.data('y');
             var x2 = tile.data('x');
             var y2 = tile.data('y');
-            var captured = ns.pieces[x2][y2];
+            var captured = pieces[x2][y2];
             if (captured) {
                 captured.remove(); // Remove captured piece from the board.
             }
@@ -494,8 +494,8 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
             showMoves();
         } else {
             piece.animate({
-                left: (piece.data('x') - 1) * ns.tileSize + 'px',
-                top: (8 - piece.data('y')) * ns.tileSize + 'px'
+                left: (piece.data('x') - 1) * TILESIZE + 'px',
+                top: (8 - piece.data('y')) * TILESIZE + 'px'
             });
         }
     }
@@ -523,9 +523,9 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
             return true; // This piece should not be moved.
         }
         e.preventDefault(); // Prevent browser scrolling.
-        var tile = ns.tiles[piece.data('x')][piece.data('y')];
+        var tile = tiles[piece.data('x')][piece.data('y')];
         var touch = getTouch(e);
-        ns.drag = {piece: piece,
+        dragging = {piece: piece,
                    tile: tile,
                    offsetX: this.offsetLeft - touch.clientX,
                    offsetY: this.offsetTop - touch.clientY};
@@ -534,44 +534,44 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     };
 
     ns.touchMove = function (e) {
-        if (!ns.drag) {
+        if (!dragging) {
             return true;
         }
         // console.log('touchMove');
         e.preventDefault(); // Prevent browser scrolling.
         var touch = getTouch(e);
-        var piece = ns.drag.piece;
-        var left = touch.clientX + ns.drag.offsetX;
-        var top = touch.clientY + ns.drag.offsetY;
+        var piece = dragging.piece;
+        var left = touch.clientX + dragging.offsetX;
+        var top = touch.clientY + dragging.offsetY;
         piece.css('left', left + 'px');
         piece.css('top', top + 'px');
-        var x = Math.max(1, Math.min(8, Math.round(1 + left / ns.tileSize)));
-        var y = Math.max(1, Math.min(8, Math.round(8 - top / ns.tileSize)));
-        var tile = ns.tiles[x][y];
-        if (ns.drag.tile != tile) {
-            ns.drag.tile.removeClass('illegal');
+        var x = Math.max(1, Math.min(8, Math.round(1 + left / TILESIZE)));
+        var y = Math.max(1, Math.min(8, Math.round(8 - top / TILESIZE)));
+        var tile = tiles[x][y];
+        if (dragging.tile != tile) {
+            dragging.tile.removeClass('illegal');
             if (!tile.hasClass('legal')) {
                 tile.addClass('illegal');
             }
-            ns.drag.tile = tile;
+            dragging.tile = tile;
         }
         // console.log('touchMove done');
         return false;
     };
 
     ns.touchEnd = function (e) {
-        if (!ns.drag) {
+        if (!dragging) {
             return true;
         }
         // console.log('touchEnd');
         e.preventDefault(); // Prevent browser scrolling.
-        var piece = ns.drag.piece;
+        var piece = dragging.piece;
         var left = parseInt(piece.css('left'), 10);
         var top = parseInt(piece.css('top'), 10);
-        ns.drag.tile.removeClass('illegal');
-        tileDrop.call(ns.drag.tile, e, {draggable: piece});
+        dragging.tile.removeClass('illegal');
+        tileDrop.call(dragging.tile, e, {draggable: piece});
         pieceStop.call(this, e, {draggable: piece});
-        ns.drag = false;
+        dragging = false;
         // console.log('touchEnd success');
         return false;
     };
@@ -610,7 +610,7 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
         return {
             readers: ['public'],
             writers: ['public'],
-            blob: ns.moves
+            blob: moves
         };
     }
 
