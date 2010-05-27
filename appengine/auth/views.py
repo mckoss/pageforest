@@ -231,28 +231,6 @@ def set_session_cookie(request, session_key):
     return response
 
 
-@login_required
-@method_required('GET')
-def get_session_cookie(request):
-    """
-    Retrieve the session key from the cookie and make it available to
-    the JavaScript application, but only for trusted pages.
-    """
-    # Disallow cookie retrieval for user-generated pages.
-    referer = request.META.get('HTTP_REFERER', '/app/docs/')
-    if referer.startswith('/app/docs/'):
-        return AccessDenied(
-            request, "The %s cookie is not available inside documents." %
-            settings.SESSION_COOKIE_NAME)
-    # Check if the cookie was transmitted by the browser.
-    if settings.SESSION_COOKIE_NAME not in request.COOKIES:
-        return AccessDenied(
-            request, "Missing %s cookie." % settings.SESSION_COOKIE_NAME)
-    # Extract and return the session key.
-    session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-    return HttpResponse(session_key, content_type='text/plain')
-
-
 @method_required('GET')
 def sign_out(request, app_id=None):
     """
