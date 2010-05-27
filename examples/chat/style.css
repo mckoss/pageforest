@@ -1,0 +1,39 @@
+body {
+  margin: padding: 0;
+  font-family: Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+div.page {
+  width: 800px;
+  margin: auto;
+}
+
+label {
+  font-weight: bold;
+  display: inline-block;
+  width: 100px;
+  vertical-align: top;
+}
+
+input#signin {
+  margin: 5px 0;
+}
+
+input[type="text"] {
+  margin-right: 12px;
+}
+
+input#message {
+  width: 640px;
+}
+
+input#docid {
+  width: 120px;
+}
+
+textarea {
+  font-family: Helvetica, sans-serif;
+  width: 800px;
+  height: 100px;
+}
