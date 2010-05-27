@@ -1,3 +1,5 @@
+from urlparse import urlparse
+
 from django.conf import settings
 from django.http import HttpResponseForbidden, HttpResponseNotAllowed
 
@@ -34,12 +36,18 @@ def referer_is_trusted(request):
     if referer.count('/') < 2:
         request.referer_error = "Invalid Referer header."
         return False
-    hostname = referer.split('/')[2].split(':')[0]
+    (scheme, netloc, path, parameters, query, fragment) = urlparse(referer)
+    # Remove optional port number.
+    hostname = netloc.split(':')[0]
     app_id = app_id_from_trusted_domain(hostname)
     if app_id == 'www':
         # Always trust the www front-end.
         return True
     if app_id == request.app.get_app_id():
+        # Don't trust user-generated documents under /docs/.
+        if path.startswith('/docs/'):
+            request.referer_error = "Untrusted Referer path: " + path
+            return False
         # Trust the default domain for this app.
         return True
     for referer in request.app.referers:
@@ -47,7 +55,7 @@ def referer_is_trusted(request):
         if referer.startswith(referer):
             # Explicitly trusted by the app developer.
             return True
-    request.referer_error = "Untrusted Referer domain: %s." % hostname
+    request.referer_error = "Untrusted Referer domain: " + hostname
     return False
 
 
