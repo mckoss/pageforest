@@ -669,8 +669,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var blobMessage = "Document is missing a blob property.";
 
     // The application calls Client, and implements the following methods:
-    // app.setData(jsonDocument) - Called when a new document is loaded.
-    // app.getData() - Called to get the json data to be saved.
+    // app.setDoc(jsonDocument) - Called when a new document is loaded.
+    // app.getDoc() - Called to get the json data to be saved.
     // app.onSaveSuccess() - successfully saved.
     // app.onError(errorMessage) - Called when we get an error reading or
     //     writing a document (optional).
@@ -691,14 +691,34 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.state = 'clean';
         this.username = undefined;
-        this.fLogging = false;
+        this.fLogging = true;
+
         // Auto save every 60 seconds
         this.saveInterval = 60;
+
+        // Map deprecated function names.
+        var deprecated = {
+            "getData": "getDoc",
+            "setData": "setDoc"
+        };
+        for (var oldName in deprecated) {
+            if (deprecated.hasOwnProperty(oldName)) {
+                var newName = deprecated[oldName];
+                if (app[oldName] && !app[newName]) {
+                    this.log("deprecated function " + oldName +
+                             " should be renamed to " + newName,
+                             {'level': 'warn'});
+                    app[newName] = app[oldName];
+                }
+            }
+        }
+
+        // REVIEW:
         this.setCleanDoc(undefined, true);
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
-        // Note that we cannot kick off a poll() until this contstuctor
+        // Note that we cannot kick off a poll() until this constructor
         // returns as the app's callbacks likely depend on completing their
         // initialization.
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
@@ -736,7 +756,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     }
                 }.fnMethod(this),
                 success: function (document, textStatus, xmlhttp) {
-                    this.app.setData(document);
+                    this.app.setDoc(document);
                     this.setCleanDoc(docid);
                 }.fnMethod(this)
             });
@@ -749,7 +769,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (json == undefined) {
-                json = this.app.getData();
+                json = this.app.getDoc();
                 if (typeof json != 'object') {
                     this.errorReport('missing_object', objectMessage);
                     return;
@@ -790,7 +810,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var data = JSON.stringify(json);
-            this.log('saving: ' + this.getDocURL(docid), json);
+            this.log('saving: ' + this.getDocURL(docid), {'obj': json});
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -825,7 +845,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.docid = docid;
             this.changeState('clean');
             // Remember the clean state of the document
-            this.lastJSON = JSON.stringify(this.app.getData());
+            this.lastJSON = JSON.stringify(this.app.getDoc());
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -859,14 +879,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.fLogging = f;
         },
 
-        log: function(message, obj) {
+        log: function(message, options) {
+            if (options == undefined) {
+                options = {};
+            }
+            if (options.level == undefined) {
+                options.level = 'log';
+            }
             if (this.fLogging) {
                 // BUG: console.log.apply(undefined, arguments) work in Chrome!
-                if (obj != undefined) {
-                    console.log(message, obj);
-                }
-                else {
-                    console.log(message);
+                if (options.obj != undefined) {
+                    console[options.level](message, options.obj);
+                } else {
+                    console[options.level](message);
                 }
             }
         },
@@ -875,7 +900,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
-            this.log(message + ' (' + code + ')', xmlhttp);
+            this.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.errorReport(code, message);
         },
 
@@ -887,7 +912,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 var formatted = "client error: " + message +
                     ' (' + status + ')';
                 console.log(formatted);
-                alert(formatted);
             }
         },
 
@@ -951,7 +975,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.load(location.hash.substr(1));
             }
             this.checkUsername();
-            this.checkData();
+            this.checkDoc();
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -991,7 +1015,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // See if the document data has changed - assume this is not
         // expensive as we execute this every second.
-        checkData: function() {
+        checkDoc: function() {
             // No auto-saving - do nothing
             if (this.saveInterval == 0) {
                 return;
@@ -1016,7 +1040,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Document looks clean - see if it's changed since we last
             // checked.
-            var json = JSON.stringify(this.app.getData());
+            var json = JSON.stringify(this.app.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
             }
