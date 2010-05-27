@@ -13,19 +13,34 @@
 <body onload="runner.run();">
 <h1 id="title"><script>document.write(document.title);</script></h1>
 <script>
+var base = namespace.lookup('org.startpad.base');
 var unit = namespace.lookup('org.startpad.unit');
 var modules = namespace.lookup('com.pageforest.modules');
 var runner = namespace.lookup('com.pageforest.test.runner.html');
 runner.define(function (ns) {
-    function testModule(module) {
+    function testModule(module, fnCallback) {
         var targetNamespace = modules.namespaces[module];
 
         if (modules.locations[targetNamespace + '.test']) {
-            unit.runTest(targetNamespace, modules.locations);
+            unit.runTest(targetNamespace, modules.locations, fnCallback);
+        }
+        else {
+            if (fnCallback) {
+                fnCallback();
+            }
         }
     }
 
-    ns.run = function () {
+    var moduleList = base.keys(modules.namespaces);
+    var i = 0;
+    function testNext() {
+        if (i >= moduleList.length) {
+            return;
+        }
+        testModule(moduleList[i++], testNext);
+    }
+
+    function run() {
         var target = location.hash;
         if (!target) {
             target = 'all';
@@ -39,13 +54,11 @@ runner.define(function (ns) {
             return;
         }
 
-        for (module in modules.namespaces) {
-            if (modules.namespaces.hasOwnProperty(module)) {
-                testModule(module);
-            }
-        }
-
+       // Run all tests (Async)
+       testNext();
     };
+
+    ns.run = run;
 });
 </script>
 
