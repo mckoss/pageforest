@@ -617,8 +617,8 @@ namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
     ns.extend({
         onReady: onReady,
         onError: onError,
-        getDocument: getDocument,
-        setDocument: setDocument
+        getDoc: getDoc,
+        setDoc: setDoc
     });
 
 }); // com.pageforest.chess
