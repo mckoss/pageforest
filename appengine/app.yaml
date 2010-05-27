@@ -2,7 +2,7 @@ application: pageforest
 version: dev
 runtime: python
 api_version: 1
-default_expiration: 1d
+default_expiration: 10s
 
 handlers:
 - url: /static/
