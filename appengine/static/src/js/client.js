@@ -334,7 +334,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.load(location.hash.substr(1));
             }
             this.checkUsername();
-            this.checkData();
+            this.checkDoc();
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -374,7 +374,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // See if the document data has changed - assume this is not
         // expensive as we execute this every second.
-        checkData: function() {
+        checkDoc: function() {
             // No auto-saving - do nothing
             if (this.saveInterval == 0) {
                 return;
