@@ -382,6 +382,17 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return objT;
     }
 
+    function keys(map) {
+        var list = [];
+
+        for (var prop in map) {
+            if (map.hasOwnProperty(prop)) {
+                list.push(prop);
+            }
+        }
+        return list;
+    }
+
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
         if (!a) {
@@ -429,15 +440,16 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         Enum: Enum,
         StBuf: StBuf,
 
-        extendIfMissing: extendIfMissing,
-        extendDeep: extendDeep,
-        randomInt: randomInt,
-        strip: strip,
-        project: project,
-        uniqueArray: uniqueArray,
-        map: map,
-        filter: filter,
-        reduce: reduce
+        'extendIfMissing': extendIfMissing,
+        'extendDeep': extendDeep,
+        'randomInt': randomInt,
+        'strip': strip,
+        'project': project,
+        'uniqueArray': uniqueArray,
+        'map': map,
+        'filter': filter,
+        'reduce': reduce,
+        'keys': keys
     });
 
 
@@ -1036,7 +1048,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             cookies.setCookie('sessionuser', 'expired', -1);
             cookies.setCookie('sessionkey', 'expired', -1);
 
-            // Some browsers don't allow setting HttpOnly cookies locally -
+            // Some browsers don't allow writing to HttpOnly cookies -
             // use the server to do it.
             $.ajax({
                 dataType: 'text',
