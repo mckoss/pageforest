@@ -21,9 +21,6 @@ class AuthClient(Client):
     Test client with AJAX request authentication support.
     """
 
-    def sign_in(self, app, user, subdomain=None):
-        self.session_key = user.generate_session_key(app, subdomain=subdomain)
-
     def add_auth_headers(self, url, headers):
         # request_id = crypto.random64(8)
         # headers['HTTP_X_REQUEST_ID'] = request_id
@@ -115,9 +112,10 @@ class AppTestCase(TestCase):
         self.www_client.cookies[settings.SESSION_COOKIE_NAME] = \
             user.generate_session_key(self.www)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
+            self.app_client.session_key = \
             user.generate_session_key(self.app)
-        self.admin_client.sign_in(
-            self.app, user, subdomain=settings.ADMIN_SUBDOMAIN)
+        self.admin_client.session_key = user.generate_session_key(
+            self.app, subdomain=settings.ADMIN_SUBDOMAIN)
 
     def sign_out(self):
         """
