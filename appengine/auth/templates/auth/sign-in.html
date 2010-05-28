@@ -8,7 +8,7 @@ var signIn = namespace.lookup("com.pageforest.auth.sign-in-form");
 $(document).ready(function() {
     var username = "{{ user.username }}";
     var appId = "{{ cross_app.get_app_id }}";
-    signIn.documentReady(username, appId);
+    signIn.onReady(username, appId);
 });
 </script>
 {% endblock %}
