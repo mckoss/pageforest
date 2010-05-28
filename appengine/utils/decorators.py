@@ -3,6 +3,7 @@ import time
 import email
 import httplib
 
+from django.conf import settings
 from django.http import HttpResponse, Http404, HttpResponseNotFound, \
     HttpResponseNotAllowed, HttpResponseServerError
 from django.utils import simplejson as json
@@ -80,10 +81,10 @@ def jsonp(func):
                 "message": content,
                 }, sort_keys=True, indent=4)
             response.status_code = 200
-            response['Content-Type'] = 'application/json'
+            response['Content-Type'] = settings.JSON_MIMETYPE
 
         # Encode arbitrary strings as valid JSON.
-        if response['Content-Type'] != 'application/json':
+        if response['Content-Type'] != settings.JSON_MIMETYPE:
             # Remove trailing newlines.
             content = content.rstrip('\n')
             content = json.dumps(content)
