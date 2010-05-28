@@ -1,7 +1,7 @@
 namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
 
     // Long polling for new chat messages from remote users.
-    function comet() {
+    function poll(wait) {
         if (!ns.client.docid) {
             return; // We have not entered a chatroom yet.
         }
@@ -9,16 +9,13 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
             return; // The previous poll is still in progress.
         }
         ns.xhr = $.ajax({
-            url: '/docs/' + ns.client.docid + '/messages?wait=10&slice=-20:',
+            url: '/docs/' + ns.client.docid +
+                '/messages?wait=' + wait + '&slice=-50:',
             dataType: 'json',
-            success: function(json, status, xhr) {
-                var history = '';
-                for (var index = 0; index < json.length; index++) {
-                    history += json[index] + '\n';
-                }
+            success: function(history, status, xhr) {
                 var textarea = $('#messages');
-                textarea.val(history);
-                textarea.scrollTop = textarea.scrollHeight;
+                textarea.val(history.join('\n'));
+                textarea.attr('scrollTop', textarea.attr('scrollHeight'));
             },
             complete: function() {
                 ns.xhr = false;
@@ -26,12 +23,16 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
         });
     }
 
+    function comet() {
+        poll(20);
+    }
+
     // Initialize the document - create a client helper object.
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(ns);
         ns.client.setLogging(true);
-        $('#message').focus();
+        $('#docid').focus();
         // Start a new long poll request whenever necessary.
         setInterval(comet, 1000);
     }
@@ -68,7 +69,8 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
 
     // Respond to document load success.
     function setDoc(doc) {
-        $('#status').html('Entered chatroom ' + JSON.stringify(doc));
+        $('#status').html('Joined chatroom: ' + ns.client.docid);
+        poll(0);
     }
 
     // Join a chatroom by name.
@@ -91,6 +93,8 @@ namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
                 $('#status').html(status + " " + message);
             }
         });
+        $('#message').val('');
+        $('#message').focus();
     }
 
     // Exported functions

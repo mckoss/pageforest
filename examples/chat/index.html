@@ -23,19 +23,21 @@ $(document).ready(chat.onReady);
   <p style="margin-top:0">Current username: <span id="username"></span></p>
 </div>
 
+<form onsubmit="chat.join(); return false">
 <p style="clear:both">
 <input type="text" id="docid" name="docid" value="chat" />
-<input type="button" id="join" name="join" value="Join chatroom"
-       onclick="chat.join()" />
+<input type="submit" id="join" name="join" value="Join chatroom" />
 </p>
+</form>
 
 <textarea id="messages" name="messages"></textarea>
 
+<form onsubmit="chat.submit(); return false">
 <p>
 <input type="text" id="message" name="message" value="" />
-<input type="button" id="submit" name="submit" value="Submit message"
-       onclick="chat.submit()" />
+<input type="submit" id="submit" name="submit" value="Submit message" />
 </p>
+</form>
 
 <h2>API Status</h2>
 <div id="status">Loading...</div>
