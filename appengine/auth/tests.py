@@ -151,7 +151,7 @@ class RegistrationTest(AppTestCase):
 
             response = self.www_client.get(verify_url)
             self.assertContains(response,
-                                "Your email address has  been verified.")
+                                "Your email address has been verified.")
 
         finally:
             mail.send_mail = real_send_mail
