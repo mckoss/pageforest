@@ -1,5 +1,6 @@
-import time
 import re
+import time
+from mock import Mock
 
 from django.conf import settings
 from django.test import Client
@@ -38,21 +39,32 @@ class UserTest(AppTestCase):
         self.assertTrue(self.peter.last_login >= self.start_time)
         self.assertTrue(self.paul.created >= self.peter.created)
 
+    def test_unicode(self):
+        """The __unicode__ method should return the username."""
+        self.assertEqual(unicode(self.peter), 'Peter')
+        self.assertEqual(unicode(self.paul), 'Paul')
+
+
+class MigratableTest(AppTestCase):
+
+    def setUp(self):
+        super(MigratableTest, self).setUp()
+        self.migrate = User.migrate
+        User.migrate = Mock(User.migrate)
+        self.current_schema = User.current_schema
+        User.current_schema = 3
+
+    def tearDown(self):
+        User.migrate = self.migrate
+        User.current_schema = self.current_schema
+
     def test_migratable(self):
         """Test schema migration for User model."""
-
-        def dummy_migrate(self, schema):
-            """Set the migrated flag for this test."""
-            self.migrated = schema
-
-        # TODO: The following monkey patch might break other tests.
-        User.migrate = dummy_migrate
-        User.schema_current = 2
-        self.peter.migrated = 0
+        self.assertEqual(User.migrate.call_count, 0)
         self.assertEqual(self.peter.schema, 1)
         self.peter.update_schema()
-        self.assertEqual(self.peter.schema, 2)
-        self.assertEqual(self.peter.migrated, 2)
+        self.assertEqual(self.peter.schema, 3)
+        self.assertEqual(User.migrate.call_count, 2)
 
 
 class RegistrationTest(AppTestCase):
@@ -597,10 +609,10 @@ class EmailVerificationTest(AppTestCase):
                             "Your email address has been verified.")
 
     def test_paul(self):
-        """Paul's email address has not yet been verified."""
+        """Paul's email address has not been verified."""
         self.sign_in(self.paul)
         self.assertContains(self.www_client.get(EMAIL_VERIFY),
-                            "Your email address has not yet been verified.")
+                            "Your email address has not been verified.")
 
     def test_verification(self):
         """A valid verification should verify Paul's email."""
