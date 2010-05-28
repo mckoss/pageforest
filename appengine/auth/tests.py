@@ -390,7 +390,7 @@ class SimpleAuthTest(AppTestCase):
 
     def test_session_key_expired(self):
         """Expired session key should return error message."""
-        parts = self.session_key.split(crypto.SEPARATOR)
+        parts = crypto.split(self.session_key)
         parts[2] = int(time.time() - 10)
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             crypto.join(parts)
@@ -399,7 +399,7 @@ class SimpleAuthTest(AppTestCase):
 
     def test_different_app(self):
         """Session key for a different app should return error message."""
-        parts = self.session_key.split(crypto.SEPARATOR)
+        parts = crypto.split(self.session_key)
         parts[0] = 'other'
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             crypto.join(parts)
@@ -416,7 +416,7 @@ class SimpleAuthTest(AppTestCase):
 
     def test_unknown_user(self):
         """Session key with unknown user should return error message."""
-        parts = self.session_key.split(crypto.SEPARATOR)
+        parts = crypto.split(self.session_key)
         parts[1] = 'unknown'
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             crypto.join(parts)
@@ -425,7 +425,7 @@ class SimpleAuthTest(AppTestCase):
 
     def test_incorrect_session_key(self):
         """Incorrect password should return error message."""
-        parts = self.session_key.split(crypto.SEPARATOR)
+        parts = crypto.split(self.session_key)
         parts[-1] = parts[-1][::-1]  # Backwards.
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
             crypto.join(parts)

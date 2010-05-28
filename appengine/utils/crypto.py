@@ -52,6 +52,16 @@ def join(*args):
     return SEPARATOR.join(parts)
 
 
+def split(signature):
+    """
+    Split a signature, using the SEPARATOR.
+
+    >>> split('a|b|c')
+    ['a', 'b', 'c']
+    """
+    return signature.split(SEPARATOR)
+
+
 def hmac_sha1(*args):
     """
     The last item in args is the secret key for HMAC.
