@@ -7,7 +7,7 @@ class Migratable(db.Model):
     """
     Model migrations helper class.
 
-    Each class should increment schema_current when schema changes are
+    Each class should increment current_schema when schema changes are
     made and implement migrate() to perform the appropriate schema
     migrations to each successive version.
 
@@ -18,7 +18,7 @@ class Migratable(db.Model):
     update_schema_batch() - Migrates a group (default up to 100)
     Models at once.
     """
-    schema_current = 1
+    current_schema = 1
     schema = db.IntegerProperty(default=1)
 
     @classmethod
@@ -42,10 +42,10 @@ class Migratable(db.Model):
 
     def update_schema(self):
         schema_old = self.schema
-        if schema_old == self.schema_current:
+        if schema_old == self.current_schema:
             return
 
-        while self.schema < self.schema_current:
+        while self.schema < self.current_schema:
             self.migrate(self.schema + 1)
             self.schema += 1
 
@@ -63,7 +63,7 @@ class Migratable(db.Model):
 
         TODO: Deferred migration support via callback.
         """
-        models = cls.all().filter('schema <', cls.schema_current).fetch(limit)
+        models = cls.all().filter('schema <', cls.current_schema).fetch(limit)
         for model in models:
             model.update_schema()
         return len(models)
