@@ -37,40 +37,13 @@ def send_email_verification(request, user):
                                user.email,
                                expires,
                                www.secret)
-    message = render_to_string('auth/verify-email.txt',
-                               RequestContext(request,
-                                              {'registering_user': user,
-                                               'verification': verification}))
-
+    context = RequestContext(request, {'registering_user': user,
+                                       'verification': verification})
+    message = render_to_string('auth/verify-email.txt', context)
     mail.send_mail(sender=settings.SITE_EMAIL_FROM,
                    to=user.email,
                    subject=settings.SITE_NAME + " account verification",
                    body=message)
-
-
-def test_email_verification(verification, secret):
-    """
-    Test email verification string for validity.
-
-    Return's (user, error) - error string if user is None.
-    """
-    verified = crypto.verify(verification, secret)
-    if not verified:
-        return (None, "Invalid verification key.")
-
-    (username, email, expires, secret) = verification.split(crypto.SEPARATOR)
-
-    if time.time() > expires:
-        return (None, "Email verification code has expired.")
-
-    user = User.lookup(username)
-    if user is None:
-        return (None, "No such user: %s." % username)
-
-    if user.email != email:
-        return (None, "Email verification for old email address.")
-
-    return (user, None)
 
 
 @method_required('GET', 'POST')
@@ -82,20 +55,20 @@ def email_verification(request, verification=None):
     state of the signed-in user.
     """
     error = None
-    if verification is not None:
-        (user, error) = test_email_verification(verification,
-                                                request.app.secret)
+    if verification:
+        try:
+            user = User.verify_email(verification, request.app.secret)
+        except SignatureError, exception:
+            error = exception.message
         if user and user.email_verified is None:
             user.email_verified = datetime.now()
             user.put()
-        elif request.user:
-            user = request.user
     else:
-        if request.method == 'POST' and 'resend' in request.POST and \
-                request.user:
+        if (request.method == 'POST'
+            and 'resend' in request.POST and request.user):
             send_email_verification(request, request.user)
             return HttpResponse({'resent': True},
-                                    mimetype='application/json')
+                                mimetype=settings.JSON_MIMETYPE)
         # Show verification status for the currently sign-in in user.
         user = request.user
         if user is None:
@@ -117,7 +90,7 @@ def register(request):
     if request.method == 'POST':
         if 'validate' in request.POST:
             return HttpResponse(form.errors_json(),
-                                mimetype='application/json')
+                                mimetype=settings.JSON_MIMETYPE)
         if form.is_valid():
             user = form.save()
             send_email_verification(request, user)
