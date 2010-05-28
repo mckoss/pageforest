@@ -5,9 +5,10 @@ urlpatterns = patterns(
     # Auth API for both:
     # - http://www.pageforest.com/auth
     # - http://app_id.pageforest.com/auth
-    (r'^reauth/$', 'reauth'),
     (r'^challenge/$', 'challenge'),
     (r'^verify/(.+)/$', 'verify'),
     (r'^username/$', 'get_username'),
     (r'^set-session/(.+)/$', 'set_session_cookie'),
+    # Disabled obsolete URLs:
+    # (r'^reauth/$', 'reauth'),
 )

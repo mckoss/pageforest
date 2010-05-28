@@ -189,13 +189,15 @@ def sign_in(request, app_id=None):
 
 
 @jsonp
-@method_required('GET', 'POST')
+@method_required('GET')
 def get_username(request):
     """
     Get the username that is currently signed in.
-
-    REVIEW: Security problem - should require referer is www.pageforest.com
     """
+    # FIXME:
+    # referer = request.META.get('HTTP_REFERER', '')
+    # if not referer.startswith('http://www.' + settings.DEFAULT_DOMAIN + '/'):
+    #     return AccessDenied(request, "Untrusted Referer: " + referer)
     if request.user is None:
         raise Http404("The user is not signed in.")
     return HttpResponse(request.user.username, mimetype='text/plain')
@@ -297,38 +299,3 @@ def verify(request, signature):
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
                         max_age=settings.REAUTH_COOKIE_AGE)
     return response
-
-
-@jsonp
-@method_required('GET')
-def reauth(request):
-    """
-    Attempt to authenticate with a long-lived reauth cookie.
-    """
-    return HttpResponseForbidden("No reauth cookie.", mimetype="text/plain")
-    # return HttpResponse(session_key, mimetype="text/plain")
-
-
-@jsonp
-@method_required('GET')
-def poll(request, token):
-    """
-    Get the session key for this token, wait up to 30 seconds until it
-    becomes available.
-    """
-    started = time.time()
-    seconds = int(request.GET.get('seconds', '30'))
-    memcache_key = 'auth.poll~' + token
-    try:
-        while True:
-            if settings.DEBUG:
-                logging.info("polling memcache for " + memcache_key)
-            session_key = memcache.get(memcache_key)
-            if session_key:
-                return HttpResponse(session_key, mimetype="text/plain")
-            if time.time() > started + seconds:
-                break
-            time.sleep(3)  # Seconds.
-    except DeadlineExceededError:
-        pass
-    return HttpResponse(status=204)
