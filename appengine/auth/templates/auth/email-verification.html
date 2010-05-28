@@ -10,9 +10,7 @@ var registration = namespace.lookup("com.pageforest.registration");
 
 {% block both-columns %}
 
-<h2>
-    Your email address has {% if error %}not{% endif %} been verified.
-</h2>
+<h2>Your email address has{% if error %} not{% endif %} been verified.</h2>
 
 {% if error %}
 <p class="error">{{ error }}</p>
