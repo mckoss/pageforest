@@ -14,7 +14,7 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         // Check if user is already logged in.
         documentReady: function(username, appId) {
             ns.appId = appId;
-            ns.appAuthURL = ns.getAppDomain(appId) + '/auth/';
+            ns.appAuthURL = 'http://' + ns.getAppDomain(appId) + '/auth/';
 
             // Check for a (session) cookie with the application
             // session key. We clear it once used so it doesn't get
@@ -43,7 +43,8 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
             // Check (once) if we're also currently logged in @ appId
             // without having to sign-in again.
             // REVIEW: Isn't this insecure?
-            ns.getString(ns.appAuthURL + "username/", function(username) {
+            var url = ns.appAuthURL + "username/";
+            ns.getJSONP(url, function(username) {
                 // We're already logged in!
                 if (typeof(username) == 'string') {
                     ns.closeForm();
@@ -56,8 +57,8 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
             // Send a valid appId sessionKey to the app domain
             // to get it installed on a cookie.
             var url = ns.appAuthURL + "set-session/" + sessionKey;
-            ns.getString(url, function (s) {
-                if (typeof(s) != 'string') {
+            ns.getJSONP(url, function(message) {
+                if (typeof(message) != 'string') {
                     return;
                 }
                 // Close the window if this was used to
@@ -82,8 +83,7 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         },
 
         // Use JSONP to read the username from the cross-site application.
-        getString: function(url, fn) {
-            url = "http://" + url;
+        getJSONP: function(url, fn) {
             $.ajax({
                 type: "GET",
                 url: url,
