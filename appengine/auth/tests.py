@@ -57,6 +57,13 @@ class UserTest(AppTestCase):
 
 class RegistrationTest(AppTestCase):
 
+    def test_ajax_validate(self):
+        """Test the AJAX form validator."""
+        data =  {'username': 'mary', 'tos': 'checked', 'validate': 'on',
+                 'password': 'little_lamb', 'repeat': 'little_lamb'}
+        self.assertContains(self.www_client.post(SIGN_UP, data),
+                            '{"email": ["This field is required."]}')
+
     def test_username_invalid_first(self):
         """Invalid usernames are rejected."""
         for char in '012_-.,!?$:@/':
@@ -574,3 +581,31 @@ class CookieTest(AppTestCase):
                 url, HTTP_REFERER='http://myapp.pageforest.com/docs/')
             self.assertContains(
                 response, 'Untrusted Referer path: /docs/', status_code=403)
+
+
+class EmailVerificationTest(AppTestCase):
+
+    def test_anonymous(self):
+        """Anonymous user should be asked to sign in."""
+        self.assertContains(self.www_client.get(EMAIL_VERIFY),
+                            "You are not signed in.")
+
+    def test_peter(self):
+        """Peter's email address is already verified."""
+        self.sign_in(self.peter)
+        self.assertContains(self.www_client.get(EMAIL_VERIFY),
+                            "Your email address has been verified.")
+
+    def test_paul(self):
+        """Paul's email address has not yet been verified."""
+        self.sign_in(self.paul)
+        self.assertContains(self.www_client.get(EMAIL_VERIFY),
+                            "Your email address has not yet been verified.")
+
+    def test_verification(self):
+        """A valid verification should verify Paul's email."""
+        expires = int(time.time()) + 3 * 24 * 60 * 60
+        verification = crypto.sign(
+            'paul', 'paul@example.com', expires, self.www.secret)
+        self.assertContains(self.www_client.get(EMAIL_VERIFY + verification),
+                            "Your email address has been verified.")

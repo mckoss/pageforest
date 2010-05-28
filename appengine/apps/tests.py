@@ -25,10 +25,12 @@ class AppTestCase(TestCase):
         self.start_time = datetime.now()
         # Create some users.
         self.peter = User(key_name='peter', username='Peter',
+                          email='peter@example.com',
                           email_verified=datetime.now())
         self.peter.set_password('peter_secret')
         self.peter.put()
-        self.paul = User(key_name='paul', username='Paul')
+        self.paul = User(key_name='paul', username='Paul',
+                         email='paul@example.com')
         self.paul.set_password('paul_secret')
         self.paul.put()
         # Create a test application.
