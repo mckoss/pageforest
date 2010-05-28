@@ -68,7 +68,7 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         Check a challenge signature and return the user. If the
         signature is invalid, raise SignatureError with explanation.
         """
-        parts = signature.split(crypto.SEPARATOR)
+        parts = crypto.split(signature)
         if len(parts) != 6:
             raise SignatureError("Expected 6 parts.")
         (username, random, expires, ip) = parts[:4]
@@ -124,7 +124,7 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         Verify the session key and return the user object. If the
         session key is invalid, raise SignatureError with explanation.
         """
-        parts = session_key.split(crypto.SEPARATOR)
+        parts = crypto.split(session_key)
         if len(parts) != 4:
             raise SignatureError("Expected 4 parts.")
         (subdomain_app_id, username, expires) = parts[:3]
@@ -154,6 +154,28 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         secret = crypto.join(user.password, app.secret)
         if not crypto.verify(session_key, secret):
             raise SignatureError("Password incorrect.")
+        return user
+
+    @classmethod
+    def verify_email(self, signature, secret):
+        """
+        Verify the email signature and return the user object. If the
+        signature is invalid, raise SignatureError with explanation.
+        """
+        # Check the HMAC-SHA1 signature.
+        if not crypto.verify(signature, secret):
+            raise SignatureError("Invalid verification code.")
+        (username, email, expires, secret) = crypto.split(signature)
+        # Check expiration time.
+        if time.time() > expires:
+            raise SignatureError("Expired verification code.")
+        # Check if the user exists.
+        user = User.lookup(username)
+        if user is None:
+            raise SignatureError("Unknown user.")
+        # Check if the email address is unchanged.
+        if user.email != email:
+            raise SignatureError("Email address changed.")
         return user
 
     def assert_authorized(self, action):
