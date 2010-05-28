@@ -880,19 +880,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         log: function(message, options) {
+            if (!this.fLogging) {
+                return;
+            }
             if (options == undefined) {
                 options = {};
             }
-            if (options.level == undefined) {
+            if (!options.hasOwnProperty('level')) {
                 options.level = 'log';
             }
-            if (this.fLogging) {
-                // BUG: console.log.apply(undefined, arguments) work in Chrome!
-                if (options.obj != undefined) {
-                    console[options.level](message, options.obj);
-                } else {
-                    console[options.level](message);
-                }
+            if (options.hasOwnProperty('obj')) {
+                console[options.level](message, options.obj);
+            } else {
+                console[options.level](message);
             }
         },
 
