@@ -59,8 +59,8 @@ class RegistrationTest(AppTestCase):
 
     def test_ajax_validate(self):
         """Test the AJAX form validator."""
-        data =  {'username': 'mary', 'tos': 'checked', 'validate': 'on',
-                 'password': 'little_lamb', 'repeat': 'little_lamb'}
+        data = {'username': 'mary', 'tos': 'checked', 'validate': 'on',
+                'password': 'little_lamb', 'repeat': 'little_lamb'}
         self.assertContains(self.www_client.post(SIGN_UP, data),
                             '{"email": ["This field is required."]}')
 
