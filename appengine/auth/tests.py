@@ -258,16 +258,18 @@ class AppSignInTest(AppTestCase):
 
         # Simulate the in-page javascript that does the cross-site
         # authentication
+        old_referer = self.app_client.defaults['HTTP_REFERER']
         self.app_client.defaults['HTTP_REFERER'] = \
             "http://www.pageforest.com/sign-in/"
         response = self.app_client.get(
             APP_AUTH_PREFIX + 'set-session/' +
             myapp_session_key + '?callback=jsonp123')
-        del self.app_client.defaults['HTTP_REFERER']
         self.assertEqual(response.content,
                          'jsonp123("' + myapp_session_key + '")')
         cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('myapp|peter|12'))
+        self.assertEqual(cookie.value, myapp_session_key)
+        self.app_client.defaults['HTTP_REFERER'] = old_referer
+
         # And confirm the username api returns the user
         response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
         self.assertContains(response, "Peter")

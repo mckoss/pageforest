@@ -111,9 +111,24 @@ class AuthMiddleware(object):
                     settings.SESSION_COOKIE_NAME, unicode(error))
                 assert request.user is None
 
+        # Referer check for /auth/ requests.
+        if (request.path_info.startswith('/auth/')
+            or request.path_info.startswith('/app/auth/')
+            or request.path_info.startswith('/app/admin/auth/')):
+            if not referer_is_trusted(request):
+                return AccessDenied(request)
+
         # Allow authentication attempts.
         if (request.path_info == '/app/admin/auth/challenge/'
             or request.path_info.startswith('/app/admin/auth/verify/')):
+            return
+
+        # Let authenticated user create an app by uploading app.json.
+        if (request.app.owner == ''
+            and request.method == 'PUT'
+            and request.path_info == '/app/%s/app.json/' %
+                settings.ADMIN_SUBDOMAIN
+            and request.user is not None):
             return
 
         # Only allow GET and HEAD for app_id.pageforest.com.
@@ -135,14 +150,6 @@ class AuthMiddleware(object):
             else:
                 # Check permissions for current document or its blob store.
                 return check_permissions(request, request.doc)
-
-        # Let authenticated user create an app by uploading app.json.
-        if (request.app.owner == ''
-            and request.method == 'PUT'
-            and request.path_info == '/app/%s/app.json/' %
-                settings.ADMIN_SUBDOMAIN
-            and request.user is not None):
-            return
 
         # Check permissions for the current app.
         return check_permissions(request, request.app)
