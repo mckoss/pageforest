@@ -8,6 +8,7 @@ load("../timer.js");
 
 (function(a) {
     var unit = namespace.lookup('org.startpad.unit');
+    var base = namespace.lookup('org.startpad.base');
     var modules = namespace.lookup('com.pageforest.modules');
 
     var cTests = 0;
@@ -24,14 +25,14 @@ load("../timer.js");
         return (ms / 1000).toString();
     }
 
-    function printSummary() {
-        print("Ran " + cTests + " tests in " + secs(msNow() - msStart) + 's');
-    }
-
     function ensureNamespaceLoaded(name) {
+        // FIXME: Need to load all module dependencies
+        // Use loader functions customized for Rhino
+
         var targetNamespace = namespace.lookup(name);
         if (!targetNamespace._isDefined) {
             var fileName = modules.locations[name];
+            // BUG: Rhino does not all catching this error in a try block?
             load(fileName);
         }
         return targetNamespace;
@@ -53,14 +54,7 @@ load("../timer.js");
             var option = target.substr(1);
             switch (option) {
             case 'a':
-                for (var module in modules.namespaces) {
-                    if (modules.namespaces.hasOwnProperty(module)) {
-                        var attrs = modules.testAttrs[module];
-                        if (attrs && attrs.noui) {
-                            a.push(module);
-                        }
-                    }
-                }
+                a = a.concat(base.keys(modules.namespaces));
                 break;
             case 'q':
                 fQuiet = true;
@@ -74,19 +68,28 @@ load("../timer.js");
 
         var targetNamespace = modules.namespaces[target];
         ensureNamespaceLoaded(targetNamespace);
-        var testModule = ensureNamespaceLoaded(targetNamespace + '.test');
+        var testNamespace = targetNamespace + '.test';
+        var testModule = ensureNamespaceLoaded(testNamespace);
 
-        var ts = new unit.TestSuite(targetNamespace + '.test');
+        if (typeof testModule.addTests == 'undefined') {
+            print("Failed to load module " + testNamespace);
+            cFailures++;
+            continue;
+        }
+
+        var ts = new unit.TestSuite(testNamespace);
         ts.fQuiet = fQuiet;
 
         testModule.addTests(ts);
         ts.run();
         cTests += ts.rgut.length;
-        cFailures = ts.cFailures;
-        if (ts.cFailures > 0) {
-            printSummary();
-            quit(1);
-        }
+        cFailures += ts.cFailures;
     }
-    printSummary();
+
+    print("Ran " + cTests + " tests in " + secs(msNow() - msStart) + 's' +
+          (cFailures != 0 ? " with " + cFailures + " errors." : ""));
+
+    if (cFailures) {
+        quit(1);
+    }
 }(arguments));

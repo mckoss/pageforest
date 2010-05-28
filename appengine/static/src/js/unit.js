@@ -70,12 +70,16 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (!this.fEnable) {
                 return;
             }
-            this.state = UnitTest.states.running;
-            console.log("=== Running test: " + this.stName + " ===");
             if (this.cAsync) {
-                this.tm = new timer.Timer(this.msTimeout,
-                                          this.timeout.fnMethod(this)).active();
+                if (typeof setInterval == 'undefined') {
+                    this.enable(false);
+                    return;
+                } else {
+                    this.tm = new timer.Timer(this.msTimeout,
+                        this.timeout.fnMethod(this)).active();
+                }
             }
+            this.state = UnitTest.states.running;
             try {
                 this.fn(this);
             }
@@ -107,6 +111,13 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         enable: function(f) {
             this.fEnable = f;
             return this;
+        },
+
+        require: function(toEval) {
+            var type = eval('typeof ' + toEval);
+            if (type == 'undefined') {
+                this.enable(false);
+            }
         },
 
         stopFail: function(f) {

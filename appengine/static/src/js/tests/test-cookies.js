@@ -14,7 +14,7 @@ namespace.lookup('org.startpad.cookies.test').defineOnce(function (ns) {
 
             ut.assertEq(obj.c1, x);
             ut.assertEq(obj.c2, y);
-        });
+        }).require('document');
     };
 
 });
