@@ -5,14 +5,12 @@ from datetime import datetime
 from django.conf import settings
 from django.shortcuts import redirect
 from django.core.urlresolvers import reverse
+from django.template.loader import render_to_string
+from django.template import RequestContext
 from django.http import \
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
-from google.appengine.api import mail, memcache
-from google.appengine.runtime import DeadlineExceededError
-
-from django.template.loader import render_to_string
-from django.template import RequestContext
+from google.appengine.api import mail
 
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
@@ -22,7 +20,6 @@ from auth import SignatureError
 from auth.forms import RegistrationForm, SignInForm
 from auth.models import User, CHALLENGE_EXPIRATION
 from auth.middleware import AccessDenied
-from auth.decorators import login_required
 
 from apps.models import App
 
@@ -67,17 +64,16 @@ def email_verification(request, verification=None):
         if (request.method == 'POST'
             and 'resend' in request.POST and request.user):
             send_email_verification(request, request.user)
-            return HttpResponse({'resent': True},
+            return HttpResponse('{"resent": true}',
                                 mimetype=settings.JSON_MIMETYPE)
         # Show verification status for the currently sign-in in user.
         user = request.user
         if user is None:
             error = "You are not signed in."
-        elif user.email_verified is None:
-            error = "Your email address has not yet been verified."
 
     return render_to_response(request, 'auth/email-verification.html',
                               {'verification_user': user,
+                               'is_verified': user and user.email_verified,
                                'error': error})
 
 
@@ -167,10 +163,6 @@ def get_username(request):
     """
     Get the username that is currently signed in.
     """
-    # FIXME:
-    # referer = request.META.get('HTTP_REFERER', '')
-    # if not referer.startswith('http://www.' + settings.DEFAULT_DOMAIN + '/'):
-    #     return AccessDenied(request, "Untrusted Referer: " + referer)
     if request.user is None:
         raise Http404("The user is not signed in.")
     return HttpResponse(request.user.username, mimetype='text/plain')

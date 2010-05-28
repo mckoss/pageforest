@@ -69,8 +69,14 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
             url: "/email-verify/",
             data: {resend: true},
             dataType: "json",
-            success: validate_success,
-            error: validate_error
+            success: function() {
+                $('span#result').css('color', '#0A0')
+                    .html("A new verification email was sent.");
+            },
+            error: function() {
+                $('span#result').css('color', '#F00')
+                    .html("Sorry, please try again later.");
+            }
         });
     }
 
