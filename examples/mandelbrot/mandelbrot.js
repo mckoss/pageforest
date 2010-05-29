@@ -10,9 +10,20 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
     Mandelbrot.methods({
         iterations: function (x0, y0) {
-            var x = 0;
-            var y = 0;
+            if (y0 < 0) {
+                y0 = -y0;
+            }
+            var x = x0;
+            var y = y0;
             var xT;
+
+            // Filter out points in bulb of radius 1/4 around (-1,0)
+            if (-1.25 < x && x < -0.75 && y < 0.25) {
+                var d = (x + 1) * (x + 1) + y * y;
+                if (d < 1 / 16) {
+                    return undefined;
+                }
+            }
 
             for (var i = 0; i < this.maxIterations; i++) {
                 xT = x * x - y * y + x0;
@@ -23,7 +34,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     return i;
                 }
             }
-            return this.maxIterations;
+            return undefined;
         }
     });
 
