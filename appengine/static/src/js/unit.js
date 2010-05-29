@@ -24,7 +24,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     function runTest(testModule, fnCallback) {
         if (!testModule.addTests) {
             alert("Module " + testModule._path +
-                  " has no no addTests() function.");
+                  " has no addTests() function.");
             return;
         }
 

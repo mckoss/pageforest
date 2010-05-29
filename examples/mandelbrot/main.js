@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
+namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
 
     // Initialize the document - create a client helper object

@@ -9,25 +9,26 @@
     src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
 <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="main.js"></script>
 <script type="text/javascript" src="mandelbrot.js"></script>
 <script type="text/javascript">
-var mandelbrot = namespace.lookup("com.pageforest.mandelbrot");
-$(document).ready(mandelbrot.onReady);
+var main = namespace.lookup("com.pageforest.mandelbrot.main");
+$(document).ready(main.onReady);
 </script>
 </head>
 <body>
 <div class="page">
 <h1><script>document.write(document.title);</script></h1>
 <div style="text-align:right">
-  <input type="button" id="signin" onclick="mandelbrot.signInOut()" value="Sign in" />
+  <input type="button" id="signin" onclick="main.signInOut()" value="Sign in" />
   <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
 </div>
 
 <fieldset>
   <div
   <div style="float:right;">
-    <input type="button" onclick="mandelbrot.client.detach();" value="Make a Copy" />
-    <input id="save" type="button" onclick="mandelbrot.client.save();" value="Save" />
+    <input type="button" onclick="main.client.detach();" value="Make a Copy" />
+    <input id="save" type="button" onclick="main.client.save();" value="Save" />
   </div>
   <p><i>Document is <span id="doc-state">clean</span>.</i></p>
 </fieldset>
@@ -44,8 +45,14 @@ $(document).ready(mandelbrot.onReady);
     computation.
   </p>
   <ol>
-    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/mandelbrot">Source code</a> - View the code for this application.</li>
-    <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">Getting Started</a> - How to get started with the Pageforest API.</li>
+    <li><a target="_blank" href="http://en.wikipedia.org/wiki/Mandelbrot_set">Mandelbrot Sets</a>
+      - Learn more about Mandelbrot sets on Wikipedia.</li>
+    <li><a target="_blank" href="test-runner.html">Unit Tests</a>
+      - Run the Unit Test Suite for this appliction.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/mandelbrot">Source code</a>
+      - View the code for this application.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">Getting Started</a>
+      - How to get started with the Pageforest API.</li>
   </ol>
 </fieldset>
 </body>
