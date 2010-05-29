@@ -41,7 +41,8 @@ class AuthRequest(urllib2.Request):
         urllib2.Request.__init__(self, url, *args, **kwargs)
         self.add_header('Referer', 'http://%s.%s/' % (
                 options.application, options.server))
-        self.add_header('Cookie', 'sessionkey=' + options.session_key)
+        if (hasattr(options, 'session_key')):
+            self.add_header('Cookie', 'sessionkey=' + options.session_key)
 
 
 class PutRequest(AuthRequest):
@@ -59,7 +60,7 @@ def sign_in():
     url = options.root_url + 'auth/challenge'
     if options.verbose:
         print("Getting %s" % url)
-    challenge = urllib2.urlopen(url).read()
+    challenge = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
         print("Challenge: %s" % challenge)
     userpass = hmac_sha1(options.password, options.username.lower())
@@ -68,7 +69,7 @@ def sign_in():
     url = options.root_url + 'auth/verify/' + reply
     if options.verbose:
         print("Response: %s" % url)
-    session_key = urllib2.urlopen(url).read()
+    session_key = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
         print("Session key: %s" % session_key)
     return session_key
