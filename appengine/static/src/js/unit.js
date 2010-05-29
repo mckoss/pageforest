@@ -21,19 +21,26 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var loader = namespace.lookup('org.startpad.loader');
 
     // Run the selected tests in the browser
-    function runTest(moduleName, locations, fnCallback) {
-        console.log("runTest: ", moduleName);
-        loader.loadNamespace(moduleName + '.test', locations, function () {
-            var testModule = namespace.lookup(moduleName + '.test');
-            if (!testModule.addTests) {
-                alert("Either module " + moduleName + " did not load or " +
-                      "no addTests() function was found.");
+    function runTest(testModule, fnCallback) {
+        if (!testModule.addTests) {
+            alert("Module " + testModule._path +
+                  " has no no addTests() function.");
+            return;
+        }
+
+        var ts = new ns.TestSuite(testModule._path);
+        testModule.addTests(ts);
+        ts.run(fnCallback);
+    }
+
+    function loadAndRunTest(path, locations, fnCallback) {
+        loader.loadNamespace(path + '.test', locations, function () {
+            var testModule = namespace.lookup(path + '.test');
+            if (!testModule._isDefined) {
+                alert("Module " + path + " is not loaded.");
                 return;
             }
-
-            var ts = new ns.TestSuite(moduleName + '.test');
-            testModule.addTests(ts);
-            ts.run(fnCallback);
+            runTest(testModule, fnCallback);
         });
     }
 
@@ -775,7 +782,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     }); // TestSuite
 
     ns.extend({
-        runTest: runTest,
+        'runTest': runTest,
+        'loadAndRunTest': loadAndRunTest,
         'TestSuite': TestSuite,
         'UnitTest': UnitTest,
         'TestResult': TestResult
