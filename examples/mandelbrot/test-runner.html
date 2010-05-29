@@ -1,0 +1,31 @@
+<html>
+
+<head>
+<title>Mandelbrot Unit Tests</title>
+<script src="/lib/beta/js/utils.js"></script>
+<script src="/static/src/js/unit.js"></script>
+<script src="/static/src/js/timer.js"></script>
+<script src="mandelbrot.js"></script>
+<script src="test-mandelbrot.js"></script>
+</head>
+
+<body onload="runner.run();">
+<h1 id="title"><script>document.write(document.title);</script></h1>
+
+<script>
+var mondelbrotTest = namespace.lookup('com.pageforest.mandelbrot.test');
+var unit = namespace.lookup('org.startpad.unit');
+var runner = namespace.lookup('com.pageforest.mandelbrot.test.runner');
+runner.define(function (ns) {
+    function run() {
+        unit.runTest(mondelbrotTest);
+    };
+
+    ns.run = run;
+});
+</script>
+
+<div id="divUnit" style="font-family: Courier;"></div>
+
+</body>
+</html>
