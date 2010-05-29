@@ -50,7 +50,7 @@ class Migratable(db.Model):
             self.schema += 1
 
         self.put()
-        logging.info("Updating %s[%s] schema (%d -> %d)" % (
+        logging.info("Updated %s entity %s from schema %d to %d" % (
                 self.kind(),
                 self.key().id_or_name(),
                 schema_old,
