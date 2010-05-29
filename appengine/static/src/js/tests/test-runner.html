@@ -22,7 +22,7 @@ runner.define(function (ns) {
         var targetNamespace = modules.namespaces[module];
 
         if (modules.locations[targetNamespace + '.test']) {
-            unit.runTest(targetNamespace, modules.locations, fnCallback);
+            unit.loadAndRunTest(targetNamespace, modules.locations, fnCallback);
         }
         else {
             if (fnCallback) {
