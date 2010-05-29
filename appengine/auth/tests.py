@@ -317,6 +317,52 @@ class AppSignInTest(AppTestCase):
         self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
 
+class SetSessionTest(AppTestCase):
+
+    def setUp(self):
+        super(SetSessionTest, self).setUp()
+        self.referer = self.app_client.defaults['HTTP_REFERER']
+        self.app_client.defaults['HTTP_REFERER'] = \
+            "http://www.pageforest.com/sign-in/"
+        self.session_key = self.peter.generate_session_key(self.app)
+
+    def tearDown(self):
+        self.app_client.defaults['HTTP_REFERER'] = self.referer
+
+    def test_set_session(self):
+        """Simulate the JavaScript cross-site auth."""
+        response = self.app_client.get(
+            APP_AUTH_PREFIX + 'set-session/' +
+            self.session_key + '?callback=jsonp123')
+        self.assertEqual(response.content,
+                         'jsonp123("' + self.session_key + '")')
+        cookie = response.cookies['sessionkey']
+        self.assertEqual(cookie.value, self.session_key)
+
+    def test_bogus(self):
+        """Bogus session key should return an error message."""
+        self.assertContains(self.app_client.get(
+                APP_AUTH_PREFIX + 'set-session/bogus'),
+                "Invalid session key: Expected 4 parts.",
+                status_code=403)
+
+    def test_invalid(self):
+        """Invalid signature should return an error message."""
+        self.assertContains(self.app_client.get(
+                APP_AUTH_PREFIX + 'set-session/' + self.session_key[:-1]),
+                "Invalid session key: Password incorrect.",
+                status_code=403)
+
+    def test_expired(self):
+        """Expired session key should return an error message."""
+        parts = crypto.split(self.session_key)
+        parts[2] = int(time.time()) - 10
+        self.assertContains(self.app_client.get(
+                APP_AUTH_PREFIX + 'set-session/' + crypto.join(parts)),
+                "Invalid session key: Session key expired.",
+                status_code=403)
+
+
 class ChallengeVerifyTest(AppTestCase):
 
     def sign_and_verify(self, challenge, username=None, password=None,
