@@ -1,53 +1,14 @@
-div.tabLeft {
-    float: left;
-    width: 10px;
-    height: 30px;
-    margin: 0px;
-}
-
-div.tabLeftSelect {
-    font-weight:bold;
-    float: left;
-    width: 10px;
-    height: 30px;
-    margin: 0px;
-}
-
-div.tabMiddle {
+div.tab {
     float: left;
     height: 30px;
     margin: 0px;
 }
 
-div.tabMiddleSelect {
+div.tabSelect {
     font-weight: bold;
-    float: left;
-    height: 30px;
-    margin: 0px;
 }
 
-div.tabRight {
-    float: left;
-    width: 10px;
-    height: 30px;
-    margin: 0px;
-}
-
-div.tabRightSelect {
-    font-weight: bold;
-    float: left;
-    width: 10px;
-    height: 30px;
-    margin: 0px;
-}
-
-div.tabSpacer {
-    float: left;
-    width: 3px;
-    height: 30px;
-}
-
-div.tabMiddle a {
+div.tab a {
     text-decoration: none;
     color: #898989;
     line-height: 31px;
@@ -55,7 +16,7 @@ div.tabMiddle a {
     font-weight: bold;
 }
 
-div.tabMiddleSelect a {
+div.tabSelect a {
     text-decoration: none;
     color: #4D2500;
     line-height: 31px;
@@ -63,7 +24,7 @@ div.tabMiddleSelect a {
     font-weight: bold;
 }
 
-div.tabMiddle a:hover {
+div.tab a:hover {
     text-decoration: underline;
     color: #FF7F00;
 }
