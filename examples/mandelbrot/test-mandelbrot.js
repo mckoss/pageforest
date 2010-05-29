@@ -69,7 +69,6 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             var msStart = new Date().getTime();
             var cInSet = 0;
 
-            // Assume tiles are 25 x 25
             var dx = (m.xMax - m.xMin) / 256;
             var dy = (m.yMax - m.yMin) / 256;
             var y = m.yMin;
@@ -86,7 +85,8 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
 
             var msElapsed = new Date().getTime() - msStart;
-            var report = cInSet + " in set, (" + msElapsed + "ms)";
+            var area = cInSet / 256 / 256;
+            var report = "area = " + area + " (" + msElapsed + "ms)";
             console.log(report);
 
             ut.assert(msElapsed < 1000, report);
