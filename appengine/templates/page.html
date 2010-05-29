@@ -9,18 +9,12 @@
                 <!-- Signin Widget -->
                 <div class="topbar">
                 <div class="topbarLeft"></div>
-                <div class="topbarMid"><a href="http://{{DOMAIN}}/sign-in/">Sign in</a><a href="http://{{DOMAIN}}/sign-up/">Join now</a><a href="http://blog.pageforest.com/">Blog</a></div>
+                <div class="topbarMid"><a href="http://{{DOMAIN}}/sign-in/">Sign in</a><a href="http://{{DOMAIN}}/sign-up/">Join now</a></div>
                 <div class="topbarRight"></div>
                 </div>
 
                 <!-- Navigation Bar -->
                 <div style="position:absolute;left:125px;top:164px;height:30px;width:770px;">
-                    <!-- Search -->
-                    <div style="float:right;width:220px;height:30px;">
-                        <input type="button" style="float:right;width:70px;position:relative;top:-1px;" value="Search" />
-                        <input type="text" style="float:left;width:140px;height:17px" />
-                    </div>
-
                     <!-- Folder Tabs -->
                     <div class="tabLeftSelect"></div>
                     <div class="tabMiddleSelect"><a href="http://{{DOMAIN}}/">Home</a></div>
@@ -28,7 +22,11 @@
                     <div class="tabSpacer"></div>
 
                     <div class="tabLeft"></div>
-                    <div class="tabMiddle"><a href="http://{{DOMAIN}}/docs/">My Pages</a></div>
+                    <div class="tabMiddle"><a href="http://{{DOMAIN}}/apps/">Apps</a></div>
+                    <div class="tabRight"></div>
+
+                    <div class="tabLeft"></div>
+                    <div class="tabMiddle"><a href="http://{{DOMAIN}}/docs/">Docs</a></div>
                     <div class="tabRight"></div>
 
                 </div>
@@ -38,15 +36,9 @@
 </div>
 
 <!-- Page Content -->
-<div class="Content" style="width:100%;">
+<div class="Content" style="width:100%;background:url({{MEDIA_URL}}images/nav/body-background.png) repeat-x top left scroll;">
     <div style="margin:auto;width:960px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
-        <div class="breadcrumb">
-          <a href="#">Home</a>
-          <img style="width:25px;position:relative;top:-1px;" src="{{MEDIA_URL}}images/nav/breadcrumb.gif"/>
-          <a href="#">Widget</a>
-        </div>
-
-        <div style="float:left;margin-left:125px;width:835px;">
+        <div style="float:left;margin-top:20px;margin-left:125px;width:835px;">
         {% block both-columns %}
             <!-- Left Column -->
             <div id="left-column" style="float:left;padding-right:15px;width:585px;background:url({{MEDIA_URL}}images/nav/rule-vert.gif) repeat-y scroll top right;">
