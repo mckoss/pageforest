@@ -1,5 +1,6 @@
 import re
 import time
+import logging
 from mock import Mock
 
 from django.conf import settings
@@ -44,27 +45,41 @@ class UserTest(AppTestCase):
         self.assertEqual(unicode(self.peter), 'Peter')
         self.assertEqual(unicode(self.paul), 'Paul')
 
+    def test_migrate(self):
+        """The migrate method should not have side effects."""
+        self.assertEqual(self.peter.schema, 1)
+        self.peter.migrate(2)
+        self.assertEqual(self.peter.schema, 1)
+
 
 class MigratableTest(AppTestCase):
 
     def setUp(self):
         super(MigratableTest, self).setUp()
-        self.migrate = User.migrate
-        User.migrate = Mock(User.migrate)
-        self.current_schema = User.current_schema
+        self.original = {
+            'User.current_schema': User.current_schema,
+            'User.migrate': User.migrate,
+            'logging.info': logging.info,
+            }
         User.current_schema = 3
+        User.migrate = Mock()
+        logging.info = Mock(wraps=logging.info)
 
     def tearDown(self):
-        User.migrate = self.migrate
-        User.current_schema = self.current_schema
+        User.current_schema = self.original['User.current_schema']
+        User.migrate = self.original['User.migrate']
+        logging.info = self.original['logging.info']
 
     def test_migratable(self):
         """Test schema migration for User model."""
+        self.assertEqual(logging.info.call_count, 0)
         self.assertEqual(User.migrate.call_count, 0)
         self.assertEqual(self.peter.schema, 1)
         self.peter.update_schema()
         self.assertEqual(self.peter.schema, 3)
         self.assertEqual(User.migrate.call_count, 2)
+        self.assertEqual(logging.info.call_args[0][0],
+                         u"Updated User entity peter from schema 1 to 3")
 
 
 class RegistrationTest(AppTestCase):
