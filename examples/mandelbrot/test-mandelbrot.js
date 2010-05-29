@@ -42,13 +42,13 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
 
             for (i = 0; i < inSet.length; i++) {
                 p = inSet[i];
-                ut.assertEq(m.iterations(p[0], p[1]), m.maxIterations,
+                ut.assertEq(m.iterations(p[0], p[1]), undefined,
                             p[0] + ', ' + p[1]);
             }
 
             for (i = 0; i < outSet.length; i++) {
                 p = outSet[i];
-                ut.assert(m.iterations(p[0], p[1]) < m.maxIterations);
+                ut.assert(m.iterations(p[0], p[1]) != undefined);
             }
         });
 
@@ -76,7 +76,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
                 var x = m.xMin;
                 for (var ix = 0; ix < 256; ix++) {
                     var iters = m.iterations(x, y);
-                    if (iters == m.maxIterations) {
+                    if (iters == undefined) {
                         cInSet++;
                     }
                     x += dx;
@@ -85,11 +85,10 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
 
             var msElapsed = new Date().getTime() - msStart;
-            var area = cInSet / 256 / 256;
-            var report = "area = " + area + " (" + msElapsed + "ms)";
-            console.log(report);
-
-            ut.assert(msElapsed < 1000, report);
+            var area = cInSet * dx * dy;
+            console.log("area = " + area + " (" + msElapsed + "ms)");
+            ut.assert(msElapsed < 1000, "Too slow: " + msElapsed + "ms");
+            ut.assert(area > 1.5 && area < 1.52, "Inaccurate area: " + area);
         });
     }
 
