@@ -1,0 +1,53 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Mandelbrot Set Viewer</title>
+<link rel="stylesheet" type="text/css" href="main.css" />
+<script type="text/javascript"
+    src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="mandelbrot.js"></script>
+<script type="text/javascript">
+var mandelbrot = namespace.lookup("com.pageforest.mandelbrot");
+$(document).ready(mandelbrot.onReady);
+</script>
+</head>
+<body>
+<div class="page">
+<h1><script>document.write(document.title);</script></h1>
+<div style="text-align:right">
+  <input type="button" id="signin" onclick="mandelbrot.signInOut()" value="Sign in" />
+  <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
+</div>
+
+<fieldset>
+  <div
+  <div style="float:right;">
+    <input type="button" onclick="mandelbrot.client.detach();" value="Make a Copy" />
+    <input id="save" type="button" onclick="mandelbrot.client.save();" value="Save" />
+  </div>
+  <p><i>Document is <span id="doc-state">clean</span>.</i></p>
+</fieldset>
+
+<fieldset>
+  <legend>API Status</legend>
+  <div id="error"></div>
+</fieldset>
+
+<fieldset>
+  <legend>Explore</legend>
+  <p>This application demonstrates some powerful HTML5 features (Canvas, Web Workers), as well
+    as use of the Pageforest JavaScript platform to implement Tile Caching and collaborative
+    computation.
+  </p>
+  <ol>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/mandelbrot">Source code</a> - View the code for this application.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">Getting Started</a> - How to get started with the Pageforest API.</li>
+  </ol>
+</fieldset>
+</body>
+</div>
+</html>
