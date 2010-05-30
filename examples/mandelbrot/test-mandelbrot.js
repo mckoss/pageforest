@@ -69,9 +69,9 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             var msStart = new Date().getTime();
             var cInSet = 0;
 
-            var dx = (m.xMax - m.xMin) / 256;
-            var dy = (m.yMax - m.yMin) / 256;
-            var y = m.yMin;
+            var dx = (m.xMax - m.xMin) / 255;
+            var dy = m.yMax / 255;
+            var y = m.yMax;
             for (var iy = 0; iy < 256; iy++) {
                 var x = m.xMin;
                 for (var ix = 0; ix < 256; ix++) {
@@ -81,11 +81,11 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
                     }
                     x += dx;
                 }
-                y += dy;
+                y -= dy;
             }
 
             var msElapsed = new Date().getTime() - msStart;
-            var area = cInSet * dx * dy;
+            var area = 2 * cInSet * dx * dy;
             console.log("area = " + area + " (" + msElapsed + "ms)");
             ut.assert(msElapsed < 1000, "Too slow: " + msElapsed + "ms");
             ut.assert(area > 1.5 && area < 1.52, "Inaccurate area: " + area);
