@@ -54,26 +54,25 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             dx = dx / cx;
             dy = dy / cy;
 
-            var imageData = ctx.createImageData(cx, cy);
+            ctx.fillStyle = "red";
+            var bitmap = ctx.createImageData(cx, cy);
 
             var y = yTop;
-            var ibLine = 0;
+            var ib = 0;
             for (var iy = 0; iy < cy; iy++) {
                 var x = xLeft;
                 for (var ix = 0; ix < cx; ix++) {
                     var iters = this.iterations(x, y);
-                    var color = iters % 256;
-                    imageData[ibLine] = 0;
-                    imageData[ibLine] = 0;
-                    imageData[ibLine] = 0;
-                    imageData[ibLine] = 255;
+                    if (iters != undefined && iters != 0) {
+                        bitmap.data[ib] = iters % 256;
+                        bitmap.data[ib + 3] = 255;
+                    }
                     x += dx;
+                    ib += 4;
                 }
-                y += dy;
-                ibLine += 4 * cx;
+                y -= dy;
             }
-
-            ctx.putImageData(imageData, xCanvas, yCanvas);
+            ctx.putImageData(bitmap, 0, 0);
         }
     });
 
