@@ -7,6 +7,17 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         this.xMax = 1;
         this.yMin = -1.5;
         this.yMax = 1.5;
+
+        // Color of in-set pixels
+        this.setColor = [0, 0, 0, 255];
+        // level, R, G, B, A - interpolated
+        this.levelColors = [
+            [0, [0, 0, 0, 255]],
+            [20, [255, 0, 0, 255]],
+            [40, [0, 0, 255, 255]],
+            [60, [0, 255, 0, 255]],
+            [1000, [255, 255, 255, 255]]
+        ];
     }
 
     Mandelbrot.methods({
@@ -49,6 +60,40 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             return undefined;
         },
 
+        colorFromLevel: function(level) {
+            if (level == undefined) {
+                return this.setColor;
+            }
+            var iMin = 0;
+            var iMax = this.levelColors.length;
+            while (iMin < iMax - 1) {
+                var iMid = Math.floor((iMin + iMax) / 2);
+                var levelT = this.levelColors[iMid][0];
+                if (levelT == level) {
+                    return this.levelColors[iMid][1];
+                }
+                if (levelT < level) {
+                    iMin = iMid;
+                }
+                else {
+                    iMax = iMid;
+                }
+            }
+
+            var levelMin = this.levelColors[iMin][0];
+            var levelMax = this.levelColors[iMax][0];
+            var p = (level - levelMin) / (levelMax - levelMin);
+
+            var color = [];
+            for (var i = 0; i < 4; i++) {
+                var cMin = this.levelColors[iMin][1][i];
+                var cMax = this.levelColors[iMax][1][i];
+                color[i] = Math.floor(cMin + p * (cMax - cMin) + 0.5);
+            }
+
+            return color;
+        },
+
         drawTile: function(ctx, xLeft, yTop, dx, dy,
                            xCanvas, yCanvas, cx, cy) {
             dx = dx / cx;
@@ -59,16 +104,16 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
             var y = yTop;
             var ib = 0;
+            var rgba;
             for (var iy = 0; iy < cy; iy++) {
                 var x = xLeft;
                 for (var ix = 0; ix < cx; ix++) {
                     var iters = this.iterations(x, y);
-                    if (iters != undefined && iters != 0) {
-                        bitmap.data[ib] = iters % 256;
-                        bitmap.data[ib + 3] = 255;
+                    rgba = this.colorFromLevel(iters);
+                    for (var i = 0; i < 4; i++) {
+                        bitmap.data[ib++] = rgba[i];
                     }
                     x += dx;
-                    ib += 4;
                 }
                 y -= dy;
             }
