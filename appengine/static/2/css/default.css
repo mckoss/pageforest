@@ -64,6 +64,12 @@ div.CallToAction p {
     margin: 0;
     padding: 15px;
 }
+
+img.favicon16 {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+}
 /* Begin file: home.css */
 # Styles used only on the home page
 #home {
