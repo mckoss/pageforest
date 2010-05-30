@@ -17,7 +17,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         var ctx = c.getContext('2d');
         m.drawTile(ctx, m.xMin, m.yMax,
                    (m.xMax - m.xMin), (m.yMax - m.yMin),
-                   0, 0, 100, 100);
+                   0, 0, 512, 512);
     }
 
     // This function is called whenever your document should be reloaded.

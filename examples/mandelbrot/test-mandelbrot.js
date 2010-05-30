@@ -90,6 +90,35 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             ut.assert(msElapsed < 1000, "Too slow: " + msElapsed + "ms");
             ut.assert(area > 1.5 && area < 1.52, "Inaccurate area: " + area);
         });
+
+        ts.addTest("colorFromLevel", function(ut) {
+            var m = new mandelbrot.Mandelbrot();
+            var tests = [
+                [undefined, m.setColor],
+                [1000, [255, 255, 255, 255]],
+                [20, [255, 0, 0, 255]],
+                [40, [0, 0, 255, 255]],
+                [60, [0, 255, 0, 255]],
+                [10, [128, 0, 0, 255]],
+                [30, [128, 0, 128, 255]]
+            ];
+
+            function assertColorMatch(color, match, level) {
+                console.log(level, color, match);
+                for (var i = 0; i < 4; i++) {
+                    var c = color[i];
+                    ut.assert(c == Math.floor(c));
+                    ut.assert(c >= 0 && c <= 255);
+                    ut.assertEq(c, match[i], level + '[' + i + ']');
+                }
+            }
+
+            for (var i = 0; i < tests.length; i++) {
+                var level = tests[i][0];
+                var color = tests[i][1];
+                assertColorMatch(m.colorFromLevel(level), color, level);
+            }
+        });
     }
 
     ns.addTests = addTests;
