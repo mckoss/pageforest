@@ -1,5 +1,6 @@
 namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
+    var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
 
     // Initialize the document - create a client helper object
     function onReady() {
@@ -9,6 +10,14 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
+
+        var m = new mandelbrot.Mandelbrot();
+        var c = document.getElementById('view-port');
+        console.log(c.tagName);
+        var ctx = c.getContext('2d');
+        m.drawTile(ctx, m.xMin, m.yMax,
+                   (m.xMax - m.xMin), (m.yMax - m.yMin),
+                   1024, 1024);
     }
 
     // This function is called whenever your document should be reloaded.

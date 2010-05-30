@@ -47,6 +47,33 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                 }
             }
             return undefined;
+        },
+
+        drawTile: function(ctx, xLeft, yTop, dx, dy,
+                           xCanvas, yCanvas, cx, cy) {
+            dx = dx / cx;
+            dy = dy / cy;
+
+            var imageData = ctx.createImageData(cx, cy);
+
+            var y = yTop;
+            var ibLine = 0;
+            for (var iy = 0; iy < cy; iy++) {
+                var x = xLeft;
+                for (var ix = 0; ix < cx; ix++) {
+                    var iters = this.iterations(x, y);
+                    var color = iters % 256;
+                    imageData[ibLine] = 0;
+                    imageData[ibLine] = 0;
+                    imageData[ibLine] = 0;
+                    imageData[ibLine] = 255;
+                    x += dx;
+                }
+                y += dy;
+                ibLine += 4 * cx;
+            }
+
+            ctx.putImageData(imageData, xCanvas, yCanvas);
         }
     });
 
