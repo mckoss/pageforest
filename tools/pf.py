@@ -22,7 +22,7 @@ SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
-COMMANDS = ['get', 'put']  # TODO: Add list and delete.
+COMMANDS = ['get', 'put', 'test']  # TODO: Add list and delete.
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
 
@@ -144,7 +144,10 @@ def config():
     if not options.server:
         options.server = "pageforest.com"
 
-    options.application = load_application()
+    if options.command == 'test':
+        options.application = 'pfpytest'
+    else:
+        options.application = load_application()
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
@@ -299,6 +302,49 @@ def put(args):
             upload_dir(path)
         elif os.path.isfile(path):
             upload_file(path)
+
+
+def test(args):
+    """
+    Test all commands against a live server.
+    """
+    # Create temp folder.
+    dirname = options.application
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    os.chdir(dirname)
+    # Create app.json with metadata.
+    outfile = open(META_FILENAME, 'w')
+    outfile.write('{"application": "%s"}' % options.application)
+    outfile.close()
+    # Create test.txt with current timestamp as content.
+    write_data = datetime.now().isoformat()
+    filename = 'test.txt'
+    outfile = open(filename, 'w')
+    outfile.write(write_data)
+    outfile.close()
+    # Upload everything, then delete local files.
+    put([])
+    os.unlink(META_FILENAME)
+    os.unlink(filename)
+    # TODO: Implement and test LIST command.
+    # Download everything, then verify file content.
+    get([])
+    infile = open(filename, 'r')
+    read_data = infile.read()
+    infile.close()
+    assert read_data == write_data
+    # Verify app.json content.
+    infile = open(META_FILENAME, 'r')
+    app_json = infile.read()
+    infile.close()
+    assert '"modified":' in app_json
+    assert '"tags": []' in app_json
+    # Clean up.
+    os.unlink(META_FILENAME)
+    os.unlink(filename)
+    os.chdir('..')
+    os.rmdir(dirname)
 
 
 def main():
