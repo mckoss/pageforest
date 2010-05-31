@@ -15,17 +15,19 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
         });
 
         ts.addTest("thousands", function (ut) {
-            var tests = [[100, '100'],
-                         [-100, '-100'],
-                         [1000, '1,000'],
-                         [-1000, '-1,000'],
-                         [1000000, '1,000,000']
+            var tests = [[100, undefined, '100'],
+                         [-100, undefined, '-100'],
+                         [1000, undefined, '1,000'],
+                         [-1000, undefined, '-1,000'],
+                         [1000000, undefined, '1,000,000'],
+                         [1000, 2, '1,000.00'],
+                         [0.75, 5, '0.75000'],
+                         [0.12345, 3, '0.123']
                         ];
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
-                ut.assertEq(format.thousands(test[0]), test[1]);
+                ut.assertEq(format.thousands(test[0], test[1]), test[2]);
             }
-            ut.assertEq(format.thousands(1000, 2), '1,000.00');
         });
 
         ts.addTest("fixedDigits", function (ut) {
