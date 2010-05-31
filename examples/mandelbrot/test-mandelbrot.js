@@ -5,7 +5,8 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
     var nsSymbols = ['Mandelbrot',
                      '_isDefined', '_referenced', '_parent', '_path', 'test'];
 
-    var mandelbrotSymbols = ['iterations'];
+    var mandelbrotSymbols = ['iterations', 'colorFromLevel', 'levelFromColor',
+                             'render', 'renderKey', 'rgbaFromColor'];
 
     function addTests(ts) {
         ts.addTest("Contract", function(ut) {
@@ -14,7 +15,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
 
             for (var i = 0; i < mandelbrotSymbols.length; i++) {
                 var symbol = mandelbrotSymbols[i];
-                ut.assert(Mandelbrot.prototype.hasOwnProperty(symbol),
+                ut.assert(Mandelbrot.prototype[symbol] != undefined,
                           "Missing api: Mandelbrot." + symbol);
                 ut.assertEq(typeof Mandelbrot.prototype[symbol], 'function',
                             symbol);
@@ -27,6 +28,13 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
                 if (mandelbrot.hasOwnProperty(prop)) {
                     ut.assert(nsSymbols.indexOf(prop) != -1,
                                 "Undocumented symbol: " + prop);
+                }
+            }
+
+            for (prop in Mandelbrot.prototype) {
+                if (Mandelbrot.prototype.hasOwnProperty(prop)) {
+                    ut.assert(mandelbrotSymbols.indexOf(prop) != -1,
+                              "Undocument method: Mandelbrot." + prop);
                 }
             }
         });
@@ -97,6 +105,16 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             // Confirm colors assignment are invertible.
             for (var level = 0; level <= m.maxIterations; level++) {
                 ut.assertEq(m.levelFromColor(m.colorFromLevel(level)), level);
+            }
+        });
+
+        ts.addTest("rgba", function(ut) {
+            var m = new mandelbrot.Mandelbrot();
+            var regex = /^rgba\((\d+,){3}\d+\)$/;
+            for (var level = 0; level <= this.maxIterations; level += 100) {
+                var color = m.colorFromLevel(color);
+                var rgba = m.rgbaFromColor(color);
+                ut.assert(regex.test(rgba), rgba);
             }
         });
     }
