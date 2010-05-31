@@ -12,13 +12,13 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         this.setColor = [0, 0, 0, 255];
         // level, R, G, B, A - interpolated
         this.levelColors = [
-            [0, [0, 8, 107, 255]],
-            [20, [0, 0, 255, 255]],
-            [50, [255, 0, 255, 255]],
-            [100, [255, 0, 0, 255]],
-            [200, [255, 255, 0, 255]],
-            [300, [0, 255, 0, 255]],
-            [1000, [255, 255, 255, 255]]
+            [0, [0, 8, 107, 255]],        // dark blue background
+            [100, [255, 255, 255, 255]],
+            [200, [255, 0, 0, 255]],
+            [400, [255, 255, 0, 255]],
+            [600, [0, 255, 0, 255]],
+            [800, [0, 255, 255, 255]],
+            [1000, [255, 246, 170, 255]]
         ];
     }
 
@@ -38,7 +38,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             if (-0.75 < x && x < 0.38 && y < 0.66) {
                 var q = (x - 0.25) * (x - 0.25) + y2;
                 if (q * (q + x - 0.25) < 0.25 * y2) {
-                    return undefined;
+                    return this.maxIterations;
                 }
             }
 
@@ -46,7 +46,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             if (-1.25 < x && x < -0.75 && y < 0.25) {
                 var d = (x + 1) * (x + 1) + y2;
                 if (d < 1 / 16) {
-                    return undefined;
+                    return this.maxIterations;
                 }
             }
 
@@ -59,11 +59,13 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     return i;
                 }
             }
-            return undefined;
+            return this.maxIterations;
         },
 
         colorFromLevel: function(level) {
-            if (level == undefined) {
+            // Interpolate control points in this.levelColors
+            // to map levels to colors.
+            if (level == this.maxIterations) {
                 return this.setColor;
             }
             var iMin = 0;
@@ -84,16 +86,33 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
             var levelMin = this.levelColors[iMin][0];
             var levelMax = this.levelColors[iMax][0];
+            // Make sure we are not overly sensitive to rounding
             var p = (level - levelMin) / (levelMax - levelMin);
 
             var color = [];
             for (var i = 0; i < 4; i++) {
                 var cMin = this.levelColors[iMin][1][i];
                 var cMax = this.levelColors[iMax][1][i];
-                color[i] = Math.floor(cMin + p * (cMax - cMin) + 0.5);
+                color[i] = Math.floor(cMin + p * (cMax - cMin));
             }
 
             return color;
+        },
+
+        levelFromColor: function(color) {
+            // On-demand compute inversion color table.
+            var key;
+
+            if (this.colorLevels == undefined) {
+                this.colorLevels = {};
+                for (var level = 0; level <= this.maxIterations; level++) {
+                    key = this.colorFromLevel(level).join('-');
+                    this.colorLevels[key] = level;
+                }
+            }
+
+            key = color.join('-');
+            return this.colorLevels[key];
         },
 
         drawTile: function(ctx, xLeft, yTop, dx, dy,
