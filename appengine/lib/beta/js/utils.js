@@ -573,7 +573,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // decimal digits.
     function thousands(value, digits) {
         var integerPart = Math.floor(value);
-        var s = value.toString();
+        var s = integerPart.toString();
         var sLast = "";
         while (s != sLast) {
             sLast = s;
@@ -581,7 +581,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         }
 
         var fractionString = "";
-        if (digits && digits > 0) {
+        if (digits && digits >= 1) {
+            digits = Math.floor(digits);
             var fraction = value - integerPart;
             fraction = Math.floor(fraction * Math.pow(10, digits));
             fractionString = "." + fixedDigits(fraction, digits);
