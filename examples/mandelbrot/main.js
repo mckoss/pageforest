@@ -2,6 +2,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
     var vector = namespace.lookup('org.startpad.vector');
+    var format = namespace.lookup('org.startpad.format');
 
     // Initialize the document - create a client helper object
     function onReady() {
@@ -19,34 +20,38 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.viewPortOffset = ns.viewPort.offset();
         console.log(ns.viewPortOffset);
         ns.viewPort = ns.viewPort[0];
-        ns.context = ns.viewPort.getContext('2d');
 
         $(ns.viewPort).click(function(evt) {
             var px = (evt.pageX - ns.viewPortOffset.left) / ns.viewPort.width;
             var py = (evt.pageY - ns.viewPortOffset.top) / ns.viewPort.height;
             var dx = (px - 0.5) * (ns.m.xMax - ns.m.xMin) / ns.scale;
             var dy = (0.5 - py) * (ns.m.yMax - ns.m.yMin) / ns.scale;
-            console.log(px, py, dx, dy);
             ns.center[0] += dx;
             ns.center[1] += dy;
-            console.log('center', ns.center);
             ns.draw();
         });
 
         ns.m = new mandelbrot.Mandelbrot();
+
         ns.scale = 1;
         ns.center = [(ns.m.xMin + ns.m.xMax) / 2,
                      (ns.m.yMin + ns.m.yMax) / 2];
-        console.log(ns.center);
+
+        ns.renderKey($('#level-key')[0]);
     }
 
     function draw() {
+        var precision = Math.floor(Math.log(ns.scale) / Math.LN10 + 2.5);
+        $('#center').text(format.thousands(ns.center[0], precision) + ', ' +
+                          format.thousands(ns.center[1], precision));
+        $('#zoom').text(ns.scale);
+        ns.onError('ok', "Drawing...");
         var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
         var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
-        ns.m.drawTile(ns.context,
-                      ns.center[0] - dx / 2, ns.center[1] + dy / 2,
-                      dx, dy,
-                      0, 0, ns.viewPort.width, ns.viewPort.height);
+        ns.m.render(ns.viewPort,
+                    ns.center[0] - dx / 2, ns.center[1] + dy / 2,
+                    dx, dy);
+        ns.onError("", "");
     }
 
     function zoom(scale) {

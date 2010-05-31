@@ -26,13 +26,20 @@ $(document).ready(main.onReady);
 </div>
 
 <fieldset>
-  <canvas id="view-port" width="512" height="512"></canvas>
   <div style="float:right;">
-    <input type="button" onclick="main.client.detach();" value="Make a Copy" />
-    <input id="save" type="button" onclick="main.client.save();" value="Save" />
     <input type="button" onclick="main.draw();" value="Draw" />
     <input type="button" onclick="main.zoom(2);" value="+" />
     <input type="button" onclick="main.zoom(0.5);" value="-" />
+    <p>Magnification: <span id="zoom"></span></p>
+    <p>Center: <span id="center"></span></p>
+  </div>
+
+  <canvas id="view-port" width="512" height="512"></canvas>
+  <canvas id="level-key" width="512" height="20"></canvas>
+
+  <div style="clear:both;float:right;">
+    <input type="button" onclick="main.client.detach();" value="Make a Copy" />
+    <input id="save" type="button" onclick="main.client.save();" value="Save" />
   </div>
   <p><i>Document is <span id="doc-state">clean</span>.</i></p>
 </fieldset>
@@ -50,7 +57,7 @@ $(document).ready(main.onReady);
   </p>
   <ol>
     <li><a target="_blank" href="http://en.wikipedia.org/wiki/Mandelbrot_set">The Mandelbrot Set</a>
-      - Learn more about Mandelbrot sets on Wikipedia.</li>
+      - Learn more about the Mandelbrot set on Wikipedia.</li>
     <li><a target="_blank" href="test-runner.html">Unit Tests</a>
       - Run the Unit Test Suite for this appliction.</li>
     <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/mandelbrot">Source code</a>

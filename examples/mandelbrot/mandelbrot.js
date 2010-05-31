@@ -115,13 +115,31 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             return this.colorLevels[key];
         },
 
-        drawTile: function(ctx, xLeft, yTop, dx, dy,
-                           xCanvas, yCanvas, cx, cy) {
+        rgbaFromColor: function(color) {
+            return "rgba(" + color.join(',') + ")";
+        },
+
+        renderKey: function(canvas) {
+            var ctx = canvas.getContext('2d');
+            var width = canvas.width;
+            var height = canvas.height;
+
+            for (var x = 0; x < width; x++) {
+                var level = Math.floor(this.maxIterations * x / width);
+                ctx.fillStyle = this.rgbaFromColor(this.colorFromLevel(level));
+                ctx.fillRect(x, 0, x + 1, height);
+            }
+        },
+
+        render: function(canvas, xLeft, yTop, dx, dy) {
+            var cx = canvas.width;
+            var cy = canvas.height;
+            var ctx = canvas.getContext('2d');
+            var bitmap = ctx.createImageData(cx, cy);
+
+            // Per-pixel step values
             dx = dx / cx;
             dy = dy / cy;
-
-            ctx.fillStyle = "red";
-            var bitmap = ctx.createImageData(cx, cy);
 
             var y = yTop;
             var ib = 0;
