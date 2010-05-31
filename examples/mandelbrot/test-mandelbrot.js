@@ -21,7 +21,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("Undocumented exports", function(ut) {
+        ts.addTest("Undocumented Exports", function(ut) {
             var Mandelbrot = mandelbrot.Mandelbrot;
             for (var prop in mandelbrot) {
                 if (mandelbrot.hasOwnProperty(prop)) {
@@ -42,17 +42,17 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
 
             for (i = 0; i < inSet.length; i++) {
                 p = inSet[i];
-                ut.assertEq(m.iterations(p[0], p[1]), undefined,
+                ut.assertEq(m.iterations(p[0], p[1]), m.maxIterations,
                             p[0] + ', ' + p[1]);
             }
 
             for (i = 0; i < outSet.length; i++) {
                 p = outSet[i];
-                ut.assert(m.iterations(p[0], p[1]) != undefined);
+                ut.assert(m.iterations(p[0], p[1]) != m.maxIterations);
             }
         });
 
-        ts.addTest("Vertical symmetry", function(ut) {
+        ts.addTest("Vertical Symmetry", function(ut) {
             var m = new mandelbrot.Mandelbrot();
 
             for (var i = 0; i < 100; i++) {
@@ -76,7 +76,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
                 var x = m.xMin;
                 for (var ix = 0; ix < 256; ix++) {
                     var iters = m.iterations(x, y);
-                    if (iters == undefined) {
+                    if (iters == m.maxIterations) {
                         cInSet++;
                     }
                     x += dx;
@@ -91,32 +91,12 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             ut.assert(area > 1.5 && area < 1.52, "Inaccurate area: " + area);
         });
 
-        ts.addTest("colorFromLevel", function(ut) {
+        ts.addTest("Color Invertibility", function(ut) {
             var m = new mandelbrot.Mandelbrot();
-            var tests = [
-                [undefined, m.setColor],
-                [1000, [255, 255, 255, 255]],
-                [20, [0, 0, 255, 255]],
-                [40, [255, 0, 255, 255]],
-                [60, [0, 255, 0, 255]],
-                [10, [0, 0, 128, 255]],
-                [30, [128, 0, 255, 255]]
-            ];
 
-            function assertColorMatch(color, match, level) {
-                console.log(level, color, match);
-                for (var i = 0; i < 4; i++) {
-                    var c = color[i];
-                    ut.assert(c == Math.floor(c));
-                    ut.assert(c >= 0 && c <= 255);
-                    ut.assertEq(c, match[i], level + '[' + i + ']');
-                }
-            }
-
-            for (var i = 0; i < tests.length; i++) {
-                var level = tests[i][0];
-                var color = tests[i][1];
-                assertColorMatch(m.colorFromLevel(level), color, level);
+            // Confirm colors assignment are invertible.
+            for (var level = 0; level <= m.maxIterations; level++) {
+                ut.assertEq(m.levelFromColor(m.colorFromLevel(level)), level);
             }
         });
     }
