@@ -5,13 +5,14 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Mandelbrot Set Viewer</title>
 <link rel="stylesheet" type="text/css" href="main.css" />
-<script type="text/javascript"
-    src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
-<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
-<script type="text/javascript" src="main.js"></script>
-<script type="text/javascript" src="mandelbrot.js"></script>
-<script type="text/javascript">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js">
+    </script>
+<script src="/lib/0.6/js/json2.min.js"></script>
+<script src="/lib/beta/js/utils.js"></script>
+<script src="/static/src/js/vector.js"></script>
+<script src="main.js"></script>
+<script src="mandelbrot.js"></script>
+<script>
 var main = namespace.lookup("com.pageforest.mandelbrot.main");
 $(document).ready(main.onReady);
 </script>
@@ -29,6 +30,9 @@ $(document).ready(main.onReady);
   <div style="float:right;">
     <input type="button" onclick="main.client.detach();" value="Make a Copy" />
     <input id="save" type="button" onclick="main.client.save();" value="Save" />
+    <input type="button" onclick="main.draw();" value="Draw" />
+    <input type="button" onclick="main.zoom(2);" value="+" />
+    <input type="button" onclick="main.zoom(0.5);" value="-" />
   </div>
   <p><i>Document is <span id="doc-state">clean</span>.</i></p>
 </fieldset>

@@ -96,11 +96,11 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             var tests = [
                 [undefined, m.setColor],
                 [1000, [255, 255, 255, 255]],
-                [20, [255, 0, 0, 255]],
-                [40, [0, 0, 255, 255]],
+                [20, [0, 0, 255, 255]],
+                [40, [255, 0, 255, 255]],
                 [60, [0, 255, 0, 255]],
-                [10, [128, 0, 0, 255]],
-                [30, [128, 0, 128, 255]]
+                [10, [0, 0, 128, 255]],
+                [30, [128, 0, 255, 255]]
             ];
 
             function assertColorMatch(color, match, level) {

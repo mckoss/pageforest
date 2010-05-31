@@ -1,6 +1,7 @@
 namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
+    var vector = namespace.lookup('org.startpad.vector');
 
     // Initialize the document - create a client helper object
     function onReady() {
@@ -11,13 +12,46 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         // the doc and logging in the user.
         ns.client.poll();
 
-        var m = new mandelbrot.Mandelbrot();
-        var c = document.getElementById('view-port');
-        console.log(c.tagName);
-        var ctx = c.getContext('2d');
-        m.drawTile(ctx, m.xMin, m.yMax,
-                   (m.xMax - m.xMin), (m.yMax - m.yMin),
-                   0, 0, 512, 512);
+        ns.viewPort = $('#view-port');
+        // I really dislike jQuery's handling of offset().  I should port
+        // DOM into the namespace so I don't have to use their stupid
+        // wrappers.
+        ns.viewPortOffset = ns.viewPort.offset();
+        console.log(ns.viewPortOffset);
+        ns.viewPort = ns.viewPort[0];
+        ns.context = ns.viewPort.getContext('2d');
+
+        $(ns.viewPort).click(function(evt) {
+            var px = (evt.pageX - ns.viewPortOffset.left) / ns.viewPort.width;
+            var py = (evt.pageY - ns.viewPortOffset.top) / ns.viewPort.height;
+            var dx = (px - 0.5) * (ns.m.xMax - ns.m.xMin) / ns.scale;
+            var dy = (0.5 - py) * (ns.m.yMax - ns.m.yMin) / ns.scale;
+            console.log(px, py, dx, dy);
+            ns.center[0] += dx;
+            ns.center[1] += dy;
+            console.log('center', ns.center);
+            ns.draw();
+        });
+
+        ns.m = new mandelbrot.Mandelbrot();
+        ns.scale = 1;
+        ns.center = [(ns.m.xMin + ns.m.xMax) / 2,
+                     (ns.m.yMin + ns.m.yMax) / 2];
+        console.log(ns.center);
+    }
+
+    function draw() {
+        var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
+        var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
+        ns.m.drawTile(ns.context,
+                      ns.center[0] - dx / 2, ns.center[1] + dy / 2,
+                      dx, dy,
+                      0, 0, ns.viewPort.width, ns.viewPort.height);
+    }
+
+    function zoom(scale) {
+        ns.scale *= scale;
+        draw();
     }
 
     // This function is called whenever your document should be reloaded.
@@ -72,13 +106,15 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     // Exported functions
     ns.extend({
-        onReady: onReady,
-        getDoc: getDoc,
-        setDoc: setDoc,
-        onError: onError,
-        onUserChange: onUserChange,
-        onStateChange: onStateChange,
-        signInOut: signInOut
+        'onReady': onReady,
+        'getDoc': getDoc,
+        'setDoc': setDoc,
+        'onError': onError,
+        'onUserChange': onUserChange,
+        'onStateChange': onStateChange,
+        'signInOut': signInOut,
+        'draw': draw,
+        'zoom': zoom
     });
 
 });

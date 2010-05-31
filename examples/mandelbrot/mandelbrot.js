@@ -4,18 +4,20 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     function Mandelbrot() {
         this.maxIterations = 1000;
         this.xMin = -2;
-        this.xMax = 1;
-        this.yMin = -1.5;
-        this.yMax = 1.5;
+        this.xMax = 0.5;
+        this.yMin = -1.25;
+        this.yMax = 1.25;
 
         // Color of in-set pixels
         this.setColor = [0, 0, 0, 255];
         // level, R, G, B, A - interpolated
         this.levelColors = [
-            [0, [0, 0, 0, 255]],
-            [20, [255, 0, 0, 255]],
-            [40, [0, 0, 255, 255]],
-            [60, [0, 255, 0, 255]],
+            [0, [0, 8, 107, 255]],
+            [20, [0, 0, 255, 255]],
+            [50, [255, 0, 255, 255]],
+            [100, [255, 0, 0, 255]],
+            [200, [255, 255, 0, 255]],
+            [300, [0, 255, 0, 255]],
             [1000, [255, 255, 255, 255]]
         ];
     }
