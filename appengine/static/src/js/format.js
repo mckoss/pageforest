@@ -141,7 +141,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         if (data.indexOf(prefix) != 0) {
             return undefined;
         }
-        return base64ToString(data.substr(prefix.length));
+        //return base64ToString(data.substr(prefix.length));
+        return data.substr(prefix.length);
     }
 
     ns.extend({
