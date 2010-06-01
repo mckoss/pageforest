@@ -91,9 +91,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     }
 
     function onSaveSuccess() {
-        this.client.saveBlob('viewport.png',
+        this.client.putBlob('viewport.png',
                              format.canvasToPNG(ns.viewPort),
-                            'image/png');
+                            'base64');
     }
 
     // Called on any api errors.
