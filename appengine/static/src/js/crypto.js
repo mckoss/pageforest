@@ -11,7 +11,7 @@
 
 /* Global crypto object
  ---------------------------------------------------------------------------- */
-var C = Crypto = {};
+var C = namespace.lookup('com.googlecode.crypto-js');
 
 /* Types
  ---------------------------------------------------------------------------- */
@@ -106,7 +106,7 @@ enc.Words = {
 (function () {
 
 // Shortcuts
-var C = Crypto;
+var C = namespace.lookup('com.googlecode.crypto-js');
 var UTF8 = C.enc.UTF8;
 var WordArray = C.types.WordArray;
 
@@ -195,7 +195,7 @@ SHA1.blockSize = 16;
 (function () {
 
 // Shortcuts
-var C = Crypto;
+var C = namespace.lookup('com.googlecode.crypto-js');
 var UTF8 = C.enc.UTF8;
 var Words = C.enc.Words;
 var WordArray = C.types.WordArray;
