@@ -25,6 +25,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         });
 
         ns.m = new mandelbrot.Mandelbrot();
+        mandelbrot.initWorkers();
 
         ns.scale = 1;
         ns.center = [(ns.m.xMin + ns.m.xMax) / 2,
@@ -54,14 +55,25 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             var msStart = new Date().getTime();
             var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
             var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
+
+            function renderComplete() {
+                var ms = new Date().getTime() - msStart;
+                var pps = Math.floor(ns.viewPort.width * ns.viewPort.height /
+                                     ms * 1000);
+                ns.onError("", "Drawing speed: " +
+                           format.thousands(pps) + " pixels per second.");
+            }
+
+            var fUseWorker = $('#use-worker').is(':checked');
+            console.log("uw", fUseWorker);
+
             ns.m.render(ns.viewPort,
                         ns.center[0] - dx / 2, ns.center[1] + dy / 2,
-                        dx, dy);
-            var ms = new Date().getTime() - msStart;
-            var pps = Math.floor(ns.viewPort.width * ns.viewPort.height / ms *
-                                 1000);
-            ns.onError("", "Drawing speed: " +
-                       format.thousands(pps) + " pixels per second.");
+                        dx, dy,
+                        fUseWorker ? renderComplete : undefined);
+            if (!fUseWorker) {
+                renderComplete();
+            }
         }, 1);
     }
 
@@ -129,6 +141,15 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         }
         else {
             $('#save').removeAttr('disabled');
+        }
+
+        var url = ns.client.getDocURL() + 'viewport.png';
+        var link = $('#viewport-png');
+        if (url) {
+            link.attr('href', url).show();
+        }
+        else {
+            link.hide();
         }
     }
 
