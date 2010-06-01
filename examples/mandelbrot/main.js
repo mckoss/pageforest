@@ -38,20 +38,28 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                      (ns.m.yMin + ns.m.yMax) / 2];
 
         ns.m.renderKey($('#level-key')[0]);
+        ns.draw();
     }
 
     function draw() {
         var precision = Math.floor(Math.log(ns.scale) / Math.LN10 + 2.5);
         $('#center').text(format.thousands(ns.center[0], precision) + ', ' +
                           format.thousands(ns.center[1], precision));
-        $('#zoom').text(ns.scale);
+        $('#zoom').text(format.thousands(ns.scale));
         ns.onError('ok', "Drawing...");
-        var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
-        var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
-        ns.m.render(ns.viewPort,
-                    ns.center[0] - dx / 2, ns.center[1] + dy / 2,
-                    dx, dy);
-        ns.onError("", "");
+        setTimeout(function() {
+            var msStart = new Date().getTime();
+            var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
+            var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
+            ns.m.render(ns.viewPort,
+                        ns.center[0] - dx / 2, ns.center[1] + dy / 2,
+                        dx, dy);
+            var ms = new Date().getTime() - msStart;
+            var pps = Math.floor(ns.viewPort.width * ns.viewPort.height / ms *
+                                 1000);
+            ns.onError("", "Drawing speed: " +
+                       format.thousands(pps) + " pixels per second.");
+        }, 1);
     }
 
     function zoom(scale) {
