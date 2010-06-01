@@ -2,6 +2,8 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
 
     ns.addTests = function(ts) {
+        // REVIEW: Add exports contract test - should be a simple assert
+        // in unit test framework.
 
         ts.addTest("replaceKeys", function(ut)
         {
@@ -139,6 +141,25 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 ut.assertEq(format.parseISO(aTest[i][0]), dt);
             }
         }).enable(false);
+
+        ts.addTest("base64ToString", function(ut) {
+            ut.assertEq(format.base64ToString("aGVsbG8="), "hello");
+        });
+
+        ts.addTest("canvasToPNG", function(ut) {
+            var canvas = document.createElement('canvas');
+            canvas.width = 10;
+            canvas.height = 10;
+            var ctx = canvas.getContext('2d');
+            ctx.fillStyle = "red";
+            ctx.fillRect(0, 0, 10, 10);
+            //document.body.appendChild(canvas);
+            var png = format.canvasToPNG(canvas);
+            var header = [137, 80, 78, 71, 13, 10, 26, 10];
+            for (var i = 0; i < header.length; i++) {
+                ut.assertEq(png.charCodeAt(i), header[i]);
+            }
+        }).require('document');
 
     }; // addTests
 

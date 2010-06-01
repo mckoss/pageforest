@@ -26,6 +26,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var objectMessage = "Document data is missing.";
     var titleMessage = "Document is missing a title.";
     var blobMessage = "Document is missing a blob property.";
+    var docUnsavedMessage = "Document must be saved before " +
+        "children can be saved.";
 
     // The application calls Client, and implements the following methods:
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
@@ -72,7 +74,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         }
 
-        // REVIEW:
         this.setCleanDoc(undefined, true);
 
         // REVIEW: When we support multiple clients per page, we can
@@ -168,12 +169,50 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Content-Type", "x-image/png; charset=binary");
+                },
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
                     if (this.app.onSaveSuccess) {
                         this.app.onSaveSuccess();
+                    }
+                }.fnMethod(this)
+            });
+        },
+
+        // Save a child blob in the namespace of the current document
+        saveBlob: function(blobKey, data, contentType) {
+            if (this.docid == undefined) {
+                this.errorReport('unsaved_document', docUnsavedMessage);
+                return;
+            }
+            // REVIEW: what about?
+            // "application/x-www-form-urlencoded; charset=UTF-8"
+            if (contentType == undefined) {
+                contentType = typeof data == 'object' ? 'application/json' :
+                    'text';
+            }
+            this.log('saving blob: ' + blobKey + ' (' + data.length + ')');
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL() + blobKey,
+                data: data,
+                dataType: 'text',
+                contentType: contentType,
+                processData: false,
+                error: function (xmlhttp, textStatus, errorThrown) {
+                    var code = 'ajax_error/' + xmlhttp.status;
+                    var message = xmlhttp.statusText;
+                    this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+                    this.errorReport(code, message);
+                }.fnMethod(this),
+                success: function(data) {
+                    this.log('saved blob: ' + blobKey);
+                    if (this.app.onBlobSaveSuccess) {
+                        this.app.onBlobSaveSuccess();
                     }
                 }.fnMethod(this)
             });

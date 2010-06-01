@@ -1,3 +1,5 @@
+/*globals atob */
+
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     var base = namespace.lookup('org.startpad.base');
 
@@ -102,12 +104,54 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return st;
     }
 
+    var base64map =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // Convert a base-64 string to a binary-encoded string
+    function base64ToString(base64) {
+        var b;
+
+        // Use browser-native function if it exists
+        if (typeof atob == "function") {
+            return atob(base64);
+        }
+
+        // Remove non-base-64 characters
+        base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
+
+        for (var chars = [], i = 0, imod4 = 0;
+             i < base64.length;
+             imod4 = ++i % 4) {
+            if (imod4 == 0) {
+                continue;
+            }
+            b = ((base64map.indexOf(base64.charAt(i - 1)) &
+                  (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2)) |
+                (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2));
+            chars.push(String.fromCharCode(b));
+        }
+
+        return chars.join('');
+
+    }
+
+    function canvasToPNG(canvas) {
+        var prefix = "data:image/png;base64,";
+        var data = canvas.toDataURL('image/png');
+        if (data.indexOf(prefix) != 0) {
+            return undefined;
+        }
+        return base64ToString(data.substr(prefix.length));
+    }
+
     ns.extend({
-        fixedDigits: fixedDigits,
-        thousands: thousands,
-        slugify: slugify,
-        escapeHTML: escapeHTML,
-        replaceKeys: replaceKeys,
-        replaceString: replaceString
+        'fixedDigits': fixedDigits,
+        'thousands': thousands,
+        'slugify': slugify,
+        'escapeHTML': escapeHTML,
+        'replaceKeys': replaceKeys,
+        'replaceString': replaceString,
+        'base64ToString': base64ToString,
+        'canvasToPNG': canvasToPNG
     });
 }); // org.startpad.format
