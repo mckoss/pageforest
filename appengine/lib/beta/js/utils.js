@@ -751,6 +751,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.state = 'clean';
         this.username = undefined;
         this.fLogging = true;
+        this.fFirstPoll = true;
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
@@ -897,7 +898,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 data: data,
                 dataType: 'text',
                 beforeSend: function(xhr) {
-                    xhr.setRequestHeader("Content-Type", "x-image/png; charset=binary");
+                    xhr.setRequestHeader("Content-Type", "x-image/png");
                 },
                 contentType: contentType,
                 processData: false,
@@ -1060,6 +1061,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             this.checkUsername();
             this.checkDoc();
+            this.fFirstPoll = false;
         },
 
         // See if the user sign-in state has changed by polling the cookie
@@ -1078,7 +1080,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     }
                 }
             } else {
-                if (this.username) {
+                if (this.username || this.fFirstPoll) {
                     this.username = undefined;
                     if (this.app.onUserChange) {
                         this.app.onUserChange(this.username);
