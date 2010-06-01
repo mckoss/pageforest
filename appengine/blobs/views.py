@@ -179,6 +179,10 @@ def blob_put(request):
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
         value = value.encode('utf-8')
+    transfer_encoding = request.GET.get('transfer-encoding', '')
+    if transfer_encoding:
+        # Decode base64 if specified in the query string.
+        value = value.decode(transfer_encoding)
     blob = Blob(key_name=request.key_name, value=value)
     blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
