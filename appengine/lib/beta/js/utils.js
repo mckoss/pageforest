@@ -538,6 +538,8 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
 
 }); // org.startpad.cookies
 /* Begin file: format.js */
+/*globals atob */
+
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     var base = namespace.lookup('org.startpad.base');
 
@@ -642,13 +644,55 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return st;
     }
 
+    var base64map =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // Convert a base-64 string to a binary-encoded string
+    function base64ToString(base64) {
+        var b;
+
+        // Use browser-native function if it exists
+        if (typeof atob == "function") {
+            return atob(base64);
+        }
+
+        // Remove non-base-64 characters
+        base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
+
+        for (var chars = [], i = 0, imod4 = 0;
+             i < base64.length;
+             imod4 = ++i % 4) {
+            if (imod4 == 0) {
+                continue;
+            }
+            b = ((base64map.indexOf(base64.charAt(i - 1)) &
+                  (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2)) |
+                (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2));
+            chars.push(String.fromCharCode(b));
+        }
+
+        return chars.join('');
+
+    }
+
+    function canvasToPNG(canvas) {
+        var prefix = "data:image/png;base64,";
+        var data = canvas.toDataURL('image/png');
+        if (data.indexOf(prefix) != 0) {
+            return undefined;
+        }
+        return base64ToString(data.substr(prefix.length));
+    }
+
     ns.extend({
-        fixedDigits: fixedDigits,
-        thousands: thousands,
-        slugify: slugify,
-        escapeHTML: escapeHTML,
-        replaceKeys: replaceKeys,
-        replaceString: replaceString
+        'fixedDigits': fixedDigits,
+        'thousands': thousands,
+        'slugify': slugify,
+        'escapeHTML': escapeHTML,
+        'replaceKeys': replaceKeys,
+        'replaceString': replaceString,
+        'base64ToString': base64ToString,
+        'canvasToPNG': canvasToPNG
     });
 }); // org.startpad.format
 /* Begin file: client.js */
@@ -680,6 +724,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var objectMessage = "Document data is missing.";
     var titleMessage = "Document is missing a title.";
     var blobMessage = "Document is missing a blob property.";
+    var docUnsavedMessage = "Document must be saved before " +
+        "children can be saved.";
 
     // The application calls Client, and implements the following methods:
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
@@ -726,7 +772,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         }
 
-        // REVIEW:
         this.setCleanDoc(undefined, true);
 
         // REVIEW: When we support multiple clients per page, we can
@@ -822,12 +867,50 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Content-Type", "image/png; charset=binary");
+                },
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
                     this.setCleanDoc(docid);
                     this.log('saved');
                     if (this.app.onSaveSuccess) {
                         this.app.onSaveSuccess();
+                    }
+                }.fnMethod(this)
+            });
+        },
+
+        // Save a child blob in the namespace of the current document
+        saveBlob: function(blobKey, data, contentType) {
+            if (this.docid == undefined) {
+                this.errorReport('unsaved_document', docUnsavedMessage);
+                return;
+            }
+            // REVIEW: what about?
+            // "application/x-www-form-urlencoded; charset=UTF-8"
+            if (contentType == undefined) {
+                contentType = typeof data == 'object' ? 'application/json' :
+                    'text';
+            }
+            this.log('saving blob: ' + blobKey + ' (' + data.length + ')');
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL() + blobKey,
+                data: data,
+                dataType: 'text',
+                contentType: contentType,
+                processData: false,
+                error: function (xmlhttp, textStatus, errorThrown) {
+                    var code = 'ajax_error/' + xmlhttp.status;
+                    var message = xmlhttp.statusText;
+                    this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+                    this.errorReport(code, message);
+                }.fnMethod(this),
+                success: function(data) {
+                    this.log('saved blob: ' + blobKey);
+                    if (this.app.onBlobSaveSuccess) {
+                        this.app.onBlobSaveSuccess();
                     }
                 }.fnMethod(this)
             });

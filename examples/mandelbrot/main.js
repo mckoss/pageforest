@@ -12,7 +12,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         // DOM into the namespace so I don't have to use their stupid
         // wrappers.
         ns.viewPortOffset = ns.viewPort.offset();
-        console.log(ns.viewPortOffset);
         ns.viewPort = ns.viewPort[0];
 
         $(ns.viewPort).click(function(evt) {
@@ -34,6 +33,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.m.renderKey($('#level-key')[0]);
 
         ns.client = new clientLib.Client(ns);
+        ns.client.setLogging();
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
@@ -90,6 +90,12 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         };
     }
 
+    function onSaveSuccess() {
+        this.client.saveBlob('viewport.png',
+                             format.canvasToPNG(ns.viewPort),
+                            'image/png');
+    }
+
     // Called on any api errors.
     function onError(status, message) {
         $('#error').text(message);
@@ -126,6 +132,12 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         }
     }
 
+    // FIXME: Can add an export function eval's symbols in this namespace to
+    // export them...add helper to ns?
+    // ns.exportSymbols(['onReady', 'getDoc', ... ], function(symbol) {
+    //     return eval(symbol);
+    // });
+
     // Exported functions
     ns.extend({
         'onReady': onReady,
@@ -134,6 +146,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onError': onError,
         'onUserChange': onUserChange,
         'onStateChange': onStateChange,
+        'onSaveSuccess': onSaveSuccess,
         'signInOut': signInOut,
         'draw': draw,
         'zoom': zoom
