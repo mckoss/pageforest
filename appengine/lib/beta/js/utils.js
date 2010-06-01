@@ -681,7 +681,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         if (data.indexOf(prefix) != 0) {
             return undefined;
         }
-        return base64ToString(data.substr(prefix.length));
+        //return base64ToString(data.substr(prefix.length));
+        return data.substr(prefix.length);
     }
 
     ns.extend({
@@ -880,27 +881,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // Save a child blob in the namespace of the current document
-        saveBlob: function(blobKey, data, contentType) {
+        putBlob: function(blobKey, data, encoding) {
             if (this.docid == undefined) {
                 this.errorReport('unsaved_document', docUnsavedMessage);
                 return;
             }
-            // REVIEW: what about?
-            // "application/x-www-form-urlencoded; charset=UTF-8"
-            if (contentType == undefined) {
-                contentType = typeof data == 'object' ? 'application/json' :
-                    'text';
+            var url = this.getDocURL() + blobKey;
+            if (encoding) {
+                url += '?transfer-encoding=' + encoding;
             }
             this.log('saving blob: ' + blobKey + ' (' + data.length + ')');
             $.ajax({
                 type: 'PUT',
-                url: this.getDocURL() + blobKey,
+                url: url,
                 data: data,
-                dataType: 'text',
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader("Content-Type", "x-image/png");
-                },
-                contentType: contentType,
+                dataType: 'json',
                 processData: false,
                 error: function (xmlhttp, textStatus, errorThrown) {
                     var code = 'ajax_error/' + xmlhttp.status;
