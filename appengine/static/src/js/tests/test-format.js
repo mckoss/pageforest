@@ -154,7 +154,7 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ctx.fillStyle = "red";
             ctx.fillRect(0, 0, 10, 10);
             //document.body.appendChild(canvas);
-            var png = format.canvasToPNG(canvas);
+            var png = format.base64ToString(format.canvasToPNG(canvas));
             var header = [137, 80, 78, 71, 13, 10, 26, 10];
             for (var i = 0; i < header.length; i++) {
                 ut.assertEq(png.charCodeAt(i), header[i]);
