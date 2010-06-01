@@ -8,17 +8,16 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         this.yMin = -1.25;
         this.yMax = 1.25;
 
-        // Color of in-set pixels
-        this.setColor = [0, 0, 0, 255];
         // level, R, G, B, A - interpolated
         this.levelColors = [
             [0, [0, 8, 107, 255]],        // dark blue background
-            [100, [255, 255, 255, 255]],
-            [200, [255, 0, 0, 255]],
-            [400, [255, 255, 0, 255]],
-            [600, [0, 255, 0, 255]],
-            [800, [0, 255, 255, 255]],
-            [1000, [255, 246, 170, 255]]
+            [100, [255, 255, 0, 255]],    // yellow
+            [200, [255, 0, 0, 255]],      // red
+            [400, [255, 255, 255, 255]],  // white
+            [600, [0, 255, 0, 255]],      // green
+            [800, [0, 255, 255, 255]],    // cyan
+            [900, [128, 128, 128, 255]],  // gray
+            [1000, [0, 0, 0, 255]]        // black
         ];
     }
 
@@ -65,9 +64,6 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         colorFromLevel: function(level) {
             // Interpolate control points in this.levelColors
             // to map levels to colors.
-            if (level == this.maxIterations) {
-                return this.setColor;
-            }
             var iMin = 0;
             var iMax = this.levelColors.length;
             while (iMin < iMax - 1) {
@@ -125,7 +121,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             var height = canvas.height;
 
             for (var x = 0; x < width; x++) {
-                var level = Math.floor(this.maxIterations * x / width);
+                var level = Math.floor(this.maxIterations * x / (width - 1));
                 ctx.fillStyle = this.rgbaFromColor(this.colorFromLevel(level));
                 ctx.fillRect(x, 0, x + 1, height);
             }

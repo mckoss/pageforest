@@ -37,7 +37,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.center = [(ns.m.xMin + ns.m.xMax) / 2,
                      (ns.m.yMin + ns.m.yMax) / 2];
 
-        ns.renderKey($('#level-key')[0]);
+        ns.m.renderKey($('#level-key')[0]);
     }
 
     function draw() {
