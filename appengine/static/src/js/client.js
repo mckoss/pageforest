@@ -169,9 +169,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
-                beforeSend: function(xhr) {
-                    xhr.setRequestHeader("Content-Type", "x-image/png; charset=binary");
-                },
                 error: this.errorHandler.fnMethod(this),
                 success: function(data) {
                     this.setCleanDoc(docid);
@@ -201,6 +198,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL() + blobKey,
                 data: data,
                 dataType: 'text',
+                beforeSend: function(xhr) {
+                    xhr.setRequestHeader("Content-Type", "x-image/png; charset=binary");
+                },
                 contentType: contentType,
                 processData: false,
                 error: function (xmlhttp, textStatus, errorThrown) {
