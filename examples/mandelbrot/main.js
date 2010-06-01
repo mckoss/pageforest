@@ -7,12 +7,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     // Initialize the document - create a client helper object
     function onReady() {
         $('#title').focus();
-        ns.client = new clientLib.Client(ns);
-        ns.client.setLogging(true);
-        // Quick call to poll - don't wait a whole second to try loading
-        // the doc and logging in the user.
-        ns.client.poll();
-
         ns.viewPort = $('#view-port');
         // I really dislike jQuery's handling of offset().  I should port
         // DOM into the namespace so I don't have to use their stupid
@@ -38,13 +32,22 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                      (ns.m.yMin + ns.m.yMax) / 2];
 
         ns.m.renderKey($('#level-key')[0]);
+
+        ns.client = new clientLib.Client(ns);
+        // Quick call to poll - don't wait a whole second to try loading
+        // the doc and logging in the user.
+        ns.client.poll();
         ns.draw();
     }
 
-    function draw() {
+    function centerText() {
         var precision = Math.floor(Math.log(ns.scale) / Math.LN10 + 2.5);
-        $('#center').text(format.thousands(ns.center[0], precision) + ', ' +
-                          format.thousands(ns.center[1], precision));
+        return format.thousands(ns.center[0], precision) + ', ' +
+            format.thousands(ns.center[1], precision);
+    }
+
+    function draw() {
+        $('#center').text(centerText());
         $('#zoom').text(format.thousands(ns.scale));
         ns.onError('ok', "Drawing...");
         setTimeout(function() {
@@ -69,14 +72,20 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     // This function is called whenever your document should be reloaded.
     function setDoc(json) {
+        ns.scale = json.blob.scale;
+        ns.center = json.blob.center;
+        ns.draw();
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
     function getDoc() {
         return {
-            "title": "My Mandelbrot Location",
-            "blob": {x: 0, y: 0},
+            "title": "Mandelbrot Location: " + centerText(),
+            "blob": {
+                'scale': ns.scale,
+                'center': ns.center
+            },
             "readers": ["public"]
         };
     }
