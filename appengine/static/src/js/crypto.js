@@ -1,328 +1,233 @@
-/*!
+/*
  * Crypto-JS v2.0.0
  * http://code.google.com/p/crypto-js/
  * Copyright (c) 2009, Jeff Mott. All rights reserved.
  * http://code.google.com/p/crypto-js/wiki/License
  */
 
-// 2010-05-24 Changed global_namespace to namespace - mckoss@startpad.org
-// 2010-04-20 Added global_namespace - johann@rocholl.net
+//////////////////////////////// Crypto.js ////////////////////////////////
 
-namespace.lookup("com.googlecode.crypto-js").define(function () {});
+(function () {
 
-(function() {
+/* Global crypto object
+ ---------------------------------------------------------------------------- */
+var C = Crypto = {};
 
-    // Global Crypto object
-    var Crypto = namespace.lookup("com.googlecode.crypto-js");
+/* Types
+ ---------------------------------------------------------------------------- */
+var types = C.types = {};
 
-    Crypto.base64map =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+/* Word arrays
+ ------------------------------------------------------------- */
+var WordArray = types.WordArray = {
 
-    // Crypto utilities
-    var util = Crypto.util = {
+    // Get significant bytes
+    getSigBytes: function (words) {
+        if (words["_Crypto"] && words["_Crypto"].sigBytes != undefined) {
+            return words["_Crypto"].sigBytes;
+        } else {
+            return words.length * 4;
+        }
+    },
 
-        // Bit-wise rotate left
-        rotl: function (n, b) {
-            return (n << b) | (n >>> (32 - b));
-        },
+    // Set significant bytes
+    setSigBytes: function (words, n) {
+        words["_Crypto"] = { sigBytes: n };
+    },
 
-        // Bit-wise rotate right
-        rotr: function (n, b) {
-            return (n << (32 - b)) | (n >>> b);
-        },
+    // Concatenate word arrays
+    cat: function (w1, w2) {
+        return ByteStr.decode(ByteStr.encode(w1) + ByteStr.encode(w2));
+    }
 
-        // Swap big-endian to little-endian and vice versa
-        endian: function (n) {
+};
 
-            // If number given, swap endian
-            if (n.constructor == Number) {
-                return util.rotl(n,  8) & 0x00FF00FF |
-                    util.rotl(n, 24) & 0xFF00FF00;
-            }
+/* Encodings
+ ---------------------------------------------------------------------------- */
+var enc = C.enc = {};
 
-            // Else, assume array and swap all items
-            for (var i = 0; i < n.length; i++) {
-                n[i] = util.endian(n[i]);
-            }
-            return n;
+/* Byte strings
+ ------------------------------------------------------------- */
+var ByteStr = enc.ByteStr = {
 
-        },
+    encode: function (words) {
 
-        // Generate an array of any length of random bytes
-        randomBytes: function (n) {
-            for (var bytes = []; n > 0; n--) {
-                bytes.push(Math.floor(Math.random() * 256));
-            }
-            return bytes;
-        },
+        var sigBytes = WordArray.getSigBytes(words);
+        var str = [];
 
-        // Convert a byte array to big-endian 32-bit words
-        bytesToWords: function (bytes) {
-            for (var words = [], i = 0, b = 0; i < bytes.length; i++, b += 8) {
-                words[b >>> 5] |= bytes[i] << (24 - b % 32);
-            }
-            return words;
-        },
-
-        // Convert big-endian 32-bit words to a byte array
-        wordsToBytes: function (words) {
-            for (var bytes = [], b = 0; b < words.length * 32; b += 8) {
-                bytes.push((words[b >>> 5] >>> (24 - b % 32)) & 0xFF);
-            }
-            return bytes;
-        },
-
-        // Convert a byte array to a hex string
-        bytesToHex: function (bytes) {
-            for (var hex = [], i = 0; i < bytes.length; i++) {
-                hex.push((bytes[i] >>> 4).toString(16));
-                hex.push((bytes[i] & 0xF).toString(16));
-            }
-            return hex.join("");
-        },
-
-        // Convert a hex string to a byte array
-        hexToBytes: function (hex) {
-            for (var bytes = [], c = 0; c < hex.length; c += 2) {
-                bytes.push(parseInt(hex.substr(c, 2), 16));
-            }
-            return bytes;
-        },
-
-        // Convert a byte array to a base-64 string
-        bytesToBase64: function (bytes) {
-
-            // Use browser-native function if it exists
-            if (typeof btoa == "function") {
-                return btoa(Binary.bytesToString(bytes));
-            }
-
-            for (var base64 = [], i = 0; i < bytes.length; i += 3) {
-                var triplet = (bytes[i] << 16) | (bytes[i + 1] << 8) |
-                    bytes[i + 2];
-                for (var j = 0; j < 4; j++) {
-                    if (i * 8 + j * 6 <= bytes.length * 8) {
-                        base64.push(base64map.charAt((triplet >>> 6 * (3 - j)) &
-                                                     0x3F));
-                    }
-                    else {
-                        base64.push("=");
-                    }
-                }
-            }
-
-            return base64.join("");
-
-        },
-
-        // Convert a base-64 string to a byte array
-        base64ToBytes: function (base64) {
-
-            // Use browser-native function if it exists
-            if (typeof atob == "function") {
-                return Binary.stringToBytes(atob(base64));
-            }
-
-            // Remove non-base-64 characters
-            base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
-
-            for (var bytes = [], i = 0, imod4 = 0;
-                 i < base64.length;
-                 imod4 = ++i % 4) {
-                if (imod4 == 0) {
-                    continue;
-                }
-                bytes.push(((base64map.indexOf(base64.charAt(i - 1)) &
-                             (Math.pow(2, -2 * imod4 + 8) - 1)) <<
-                            (imod4 * 2)) |
-                           (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2)));
-            }
-
-            return bytes;
-
+        for (var i = 0; i < sigBytes; i++) {
+            str.push(String.fromCharCode((words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xFF));
         }
 
-    };
+        return str.join("");
 
-    // Crypto mode namespace
-    Crypto.mode = {};
+    },
 
-    // Crypto character encodings
-    var charenc = Crypto.charenc = {};
+    decode: function (str) {
 
-    // UTF-8 encoding
-    var UTF8 = charenc.UTF8 = {
+        var words = [];
 
-        // Convert a string to a byte array
-        stringToBytes: function (str) {
-            return Binary.stringToBytes(unescape(encodeURIComponent(str)));
-        },
-
-        // Convert a byte array to a string
-        bytesToString: function (bytes) {
-            return decodeURIComponent(escape(Binary.bytesToString(bytes)));
+        for (var i = 0; i < str.length; i++) {
+            words[i >>> 2] |= str.charCodeAt(i) << (24 - (i % 4) * 8);
         }
+        WordArray.setSigBytes(words, str.length);
 
-    };
+        return words;
 
-    // Binary encoding
-    var Binary = charenc.Binary = {
+    }
 
-        // Convert a string to a byte array
-        stringToBytes: function (str) {
-            for (var bytes = [], i = 0; i < str.length; i++) {
-                bytes.push(str.charCodeAt(i));
-            }
-            return bytes;
-        },
+};
 
-        // Convert a byte array to a string
-        bytesToString: function (bytes) {
-            for (var str = [], i = 0; i < bytes.length; i++)
-                str.push(String.fromCharCode(bytes[i]));
-            return str.join("");
-        }
+/* UTF8 strings
+ ------------------------------------------------------------- */
+enc.UTF8 = {
 
-    };
+    encode: function (words) {
+        return decodeURIComponent(escape(ByteStr.encode(words)));
+    },
+
+    decode: function (str) {
+        return ByteStr.decode(unescape(encodeURIComponent(str)));
+    }
+
+};
+
+/* Word arrays
+ ------------------------------------------------------------- */
+enc.Words = {
+    encode: function (words) { return words; },
+    decode: function (words) { return words; }
+};
 
 })();
 
-//////////////////////////////// sha1.js /////////////////////////////////
+//////////////////////////////// SHA1.js ////////////////////////////////
 
-(function(){
+(function () {
 
-    // Shortcuts
-    var C = namespace.lookup("com.googlecode.crypto-js"),
-    util = C.util,
-    charenc = C.charenc,
-    UTF8 = charenc.UTF8,
-    Binary = charenc.Binary;
+// Shortcuts
+var C = Crypto;
+var UTF8 = C.enc.UTF8;
+var WordArray = C.types.WordArray;
 
-    // Public API
-    var SHA1 = C.SHA1 = function (message, options) {
-        var digestbytes = util.wordsToBytes(SHA1._sha1(message));
-        return options && options.asBytes ? digestbytes :
-            options && options.asString ? Binary.bytesToString(digestbytes) :
-            util.bytesToHex(digestbytes);
-    };
+// Public API
+var SHA1 = C.SHA1 = function (message, options) {
 
-    // The core
-    SHA1._sha1 = function (message) {
+    // Digest
+    var digestWords = SHA1.digest(message);
 
-        // Convert to byte array
-        if (message.constructor == String) message = UTF8.stringToBytes(message);
-        /* else, assume byte array already */
+    // Set default output
+    var output = options && options.output || C.enc.Hex;
 
-        var m  = util.bytesToWords(message),
-        l  = message.length * 8,
-        w  =  [],
-        H0 =  1732584193,
-        H1 = -271733879,
-        H2 = -1732584194,
-        H3 =  271733878,
-        H4 = -1009589776;
+    // Return encoded output
+    return output.encode(digestWords);
 
-        // Padding
-        m[l >> 5] |= 0x80 << (24 - l % 32);
-        m[((l + 64 >>> 9) << 4) + 15] = l;
+};
 
-        for (var i = 0; i < m.length; i += 16) {
+// The core
+SHA1.digest = function (message) {
 
-            var a = H0,
-            b = H1,
-            c = H2,
-            d = H3,
-            e = H4;
+    // Convert to words, else assume words already
+    var m = message.constructor == String ? UTF8.decode(message) : message;
 
-            for (var j = 0; j < 80; j++) {
+    // Add padding
+    var l = WordArray.getSigBytes(m) * 8;
+    m[l >>> 5] |= 0x80 << (24 - l % 32);
+    m[(((l + 64) >>> 9) << 4) + 15] = l;
 
-                if (j < 16) w[j] = m[i + j];
-                else {
-                    var n = w[j-3] ^ w[j-8] ^ w[j-14] ^ w[j-16];
-                    w[j] = (n << 1) | (n >>> 31);
-                }
+    // Initial values
+    var w  = [];
+    var H0 = 0x67452301;
+    var H1 = 0xEFCDAB89;
+    var H2 = 0x98BADCFE;
+    var H3 = 0x10325476;
+    var H4 = 0xC3D2E1F0;
 
-                var t = ((H0 << 5) | (H0 >>> 27)) + H4 + (w[j] >>> 0) + (
-                    j < 20 ? (H1 & H2 | ~H1 & H3) + 1518500249 :
-                        j < 40 ? (H1 ^ H2 ^ H3) + 1859775393 :
-                        j < 60 ? (H1 & H2 | H1 & H3 | H2 & H3) - 1894007588 :
-                        (H1 ^ H2 ^ H3) - 899497514);
+    for (var i = 0; i < m.length; i += 16) {
 
-                H4 =  H3;
-                H3 =  H2;
-                H2 = (H1 << 30) | (H1 >>> 2);
-                H1 =  H0;
-                H0 =  t;
+        var a = H0;
+        var b = H1;
+        var c = H2;
+        var d = H3;
+        var e = H4;
 
+        for (var j = 0; j < 80; j++) {
+
+            if (j < 16) w[j] = m[i + j];
+            else {
+                var n = w[j - 3] ^ w[j - 8] ^ w[j - 14] ^ w[j - 16];
+                w[j] = (n << 1) | (n >>> 31);
             }
 
-            H0 += a;
-            H1 += b;
-            H2 += c;
-            H3 += d;
-            H4 += e;
+            var t = ((H0 << 5) | (H0 >>> 27)) + H4 + (w[j] >>> 0) + (
+                     j < 20 ? ((H1 & H2) | (~H1 & H3))            + 0x5A827999 :
+                     j < 40 ?  (H1 ^ H2 ^ H3)                     + 0x6ED9EBA1 :
+                     j < 60 ? ((H1 & H2) | (H1 & H3) | (H2 & H3)) - 0x70E44324 :
+                               (H1 ^ H2 ^ H3)                     - 0x359D3E2A);
+
+            H4 = H3;
+            H3 = H2;
+            H2 = (H1 << 30) | (H1 >>> 2);
+            H1 = H0;
+            H0 = t;
 
         }
 
-        return [H0, H1, H2, H3, H4];
+        H0 += a;
+        H1 += b;
+        H2 += c;
+        H3 += d;
+        H4 += e;
 
-    };
+    }
 
-    // Package private blocksize
-    SHA1._blocksize = 16;
+    return [H0, H1, H2, H3, H4];
 
-})();
+};
 
-//////////////////////////////// hmac.js /////////////////////////////////
-
-(function(){
-
-    // Shortcuts
-    var C = namespace.lookup("com.googlecode.crypto-js"),
-    util = C.util,
-    charenc = C.charenc,
-    UTF8 = charenc.UTF8,
-    Binary = charenc.Binary;
-
-    C.HMAC = function (hasher, message, key, options) {
-
-        // Convert to byte arrays
-        if (message.constructor == String) message = UTF8.stringToBytes(message);
-        if (key.constructor == String) key = UTF8.stringToBytes(key);
-        /* else, assume byte arrays already */
-
-        // Allow arbitrary length keys
-        if (key.length > hasher._blocksize * 4)
-            key = hasher(key, { asBytes: true });
-
-        // XOR keys with pad constants
-        var okey = key.slice(0),
-        ikey = key.slice(0);
-        for (var i = 0; i < hasher._blocksize * 4; i++) {
-            okey[i] ^= 0x5C;
-            ikey[i] ^= 0x36;
-        }
-
-        var hmacbytes = hasher(okey.concat(hasher(ikey.concat(message), { asBytes: true })), { asBytes: true });
-
-        return options && options.asBytes ? hmacbytes :
-            options && options.asString ? Binary.bytesToString(hmacbytes) :
-            util.bytesToHex(hmacbytes);
-
-    };
+// Block size
+SHA1.blockSize = 16;
 
 })();
 
-///////////////////// Convenience functions //////////////////////////////
+//////////////////////////////// HMAC.js ////////////////////////////////
 
-(function(){
+(function () {
 
-    var C = namespace.lookup("com.googlecode.crypto-js");
+// Shortcuts
+var C = Crypto;
+var UTF8 = C.enc.UTF8;
+var Words = C.enc.Words;
+var WordArray = C.types.WordArray;
 
-    // ATTENTION: This uses standard argument order
-    // (key first) even though C.HMAC has it wrong.
-    C.HMAC_SHA1 = function (key, message, options) {
-        return C.HMAC(C.SHA1, message, key, options);
-    };
+C.HMAC = function (hasher, message, key, options) {
+
+    // Convert to words, else assume words already
+    var m = message.constructor == String ? UTF8.decode(message) : message;
+    var k = key.constructor == String ? UTF8.decode(key) : key;
+
+    // Allow arbitrary length keys
+    if (k.length > hasher.blockSize) {
+        k = hasher(k, { output: Words });
+    }
+
+    // XOR keys with pad constants
+    var oKey = k.slice(0);
+    var iKey = k.slice(0);
+    for (var i = 0; i < hasher.blockSize; i++) {
+        oKey[i] ^= 0x5C5C5C5C;
+        iKey[i] ^= 0x36363636;
+    }
+
+    // Hash
+    var hmacWords = hasher(WordArray.cat(oKey, hasher(WordArray.cat(iKey, m), { output: Words })), { output: Words });
+
+    // Set default output
+    var output = options && options.output || C.enc.Hex;
+
+    // Return encoded output
+    return output.encode(hmacWords);
+
+};
 
 })();
