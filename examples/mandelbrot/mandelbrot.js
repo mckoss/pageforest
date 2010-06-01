@@ -1,5 +1,16 @@
+/*globals Worker */
+
 namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     // http://en.wikipedia.org/wiki/Mandelbrot_set
+
+    var worker;
+
+    function initWorkers() {
+        if (typeof Worker != 'undefined') {
+            worker = new Worker('mandelbrot-worker.js');
+        }
+    }
+
 
     function Mandelbrot() {
         this.maxIterations = 1000;
@@ -127,11 +138,45 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             }
         },
 
-        render: function(canvas, xLeft, yTop, dx, dy) {
+        render: function(canvas, xLeft, yTop, dx, dy, fn) {
             var cx = canvas.width;
             var cy = canvas.height;
             var ctx = canvas.getContext('2d');
             var bitmap = ctx.createImageData(cx, cy);
+
+            function renderDone() {
+                ctx.putImageData(bitmap, 0, 0);
+                if (fn) {
+                    fn();
+                }
+            }
+
+            this.renderData(bitmap.data, xLeft, yTop, dx, dy,
+                            cx, cy,
+                            fn ? renderDone : undefined);
+
+            if (!fn) {
+                renderDone();
+            }
+        },
+
+        renderData: function(data, xLeft, yTop, dx, dy, cx, cy, fn) {
+            function onData(evt) {
+                var cb = cx * cy * 4;
+                var results = evt.data;
+                console.log(evt);
+                console.log("Copying " + evt.data.length + " bytes of data");
+                for (var i = 0; i < cb; i++) {
+                    data[i] = results[i];
+                }
+                fn();
+            }
+
+            if (worker && fn) {
+                worker.onmessage = onData;
+                worker.postMessage([xLeft, yTop, dx, dy, cx, cy]);
+                return;
+            }
 
             // Per-pixel step values
             dx = dx / cx;
@@ -146,17 +191,21 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     var iters = this.iterations(x, y);
                     rgba = this.colorFromLevel(iters);
                     for (var i = 0; i < 4; i++) {
-                        bitmap.data[ib++] = rgba[i];
+                        data[ib++] = rgba[i];
                     }
                     x += dx;
                 }
                 y -= dy;
             }
-            ctx.putImageData(bitmap, 0, 0);
+            console.log("Rendered " + ib + " bytes of data.");
+            if (fn) {
+                fn();
+            }
         }
     });
 
     ns.extend({
-        'Mandelbrot': Mandelbrot
+        'Mandelbrot': Mandelbrot,
+        'initWorkers': initWorkers
     });
 });

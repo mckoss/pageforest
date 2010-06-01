@@ -31,6 +31,9 @@ $(document).ready(main.onReady);
     <input type="button" onclick="main.zoom(0.5);" value="-" />
     <p>Magnification: <span id="zoom"></span></p>
     <p>Center: <span id="center"></span></p>
+    <p><input id="use-worker" type="checkbox" checked="checked" />
+      <label for="use-worker">Background Processing</label>
+    </p>
   </div>
 
   <canvas id="view-port" width="512" height="512"></canvas>
@@ -55,6 +58,7 @@ $(document).ready(main.onReady);
     computation.
   </p>
   <ol>
+    <li><a id="viewport-png" target="_blank">Saved Image</a></li>
     <li><a target="_blank" href="http://en.wikipedia.org/wiki/Mandelbrot_set">The Mandelbrot Set</a>
       - Learn more about the Mandelbrot set on Wikipedia.</li>
     <li><a target="_blank" href="test-runner.html">Unit Tests</a>
