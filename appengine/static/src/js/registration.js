@@ -1,7 +1,7 @@
 namespace.lookup('com.pageforest.auth.registration').define(function(ns) {
 
     var util = namespace.util;
-    var Crypto = namespace.lookup('com.googlecode.crypto-js');
+    var crypto = namespace.lookup('com.googlecode.crypto-js');
 
     function validatePassword() {
         var password = $("#id_password").val();
@@ -70,7 +70,7 @@ namespace.lookup('com.pageforest.auth.registration').define(function(ns) {
         var repeat = $("#id_repeat").val();
         return {
             username: username,
-            password: Crypto.HMAC(Crypto.SHA1, username, password),
+            password: crypto.HMAC(crypto.SHA1, username, password),
             email: $("#id_email").val(),
             tos: $("#id_tos").attr('checked') ? 'checked' : ''
         };
