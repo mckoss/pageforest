@@ -111,10 +111,11 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     function onSubmit() {
         // Replace plaintext password with HMAC-SHA1 before POST request.
-        var username = $("#id_username").val();
-        var password = $("#id_password").val();
+        var username = $('#id_username').val();
+        var password = $('#id_password').val();
         var hmac = crypto.HMAC(crypto.SHA1, username, password);
-        $("#id_password").val(hmac);
+        $('#id_password').val(hmac);
+        $('form#sign-in').submit();
         return true;
     }
 
