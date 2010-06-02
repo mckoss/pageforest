@@ -86,8 +86,8 @@ class RegistrationTest(AppTestCase):
 
     def test_ajax_validate(self):
         """Test the AJAX form validator."""
-        data = {'username': 'mary', 'tos': 'checked', 'validate': 'on',
-                'password': 'little_lamb', 'repeat': 'little_lamb'}
+        data = {'username': 'mary', 'tos': 'checked', 'validate': 'true',
+                'password': '1234567890123456789012345678901234567890'}
         self.assertContains(self.www_client.post(SIGN_UP, data),
                             '{"email": ["This field is required."]}')
 
@@ -132,12 +132,6 @@ class RegistrationTest(AppTestCase):
             response = self.www_client.post(SIGN_UP, {'username': name})
             self.assertContains(response, "This username is reserved.")
 
-    def test_password_silly(self):
-        """Silly passwords are rejected."""
-        for password in '123456 aaaaaa qwerty qwertz mnbvcxz NBVCXY'.split():
-            response = self.www_client.post(SIGN_UP, {'password': password})
-            self.assertContains(response, "This password is too simple.")
-
     def test_username_taken(self):
         """Existing usernames are reserved."""
         response = self.www_client.post(SIGN_UP, {'username': 'peter'})
@@ -157,12 +151,11 @@ class RegistrationTest(AppTestCase):
         try:
             response = self.www_client.post(SIGN_UP, {
                     'username': 'Mary',
-                    'password': 'afinepassword',
-                    'repeat': 'afinepassword',
+                    'password': '0123456789012345678901234567890123456789',
                     'email': 'mary@bunyan.com',
                     'tos': 'checked',
                     })
-            self.assertRedirects(response, WWW + SIGN_IN)
+            self.assertContains(response, '"statusText": "Registered"')
             mary = User.lookup('mary')
             self.assertTrue(mary is not None)
             self.assertEqual(mary.username, 'Mary')
@@ -188,11 +181,15 @@ class SignInTest(AppTestCase):
 
     def test_errors(self):
         """Errors on sign-in form."""
-        cases = ({'fields': {'username': '', 'password': ''},
+        cases = ({'fields': {'username': 'peter', 'password': ''},
                   'expect': 'This field is required'},
-                 {'fields': {'username': 'peter', 'password': 'weak'},
-                  'expect': 'at least 6 characters'},
-                 {'fields': {'username': 'peter', 'password': 'wrongpassword'},
+                 {'fields': {
+                    'username': '',
+                    'password': '1234567890123456789012345678901234567890'},
+                  'expect': 'This field is required'},
+                 {'fields': {
+                    'username': 'peter',
+                    'password': '1234567890123456789012345678901234567890'},
                   'expect': 'Invalid password'},
                  )
         for case in cases:
@@ -204,7 +201,7 @@ class SignInTest(AppTestCase):
         """Sign-in form success - cookie and redirect - sign-out."""
         response = self.www_client.post(SIGN_IN, {
                 'username': 'peter',
-                'password': 'peter_secret'})
+                'password': self.peter.password})
         self.assertRedirects(response, WWW + SIGN_IN)
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))
@@ -264,7 +261,7 @@ class AppSignInTest(AppTestCase):
 
         response = self.www_client.post(SIGN_IN + 'myapp/',
                                  {'username': 'peter',
-                                  'password': 'peter_secret',
+                                  'password': self.peter.password,
                                   'app_auth': 'checked'})
         self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
         # Expect a first-party session cookie to www.pageforest.com

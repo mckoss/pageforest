@@ -3,13 +3,32 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
     var util = namespace.util;
     var Crypto = namespace.lookup('com.googlecode.crypto-js');
 
-    function onValidateSuccess(message, status, xhr, options) {
+    function validatePassword() {
+        var password = $("#id_password").val();
+        var repeat = $("#id_repeat").val();
+        if (!password.length) {
+            return {password: "This field is required."};
+        }
+        if (password.length < 6) {
+            return {password:
+                    "Ensure this value has at least 6 characters (it has " +
+                    password.length + ")."};
+        }
+        if (password != repeat) {
+            return {repeat: "Password and repeat are not the same."};
+        }
+        return false;
+    }
+
+    function showValidatorResults(fields, errors, options) {
         var force = options && options.force;
-        var fields = ["username", "password", "email", "tos"];
         for (var index = 0; index < fields.length; index++) {
             var name = fields[index];
-            var html = message[name];
-            if (!force && $("#id_" + name).val() === '') {
+            if (name == 'tos' && !force) {
+                continue;
+            }
+            var html = errors[name];
+            if ($("#id_" + name).val() === '' && !force) {
                 html = '';
             } else if (html) {
                 html = '<span class="error">' + html + '</span>';
@@ -18,6 +37,19 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
             }
             $("#validate_" + name).html(html);
         }
+    }
+
+    function onValidateSuccess(message, status, xhr, options) {
+        // Validate password fields on the client side.
+        var passwordErrors = validatePassword();
+        for (var error in passwordErrors) {
+            if (passwordErrors.hasOwnProperty(error)) {
+                message[error] = passwordErrors[error];
+            }
+        }
+        showValidatorResults(
+            ["username", "password", "repeat", "email", "tos"],
+            message, options);
     }
 
     function onSubmitSuccess(message, status, xhr) {
@@ -55,19 +87,38 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
         });
     }
 
+    function isChanged() {
+        var username = $("#id_username").val();
+        var password = $("#id_password").val();
+        var repeat = $("#id_repeat").val();
+        var email = $("#id_email").val();
+        var tos = $("#id_tos").attr('checked') ? 'checked' : '';
+        var oneline = [username, password, repeat, email, tos].join('|');
+        if (oneline == ns.previous) {
+            return false;
+        }
+        ns.previous = oneline;
+        return true;
+    }
+
     function validateIfChanged() {
+        if (!isChanged()) {
+            return;
+        }
         var data = getFormData();
         data.validate = true;
-        var oneline = [data.username, data.email].join('|');
-        if (ns.previous != oneline) {
-            ns.previous = oneline;
-            postFormData(data, onValidateSuccess, onError);
-        }
+        postFormData(data, onValidateSuccess, onError);
     }
 
     function onSubmit() {
-        var data = getFormData();
-        postFormData(data, onSubmitSuccess, onError);
+        var errors = validatePassword();
+        if (errors) {
+            showValidatorResults(['password', 'repeat'], errors,
+                                 {force: true});
+        } else {
+            var data = getFormData();
+            postFormData(data, onSubmitSuccess, onError);
+        }
         return false;
     }
 
@@ -91,7 +142,8 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
     }
 
     function onReady() {
-        ns.previous = '|';
+        // Initialize ns.previous to track input changes.
+        isChanged();
         // Validate in the background
         setInterval(validateIfChanged, 1000);
         $("#id_tos").click(function() {

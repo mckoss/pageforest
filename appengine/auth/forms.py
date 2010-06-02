@@ -135,6 +135,6 @@ class SignInForm(UsernamePasswordForm):
         """
         user = self.cleaned_data.get('user', None)
         password = self.cleaned_data.get('password', None)
-        if user and password and not user.check_password(password):
+        if user and password and password.lower() != user.password.lower():
             raise forms.ValidationError("Invalid password.")
         return self.cleaned_data
