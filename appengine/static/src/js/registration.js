@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.registration').define(function(ns) {
+namespace.lookup('com.pageforest.auth.registration').define(function(ns) {
 
     var util = namespace.util;
     var Crypto = namespace.lookup('com.googlecode.crypto-js');
