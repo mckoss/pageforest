@@ -78,7 +78,7 @@ def email_verification(request, verification=None):
 
 
 @method_required('GET', 'POST')
-def register(request):
+def sign_up(request):
     """
     Create a user account on PageForest.
     """
@@ -88,7 +88,7 @@ def register(request):
         if request.user:
             # The user is already signed in.
             return redirect(reverse(sign_in))
-        return render_to_response(request, 'auth/register.html',
+        return render_to_response(request, 'auth/sign-up.html',
                                   {'form': form})
     # Return form errors as JSON.
     if not form.is_valid():
