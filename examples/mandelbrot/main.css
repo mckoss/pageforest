@@ -79,3 +79,24 @@ input[type="button"] {
 font-size: 24px;
 margin: 5px;
 }
+
+div.signin {
+text-align: right;
+}
+
+div.signin p {
+font-style: italic;
+font-size: 20px;
+}
+
+#map_canvas {
+height: 512px;
+}
+
+div.controls {
+}
+
+div.save-bar {
+clear:both;
+float:right;
+}
