@@ -7,6 +7,7 @@ from django.http import \
     HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified, Http404
 
 from google.appengine.ext import db
+from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
 from auth.decorators import login_required
@@ -134,13 +135,14 @@ def blob_list(request):
     images/gradient.jpg (depth 2)
     but not style/css/main.css (depth 3)
     """
+    keys_only = bool(request.GET.get('keysonly', ''))
     depth = request.GET.get('depth', '1')
     depth = depth.isdigit() and int(depth) or 0
-    query = Blob.all()
+    query = Blob.all(keys_only=keys_only)
     if depth == 1:
         query.filter('directory', request.key_name)
     else:
-        query.filter('__key__ >=', db.Key.from_path('Blob', request.key_name))
+        query.filter('__key__ >', db.Key.from_path('Blob', request.key_name))
         stop_key_name = request.key_name[:-1] + '0'  # chr(ord('/') + 1)
         query.filter('__key__ <', db.Key.from_path('Blob', stop_key_name))
     strip_levels = request.key_name.count('/')
@@ -152,19 +154,37 @@ def blob_list(request):
     # up to the requested level. However, that may be very expensive.
     # To solve this, introduce a separate model to store the blob
     # meta-info and tree structure, with memcache support.
+    memcache_mapping = {}
+    memcache_bytes = 0
     for blob in query.fetch(100):
-        parts = blob.key().name().split('/')
+        if keys_only:
+            key = blob
+        else:
+            key = blob.key()
+        parts = key.name().split('/')
         parts = parts[strip_levels:-1]
         if depth and len(parts) > depth:
             # Ignore blobs that are deeper than maximum depth.
             continue
         filename = '/'.join(parts)
+        if keys_only:
+            result[filename] = {}
+            continue
         result[filename] = {
             'json': blob.valid_json,
             'modified': blob.modified,
             'sha1': blob.sha1,
             'size': len(blob.value),
             }
+        # Save small blobs directly to memcache.
+        if len(blob.value) < 20000 and memcache_bytes < 500000:
+            protobuf = blob.to_protobuf()
+            memcache_mapping[blob.get_cache_key()] = protobuf
+            memcache_bytes += len(protobuf)
+    # REVIEW: The following line increases memory pressure in
+    # memcache. Maybe the expiration time would help?
+    memcache.set_multi(memcache_mapping)
+    # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
