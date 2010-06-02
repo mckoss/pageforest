@@ -46,7 +46,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.app = app;
 
-        this.appHost = location.host;
+        this.appHost = window.location.host;
         var dot = this.appHost.indexOf('.');
         this.appid = this.appHost.substr(0, dot);
         this.wwwHost = 'www' + this.appHost.substr(dot);
@@ -288,11 +288,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 docid = '';
             }
 
-            location.hash = docid;
-            this.lastHash = location.hash;
+            window.location.hash = docid;
+            this.lastHash = window.location.hash;
             // Chrome has a bug where the location bar is not updated unless
             // the whole thing is set.
-            location.href = location.href;
+            window.location.href = window.location.href;
         },
 
         getDocURL: function(docid) {
@@ -401,9 +401,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
         poll: function () {
-            if (this.lastHash != location.hash) {
-                this.lastHash = location.hash;
-                this.load(location.hash.substr(1));
+            if (this.lastHash != window.location.hash) {
+                this.lastHash = window.location.hash;
+                this.load(window.location.hash.substr(1));
             }
             this.checkUsername();
             this.checkDoc();
