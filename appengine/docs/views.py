@@ -37,6 +37,13 @@ def index(request):
 def app_docs(request):
     """
     List the current user's documents within the current app.
+
+    TODO: Add flexible filters as query string arguments.
+    ?prefix=abc
+    ?tag=demo
+    ?owner=username
+    ?readers=public
+    ?writers=username
     """
     query = Doc.all()
     query.filter('owner', request.user.get_username())
