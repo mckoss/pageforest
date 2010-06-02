@@ -6,6 +6,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var vector = namespace.lookup('org.startpad.vector');
     var format = namespace.lookup('org.startpad.format');
 
+    var blobDocId = "v1";
 
     function MandelbrotMapType() {
     }
@@ -13,20 +14,25 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     MandelbrotMapType.methods({
         tileSize: new google.maps.Size(256, 256),
         maxZoom: 19,
-        name: "Tile #s",
+        name: "Mandelbrot",
         alt: "Mandelbrot Map Type",
 
-        getTile: function(coord, zoom, ownerDocument) {
-            var div = ownerDocument.createElement('DIV');
-            div.innerHTML = coord;
-            div.style.width = this.tileSize.width + 'px';
-            div.style.height = this.tileSize.height + 'px';
-            div.style.fontSize = '10';
-            div.style.borderStyle = 'solid';
-            div.style.borderWidth = '1px';
-            div.style.borderColor = '#AAAAAA';
-            div.style.backgroundColor = "red";
-            return div;
+        getTile: function(coord, zoom) {
+            var tileName = ns.m.tileName(coord, zoom);
+            if (tileName == undefined) {
+                var div = document.createElement('div');
+                div.style.width = this.tileSize.width + 'px';
+                div.style.height = this.tileSize.height + 'px';
+                div.style.backgroundColor = "black";
+                return div;
+            }
+
+            var img = document.createElement('img');
+            img.src = ns.client.getDocURL(blobDocId) +
+                ns.m.tileName(coord, zoom);
+            img.style.width = this.tileSize.width + 'px';
+            img.style.height = this.tileSize.height + 'px';
+            return img;
         }
     });
 
@@ -44,6 +50,23 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
         ns.map.mapTypes.set('mandelbrot', new MandelbrotMapType());
         ns.map.setMapTypeId('mandelbrot');
+    }
+
+    // Create the (shared) public document into which all tiles will be stored.
+    function createBlobDoc() {
+        ns.client.putDoc(blobDocId, {
+            title: "Mandelbrot Tile Store - Version 1",
+            writers: ["public"],
+            blob: {
+                version: blobDocId
+            }
+        }, function (saved) {
+            if (saved) {
+                alert("Document created!");
+                return;
+            }
+            alert("Error creating document.");
+        });
     }
 
     // Initialize the document - create a client helper object
@@ -111,16 +134,10 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                            format.thousands(pps) + " pixels per second.");
             }
 
-            var fUseWorker = $('#use-worker').is(':checked');
-            console.log("uw", fUseWorker);
-
             ns.m.render(ns.viewPort,
                         ns.center[0] - dx / 2, ns.center[1] + dy / 2,
                         dx, dy,
-                        fUseWorker ? renderComplete : undefined);
-            if (!fUseWorker) {
-                renderComplete();
-            }
+                        renderComplete);
         }, 1);
     }
 
@@ -150,6 +167,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     }
 
     function onSaveSuccess() {
+        // REVIEW: Nexus One browser is not writing tiles - or displaying
+        // errors?
         this.client.putBlob('viewport.png',
                              format.canvasToPNG(ns.viewPort),
                             'base64');
@@ -217,7 +236,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onSaveSuccess': onSaveSuccess,
         'signInOut': signInOut,
         'draw': draw,
-        'zoom': zoom
+        'zoom': zoom,
+        'createBlobDoc': createBlobDoc
     });
 
 });
