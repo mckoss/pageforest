@@ -1,8 +1,8 @@
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
-    var util = namespace.util;
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
+    var forms = namespace.lookup('com.pageforest.forms');
 
     function validatePassword() {
         var password = $("#id_password").val();
@@ -21,25 +21,6 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         return false;
     }
 
-    function showValidatorResults(fields, errors, options) {
-        var force = options && options.force;
-        for (var index = 0; index < fields.length; index++) {
-            var name = fields[index];
-            if (name == 'tos' && !force) {
-                continue;
-            }
-            var html = errors[name];
-            if ($("#id_" + name).val() === '' && !force) {
-                html = '';
-            } else if (html) {
-                html = '<span class="error">' + html + '</span>';
-            } else {
-                html = '<span class="success">OK</span>';
-            }
-            $("#validate_" + name).html(html);
-        }
-    }
-
     function onValidateSuccess(message, status, xhr, options) {
         // Validate password fields on the client side.
         var passwordErrors = validatePassword();
@@ -48,9 +29,11 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
                 message[error] = passwordErrors[error];
             }
         }
-        showValidatorResults(
-            ["username", "password", "repeat", "email", "tos"],
-            message, options);
+        var fields = ['username', 'password', 'repeat', 'email'];
+        if (options && options.force) {
+            fields.push('tos');
+        }
+        forms.showValidatorResults(fields, message, options);
     }
 
     function onSubmitSuccess(message, status, xhr) {
@@ -77,24 +60,12 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         };
     }
 
-    function postFormData(data, success, error) {
-        $.ajax({
-            type: "POST",
-            url: "/sign-up/",
-            data: data,
-            dataType: "json",
-            success: success,
-            error: error
-        });
-    }
-
     function isChanged() {
         var username = $("#id_username").val();
         var password = $("#id_password").val();
         var repeat = $("#id_repeat").val();
         var email = $("#id_email").val();
-        var tos = $("#id_tos").attr('checked') ? 'checked' : '';
-        var oneline = [username, password, repeat, email, tos].join('|');
+        var oneline = [username, password, repeat, email].join('|');
         if (oneline == ns.previous) {
             return false;
         }
@@ -108,17 +79,17 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         }
         var data = getFormData();
         data.validate = true;
-        postFormData(data, onValidateSuccess, onError);
+        forms.postFormData(data, onValidateSuccess, onError);
     }
 
     function onSubmit() {
         var errors = validatePassword();
         if (errors) {
-            showValidatorResults(['password', 'repeat'], errors,
-                                 {force: true});
+            forms.showValidatorResults(['password', 'repeat'], errors,
+                                       {force: true});
         } else {
             var data = getFormData();
-            postFormData(data, onSubmitSuccess, onError);
+            forms.postFormData(data, onSubmitSuccess, onError);
         }
         return false;
     }
@@ -166,4 +137,4 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         resend: resend
     });
 
-}); // com.pageforest.sign-up
+}); // com.pageforest.auth.sign-up
