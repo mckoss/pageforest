@@ -4,7 +4,7 @@
 
 {% block extra-head %}
 <script type="text/javascript">
-var registration = namespace.lookup("com.pageforest.registration");
+var signUp = namespace.lookup("com.pageforest.auth.sign-up");
 </script>
 {% endblock %}
 
@@ -29,7 +29,7 @@ var registration = namespace.lookup("com.pageforest.registration");
     click here:
 </p>
 <p>
-    <input type="button" value="Resend Email Verification" onClick="registration.resend();return false;"/>
+    <input type="button" value="Resend Email Verification" onClick="return signUp.resend()"/>
     <span id="result"></span>
 </p>
 {% else %}

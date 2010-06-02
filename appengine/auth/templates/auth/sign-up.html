@@ -2,8 +2,8 @@
 
 {% block extra-head %}
 <script type="text/javascript">
-var registration = namespace.lookup("com.pageforest.auth.registration");
-$(document).ready(registration.onReady);
+var signUp = namespace.lookup("com.pageforest.auth.sign-up");
+$(document).ready(signUp.onReady);
 </script>
 {% endblock %}
 
@@ -11,7 +11,7 @@ $(document).ready(registration.onReady);
 
 {% block both-columns %}
 <h2>Create your {{SITE_NAME}} account</h2>
-<form method="post" onsubmit="return registration.onSubmit()">
+<form method="post" onsubmit="return signUp.onSubmit()">
 <table>
 {% for field in form %}
 <tr>
