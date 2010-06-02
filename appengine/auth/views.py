@@ -17,7 +17,7 @@ from utils.shortcuts import render_to_response
 from utils import crypto
 
 from auth import SignatureError
-from auth.forms import RegistrationForm, SignInForm
+from auth.forms import SignUpForm, SignInForm
 from auth.models import User, CHALLENGE_EXPIRATION
 from auth.middleware import AccessDenied
 
@@ -82,7 +82,7 @@ def sign_up(request):
     """
     Create a user account on PageForest.
     """
-    form = RegistrationForm(request.POST or None)
+    form = SignUpForm(request.POST or None)
     # Return HTML form for GET requests.
     if request.method == 'GET':
         if request.user:
