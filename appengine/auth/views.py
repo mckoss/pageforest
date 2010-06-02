@@ -85,6 +85,9 @@ def register(request):
     form = RegistrationForm(request.POST or None)
     # Return HTML form for GET requests.
     if request.method == 'GET':
+        if request.user:
+            # The user is already signed in.
+            return redirect(reverse(sign_in))
         return render_to_response(request, 'auth/register.html',
                                   {'form': form})
     # Return form errors as JSON.
