@@ -194,7 +194,6 @@ class SignInTest(AppTestCase):
                  )
         for case in cases:
             response = self.www_client.post(SIGN_IN, case['fields'])
-            self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_success(self):
@@ -202,14 +201,15 @@ class SignInTest(AppTestCase):
         response = self.www_client.post(SIGN_IN, {
                 'username': 'peter',
                 'password': self.peter.password})
-        self.assertRedirects(response, WWW + SIGN_IN)
+        self.assertContains(response,
+                            '"status": 200, "statusText": "Authenticated"')
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertEqual(cookie['max-age'], 86400)
         self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect after POST
-        response = self.www_client.post(SIGN_IN)
+        response = self.www_client.get(SIGN_IN)
         self.assertContains(response, 'Peter, you are signed in to')
 
         # Now sign out the user - and check his cookies
@@ -222,7 +222,7 @@ class SignInTest(AppTestCase):
         self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect after GET
-        response = self.www_client.post(SIGN_IN)
+        response = self.www_client.get(SIGN_IN)
         self.assertContains(response, 'Sign in to Pageforest')
 
 
@@ -234,12 +234,15 @@ class AppSignInTest(AppTestCase):
 
     def test_errors(self):
         """Errors on application sign-in form."""
-        cases = ({'fields': {'username': 'peter'},
-                  'expect': 'This field is required'},
+        cases = ({'fields': {'username': 'p'},
+                  'expect': "Ensure this value has at least 2 characters"},
+                 {'fields': {'username': 'peter'},
+                  'expect': "This field is required"},
+                 {'fields': {'username': 'peter', 'password': '1234'},
+                  'expect': "Ensure this value has at least 40 characters"},
                  )
         for case in cases:
             response = self.www_client.post(SIGN_IN + 'myapp/', case['fields'])
-            self.assertContains(response, 'class="error"')
             self.assertContains(response, case['expect'])
 
     def test_no_auth_on_app_domain(self):
@@ -263,7 +266,8 @@ class AppSignInTest(AppTestCase):
                                  {'username': 'peter',
                                   'password': self.peter.password,
                                   'app_auth': 'checked'})
-        self.assertRedirects(response, WWW + SIGN_IN + 'myapp/')
+        self.assertContains(response,
+                            '"status": 200, "statusText": "Authenticated"')
         # Expect a first-party session cookie to www.pageforest.com
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))
@@ -274,7 +278,7 @@ class AppSignInTest(AppTestCase):
         self.assertTrue(app_cookie['httponly'])
 
         # Simulate the redirect to the form
-        response = self.www_client.post(SIGN_IN + 'myapp/')
+        response = self.www_client.get(SIGN_IN + 'myapp/')
         # We need the app-specific session cookie transferred to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
         match = re.search(r"transferSession\('(.*)'\)", response.content)

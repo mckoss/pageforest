@@ -151,45 +151,48 @@ def sign_in(request, app_id=None):
         app = App.lookup(app_id)
         if app is None or app.is_www():
             return HttpResponseRedirect(reverse(sign_in))
-
     if app is None:
         del form.fields['app_auth']
     else:
         form.fields['app_auth'].label = app_id.title()
 
-    if request.method == 'POST':
-        if form.is_valid():
-            user = form.cleaned_data['user']
-            kwargs = app_id and {'app_id': app_id} or None
-            response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
-            # Whenever we sign in - generate a fresh www session key
-            assert request.app.is_www(), \
-                "Sign-in should only be enabled on the www domain."
-            session_key = user.generate_session_key(request.app)
-            response.set_cookie(settings.SESSION_COOKIE_NAME,
-                                session_key,
-                                max_age=settings.SESSION_COOKIE_AGE)
-            # If we've authorized the cross-app, set the
-            if app and 'app_auth' in form.cleaned_data and \
-                    form.cleaned_data['app_auth']:
-                # Cookie names cannot contain unicode!
-                app_session_key = user.generate_session_key(app)
-                cookie_name = "%s-%s" % (str(app_id),
-                                        settings.SESSION_COOKIE_NAME)
-                response.set_cookie(cookie_name, app_session_key)
-            return response
+    if request.method == 'GET':
+        app_session_key = None
+        if app and request.user:
+            app_session_key = request.user.generate_session_key(app)
+        response = render_to_response(request, 'auth/sign-in.html', {
+                'form': form, 'cross_app': app, 'session_key': app_session_key,
+                'enablejs': ENABLEJS % reverse(sign_in), 'httponly': HTTPONLY})
+        response.set_cookie('httponly', 'test')
+        return response
 
-    app_session_key = None
-    if app and request.user:
-        app_session_key = request.user.generate_session_key(app)
-    response = render_to_response(
-        request, 'auth/sign-in.html',
-        {'form': form,
-         'enablejs': ENABLEJS % reverse(sign_in),
-         'httponly': HTTPONLY,
-         'cross_app': app,
-         'session_key': app_session_key})
-    response.set_cookie('httponly', 'test')
+    assert request.method == 'POST'
+    assert request.app.is_www(), \
+        "Sign-in is only allowed on www.%s." % settings.DEFAULT_DOMAIN
+
+    # Return form errors as JSON.
+    if not form.is_valid():
+        if '__all__' in form.errors:
+            form.errors['password'] = form.errors['__all__']
+            del form.errors['__all__']
+        return HttpResponse(form.errors_json(),
+                            mimetype=settings.JSON_MIMETYPE)
+
+    user = form.cleaned_data['user']
+    response = HttpResponse('{"status": 200, "statusText": "Authenticated"}',
+                            mimetype=settings.JSON_MIMETYPE)
+    # Whenever we sign in - generate a fresh www session key
+    session_key = user.generate_session_key(request.app)
+    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                        max_age=settings.SESSION_COOKIE_AGE)
+    # If we've authorized the cross-app, set the app session key cookie.
+    if app and 'app_auth' in form.cleaned_data and \
+            form.cleaned_data['app_auth']:
+        # Cookie names cannot contain unicode!
+        app_session_key = user.generate_session_key(app)
+        cookie_name = "%s-%s" % (str(app_id),
+                                 settings.SESSION_COOKIE_NAME)
+        response.set_cookie(cookie_name, app_session_key)
     return response
 
 
