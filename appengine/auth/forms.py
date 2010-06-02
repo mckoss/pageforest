@@ -84,8 +84,8 @@ class SignUpForm(UsernamePasswordForm):
         widget=LabeledCheckbox(label="I agree", field_id='tos'),
         error_messages={'required':
           mark_safe('You must agree to the <a href="http://' +
-                    settings.DEFAULT_DOMAIN + '/' + 'terms-of-service">' +
-                    'Terms of Service</a>.')})
+                    settings.DEFAULT_DOMAIN + '/terms-of-service' +
+                    '" target="_blank">Terms of Service</a>.')})
 
     def clean_username(self):
         """
