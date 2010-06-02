@@ -46,7 +46,7 @@ class LabeledCheckbox(forms.CheckboxInput):
 class UsernamePasswordForm(AjaxForm):
     """
     Reusable form class with a username and password field.
-    Both RegistrationForm and SignInForm are subclasses of this.
+    Both SignUpForm and SignInForm are subclasses of this.
     """
     username = forms.CharField(min_length=2, max_length=30)
     password = forms.CharField(min_length=40, max_length=40,
@@ -72,9 +72,9 @@ class UsernamePasswordForm(AjaxForm):
         return username
 
 
-class RegistrationForm(UsernamePasswordForm):
+class SignUpForm(UsernamePasswordForm):
     """
-    Registration form for new users, with helpful error messages.
+    Account registration form for new users, with helpful error messages.
     """
     repeat = forms.CharField(max_length=40, label="Repeat password",
         widget=forms.PasswordInput(render_value=False), required=False)
@@ -91,7 +91,7 @@ class RegistrationForm(UsernamePasswordForm):
         """
         Verify that the username is available.
         """
-        username = super(RegistrationForm, self).clean_username()
+        username = super(SignUpForm, self).clean_username()
         if User.lookup(username):
             raise forms.ValidationError("This username is already taken.")
         return username

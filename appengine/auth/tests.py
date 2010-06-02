@@ -82,7 +82,7 @@ class MigratableTest(AppTestCase):
                          u"Updated User entity peter from schema 1 to 3")
 
 
-class RegistrationTest(AppTestCase):
+class SignUpTest(AppTestCase):
 
     def test_ajax_validate(self):
         """Test the AJAX form validator."""
@@ -137,8 +137,8 @@ class RegistrationTest(AppTestCase):
         response = self.www_client.post(SIGN_UP, {'username': 'peter'})
         self.assertContains(response, "This username is already taken.")
 
-    def test_new_registration(self):
-        """Complete a user registration successfully."""
+    def test_sign_up(self):
+        """Complete user account registration successfully."""
         mail_kwargs = {}
 
         def mock_send_mail(*args, **kwargs):
