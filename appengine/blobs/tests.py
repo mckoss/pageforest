@@ -366,6 +366,18 @@ class ListTest(AppTestCase):
   }
 }""")
 
+    def test_keys_only_1(self):
+        """List method with depth=1 should return only direct children."""
+        for url in [
+            '/docs/1234?method=list&keysonly=true',
+            '/docs/1234/?method=LIST&keysonly=1',
+            '/docs/1234?keysonly=yes&method=list&depth=1',
+            ]:
+            self.assertContains(self.app_client.get(url), """\
+{
+  "one": {}
+}""")
+
     def test_depth_2(self):
         """List method with depth=2 should return only two levels."""
         for url in [
@@ -381,6 +393,15 @@ class ListTest(AppTestCase):
 
     def test_depth_unlimited(self):
         """List method with depth=unlimited should return all sub-children."""
+        four_keys = [
+            'myapp/1234/one/',
+            'myapp/1234/one/two/',
+            'myapp/1234/one/two/three/',
+            'myapp/1234/one/two/three/four/']
+        # Delete keys from memcache.
+        for key_name in four_keys:
+            memcache.delete(Blob.class_get_cache_key(key_name))
+            self.assertFalse(Blob.cache_get_by_key_name(key_name))
         for url in [
             '/docs/1234?method=list&depth=0',
             '/docs/1234/?method=LIST&depth=unlimited',
@@ -393,6 +414,26 @@ class ListTest(AppTestCase):
             self.assertContains(response, '"one/two": {')
             self.assertContains(response, '"one/two/three": {')
             self.assertContains(response, '"one/two/three/four": {')
+        # Check that LIST has populated memcache again.
+        for key_name in four_keys:
+            self.assertTrue(Blob.cache_get_by_key_name(key_name))
+
+    def test_keys_only_unlimited(self):
+        """List method with depth=unlimited should return all sub-children."""
+        for url in [
+            '/docs/1234?method=list&keysonly=true&depth=0',
+            '/docs/1234/?method=LIST&depth=unlimited&keysonly=1',
+            '/docs/1234?method=list&depth=4&keysonly=on',
+            '/docs/1234?method=list&keysonly=keysonly&depth=5',
+            ]:
+            response = self.app_client.get(url)
+            self.assertContains(response, """\
+{
+  "one": {},
+  "one/two": {},
+  "one/two/three": {},
+  "one/two/three/four": {}
+}""")
 
     def test_relative(self):
         """List method with relative depth should show three but not four."""
