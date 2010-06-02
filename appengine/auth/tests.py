@@ -275,10 +275,10 @@ class AppSignInTest(AppTestCase):
 
         # Simulate the redirect to the form
         response = self.www_client.post(SIGN_IN + 'myapp/')
-        # We need the app-specific session cookie transfered to JavaScript
+        # We need the app-specific session cookie transferred to JavaScript
         self.assertContains(response, 'Peter, you are signed in to')
-        match = re.search(r'transferSession\("(.*)"\)', response.content)
-        self.assertTrue(match is not None)
+        match = re.search(r"transferSession\('(.*)'\)", response.content)
+        self.assertTrue(match)
         myapp_session_key = match.group(1)
         self.assertTrue(myapp_session_key.startswith("myapp|peter|12"))
 

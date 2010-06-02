@@ -9,6 +9,7 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
       to allow the application access to his store.
     */
     var cookies = namespace.lookup('org.startpad.cookies');
+    var crypto = namespace.lookup('com.googlecode.crypto-js');
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -102,9 +103,19 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         });
     }
 
+    function onSubmit() {
+        // Replace plaintext password with HMAC-SHA1 before POST request.
+        var username = $("#id_username").val();
+        var password = $("#id_password").val();
+        var hmac = crypto.HMAC(crypto.SHA1, username, password);
+        $("#id_password").val(hmac);
+        return true;
+    }
+
     ns.extend({
-        transferSession: transferSession,
-        onReady: onReady
+        onReady: onReady,
+        onSubmit: onSubmit,
+        transferSession: transferSession
     });
 
 }); // com.pageforest.sign-in-form
