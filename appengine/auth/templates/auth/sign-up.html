@@ -11,6 +11,10 @@ $(document).ready(signUp.onReady);
 
 {% block both-columns %}
 <h2>Create your {{SITE_NAME}} account</h2>
+
+{{ enablejs|safe }}
+{{ httponly|safe }}
+
 <form method="post" onsubmit="return signUp.onSubmit()">
 <table>
 {% for field in form %}
