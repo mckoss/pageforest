@@ -2,10 +2,9 @@ namespace.lookup('com.pageforest.modules').defineOnce(function (ns) {
     var modules = {
         'org.startpad': ['namespace', 'base', 'unit', 'timer', 'vector',
                          'format', 'cookies'],
-        'com.pageforest': ['client', 'registration']
+        'com.pageforest': ['client'],
+        'com.pageforest.auth': ['sign-up', 'sign-in']
     };
-
-    // FIXME: auth.sign-in-form not normalized file paths...
 
     // Produce a file map of files, relative to tests directory where each
     // module can be found.  Key are namespaces like:
