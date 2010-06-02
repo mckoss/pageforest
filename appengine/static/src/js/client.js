@@ -28,6 +28,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var blobMessage = "Document is missing a blob property.";
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
+    var docidMessage = "Document name is missing.";
 
     // The application calls Client, and implements the following methods:
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
@@ -117,7 +118,56 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
+        // Save a document - does not have to be the "main" document
+        // that the user is currently viewing.
+        putDoc: function (docid, json, fn) {
+            if (!fn) {
+                fn = function () {};
+            }
+
+            var validations = {
+                'no_username': [this.username, signInMessage],
+                'missing_document_name': [docid, docidMessage],
+                'missing_object': [json, objectMessage],
+                'missing_title': [json && json.title, titleMessage],
+                'missing_blob': [json && json.blob, blobMessage]
+            };
+
+            for (var code in validations) {
+                if (validations.hasOwnProperty(code)) {
+                    var validation = validations[code];
+                    if (!validation[0]) {
+                        this.errorReport(code, validation[1]);
+                        fn(false);
+                        return;
+                    }
+                }
+            }
+
+            // Default permissions to be public readable.
+            if (!json.readers) {
+                json.readers = ['public'];
+            }
+
+            var data = JSON.stringify(json);
+            this.log('saving document: ' + this.getDocURL(docid), json);
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL(docid),
+                data: data,
+                error: function () {
+                    this.errorHandler.fnMethod(this);
+                    fn(false);
+                },
+                success: function () {
+                    fn(true);
+                }
+            });
+        },
+
         save: function (json, docid) {
+            // TODO: Call this.putDoc - and then handle the document
+            // state in the callback function.
             if (this.username == undefined) {
                 this.errorReport('no_username', signInMessage);
                 return;
@@ -165,7 +215,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var data = JSON.stringify(json);
-            this.log('saving: ' + this.getDocURL(docid), {'obj': json});
+            this.log('saving: ' + this.getDocURL(docid), json);
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -182,7 +232,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // Save a child blob in the namespace of the current document
-        putBlob: function(blobKey, data, encoding) {
+        putBlob: function(blobKey, data, encoding, docid) {
             if (this.docid == undefined) {
                 this.errorReport('unsaved_document', docUnsavedMessage);
                 return;
