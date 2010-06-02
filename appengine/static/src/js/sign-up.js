@@ -21,7 +21,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         return false;
     }
 
-    function onValidateSuccess(message, status, xhr, options) {
+    function onValidate(message, status, xhr, options) {
         // Validate password fields on the client side.
         var passwordErrors = validatePassword();
         for (var error in passwordErrors) {
@@ -30,18 +30,18 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
             }
         }
         var fields = ['username', 'password', 'repeat', 'email'];
-        if (options && options.force) {
+        if (!options || !options.ignoreEmpty) {
             fields.push('tos');
         }
         forms.showValidatorResults(fields, message, options);
     }
 
-    function onSubmitSuccess(message, status, xhr) {
-        if (message.status == 200) {
-            document.location = '/sign-in/';
-        } else {
-            onValidateSuccess(message, status, xhr, {force: true});
-        }
+    function onValidateIgnoreEmpty(message, status, xhr) {
+        onValidate(message, status, xhr, {ignoreEmpty: true});
+    }
+
+    function onSuccess(message, status, xhr) {
+        window.location = '/sign-in/';
     }
 
     function onError(xhr, status, message) {
@@ -79,17 +79,17 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         }
         var data = getFormData();
         data.validate = true;
-        forms.postFormData(data, onValidateSuccess, onError);
+        forms.postFormData('/sign-up/', data,
+                           null, onValidateIgnoreEmpty, onError);
     }
 
     function onSubmit() {
         var errors = validatePassword();
         if (errors) {
-            forms.showValidatorResults(['password', 'repeat'], errors,
-                                       {force: true});
+            forms.showValidatorResults(['password', 'repeat'], errors);
         } else {
-            var data = getFormData();
-            forms.postFormData(data, onSubmitSuccess, onError);
+            forms.postFormData('/sign-up/', getFormData(),
+                               onSuccess, onValidate, onError);
         }
         return false;
     }

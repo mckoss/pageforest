@@ -1,11 +1,11 @@
 namespace.lookup('com.pageforest.forms').define(function(ns) {
 
     function showValidatorResults(fields, errors, options) {
-        var force = options && options.force;
+        var ignoreEmpty = options && options.ignoreEmpty;
         for (var index = 0; index < fields.length; index++) {
             var name = fields[index];
             var html = errors[name];
-            if ($("#id_" + name).val() === '' && !force) {
+            if (ignoreEmpty && $("#id_" + name).val() === '') {
                 html = '';
             } else if (html) {
                 html = '<span class="error">' + html + '</span>';
@@ -16,14 +16,24 @@ namespace.lookup('com.pageforest.forms').define(function(ns) {
         }
     }
 
-    function postFormData(data, success, error) {
+    function postFormData(url, data, onSuccess, onValidate, onError) {
         $.ajax({
             type: "POST",
-            url: "/sign-up/",
+            url: url,
             data: data,
             dataType: "json",
-            success: success,
-            error: error
+            success: function(message, status, xhr) {
+                if (message.status == 200) {
+                    if (onSuccess) {
+                        onSuccess(message, status, xhr);
+                    }
+                } else {
+                    if (onValidate) {
+                        onValidate(message, status, xhr);
+                    }
+                }
+            },
+            error: onError
         });
     }
 

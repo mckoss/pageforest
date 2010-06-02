@@ -1,15 +1,18 @@
-namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-    /*
-      Handle logging a user into Pageforest and optionally also log
-      them in to a Pageforest application.
+/*
+  Handle logging a user into Pageforest and optionally also log them
+  in to a Pageforest application.
 
-      A logged in use will get a session key on www.pageforest.com.
-      This script makes requests to appid.pageforest.com in order to
-      get a cookie set on the application domain when the user wants
-      to allow the application access to his store.
-    */
+  A logged in use will get a session key on www.pageforest.com. This
+  script makes requests to appid.pageforest.com in order to get a
+  cookie set on the application domain when the user wants to allow
+  the application access to his store.
+*/
+
+namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
+
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
+    var forms = namespace.lookup('com.pageforest.forms');
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -109,14 +112,27 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
     }
 
+    function onSuccess(message, status, xhr) {
+        window.location.reload();
+    }
+
+    function onValidate(message, status, xhr) {
+        forms.showValidatorResults(['username', 'password'], message);
+    }
+
+    function onError(xhr, status, message) {
+        console.error(status + ': ' + message);
+    }
+
     function onSubmit() {
-        // Replace plaintext password with HMAC-SHA1 before POST request.
         var username = $('#id_username').val();
         var password = $('#id_password').val();
-        var hmac = crypto.HMAC(crypto.SHA1, username, password);
-        $('#id_password').val(hmac);
-        $('form#sign-in').submit();
-        return true;
+        var data = {
+            username: username,
+            password: crypto.HMAC(crypto.SHA1, username, password)
+        };
+        forms.postFormData('/sign-in/', data, onSuccess, onValidate, onError);
+        return false;
     }
 
     ns.extend({
@@ -125,4 +141,4 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         transferSession: transferSession
     });
 
-}); // com.pageforest.sign-in
+}); // com.pageforest.auth.sign-in
