@@ -83,16 +83,27 @@ def register(request):
     Create a user account on PageForest.
     """
     form = RegistrationForm(request.POST or None)
-    if request.method == 'POST':
-        if 'validate' in request.POST:
-            return HttpResponse(form.errors_json(),
-                                mimetype=settings.JSON_MIMETYPE)
-        if form.is_valid():
-            user = form.save()
-            send_email_verification(request, user)
-            return redirect(reverse(sign_in))
-    return render_to_response(request, 'auth/register.html',
-                              {'form': form})
+    # Return HTML form for GET requests.
+    if request.method == 'GET':
+        return render_to_response(request, 'auth/register.html',
+                                  {'form': form})
+    # Return form errors as JSON.
+    if not form.is_valid():
+        return HttpResponse(form.errors_json(),
+                            mimetype=settings.JSON_MIMETYPE)
+    # Return empty errors object for validate.
+    if 'validate' in request.POST:
+        return HttpResponse('{}', mimetype=settings.JSON_MIMETYPE)
+    # Create a new user, generate a session key, return success.
+    assert request.method == 'POST'
+    user = form.save()
+    send_email_verification(request, user)
+    response = HttpResponse('{"status": 200, "statusText": "Registered"}',
+                            mimetype=settings.JSON_MIMETYPE)
+    response.set_cookie(settings.SESSION_COOKIE_NAME,
+                        user.generate_session_key(request.app),
+                        max_age=settings.SESSION_COOKIE_AGE)
+    return response
 
 
 @method_required('GET', 'POST')

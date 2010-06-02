@@ -1,64 +1,74 @@
 namespace.lookup('com.pageforest.registration').define(function(ns) {
+
     var util = namespace.util;
+    var Crypto = namespace.lookup('com.googlecode.crypto-js');
 
-    function html_message(name, message) {
-        if ($("#id_" + name).val() === '') {
-            return '';
-        }
-        if (message) {
-            return '<span class="error">' + message + '</span>';
-        }
-        return '<span class="success">OK</span>';
-    }
-
-    function validate_success(message, status, xhr) {
-        var fields = {"username": "username", "email": "email",
-                      "password": "password", "repeat": "__all__"};
-        for (var name in fields) {
-            if (fields.hasOwnProperty(name)) {
-                $("#validate_" + name).html(
-                    html_message(name, message[fields[name]]));
+    function onValidateSuccess(message, status, xhr, options) {
+        var force = options && options.force;
+        var fields = ["username", "password", "email", "tos"];
+        for (var index = 0; index < fields.length; index++) {
+            var name = fields[index];
+            var html = message[name];
+            if (!force && $("#id_" + name).val() === '') {
+                html = '';
+            } else if (html) {
+                html = '<span class="error">' + html + '</span>';
+            } else {
+                html = '<span class="success">OK</span>';
             }
+            $("#validate_" + name).html(html);
         }
     }
 
-    function validate_error(xhr, status, message) {
+    function onSubmitSuccess(message, status, xhr) {
+        if (message.status == 200) {
+            document.location = '/sign-in/';
+        } else {
+            onValidateSuccess(message, status, xhr, {force: true});
+        }
+    }
+
+    function onError(xhr, status, message) {
         console.error(xhr);
     }
 
-    function validate_if_changed() {
-        var data = {
-            username: $("#id_username").val(),
+    function getFormData() {
+        var username = $("#id_username").val();
+        var password = $("#id_password").val();
+        var repeat = $("#id_repeat").val();
+        return {
+            username: username,
+            password: Crypto.HMAC(Crypto.SHA1, username, password),
             email: $("#id_email").val(),
-            password: $("#id_password").val(),
-            repeat: $("#id_repeat").val(),
-            tos: $("#id_tos").attr('checked') ? 'checked' : '',
-            validate: true
+            tos: $("#id_tos").attr('checked') ? 'checked' : ''
         };
-        var oneline = [data.username, data.email,
-                       data.password, data.repeat];
-        oneline = oneline.join('~');
-        if (oneline == ns.previous) {
-            return;
-        }
-        ns.previous = oneline;
+    }
+
+    function postFormData(data, success, error) {
         $.ajax({
             type: "POST",
             url: "/sign-up/",
             data: data,
             dataType: "json",
-            success: validate_success,
-            error: validate_error
+            success: success,
+            error: error
         });
     }
 
-    function document_ready() {
-        ns.previous = '~~~';
-        // Validate in the background
-        setInterval(validate_if_changed, 3000);
-        $("#id_tos").click(function() {
-            $("#validate_tos").html('');
-        });
+    function validateIfChanged() {
+        var data = getFormData();
+        data.validate = true;
+        var oneline = [data.username, data.email].join('|');
+        if (ns.previous != oneline) {
+            ns.previous = oneline;
+            postFormData(data, onValidateSuccess, onError);
+        }
+    }
+
+    function onSubmit() {
+        var data = getFormData();
+        postFormData(data, onSubmitSuccess, onError);
+        return false;
     }
 
     // Request a new email verification for the signed in user.
@@ -80,8 +90,18 @@ namespace.lookup('com.pageforest.registration').define(function(ns) {
         });
     }
 
+    function onReady() {
+        ns.previous = '|';
+        // Validate in the background
+        setInterval(validateIfChanged, 1000);
+        $("#id_tos").click(function() {
+            $("#validate_tos").html('');
+        });
+    }
+
     ns.extend({
-        document_ready: document_ready,
+        onReady: onReady,
+        onSubmit: onSubmit,
         resend: resend
     });
 
