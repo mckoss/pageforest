@@ -4,7 +4,7 @@
 
 {% block extra-head %}
 <script type="text/javascript">
-var signIn = namespace.lookup("com.pageforest.auth.sign-in-form");
+var signIn = namespace.lookup("com.pageforest.auth.sign-in");
 $(document).ready(function() {
     var username = "{{ user.username }}";
     var appId = "{{ cross_app.get_app_id }}";
