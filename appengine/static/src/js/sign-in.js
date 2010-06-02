@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
+namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     /*
       Handle logging a user into Pageforest and optionally also log
       them in to a Pageforest application.
@@ -118,4 +118,4 @@ namespace.lookup('com.pageforest.auth.sign-in-form').define(function(ns) {
         transferSession: transferSession
     });
 
-}); // com.pageforest.sign-in-form
+}); // com.pageforest.sign-in
