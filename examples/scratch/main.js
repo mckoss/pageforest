@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.examples.scratch').defineOnce(function (ns) {
+namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
 
     // Initialize the document - create a client helper object

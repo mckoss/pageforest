@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.examples.chat').defineOnce(function (ns) {
+namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
 
     // Long polling for new chat messages from remote users.
     function poll(wait) {

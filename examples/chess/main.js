@@ -1,4 +1,4 @@
-namespace.lookup('com.pageforest.examples.chess').defineOnce(function (ns) {
+namespace.lookup('com.pageforest.chess').defineOnce(function (ns) {
 
     var TILESIZE = 96;
     var FILE_X = {a: 1, b: 2, c: 3, d: 4, e: 5, f: 6, g: 7, h: 8};
