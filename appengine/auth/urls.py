@@ -3,7 +3,7 @@ from django.views.generic.simple import direct_to_template
 
 urlpatterns = patterns(
     'auth.views',
-    (r'^sign-up/$', 'register'),
+    (r'^sign-up/$', 'sign_up'),
     (r'^sign-in/$', 'sign_in'),
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
     (r'^sign-out/$', 'sign_out'),
