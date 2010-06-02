@@ -7,6 +7,8 @@
 <link rel="stylesheet" type="text/css" href="main.css" />
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js">
     </script>
+<script src="http://maps.google.com/maps/api/js?sensor=false">
+    </script>
 <script src="/lib/0.6/js/json2.min.js"></script>
 <script src="/lib/beta/js/utils.js"></script>
 <script src="/static/src/js/vector.js"></script>
@@ -26,6 +28,11 @@ $(document).ready(main.onReady);
 </div>
 
 <fieldset>
+  <div id="map_canvas" style="height:512px;"></div>
+
+  <canvas id="view-port" width="256" height="256"></canvas>
+  <br/><canvas id="level-key" width="256" height="20"></canvas>
+
   <div style="float:right;">
     <input type="button" onclick="main.zoom(2);" value="+" />
     <input type="button" onclick="main.zoom(0.5);" value="-" />
@@ -35,9 +42,6 @@ $(document).ready(main.onReady);
       <label for="use-worker">Background Processing</label>
     </p>
   </div>
-
-  <canvas id="view-port" width="512" height="512"></canvas>
-  <canvas id="level-key" width="512" height="20"></canvas>
 
   <div style="clear:both;float:right;">
     <input type="button" onclick="main.client.detach();" value="Make a Copy" />
