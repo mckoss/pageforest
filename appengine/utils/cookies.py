@@ -17,7 +17,7 @@ class NewMorsel(Cookie.Morsel):
 
     def OutputString(self, attrs=None):
         output = super(NewMorsel, self).OutputString(attrs)
-        if self.get("httponly", "") and 'httponly' not in output.lower():
+        if self.get("httponly", "") and '; httponly' not in output.lower():
             output += "; HttpOnly"
         return output
 
