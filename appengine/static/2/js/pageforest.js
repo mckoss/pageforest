@@ -1016,6 +1016,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
                     .html("Sorry, please try again later.");
             }
         });
+        return false;
     }
 
     function onReady() {
