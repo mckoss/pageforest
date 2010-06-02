@@ -1,6 +1,7 @@
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
     var util = namespace.util;
+    var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
 
     function validatePassword() {
@@ -143,12 +144,19 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     }
 
     function onReady() {
+        // Hide message about missing JavaScript.
+        $('#enablejs').hide();
+        // Show message about missing HttpOnly support.
+        if (cookies.getCookie('httponly')) {
+            $('#httponly').show();
+        }
+
         // Initialize ns.previous to track input changes.
         isChanged();
         // Validate in the background
         setInterval(validateIfChanged, 1000);
-        $("#id_tos").click(function() {
-            $("#validate_tos").html('');
+        $('#id_tos').click(function() {
+            $('#validate_tos').html('');
         });
     }
 

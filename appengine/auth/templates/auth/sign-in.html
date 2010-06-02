@@ -25,6 +25,9 @@ $(document).ready(function() {
 {% endif %}
 </h2>
 
+{{ enablejs|safe }}
+{{ httponly|safe }}
+
 {% if cross_app %}
     <p class="want_app">The application, <b>{{ cross_app.title }} ({{ cross_app.get_app_id }})</b>,
       is requesting permission to save documents on {{ SITE_NAME }}.

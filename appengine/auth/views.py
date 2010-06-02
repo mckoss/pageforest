@@ -23,6 +23,19 @@ from auth.middleware import AccessDenied
 
 from apps.models import App
 
+ENABLEJS = """
+<p id="enablejs" class="error">
+Please enable JavaScript in your browser settings and then
+<a href="%s">reload this page</a>.<p>
+"""
+
+HTTPONLY = """
+<p id="httponly" class="error" style="display:none">
+Security warning: Your browser does not support
+<a href="http://code.google.com/p/pageforest/wiki/HttpOnly">HttpOnly</a>
+cookies.</p>
+"""
+
 
 def send_email_verification(request, user):
     """
@@ -88,8 +101,12 @@ def sign_up(request):
         if request.user:
             # The user is already signed in.
             return redirect(reverse(sign_in))
-        return render_to_response(request, 'auth/sign-up.html',
-                                  {'form': form})
+        response = render_to_response(request, 'auth/sign-up.html', {
+                'form': form,
+                'enablejs': ENABLEJS % reverse(sign_up),
+                'httponly': HTTPONLY})
+        response.set_cookie('httponly', 'test')
+        return response
     # Return form errors as JSON.
     if not form.is_valid():
         return HttpResponse(form.errors_json(),
@@ -165,10 +182,15 @@ def sign_in(request, app_id=None):
     app_session_key = None
     if app and request.user:
         app_session_key = request.user.generate_session_key(app)
-    return render_to_response(request, 'auth/sign-in.html',
-                              {'form': form,
-                               'cross_app': app,
-                               'session_key': app_session_key})
+    response = render_to_response(
+        request, 'auth/sign-in.html',
+        {'form': form,
+         'enablejs': ENABLEJS % reverse(sign_in),
+         'httponly': HTTPONLY,
+         'cross_app': app,
+         'session_key': app_session_key})
+    response.set_cookie('httponly', 'test')
+    return response
 
 
 @jsonp
