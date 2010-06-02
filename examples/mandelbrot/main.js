@@ -1,8 +1,50 @@
+/*globals google */
+
 namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
     var vector = namespace.lookup('org.startpad.vector');
     var format = namespace.lookup('org.startpad.format');
+
+
+    function MandelbrotMapType() {
+    }
+
+    MandelbrotMapType.methods({
+        tileSize: new google.maps.Size(256, 256),
+        maxZoom: 19,
+        name: "Tile #s",
+        alt: "Mandelbrot Map Type",
+
+        getTile: function(coord, zoom, ownerDocument) {
+            var div = ownerDocument.createElement('DIV');
+            div.innerHTML = coord;
+            div.style.width = this.tileSize.width + 'px';
+            div.style.height = this.tileSize.height + 'px';
+            div.style.fontSize = '10';
+            div.style.borderStyle = 'solid';
+            div.style.borderWidth = '1px';
+            div.style.borderColor = '#AAAAAA';
+            div.style.backgroundColor = "red";
+            return div;
+        }
+    });
+
+    function initMap() {
+        var mapOptions = {
+            zoom: 1,
+            center: new google.maps.LatLng(41.850033, -87.6500523),
+            mapTypeControlOptions: {
+                mapTypeIds: ['mandelbrot'],
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
+            }
+        };
+        ns.map = new google.maps.Map(document.getElementById("map_canvas"),
+                                     mapOptions);
+
+        ns.map.mapTypes.set('mandelbrot', new MandelbrotMapType());
+        ns.map.setMapTypeId('mandelbrot');
+    }
 
     // Initialize the document - create a client helper object
     function onReady() {
@@ -38,7 +80,12 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
+
+        // FIXME: If we are loading a document - no need to draw the
+        // default location.
         ns.draw();
+
+        initMap();
     }
 
     function centerText() {
