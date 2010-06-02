@@ -82,10 +82,10 @@ Reload: function()
 // #slug: for application global (Wiki case)
 GetURLInfo: function()
         {
-    if (location.hash == "")
+    if (window.location.hash == "")
                 return null;
 
-        var rgDID = location.hash.match(/[#](.*)_(.*)/);
+        var rgDID = window.location.hash.match(/[#](.*)_(.*)/);
         if (!rgDID)
                 return null;
 
@@ -94,7 +94,7 @@ GetURLInfo: function()
 
 SetLoadId: function(info)
         {
-        location.hash = info.user + "_" + info.did;
+        window.location.hash = info.user + "_" + info.did;
         },
 
 ReportError: function(st)
