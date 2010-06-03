@@ -39,12 +39,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
+        this.app = app;
+
         if (typeof $ != 'function' || $ != jQuery) {
             this.errorReport('jQuery_required', jQueryMessage);
             return;
         }
-
-        this.app = app;
 
         this.appHost = window.location.host;
         var dot = this.appHost.indexOf('.');
