@@ -56,7 +56,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                 var iy = y % 2;
                 x = Math.floor(x / 2);
                 y = Math.floor(y / 2);
-                name = '/' + (2 * iy + ix).toString() + name;
+                name = (2 * iy + ix).toString() + name;
             }
             return '0' + name + '.png';
         },
