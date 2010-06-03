@@ -6,7 +6,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var vector = namespace.lookup('org.startpad.vector');
     var format = namespace.lookup('org.startpad.format');
 
-    var blobDocId = "v1";
+    var tilesDocId = "v1";
+    var requestedTiles = {};
 
     function MandelbrotMapType() {
     }
@@ -28,11 +29,37 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             }
 
             var img = document.createElement('img');
-            img.src = ns.client.getDocURL(blobDocId) +
-                ns.m.tileName(coord, zoom);
             img.style.width = this.tileSize.width + 'px';
             img.style.height = this.tileSize.height + 'px';
+            img.src = ns.client.getDocURL(tilesDocId, tileName);
+            requestedTiles[tileName] = img;
+
+            this.checkAndRender(tileName);
             return img;
+        },
+
+        checkAndRender: function (tileName) {
+            ns.client.checkExists(tilesDocId, tileName, function (exists) {
+                if (exists) {
+                    return;
+                }
+
+                var msStart = new Date().getTime();
+
+                ns.m.renderTile(tileName, function() {
+                    var img = requestedTiles[tileName];
+                    // Bounce the source field for force a reload of the tile?
+                    // REVIEW: should we add a random query param?
+                    img.src = '';
+                    img.src = ns.clilent.getDocURL(tilesDocId, tileName);
+
+                    var ms = new Date().getTime() - msStart;
+                    var pps = Math.floor(ns.viewPort.width *
+                                         ns.viewPort.height / ms * 1000);
+                    ns.onError("", "Drawing speed: " +
+                               format.thousands(pps) + " pixels per second.");
+                });
+            });
         }
     });
 
@@ -54,11 +81,11 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     // Create the (shared) public document into which all tiles will be stored.
     function createBlobDoc() {
-        ns.client.putDoc(blobDocId, {
+        ns.client.putDoc(tilesDocId, {
             title: "Mandelbrot Tile Store - Version 1",
             writers: ["public"],
             blob: {
-                version: blobDocId
+                version: tilesDocId
             }
         }, function (saved) {
             if (saved) {
