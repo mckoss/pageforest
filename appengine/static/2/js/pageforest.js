@@ -878,6 +878,7 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
     var util = namespace.util;
+    var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
 
     function validatePassword() {
@@ -1020,12 +1021,19 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     }
 
     function onReady() {
+        // Hide message about missing JavaScript.
+        $('#enablejs').hide();
+        // Show message about missing HttpOnly support.
+        if (cookies.getCookie('httponly')) {
+            $('#httponly').show();
+        }
+
         // Initialize ns.previous to track input changes.
         isChanged();
         // Validate in the background
         setInterval(validateIfChanged, 1000);
-        $("#id_tos").click(function() {
-            $("#validate_tos").html('');
+        $('#id_tos').click(function() {
+            $('#validate_tos').html('');
         });
     }
 
@@ -1102,15 +1110,21 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Check if user is already logged in.
     function onReady(username, appId) {
+        // Hide message about missing JavaScript.
+        $('#enablejs').hide();
+        // Show message about missing HttpOnly support.
+        if (cookies.getCookie('httponly')) {
+            $('#httponly').show();
+        }
+
         ns.appId = appId;
         ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
-
         // Check for a (session) cookie with the application
         // session key. We clear it once used so it doesn't get
         // retransmitted. This could be used to either sign-in OR
         // sign-out of the application.
         var sessionName = appId + "-sessionkey";
-        var appSession = cookies.getCookies()[sessionName];
+        var appSession = cookies.getCookie(sessionName);
         console.log("appSession: ", appSession);
         if (appSession != undefined) {
             cookies.setCookie(sessionName, 'expired', -1);

@@ -931,16 +931,16 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // Save a child blob in the namespace of the current document
-        putBlob: function(blobKey, data, encoding, docid) {
+        putBlob: function(blobid, data, encoding, docid) {
             if (this.docid == undefined) {
                 this.errorReport('unsaved_document', docUnsavedMessage);
                 return;
             }
-            var url = this.getDocURL() + blobKey;
+            var url = this.getDocURL() + blobid;
             if (encoding) {
                 url += '?transfer-encoding=' + encoding;
             }
-            this.log('saving blob: ' + blobKey + ' (' + data.length + ')');
+            this.log('saving blob: ' + blobid + ' (' + data.length + ')');
             $.ajax({
                 type: 'PUT',
                 url: url,
@@ -954,12 +954,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     this.errorReport(code, message);
                 }.fnMethod(this),
                 success: function(data) {
-                    this.log('saved blob: ' + blobKey);
+                    this.log('saved blob: ' + blobid);
                     if (this.app.onBlobSaveSuccess) {
                         this.app.onBlobSaveSuccess();
                     }
                 }.fnMethod(this)
             });
+        },
+
+        // Determine if a document or blob alread exists
+        checkExists: function(docid, blobid, fn) {
+            var url = this.getDocURL(docid, blobid);
         },
 
         // Detach the current document from it's storage.
@@ -994,14 +999,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             location.href = location.href;
         },
 
-        getDocURL: function(docid) {
+        // Return the URL for a document or blob.
+        getDocURL: function(docid, blobid) {
             if (docid == undefined) {
                 docid = this.docid;
             }
             if (docid == undefined) {
                 return undefined;
             }
-            return 'http://' + this.appHost + '/docs/' + docid + '/';
+            if (blobid == undefined) {
+                blobid = '';
+            }
+            return 'http://' + this.appHost + '/docs/' + docid + '/' + blobid;
         },
 
         setLogging: function(f) {
