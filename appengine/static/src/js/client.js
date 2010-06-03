@@ -90,7 +90,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     }
 
     Client.methods({
-        // Load a document
+        /* These methods are related to document state management. The
+           application has a "current document" state (clean, dirty,
+           loading, or saving).
+
+           load - load a document as the current document.
+           save - save the current document.
+           detach - disassociate the current document from a saved docid.
+           setCleanDoc - mark the document as 'clean' and update the
+               browser address.
+           checkDoc - polls to see if a document has changed.
+           */
+
+        // Load a document as the default document for this running application.
         load: function (docid) {
             // Your data is on notice.
             if (this.isDirty()) {
@@ -117,6 +129,194 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }.fnMethod(this)
             });
         },
+
+        save: function (json, docid) {
+            // TODO: Call this.putDoc - and then handle the document
+            // state in the callback function.
+            if (this.username == undefined) {
+                this.errorReport('no_username', signInMessage);
+                return;
+            }
+
+            if (json == undefined) {
+                json = this.app.getDoc();
+                if (typeof json != 'object') {
+                    this.errorReport('missing_object', objectMessage);
+                    return;
+                }
+                if (json.title == undefined) {
+                    this.errorReport('missing_title', titleMessage);
+                    return;
+                }
+                if (json.blob == undefined) {
+                    this.errorReport('missing_blob', blobMessage);
+                    return;
+                }
+            }
+
+            docid = docid || this.docid;
+
+            // First save?  Assign docid like username-slug
+            // FIXME: We could over-write a previously existing document
+            // with the same name.  We should do one of:
+            // - Check for existence first
+            // - Ask the server for a unique docid
+            // - Add some randomness to the docid
+            // - Use PUT if_not_exists
+            if (docid == undefined) {
+                docid = this.username + '-' + json.title + '-' +
+                    base.randomInt(10000);
+                docid = format.slugify(docid);
+            }
+
+            this.stateSave = this.state;
+            this.changeState('saving');
+
+            // Default permissions to be public readable.
+            if (!json.readers) {
+                json.readers = ['public'];
+            }
+
+            var data = JSON.stringify(json);
+            this.log('saving: ' + this.getDocURL(docid), json);
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL(docid),
+                data: data,
+                error: this.errorHandler.fnMethod(this),
+                success: function(data) {
+                    this.setCleanDoc(docid);
+                    this.log('saved');
+                    if (this.app.onSaveSuccess) {
+                        this.app.onSaveSuccess();
+                    }
+                }.fnMethod(this)
+            });
+        },
+
+        // Detach the current document from it's storage.
+        detach: function() {
+            this.setCleanDoc();
+            this.setDirty();
+        },
+
+        // Set the document to the clean state.
+        // If docid is undefined, set to the "new" document state.
+        // If preserveHash, we don't modify the URL
+        setCleanDoc: function(docid, preserveHash) {
+            this.docid = docid;
+            this.changeState('clean');
+            // Remember the clean state of the document
+            this.lastJSON = JSON.stringify(this.app.getDoc());
+
+            // Enable polling to kick off a load().
+            if (preserveHash) {
+                this.lastHash = '';
+                return;
+            }
+
+            if (docid == undefined) {
+                docid = '';
+            }
+
+            window.location.hash = docid;
+            this.lastHash = window.location.hash;
+            // Chrome has a bug where the location bar is not updated unless
+            // the whole thing is set.
+            window.location.href = window.location.href;
+        },
+
+        // See if the document data has changed - assume this is not
+        // expensive as we execute this every second.
+        checkDoc: function() {
+            // No auto-saving - do nothing
+            if (this.saveInterval == 0) {
+                return;
+            }
+
+            // See if it's time to do an auto-save
+            if (this.isDirty()) {
+                if (this.username == undefined) {
+                    return;
+                }
+                var now = new Date().getTime();
+                if (now - this.dirtyTime > this.saveInterval * 1000) {
+                    this.save();
+                }
+                return;
+            }
+
+            // Don't do anything if we're saving or loading.
+            if (this.state != 'clean') {
+                return;
+            }
+
+            // Document looks clean - see if it's changed since we last
+            // checked.
+            var json = JSON.stringify(this.app.getDoc());
+            if (json != this.lastJSON) {
+                this.setDirty();
+            }
+        },
+
+        confirmDiscard: function() {
+            if (this.app.confirmDiscard) {
+                return this.app.confirmDiscard();
+            }
+            return confirm(discardMessage);
+        },
+
+        setDirty: function(fDirty) {
+            if (fDirty == undefined) {
+                fDirty = true;
+            }
+
+            // Save the first dirty time
+            if (!this.isDirty() && fDirty) {
+                this.dirtyTime = new Date().getTime();
+            }
+
+            // REVIEW: What if we are loading or saving? Does this
+            // cancel a load?
+            this.changeState(fDirty ? 'dirty' : 'clean');
+        },
+
+        isDirty: function() {
+            return this.state == 'dirty';
+        },
+
+        isSaved: function() {
+            return this.state == 'clean' && this.docid != undefined;
+        },
+
+        changeState: function(state) {
+            if (state == this.state) {
+                return;
+            }
+
+            var stateOld = this.state;
+            this.state = state;
+
+            if (this.app.onStateChange) {
+                this.app.onStateChange(state, stateOld);
+            }
+        },
+
+        // The user is about to navigate away from the page - we want to
+        // alert the user if he might lose changes.
+        beforeUnload: function(evt) {
+            if (this.state != 'clean') {
+                evt.returnValue = unloadMessage;
+                return evt.returnValue;
+            }
+        },
+
+        /* Low-level storage primitives for saving and loading documents
+           and blobs.
+
+           TODO: Move putDoc, getDoc, putBlob, and setBlob into another
+           module, com.pageforest.storage, and refactor client.
+           */
 
         // Save a document - does not have to be the "main" document
         // that the user is currently viewing.
@@ -165,81 +365,27 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
-        save: function (json, docid) {
-            // TODO: Call this.putDoc - and then handle the document
-            // state in the callback function.
-            if (this.username == undefined) {
-                this.errorReport('no_username', signInMessage);
-                return;
-            }
-
-            if (json == undefined) {
-                json = this.app.getDoc();
-                if (typeof json != 'object') {
-                    this.errorReport('missing_object', objectMessage);
-                    return;
-                }
-                if (json.title == undefined) {
-                    this.errorReport('missing_title', titleMessage);
-                    return;
-                }
-                if (json.blob == undefined) {
-                    this.errorReport('missing_blob', blobMessage);
-                    return;
-                }
-            }
+        // Save a child blob in the namespace of a document
+        putBlob: function(docid, blobid, data, options, fn) {
+            fn = fn || function () {};
+            options = options || {};
 
             if (docid == undefined) {
-                docid = this.docid;
-            }
-
-            // First save?  Assign docid like username-slug
-            // FIXME: We could over-write a previously existing document
-            // with the same name.  We should do one of:
-            // - Check for existence first
-            // - Ask the server for a unique docid
-            // - Add some randomness to the docid
-            // - Use PUT if_not_exists
-            if (docid == undefined) {
-                docid = this.username + '-' + json.title + '-' +
-                    base.randomInt(10000);
-                docid = format.slugify(docid);
-            }
-
-            this.stateSave = this.state;
-            this.changeState('saving');
-
-            // Default permissions to be public readable.
-            if (!json.readers) {
-                json.readers = ['public'];
-            }
-
-            var data = JSON.stringify(json);
-            this.log('saving: ' + this.getDocURL(docid), json);
-            $.ajax({
-                type: 'PUT',
-                url: this.getDocURL(docid),
-                data: data,
-                error: this.errorHandler.fnMethod(this),
-                success: function(data) {
-                    this.setCleanDoc(docid);
-                    this.log('saved');
-                    if (this.app.onSaveSuccess) {
-                        this.app.onSaveSuccess();
-                    }
-                }.fnMethod(this)
-            });
-        },
-
-        // Save a child blob in the namespace of the current document
-        putBlob: function(blobid, data, encoding, docid) {
-            if (this.docid == undefined) {
                 this.errorReport('unsaved_document', docUnsavedMessage);
+                fn(false);
                 return;
             }
-            var url = this.getDocURL() + blobid;
-            if (encoding) {
-                url += '?transfer-encoding=' + encoding;
+
+            var url = this.getDocURL(docid) + blobid;
+            if (options.encoding || options.tags) {
+                url += '?';
+            }
+            if (options.encoding) {
+                url += 'transfer-encoding=' + options.encoding;
+            }
+            if (options.tags) {
+                var encodedTags = base.map(options.tags, encodeURIComponent);
+                url += 'tags=' + encodedTags.join(',');
             }
             this.log('saving blob: ' + blobid + ' (' + data.length + ')');
             $.ajax({
@@ -253,46 +399,16 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     var message = xmlhttp.statusText;
                     this.log(message + ' (' + code + ')', {'obj': xmlhttp});
                     this.errorReport(code, message);
+                    fn(false);
                 }.fnMethod(this),
                 success: function(data) {
                     this.log('saved blob: ' + blobid);
                     if (this.app.onBlobSaveSuccess) {
                         this.app.onBlobSaveSuccess();
                     }
+                    fn(true);
                 }.fnMethod(this)
             });
-        },
-
-        // Detach the current document from it's storage.
-        detach: function() {
-            this.setCleanDoc();
-            this.setDirty();
-        },
-
-        // Set the document to the clean state.
-        // If docid is undefined, set to the "new" document state.
-        // If preserveHash, we don't modify the URL
-        setCleanDoc: function(docid, preserveHash) {
-            this.docid = docid;
-            this.changeState('clean');
-            // Remember the clean state of the document
-            this.lastJSON = JSON.stringify(this.app.getDoc());
-
-            // Enable polling to kick off a load().
-            if (preserveHash) {
-                this.lastHash = '';
-                return;
-            }
-
-            if (docid == undefined) {
-                docid = '';
-            }
-
-            window.location.hash = docid;
-            this.lastHash = window.location.hash;
-            // Chrome has a bug where the location bar is not updated unless
-            // the whole thing is set.
-            window.location.href = window.location.href;
         },
 
         // Return the URL for a document or blob.
@@ -350,58 +466,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
-        confirmDiscard: function() {
-            if (this.app.confirmDiscard) {
-                return this.app.confirmDiscard();
-            }
-            return confirm(discardMessage);
-        },
-
-        setDirty: function(fDirty) {
-            if (fDirty == undefined) {
-                fDirty = true;
-            }
-
-            // Save the first dirty time
-            if (!this.isDirty() && fDirty) {
-                this.dirtyTime = new Date().getTime();
-            }
-
-            // REVIEW: What if we are loading or saving? Does this
-            // cancel a load?
-            this.changeState(fDirty ? 'dirty' : 'clean');
-        },
-
-        isDirty: function() {
-            return this.state == 'dirty';
-        },
-
-        isSaved: function() {
-            return this.state == 'clean' && this.docid != undefined;
-        },
-
-        changeState: function(state) {
-            if (state == this.state) {
-                return;
-            }
-
-            var stateOld = this.state;
-            this.state = state;
-
-            if (this.app.onStateChange) {
-                this.app.onStateChange(state, stateOld);
-            }
-        },
-
-        // The user is about to navigate away from the page - we want to
-        // alert the user if he might lose changes.
-        beforeUnload: function(evt) {
-            if (this.state != 'clean') {
-                evt.returnValue = unloadMessage;
-                return evt.returnValue;
-            }
-        },
-
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
         poll: function () {
@@ -436,39 +500,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                         this.app.onUserChange(this.username);
                     }
                 }
-            }
-        },
-
-        // See if the document data has changed - assume this is not
-        // expensive as we execute this every second.
-        checkDoc: function() {
-            // No auto-saving - do nothing
-            if (this.saveInterval == 0) {
-                return;
-            }
-
-            // See if it's time to do an auto-save
-            if (this.isDirty()) {
-                if (this.username == undefined) {
-                    return;
-                }
-                var now = new Date().getTime();
-                if (now - this.dirtyTime > this.saveInterval * 1000) {
-                    this.save();
-                }
-                return;
-            }
-
-            // Don't do anything if we're saving or loading.
-            if (this.state != 'clean') {
-                return;
-            }
-
-            // Document looks clean - see if it's changed since we last
-            // checked.
-            var json = JSON.stringify(this.app.getDoc());
-            if (json != this.lastJSON) {
-                this.setDirty();
             }
         },
 

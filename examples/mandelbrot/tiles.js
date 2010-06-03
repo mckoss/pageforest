@@ -2,6 +2,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var client = namespace.lookup('com.pageforest.client');
 
+    /* Tiles - Heirarchical image caching library.
+     */
     function Tiles(client, docid, dx, dy) {
         this.client = client;
         this.docid = docid;
@@ -17,6 +19,10 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
     }
 
     Tiles.methods({
+        // Return a DOM img element for the given blobid.
+        // The image may not be available in the cache, in which
+        // case it will be rendered in the client and then
+        // stored in the cache.
         getImage: function(blobid) {
             if (this.tiles[blobid]) {
                 return this.tiles[blobid].img;
@@ -31,6 +37,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return img;
         },
 
+        // Check if an image exists in the cache.  If not, render it
+        // and put it in the cache (and update the DOM image that
+        // is displaying it when it is loaded).
         checkAndRender: function(blobid) {
             this.checkTileExists(blobid, function (exists) {
                 // Tile already exists - no need to render it.
@@ -50,9 +59,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                         }
 
                         this.client.putBlob(
-                            this.client.getDocURL(this.docid, blobid),
-                            format.canvasToPNG(canvas),
-                            'base64', function () {
+                            blobid, format.canvasToPNG(canvas), 'base64',
+                            this.docid, function () {
                                 this.updateTileImage(blobid);
                             });
                         this.releaseCanvas(canvas);
@@ -78,9 +86,10 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlog(this.docid, blobid, function(status) {
-                fn(status);
-            });
+            this.client.getBlob(blobid, undefined, this.docid,
+                                function(status) {
+                                    fn(status);
+                                });
         }
     });
 
