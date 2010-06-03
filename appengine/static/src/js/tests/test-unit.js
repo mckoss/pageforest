@@ -70,6 +70,11 @@ namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
             ut.assertEq(obj5, obj6);
         }).expect(3, 16);
 
+        ts.addTest("Array Comparison", function(ut) {
+            ut.assertEq([1, 2], [1, 2]);
+            ut.assertEq([1, 2], [2, 1]);
+        }).expect(2, 10);
+
         ts.addTest("Types", function(ut) {
             function Foo() {}
 

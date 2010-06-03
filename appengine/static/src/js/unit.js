@@ -295,6 +295,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                             v2.length + ")", stNote);
                 break;
             case "object":
+                if (v1 instanceof Array) {
+                    this.assertDeepEq(v1, v2);
+                    return;
+                }
+
                 this.assertContains(v1, v2);
                 var cProp1 = this.propCount(v1);
                 var cProp2 = this.propCount(v2);
@@ -314,6 +319,20 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                             v2 + " (type: " + typeof v1 + ")", stNote);
                 break;
             }
+        },
+
+        // Compare two arrays for equality (recursively)
+        assertDeepEq: function(v1, v2) {
+            if (!(v1 instanceof Array)) {
+                this.assertEq(v1, v2);
+                return;
+            }
+            this.assertType(v2, Array);
+            this.assertEq(v1.length, v2.length);
+            for (var i = 0; i < v1.length; i++) {
+                this.assertDeepEq(v1[i], v2[i]);
+            }
+            return true;
         },
 
         propCount: function(obj) {
