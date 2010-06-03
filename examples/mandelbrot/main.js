@@ -7,11 +7,13 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var tileLib = namespace.lookup('com.pageforest.tiles');
 
+    var tilesDocId = "v1";
+
     function MandelbrotMapType() {
         this.tileSize = new google.maps.Size(256, 256);
         this.maxZoom = 20;
 
-        this.tiles = new tileLib.Tiles(ns.client.getDocURL("v1", 256, 256);
+        this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256);
         this.tiles.setRender(this.renderTile.fnMethod());
     }
 
@@ -30,7 +32,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             }
 
             return this.tiles.getImage(tileName);
-        },
+        }
+    });
 
     function initMap() {
         var mapOptions = {
@@ -221,7 +224,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onError': onError,
         'onUserChange': onUserChange,
         'onStateChange': onStateChange,
-        'onSaveSuccess': onSaveSuccess,
         'signInOut': signInOut,
         'draw': draw,
         'zoom': zoom,
