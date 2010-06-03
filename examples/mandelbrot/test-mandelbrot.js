@@ -123,19 +123,19 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
         ts.addTest("tileName", function(ut) {
             var m = new mandelbrot.Mandelbrot();
             var tests = [
-                [{x: 0, y: 0}, 0, "0"],
+                [{x: 0, y: 0}, 0, "0.png"],
                 [{x: 0, y: 1}, 0, undefined],
                 [{x: 2, y: 0}, 1, undefined],
                 [{x: -5, y: 0}, 1, undefined],
                 [{x: 20, y: 1}, 4, undefined],
-                [{x: 0, y: 0}, 2, "0/0/0"],
-                [{x: 1, y: 0}, 2, "0/0/1"],
-                [{x: 0, y: 1}, 2, "0/0/2"],
-                [{x: 1, y: 1}, 2, "0/0/3"],
-                [{x: 2, y: 2}, 2, "0/3/0"],
-                [{x: 3, y: 3}, 2, "0/3/3"],
-                [{x: 3, y: 0}, 2, "0/1/1"],
-                [{x: 0, y: 3}, 2, "0/2/2"]
+                [{x: 0, y: 0}, 2, "000.png"],
+                [{x: 1, y: 0}, 2, "001.png"],
+                [{x: 0, y: 1}, 2, "002.png"],
+                [{x: 1, y: 1}, 2, "003.png"],
+                [{x: 2, y: 2}, 2, "030.png"],
+                [{x: 3, y: 3}, 2, "033.png"],
+                [{x: 3, y: 0}, 2, "011.png"],
+                [{x: 0, y: 3}, 2, "022.png"]
             ];
 
             for (var i = 0; i < tests.length; i++) {
