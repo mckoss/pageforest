@@ -6,6 +6,8 @@
 <script src="/static/src/js/timer.js"></script>
 <script src="mandelbrot.js"></script>
 <script src="test-mandelbrot.js"></script>
+<script src="tiles.js"></script>
+<script src="test-tiles.js"></script>
 </head>
 
 <body onload="runner.run();">
@@ -13,11 +15,13 @@
 
 <script>
 var mondelbrotTest = namespace.lookup('com.pageforest.mandelbrot.test');
+var tilesTest = namespace.lookup('com.pageforest.tiles.test');
 var unit = namespace.lookup('org.startpad.unit');
 var runner = namespace.lookup('com.pageforest.mandelbrot.test.runner');
 runner.define(function (ns) {
     function run() {
         unit.runTest(mondelbrotTest);
+        unit.runTest(tilesTest);
     };
 
     ns.run = run;

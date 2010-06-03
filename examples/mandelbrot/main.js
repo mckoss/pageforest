@@ -14,7 +14,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         this.maxZoom = 20;
 
         this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256);
-        this.tiles.setRender(this.renderTile.fnMethod());
+        this.tiles.fnRender = this.renderTile.fnMethod();
     }
 
     MandelbrotMapType.methods({
@@ -32,6 +32,20 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             }
 
             return this.tiles.getImage(tileName);
+        },
+
+        renderTile: function(tileName, fn) {
+            var rc = ns.m.rectFromTileName(tileName);
+            var msStart = new Date().getTime();
+
+            // TODO: Use on-screen canvas now for debug purposes
+            ns.m.render(ns.viewPort, rc, function() {
+                var ms = new Date().getTime() - msStart;
+                var pps = Math.floor(256 * 256 / ms * 1000);
+                ns.onError("", "Drawing speed: " +
+                           format.thousands(pps) + " pixels per second.");
+                fn(ns.viewPort);
+            });
         }
     });
 
@@ -70,96 +84,28 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     // Initialize the document - create a client helper object
     function onReady() {
-        $('#title').focus();
-        ns.viewPort = $('#view-port');
-        // I really dislike jQuery's handling of offset().  I should port
-        // DOM into the namespace so I don't have to use their stupid
-        // wrappers.
-        ns.viewPortOffset = ns.viewPort.offset();
-        ns.viewPort = ns.viewPort[0];
-
-        $(ns.viewPort).click(function(evt) {
-            var px = (evt.pageX - ns.viewPortOffset.left) / ns.viewPort.width;
-            var py = (evt.pageY - ns.viewPortOffset.top) / ns.viewPort.height;
-            var dx = (px - 0.5) * (ns.m.xMax - ns.m.xMin) / ns.scale;
-            var dy = (0.5 - py) * (ns.m.yMax - ns.m.yMin) / ns.scale;
-            ns.center[0] += dx;
-            ns.center[1] += dy;
-            ns.draw();
-        });
-
+        ns.client = new clientLib.Client(ns);
         ns.m = new mandelbrot.Mandelbrot();
         mandelbrot.initWorkers();
 
-        ns.scale = 1;
-        ns.center = [(ns.m.xMin + ns.m.xMax) / 2,
-                     (ns.m.yMin + ns.m.yMax) / 2];
-
-        ns.m.renderKey($('#level-key')[0]);
-
-        ns.client = new clientLib.Client(ns);
-        ns.client.setLogging();
-        // Quick call to poll - don't wait a whole second to try loading
-        // the doc and logging in the user.
-        ns.client.poll();
-
-        // FIXME: If we are loading a document - no need to draw the
-        // default location.
-        ns.draw();
+        // TODO: Don't need visible canvas - for debugging now.
+        ns.viewPort = $('#view-port')[0];
 
         initMap();
-    }
 
-    function centerText() {
-        var precision = Math.floor(Math.log(ns.scale) / Math.LN10 + 2.5);
-        return format.thousands(ns.center[0], precision) + ', ' +
-            format.thousands(ns.center[1], precision);
-    }
-
-    function draw() {
-        $('#center').text(centerText());
-        $('#zoom').text(format.thousands(ns.scale));
-        ns.onError('ok', "Drawing...");
-        setTimeout(function() {
-            var msStart = new Date().getTime();
-            var dx = (ns.m.xMax - ns.m.xMin) / ns.scale;
-            var dy = (ns.m.yMax - ns.m.yMin) / ns.scale;
-
-            function renderComplete() {
-                var ms = new Date().getTime() - msStart;
-                var pps = Math.floor(ns.viewPort.width * ns.viewPort.height /
-                                     ms * 1000);
-                ns.onError("", "Drawing speed: " +
-                           format.thousands(pps) + " pixels per second.");
-            }
-
-            ns.m.render(ns.viewPort,
-                        ns.center[0] - dx / 2, ns.center[1] + dy / 2,
-                        dx, dy,
-                        renderComplete);
-        }, 1);
-    }
-
-    function zoom(scale) {
-        ns.scale *= scale;
-        draw();
+        ns.client.poll();
     }
 
     // This function is called whenever your document should be reloaded.
     function setDoc(json) {
-        ns.scale = json.blob.scale;
-        ns.center = json.blob.center;
-        ns.draw();
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
     function getDoc() {
         return {
-            "title": "Mandelbrot Location: " + centerText(),
+            "title": "Mandelbrot Set",
             "blob": {
-                'scale': ns.scale,
-                'center': ns.center
             },
             "readers": ["public"]
         };
@@ -225,8 +171,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onUserChange': onUserChange,
         'onStateChange': onStateChange,
         'signInOut': signInOut,
-        'draw': draw,
-        'zoom': zoom,
         'createBlobDoc': createBlobDoc
     });
 
