@@ -7,10 +7,10 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
 
     var mandelbrotSymbols = ['iterations', 'colorFromLevel', 'levelFromColor',
                              'render', 'renderData', 'renderKey',
-                             'rgbaFromColor', 'tileName'];
+                             'rgbaFromColor'];
 
     function addTests(ts) {
-        ts.addTest("Contract", function(ut) {
+        ts.addTest("Contract", function (ut) {
             var Mandelbrot = mandelbrot.Mandelbrot;
             ut.assertEq(typeof(Mandelbrot), 'function');
 
@@ -23,7 +23,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("Undocumented Exports", function(ut) {
+        ts.addTest("Undocumented Exports", function (ut) {
             var Mandelbrot = mandelbrot.Mandelbrot;
             for (var prop in mandelbrot) {
                 if (mandelbrot.hasOwnProperty(prop)) {
@@ -40,7 +40,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("Iter Samples", function(ut) {
+        ts.addTest("Iter Samples", function (ut) {
             var m = new mandelbrot.Mandelbrot();
             var inSet = [[0, 0], [0, 1], [0, -1],
                          [-2, 0]];
@@ -61,7 +61,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("Vertical Symmetry", function(ut) {
+        ts.addTest("Vertical Symmetry", function (ut) {
             var m = new mandelbrot.Mandelbrot();
 
             for (var i = 0; i < 100; i++) {
@@ -73,7 +73,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("Raw Speed Test", function(ut) {
+        ts.addTest("Raw Speed Test", function (ut) {
             var m = new mandelbrot.Mandelbrot();
             var msStart = new Date().getTime();
             var cInSet = 0;
@@ -101,7 +101,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             ut.assert(error < 0.2, "Area error: " + error);
         });
 
-        ts.addTest("Color Invertibility", function(ut) {
+        ts.addTest("Color Invertibility", function (ut) {
             var m = new mandelbrot.Mandelbrot();
 
             // Confirm colors assignment are invertible.
@@ -110,7 +110,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("rgba", function(ut) {
+        ts.addTest("rgba", function (ut) {
             var m = new mandelbrot.Mandelbrot();
             var regex = /^rgba\((\d+,){3}\d+\)$/;
             for (var level = 0; level <= this.maxIterations; level += 100) {
@@ -120,30 +120,6 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("tileName", function(ut) {
-            var m = new mandelbrot.Mandelbrot();
-            var tests = [
-                [{x: 0, y: 0}, 0, "0.png"],
-                [{x: 0, y: 1}, 0, undefined],
-                [{x: 2, y: 0}, 1, undefined],
-                [{x: -5, y: 0}, 1, undefined],
-                [{x: 20, y: 1}, 4, undefined],
-                [{x: 0, y: 0}, 2, "000.png"],
-                [{x: 1, y: 0}, 2, "001.png"],
-                [{x: 0, y: 1}, 2, "002.png"],
-                [{x: 1, y: 1}, 2, "003.png"],
-                [{x: 2, y: 2}, 2, "030.png"],
-                [{x: 3, y: 3}, 2, "033.png"],
-                [{x: 3, y: 0}, 2, "011.png"],
-                [{x: 0, y: 3}, 2, "022.png"]
-            ];
-
-            for (var i = 0; i < tests.length; i++) {
-                var test = tests[i];
-                ut.assertEq(m.tileName(test[0], test[1]), test[2], i);
-            }
-
-        });
     }
 
     ns.addTests = addTests;

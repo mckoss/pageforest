@@ -3,7 +3,10 @@
 namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     // http://en.wikipedia.org/wiki/Mandelbrot_set
 
+    // TODO: Enable use of up to 4 workers - also cache off-screen canvases.
     var worker;
+
+    // TODO: Don't build tiles for the negative space - just flip for display!
 
     function initWorkers() {
         if (typeof Worker != 'undefined') {
@@ -11,9 +14,9 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         }
     }
 
-
     function Mandelbrot() {
         this.maxIterations = 1000;
+        this.rcTop = [-2, -2, 2, 2];
         this.xMin = -2;
         this.xMax = 2;
         this.yMin = -2;
@@ -35,32 +38,6 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     }
 
     Mandelbrot.methods({
-        // Calculate a tile name from the tile coordinates and
-        // zoom level.  We choose tile prefix naming s.t.
-        // childName = parentName + N (for N = 0, 1, 2, 3).
-        // The top level tiles are then:
-        // '0',
-        // '00', '01', '02', '03',
-        // '000', '001', '002', ...
-        tileName: function(coord, zoom) {
-            var maxTile = Math.pow(2, zoom) - 1;
-            if (coord.x < 0 || coord.y < 0 ||
-                coord.x > maxTile || coord.y > maxTile) {
-                return undefined;
-            }
-            var name = "";
-            var x = coord.x;
-            var y = coord.y;
-            for (var i = zoom; i > 0; i--) {
-                var ix = x % 2;
-                var iy = y % 2;
-                x = Math.floor(x / 2);
-                y = Math.floor(y / 2);
-                name = (2 * iy + ix).toString() + name;
-            }
-            return '0' + name + '.png';
-        },
-
         iterations: function (x0, y0) {
             if (y0 < 0) {
                 y0 = -y0;
