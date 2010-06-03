@@ -5,10 +5,10 @@ from google.appengine.ext import db
 from django.conf import settings
 from django.utils import simplejson as json
 
-from utils.mixins import Timestamped, Migratable, Cacheable
+from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
 
 
-class Blob(Timestamped, Migratable, Cacheable):
+class Blob(Timestamped, Migratable, Taggable, Cacheable):
     """
     Key-value store for PageForest documents and resources.
 
@@ -27,7 +27,6 @@ class Blob(Timestamped, Migratable, Cacheable):
     sha1 = db.StringProperty(indexed=False)
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
-    tags = db.StringListProperty()
 
     def get_absolute_url(self):
         """

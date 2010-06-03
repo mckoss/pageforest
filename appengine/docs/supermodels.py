@@ -1,10 +1,10 @@
 from google.appengine.ext import db
 
-from utils.mixins import Timestamped, Migratable, Cacheable
+from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
 from utils.json import assert_boolean, assert_string, assert_string_list
 
 
-class SuperDoc(Timestamped, Migratable, Cacheable):
+class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
     """
     Parent class for App and Doc with shared functionality.
 
@@ -16,7 +16,6 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
     * authenticated = only users with a valid session key
     """
     title = db.StringProperty()        # Full unicode.
-    tags = db.StringListProperty()     # Full unicode short labels.
     owner = db.StringProperty()        # Lowercase username of the creator.
     writers = db.StringListProperty()  # Usernames that have write access.
     readers = db.StringListProperty()  # Usernames that have read access.
@@ -53,14 +52,6 @@ class SuperDoc(Timestamped, Migratable, Cacheable):
             return True
         username = user.get_username()
         return username == self.owner or username in self.writers
-
-    def update_tags(self, tags, **kwargs):
-        """
-        Update tags for this SuperDoc, unless they start with underscore.
-        """
-        accepted = [tag for tag in tags if not tag.startswith('_')]
-        reserved = [tag for tag in self.tags if tag.startswith('_')]
-        self.tags = accepted + reserved
 
     def update_writers(self, writers, **kwargs):
         """

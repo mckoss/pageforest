@@ -41,7 +41,7 @@ class AppTestCase(TestCase):
             url='http://myapp.pageforest.com/',
             owner='peter',
             readers=['public'],
-            tags=['mytag', '_featured'],
+            tags=['mytag', 'pf:featured'],
             secret="myapp_secret")
         self.app.put()
         # Create a test document.
@@ -216,12 +216,12 @@ class AppJsonTest(AppTestCase):
         """The app_json_put view function should update non-reserved tags."""
         self.sign_in(self.peter)
         self.assertEquals(
-            App.get_by_key_name('myapp').tags, ['mytag', '_featured'])
+            App.get_by_key_name('myapp').tags, ['mytag', 'pf:featured'])
         self.admin_client.put(
-            '/app.json', '{"tags": ["newtag", "_ignorethis"]}',
+            '/app.json', '{"tags": ["newtag", "pf:ignorethis"]}',
             content_type='application/json')
         self.assertEquals(
-            App.get_by_key_name('myapp').tags, ['newtag', '_featured'])
+            App.get_by_key_name('myapp').tags, ['newtag', 'pf:featured'])
 
 
 class HostnameTest(TestCase):
