@@ -5,16 +5,17 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
     var vector = namespace.lookup('org.startpad.vector');
     var format = namespace.lookup('org.startpad.format');
-
-    var tilesDocId = "v1";
-    var requestedTiles = {};
+    var tileLib = namespace.lookup('com.pageforest.tiles');
 
     function MandelbrotMapType() {
+        this.tileSize = new google.maps.Size(256, 256);
+        this.maxZoom = 20;
+
+        this.tiles = new tileLib.Tiles(ns.client.getDocURL("v1", 256, 256);
+        this.tiles.setRender(this.renderTile.fnMethod());
     }
 
     MandelbrotMapType.methods({
-        tileSize: new google.maps.Size(256, 256),
-        maxZoom: 19,
         name: "Mandelbrot",
         alt: "Mandelbrot Map Type",
 
@@ -28,40 +29,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 return div;
             }
 
-            var img = document.createElement('img');
-            img.style.width = this.tileSize.width + 'px';
-            img.style.height = this.tileSize.height + 'px';
-            img.src = ns.client.getDocURL(tilesDocId, tileName);
-            requestedTiles[tileName] = img;
-
-            this.checkAndRender(tileName);
-            return img;
+            return this.tiles.getImage(tileName);
         },
-
-        checkAndRender: function (tileName) {
-            ns.client.checkExists(tilesDocId, tileName, function (exists) {
-                if (exists) {
-                    return;
-                }
-
-                var msStart = new Date().getTime();
-
-                ns.m.renderTile(tileName, function() {
-                    var img = requestedTiles[tileName];
-                    // Bounce the source field for force a reload of the tile?
-                    // REVIEW: should we add a random query param?
-                    img.src = '';
-                    img.src = ns.clilent.getDocURL(tilesDocId, tileName);
-
-                    var ms = new Date().getTime() - msStart;
-                    var pps = Math.floor(ns.viewPort.width *
-                                         ns.viewPort.height / ms * 1000);
-                    ns.onError("", "Drawing speed: " +
-                               format.thousands(pps) + " pixels per second.");
-                });
-            });
-        }
-    });
 
     function initMap() {
         var mapOptions = {
@@ -191,14 +160,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             },
             "readers": ["public"]
         };
-    }
-
-    function onSaveSuccess() {
-        // REVIEW: Nexus One browser is not writing tiles - or displaying
-        // errors?
-        this.client.putBlob('viewport.png',
-                             format.canvasToPNG(ns.viewPort),
-                            'base64');
     }
 
     // Called on any api errors.
