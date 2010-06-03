@@ -259,6 +259,48 @@ class MimeTest(AppTestCase):
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
 
 
+class TagsTest(AppTestCase):
+
+    def setUp(self):
+        super(TagsTest, self).setUp()
+        self.datetime = datetime.datetime
+        datetime.datetime = Mock()
+        datetime.datetime.now.return_value = \
+            self.datetime(2010, 5, 10, 11, 12, 13)
+
+    def tearDown(self):
+        datetime.datetime = self.datetime
+
+    def test_tags(self):
+        """Query string options should set and filter tags on blobs."""
+        self.sign_in(self.peter)
+        self.assertContains(
+            self.app_client.put('/docs/mydoc/tagblob?tags=0,1%2C2,3+4'),
+            '"statusText": "Saved"')
+        self.assertEquals(
+            Blob.get_by_key_name('myapp/mydoc/tagblob/').tags,
+            ['0', '1', '2', '3 4'])
+        response = self.app_client.get('/docs/mydoc/?method=LIST&tag=3+4')
+        self.assertContains(response, """\
+{
+  "tagblob": {
+    "json": false,
+    "modified": {
+      "__class__": "Date",
+      "isoformat": "2010-05-10T11:12:13Z"
+    },
+    "sha1": "84e52dc7aeb405f3b4faa3937cfe430bcd36488d",
+    "size": 20,
+    "tags": [
+      "0",
+      "1",
+      "2",
+      "3 4"
+    ]
+  }
+}""")
+
+
 class JsonArrayTest(AppTestCase):
 
     def setUp(self):

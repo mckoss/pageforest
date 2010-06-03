@@ -1,4 +1,5 @@
 import time
+import urllib
 import logging
 
 from django.conf import settings
@@ -136,10 +137,14 @@ def blob_list(request):
     but not style/css/main.css (depth 3)
     """
     keys_only = bool(request.GET.get('keysonly', ''))
+    tag = urllib.unquote_plus(request.GET.get('tag', ''))
     depth = request.GET.get('depth', '1')
     depth = depth.isdigit() and int(depth) or 0
     query = Blob.all(keys_only=keys_only)
-    if depth == 1:
+    if tag:
+        query.filter('tags', tag)
+        depth = 0
+    elif depth == 1:
         query.filter('directory', request.key_name)
     else:
         query.filter('__key__ >', db.Key.from_path('Blob', request.key_name))
@@ -176,6 +181,8 @@ def blob_list(request):
             'sha1': blob.sha1,
             'size': len(blob.value),
             }
+        if blob.tags:
+            result[filename]['tags'] = blob.tags
         # Save small blobs directly to memcache.
         if len(blob.value) < 20000 and memcache_bytes < 500000:
             protobuf = blob.to_protobuf()
@@ -203,7 +210,9 @@ def blob_put(request):
     if transfer_encoding:
         # Decode base64 if specified in the query string.
         value = value.decode(transfer_encoding)
-    blob = Blob(key_name=request.key_name, value=value)
+    tags = [urllib.unquote_plus(tag)
+            for tag in request.GET.get('tags', '').split(',')]
+    blob = Blob(key_name=request.key_name, value=value, tags=tags)
     blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
                             mimetype=settings.JSON_MIMETYPE)
