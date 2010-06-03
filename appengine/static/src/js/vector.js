@@ -127,6 +127,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         },
 
         // Do a (deep) comparison of two arrays
+        // BUG: This code does not look right - unit test and fix!
         equal: function(v1, v2) {
             if (typeof v1 != typeof v2) {
                 return false;
