@@ -120,6 +120,18 @@ def blob_get(request):
     return response
 
 
+def prefix_filter(query, kind, start, stop=None,
+                  property='__key__', greater='>=', less='<'):
+    """
+    Add a prefix filter to an existing query object.
+    """
+    if stop is None:
+        # Increase the last character of the start value.
+        stop = start[:-1] + chr(ord(start[-1]) + 1)
+    query.filter(property + ' ' + greater, db.Key.from_path(kind, start))
+    query.filter(property + ' ' + less, db.Key.from_path(kind, stop))
+
+
 def blob_list(request):
     """
     List children of the selected blob, including size, modification
@@ -137,19 +149,20 @@ def blob_list(request):
     but not style/css/main.css (depth 3)
     """
     keys_only = bool(request.GET.get('keysonly', ''))
-    tag = urllib.unquote_plus(request.GET.get('tag', ''))
+    query = Blob.all(keys_only=keys_only)
     depth = request.GET.get('depth', '1')
     depth = depth.isdigit() and int(depth) or 0
-    query = Blob.all(keys_only=keys_only)
-    if tag:
+    if 'tag' in request.GET:
+        tag = urllib.unquote_plus(request.GET['tag'])
         query.filter('tags', tag)
         depth = 0
+    elif 'prefix' in request.GET:
+        prefix = request.GET['prefix']
+        prefix_filter(query, 'Blob', request.key_name + prefix)
     elif depth == 1:
         query.filter('directory', request.key_name)
     else:
-        query.filter('__key__ >', db.Key.from_path('Blob', request.key_name))
-        stop_key_name = request.key_name[:-1] + '0'  # chr(ord('/') + 1)
-        query.filter('__key__ <', db.Key.from_path('Blob', stop_key_name))
+        prefix_filter(query, 'Blob', request.key_name, greater='>')
     strip_levels = request.key_name.count('/')
     result = {}
     # FIXME: This fetches only 100 blobs with one datastore query.
