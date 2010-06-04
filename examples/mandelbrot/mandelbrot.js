@@ -3,16 +3,7 @@
 namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     // http://en.wikipedia.org/wiki/Mandelbrot_set
 
-    // TODO: Enable use of up to 4 workers - also cache off-screen canvases.
-    var worker;
-
     // TODO: Don't build tiles for the negative space - just flip for display!
-
-    function initWorkers() {
-        if (typeof Worker != 'undefined') {
-            //worker = new Worker('mandelbrot-worker.js');
-        }
-    }
 
     function Mandelbrot() {
         this.maxIterations = 1000;
@@ -38,6 +29,18 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     }
 
     Mandelbrot.methods({
+        initWorkers: function() {
+            if (typeof Worker != "undefined") {
+                this.worker = new Worker('mandelbrot-worker.js');
+                this.worker.onmessage = this.onData.fnMethod(this);
+                this.requests = {};
+                this.idNext = 0;
+            }
+            else {
+                console.log("Web Workers are not supported.");
+            }
+        },
+
         iterations: function (x0, y0) {
             if (y0 < 0) {
                 y0 = -y0;
@@ -165,18 +168,15 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         },
 
         renderData: function(data, rc, cx, cy, fn) {
-            function onData(evt) {
-                var cb = cx * cy * 4;
-                var results = evt.data;
-                for (var i = 0; i < cb; i++) {
-                    data[i] = results[i];
-                }
-                fn();
-            }
-
-            if (worker && fn) {
-                worker.onmessage = onData;
-                worker.postMessage([rc, cx, cy]);
+            // TODO: Enable more than 1 worker
+            if (this.worker && fn) {
+                var id = this.idNext++;
+                this.requests[id] = {
+                    data: data,
+                    fn: fn,
+                    cb: cx * cy * 4
+                };
+                this.worker.postMessage({id: id, rc: rc, cx: cx, cy: cy});
                 return;
             }
 
@@ -202,11 +202,33 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             if (fn) {
                 fn();
             }
+        },
+
+        // Callback function from Worker
+        onData: function(evt) {
+            var id = evt.data.id;
+            var dataIn = evt.data.data;
+            var req = this.requests[id];
+
+            if (req == undefined) {
+                console.error("Duplicate callback?", evt);
+                return;
+            }
+
+            var dataOut = req.data;
+            var cb = req.cb;
+
+            console.log(id, req);
+
+            for (var i = 0; i < cb; i++) {
+                dataOut[i] = dataIn[i];
+            }
+            req.fn();
+            delete this.requests[id];
         }
     });
 
     ns.extend({
-        'Mandelbrot': Mandelbrot,
-        'initWorkers': initWorkers
+        'Mandelbrot': Mandelbrot
     });
 });
