@@ -4,8 +4,8 @@ import logging
 
 from django.conf import settings
 from django.utils import simplejson as json
-from django.http import \
-    HttpResponse, HttpResponseNotAllowed, HttpResponseNotModified, Http404
+from django.http import HttpResponse, Http404, \
+    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseNotModified
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -16,7 +16,7 @@ from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
-from utils.shortcuts import get_int, lookup_or_404
+from utils.shortcuts import get_int, get_bool, lookup_or_404
 
 from blobs.models import Blob
 
@@ -139,8 +139,9 @@ def blob_list(request):
 
     The depth option sets a limit on recursive subdirectories. The
     default is 1, which means only direct children, and is optimized
-    using the directory index. Setting depth to 'unlimited' or 0
-    returns all children, >1 returns all children up to that depth.
+    using the directory index. Setting depth=2 returns children and
+    grandchildren, depth=n returns all subchildren up to level n,
+    depth=0 means unlimited.
 
     Example:
     http://scratch.pageforest.com/?method=list&depth=2 returns
@@ -148,10 +149,12 @@ def blob_list(request):
     images/gradient.jpg (depth 2)
     but not style/css/main.css (depth 3)
     """
-    keys_only = bool(request.GET.get('keysonly', ''))
+    try:
+        keys_only = get_bool(request.GET, 'keysonly', default=False)
+        depth = get_int(request.GET, 'depth', default=1)
+    except ValueError, e:
+        return HttpResponseBadRequest(e.message, 'text/plain')
     query = Blob.all(keys_only=keys_only)
-    depth = request.GET.get('depth', '1')
-    depth = depth.isdigit() and int(depth) or 0
     if 'tag' in request.GET:
         tag = urllib.unquote_plus(request.GET['tag'])
         query.filter('tags', tag)

@@ -22,9 +22,9 @@ def lookup_or_404(cls, key_name):
     return result
 
 
-def get_int(dictionary, key, default=None, min=None, max=None):
+def get_int(mapping, key, default=None, min=None, max=None):
     """
-    Get an int value from a dict of strings, if possible.
+    Get an integer value from a dict of strings, if possible.
 
     >>> get_int({'a': '123'}, 'a')
     123
@@ -54,18 +54,49 @@ def get_int(dictionary, key, default=None, min=None, max=None):
     >>> get_int({'a': '123'}, 'b', 100, min=101)
     100
     """
-    if key not in dictionary:
+    if key not in mapping:
         return default
-    value = dictionary[key]
-    if not value.isdigit():
-        if not (value.startswith('-') and value[1:].isdigit()):
-            return default
-    value = int(value)
+    value = int(mapping[key])
     if min is not None and value < min:
         value = min
     if max is not None and value > max:
         value = max
     return value
+
+
+def get_bool(mapping, key, default=None):
+    """
+    Get a boolean value from a dict of strings, if possible.
+
+    >>> get_bool({'a': 'true'}, 'a')
+    True
+    >>> get_bool({'a': 'True'}, 'a')
+    True
+    >>> get_bool({'a': 'TRUE'}, 'a')
+    True
+    >>> get_bool({'a': 'false'}, 'a')
+    False
+    >>> get_bool({'a': 'False'}, 'a')
+    False
+    >>> get_bool({'a': 'FALSE'}, 'a')
+    False
+    >>> get_bool({'a': 'FALSE'}, 'b', True)
+    True
+    >>> get_bool({'a': 'FALSE'}, 'b', False)
+    False
+    >>> get_bool({'a': 'yes'}, 'a')
+    Traceback (most recent call last):
+    ValueError: Expected true or false for a.
+    >>> get_bool({'a': 'yes'}, 'a', False)
+    Traceback (most recent call last):
+    ValueError: Expected true or false for a.
+    """
+    if key not in mapping:
+        return default
+    value = mapping[key].lower()
+    if value not in ('true', 'false'):
+        raise ValueError("Expected true or false for %s." % key)
+    return value == 'true'
 
 
 if __name__ == '__main__':
