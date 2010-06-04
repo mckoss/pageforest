@@ -17,11 +17,6 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
 
     The sha1, valid_json and directory properties are automatically
     updated before datastore put.
-
-    The tags property is set with a query string option:
-        PUT /docs/doc_id/0323112?tags=0323,03231,032311
-    Then you can filter the LIST method with these tags:
-        GET /docs/doc_id/?method=LIST&keysonly=true&tag=0323
     """
     value = db.BlobProperty()
     sha1 = db.StringProperty(indexed=False)

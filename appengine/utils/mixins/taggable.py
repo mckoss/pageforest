@@ -26,7 +26,7 @@ class Taggable(db.Model):
         PUT /docs/doc_id/0323112?tags=0323,03231,032311
 
     The LIST method allows filtering on a specific tag:
-        GET /docs/doc_id/?method=LIST&keysonly=true&tag=0323
+        GET /docs/doc_id/?method=list&keysonly=true&tag=0323
     """
     tags = db.StringListProperty()
 
