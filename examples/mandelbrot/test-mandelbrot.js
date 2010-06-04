@@ -77,27 +77,18 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             var m = new mandelbrot.Mandelbrot();
             var msStart = new Date().getTime();
             var cInSet = 0;
-            var data = []
+            var data = [];
 
             m.renderData(data, m.rcTop, 256, 256);
 
-            var dx = (m.xMax - m.xMin) / 255;
-            var dy = m.yMax / 255;
-            var y = m.yMax;
-            for (var iy = 0; iy < 256; iy++) {
-                var x = m.xMin;
-                for (var ix = 0; ix < 256; ix++) {
-                    var iters = m.iterations(x, y);
-                    if (iters == m.maxIterations) {
-                        cInSet++;
-                    }
-                    x += dx;
+            for (var i = 0; i < data.length; i += 4) {
+                if (data[i] + data[i + 1] + data[i + 2] == 0) {
+                    cInSet++;
                 }
-                y -= dy;
             }
 
             var msElapsed = new Date().getTime() - msStart;
-            var area = 2 * cInSet * dx * dy;
+            var area = cInSet * 16 / 256 / 256;
             console.log("area = " + area + " (" + msElapsed + "ms)");
             ut.assert(msElapsed < 1000, "Too slow: " + msElapsed + "ms");
             var error = Math.abs(1.50659 - area);
