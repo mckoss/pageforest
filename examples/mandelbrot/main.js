@@ -77,7 +77,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 var div = document.createElement('div');
                 div.style.width = this.tileSize.width + 'px';
                 div.style.height = this.tileSize.height + 'px';
-                div.style.backgroundColor = "black";
                 return div;
             }
 
@@ -101,8 +100,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     function initMap() {
         var mapOptions = {
-            zoom: 0,
-            center: new google.maps.LatLng(41.850033, -87.6500523),
+            zoom: 2,
+            center: new google.maps.LatLng(0, -40),
             mapTypeControlOptions: {
                 mapTypeIds: ['mandelbrot'],
                 style: google.maps.MapTypeControlStyle.DROPDOWN_MENU
@@ -123,7 +122,10 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.m = new mandelbrot.Mandelbrot();
         ns.m.initWorkers();
 
-        ns.m.renderKey($('#level-key')[0]);
+        var key = $('#level-key')[0];
+        if (key) {
+            ns.m.renderKey(key);
+        }
 
         initMap();
 
@@ -155,7 +157,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         var isSignedIn = username != undefined;
         $('#username').text(isSignedIn ? username : 'anonymous');
         $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
-        if (username == "mckoss") {
+        if (username == "mckoss" || username == "johann") {
             $('.admin').show();
         }
     }
