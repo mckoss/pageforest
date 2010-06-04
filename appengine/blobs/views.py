@@ -210,9 +210,13 @@ def blob_put(request):
     if transfer_encoding:
         # Decode base64 if specified in the query string.
         value = value.decode(transfer_encoding)
-    tags = [urllib.unquote_plus(tag)
-            for tag in request.GET.get('tags', '').split(',')]
-    blob = Blob(key_name=request.key_name, value=value, tags=tags)
+    # Create a new blob.
+    blob = Blob(key_name=request.key_name, value=value)
+    # Set blob tags from optional query string parameter.
+    if 'tags' in request.GET:
+        blob.tags = [urllib.unquote_plus(tag)
+                     for tag in request.GET['tags'].split(',')]
+    # Save new blob to memcache and datastore.
     blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
                             mimetype=settings.JSON_MIMETYPE)
