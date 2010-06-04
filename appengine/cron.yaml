@@ -6,20 +6,20 @@ cron:
 
 - url: /backups/users/cron
   description: incremental backup for User model
-  schedule: every 59 minutes
+  schedule: every 57 minutes
   timezone: America/Los_Angeles
 
 - url: /backups/apps/cron
   description: incremental backup for Apps model
-  schedule: every 61 minutes
+  schedule: every 59 minutes
   timezone: America/Los_Angeles
 
 - url: /backups/docs/cron
   description: incremental backup for Docs model
-  schedule: every 4 hours
+  schedule: every 61 minutes
   timezone: America/Los_Angeles
 
 - url: /backups/blobs/cron
   description: incremental backup for Blob model
-  schedule: every day 3:37
+  schedule: every 63 minutes
   timezone: America/Los_Angeles
