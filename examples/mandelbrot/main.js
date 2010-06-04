@@ -1,3 +1,51 @@
+/* Mandelbrot Pageforest Demo
+
+   Use Google Maps to navigate the Mandelbrot set at multiple levels of
+   resolution.
+
+   Features:
+
+   - Client side rendering using the Canvas element.
+   - Cache image tiles to Pageforest Blob storage.
+   - Render using background processing using Web Workers including
+     multiple concurrent workers (TBD).
+
+   TODO:
+
+   * Don't render positive tile space (just flip tiles to display). Note
+     should change to render from center of each pixel, rather than
+   * Show low-resolution images in the map until the high res tile
+     is available (use clipped/enlarged sections from parent tiles.
+     the corner to not introduce distortion around the origin.
+   * Pick better starting location.  Make outer regions be transparent
+     rather than black.
+   * Full-screen mode.
+   * Support bookmarking of interesting areas of the set - thumbnails
+     in the document.  Animated tours of the space.
+   * Let users build large mosaic images of selected reagions and store them
+     in their own document space (integrate with ordering print outs and
+     merchandise).
+   * Graph CPU and Network usage (both raw pixels per second and total
+     pixels per second to show effect of multiple CPU cores).
+   * Don't roundtrip for cached URL tile after a PUT - just use the computed
+     data: url from canvas to display directly.
+   * Allow anonymous users to render offline (only - mode for speed test).
+   * Use concurrent viewers as bot-net for parrallel computation of requested
+     tiles.
+   - Allow the wuser to select the number of concurrent workers (0-16).
+   - Allow selection of different level colorings.
+   - Hot-spot overlay - show where (recent) users are viewing the set.
+     Possible just show time-decay viewing and/or rendering.
+   - Coordinates/grid overlay.  Also hover to show tile name?
+   - Leaderboard for renderers (max throughput and total recent work).
+   - User (public) comments in the set.  Star regions - show most recently
+     popular.
+   - Display total number of tiles created over time, number of concurrent
+     viewers and renderers.  Allow users to join teams and have team
+     leaderboard. See http://setiathome.berkeley.edu/top_teams.php and
+     http://boinc.berkeley.edu/.
+ */
+
 /*globals google */
 
 namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
