@@ -1,7 +1,8 @@
 import re
 import logging
+import datetime
 
-from datetime import datetime
+from mock import Mock
 
 from django.conf import settings
 from django.test import TestCase, Client
@@ -22,11 +23,15 @@ class AppTestCase(TestCase):
     """
 
     def setUp(self):
-        self.start_time = datetime.now()
+        # Mock the datetime object.
+        self.datetime = datetime.datetime
+        datetime.datetime = Mock()
+        datetime.datetime.now.return_value = \
+            self.datetime(2010, 11, 12, 13, 14, 15)
         # Create some users.
         self.peter = User(key_name='peter', username='Peter',
                           email='peter@example.com',
-                          email_verified=datetime.now())
+                          email_verified=datetime.datetime.now())
         self.peter.set_password('peter_secret')
         self.peter.put()
         self.paul = User(key_name='paul', username='Paul',
@@ -68,6 +73,9 @@ class AppTestCase(TestCase):
         self.admin_client = Client(
             HTTP_HOST='%s.myapp.pageforest.com' % settings.ADMIN_SUBDOMAIN,
             HTTP_REFERER='http://myapp.pageforest.com/')
+
+    def tearDown(self):
+        datetime.datetime = self.datetime
 
     def sign_in(self, user):
         """
