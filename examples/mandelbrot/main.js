@@ -7,7 +7,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var tileLib = namespace.lookup('com.pageforest.tiles');
 
-    var tilesDocId = "v1";
+    var tilesDocId = "v4";
 
     function MandelbrotMapType() {
         this.tileSize = new google.maps.Size(256, 256);
@@ -35,15 +35,15 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             return this.tiles.getImage(tileName);
         },
 
-        renderTile: function(tileName, fn) {
+        renderTile: function(tileName, canvas, fn) {
             var rc = this.tiles.rectFromTileName(tileName);
             var msStart = new Date().getTime();
 
-            // TODO: Use on-screen canvas now for debug purposes
-            ns.m.render(ns.viewPort, rc, function() {
+            ns.m.render(canvas, rc, function() {
                 var ms = new Date().getTime() - msStart;
                 var pps = Math.floor(256 * 256 / ms * 1000);
                 ns.onError("", "Drawing speed: " +
+                           '(' + tileName + ') ' +
                            format.thousands(pps) + " pixels per second.");
                 fn(ns.viewPort);
             });
@@ -52,7 +52,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
     function initMap() {
         var mapOptions = {
-            zoom: 1,
+            zoom: 0,
             center: new google.maps.LatLng(41.850033, -87.6500523),
             mapTypeControlOptions: {
                 mapTypeIds: ['mandelbrot'],
@@ -62,25 +62,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.map = new google.maps.Map(document.getElementById("map_canvas"),
                                      mapOptions);
 
-        ns.map.mapTypes.set('mandelbrot', new MandelbrotMapType());
+        ns.mapType = new MandelbrotMapType();
+        ns.map.mapTypes.set('mandelbrot', ns.mapType);
         ns.map.setMapTypeId('mandelbrot');
-    }
-
-    // Create the (shared) public document into which all tiles will be stored.
-    function createBlobDoc() {
-        ns.client.putDoc(tilesDocId, {
-            title: "Mandelbrot Tile Store - Version 1",
-            writers: ["public"],
-            blob: {
-                version: tilesDocId
-            }
-        }, function (saved) {
-            if (saved) {
-                alert("Document created!");
-                return;
-            }
-            alert("Error creating document.");
-        });
     }
 
     // Initialize the document - create a client helper object
@@ -172,7 +156,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onUserChange': onUserChange,
         'onStateChange': onStateChange,
         'signInOut': signInOut,
-        'createBlobDoc': createBlobDoc
+        'createBlobDoc': function() {
+            ns.mapType.tiles.createTileDoc();
+        }
     });
 
 });
