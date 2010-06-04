@@ -1,5 +1,6 @@
 namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
+    var base = namespace.lookup('org.startpad.base');
 
     /* Tiles - Heirarchical image caching library.
      */
@@ -107,24 +108,19 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         checkAndRender: function(blobid) {
             // Save this in closure for use in callbacks, below.
             var self = this;
-            console.log("car1", blobid);
 
             self.checkTileExists(blobid, function (exists) {
-                console.log("car2", blobid);
                 // Tile already exists - no need to render it.
                 if (exists) {
                     return;
                 }
-                console.log("car3", blobid);
 
                 var canvas = document.createElement('canvas');
                 canvas.width = self.dxTile;
                 canvas.height = self.dyTile;
 
                 self.fnRender(blobid, canvas, function () {
-                    console.log("car4", blobid);
                     self.checkTileExists(blobid, function (exists) {
-                        console.log("car5", blobid);
                         // Looks like we wasted our time - the tile is
                         // already rendered and stored in a blob by
                         // another client.
@@ -133,15 +129,12 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                             return;
                         }
 
-                        console.log("car6", blobid);
                         self.client.putBlob(self.docid, blobid,
                                             format.canvasToPNG(canvas),
                                             {encoding: 'base64'},
                                             function () {
-                                                console.log("car7", blobid);
                                                 self.updateTileImage(blobid);
                                             });
-                        console.log("car8", blobid);
                     });
                 });
             });
@@ -151,8 +144,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Bounce the source field for force a reload of the tile?
             // REVIEW: should we add a random query param?
             var img = this.getImage(blobid);
-            img.src = '';
-            img.src = this.client.getDocURL(this.docid, blobid);
+            img.src = this.client.getDocURL(this.docid, blobid) +
+                '?salt=' + base.randomInt(10000);
         },
 
         checkTileExists: function(blobid, fn) {
@@ -164,8 +157,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, blobid, undefined,
+            this.client.getBlob(this.docid, blobid, {dataType: 'text'},
                                 function(status) {
+                                    console.log("cte", status);
                                     fn(status);
                                 });
         }

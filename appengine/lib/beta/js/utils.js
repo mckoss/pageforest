@@ -1089,8 +1089,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (typeof data != "string") {
                 data = JSON.stringify(data);
             }
-            this.log('saving blob: ' + docid + '/' + blobid +
-                     ' (' + data.length + ')');
+            this.log('saving blob: ' + url + ' (' + data.length + ')');
             $.ajax({
                 type: 'PUT',
                 url: url,
@@ -1100,12 +1099,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 error: function (xmlhttp, textStatus, errorThrown) {
                     var code = 'ajax_error/' + xmlhttp.status;
                     var message = xmlhttp.statusText;
-                    this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+                    this.log(message + ' (' + code + ') ' + url,
+                             {'obj': xmlhttp});
                     this.errorReport(code, message);
                     fn(false);
                 }.fnMethod(this),
                 success: function() {
-                    this.log('saved blob: ' + blobid);
+                    this.log('saved blob: ' + url);
                     fn(true);
                 }.fnMethod(this)
             });
@@ -1138,6 +1138,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $.ajax({
                 type: 'GET',
                 url: url,
+                // REVIEW: Is this the right default - note that 200 return
+                // codes can return error because the data is NOT json!
                 dataType: options.dataType || 'json',
                 error: function (xmlhttp, textStatus, errorThrown) {
                     var code = 'ajax_error/' + xmlhttp.status;

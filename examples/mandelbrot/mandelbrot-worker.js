@@ -6,14 +6,16 @@ importScripts("/lib/beta/js/utils.js",
 
 namespace.lookup('com.pageforest.mandelbrot.worker').defineOnce(function (ns) {
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
+    var m = new mandelbrot.Mandelbrot();
 
     function doRender(evt) {
-        var m = new mandelbrot.Mandelbrot();
         var data = [];
-        var args = [data].concat(evt.data);
-        m.renderData.apply(m, args);
-        console.log(data.length);
-        postMessage(data);
+        var req = evt.data;
+        m.renderData(data, req.rc, req.cx, req.cy);
+        postMessage({
+            id: req.id,
+            data: data
+        });
     }
 
     ns.extend({

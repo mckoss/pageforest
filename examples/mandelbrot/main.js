@@ -7,7 +7,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var tileLib = namespace.lookup('com.pageforest.tiles');
 
-    var tilesDocId = "v4";
+    var tilesDocId = "v6";
 
     function MandelbrotMapType() {
         this.tileSize = new google.maps.Size(256, 256);
@@ -71,7 +71,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     function onReady() {
         ns.client = new clientLib.Client(ns);
         ns.m = new mandelbrot.Mandelbrot();
-        mandelbrot.initWorkers();
+        ns.m.initWorkers();
 
         // TODO: Don't need visible canvas - for debugging now.
         ns.viewPort = $('#view-port')[0];
