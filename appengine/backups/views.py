@@ -12,7 +12,8 @@ from docs.models import Doc
 from blobs.models import Blob
 from backups.models import Backup
 
-MAX_ZIPFILE_BYTES = 5 * 1024 * 1024  # Five mebibytes.
+MAX_ENTITY_BYTES = 100 * 1024   # Don't backup larger entities.
+MAX_ZIPFILE_BYTES = 990 * 1024  # Datastore requests must be less than 1 MB.
 
 
 def index(request):
@@ -92,6 +93,10 @@ def incremental_backup(request, model, limit):
     for entity in entities:
         key_name = entity.key().name()
         data = serialize(entity)
+        if len(data) > MAX_ENTITY_BYTES:
+            continue
+        if temp.tell() + len(data) > MAX_ZIPFILE_BYTES:
+            break
         info = zipfile.ZipInfo(
             filename=key_name.rstrip('/').encode('utf-8'),
             date_time=entity.modified.timetuple()[:6])
@@ -100,8 +105,6 @@ def incremental_backup(request, model, limit):
         backup.keys.append(key_name)
         backup.oldest = min(backup.oldest, entity.modified)
         backup.youngest = max(backup.youngest, entity.modified)
-        if temp.tell() > MAX_ZIPFILE_BYTES:
-            break
     archive.close()
     backup.zipfile = temp.getvalue()
     temp.close()
