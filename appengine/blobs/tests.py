@@ -1,10 +1,10 @@
 import datetime
-from mock import Mock
 
 from google.appengine.api import memcache
 
 from django.conf import settings
 from django.test import Client
+from django.utils import simplejson as json
 
 from apps.tests import AppTestCase
 
@@ -261,16 +261,6 @@ class MimeTest(AppTestCase):
 
 class TagsTest(AppTestCase):
 
-    def setUp(self):
-        super(TagsTest, self).setUp()
-        self.datetime = datetime.datetime
-        datetime.datetime = Mock()
-        datetime.datetime.now.return_value = \
-            self.datetime(2010, 5, 10, 11, 12, 13)
-
-    def tearDown(self):
-        datetime.datetime = self.datetime
-
     def test_tags(self):
         """Query string options should set and filter tags on blobs."""
         self.sign_in(self.peter)
@@ -287,7 +277,7 @@ class TagsTest(AppTestCase):
     "json": false,
     "modified": {
       "__class__": "Date",
-      "isoformat": "2010-05-10T11:12:13Z"
+      "isoformat": "2010-11-12T13:14:15Z"
     },
     "sha1": "84e52dc7aeb405f3b4faa3937cfe430bcd36488d",
     "size": 20,
@@ -373,19 +363,12 @@ class ListTest(AppTestCase):
 
     def setUp(self):
         super(ListTest, self).setUp()
-        original = datetime.datetime
-        try:
-            datetime.datetime = Mock()
-            datetime.datetime.now.return_value = original(
-                2010, 5, 10, 11, 12, 13)
-            Doc(key_name='myapp/1234', doc_id='1234', owner='peter').put()
-            Blob(key_name='myapp/1234/', value='zero').put()
-            Blob(key_name='myapp/1234/one/', value='one').put()
-            Blob(key_name='myapp/1234/one/two/', value='two').put()
-            Blob(key_name='myapp/1234/one/two/three/', value='three').put()
-            Blob(key_name='myapp/1234/one/two/three/four/', value='four').put()
-        finally:
-            datetime.datetime = original
+        Doc(key_name='myapp/1234', doc_id='1234', owner='peter').put()
+        Blob(key_name='myapp/1234/', value='zero').put()
+        Blob(key_name='myapp/1234/one/', value='one').put()
+        Blob(key_name='myapp/1234/one/two/', value='two').put()
+        Blob(key_name='myapp/1234/one/two/three/', value='three').put()
+        Blob(key_name='myapp/1234/one/two/three/four/', value='four').put()
         self.sign_in(self.peter)
 
     def test_depth_1(self):
@@ -401,7 +384,7 @@ class ListTest(AppTestCase):
     "json": false,
     "modified": {
       "__class__": "Date",
-      "isoformat": "2010-05-10T11:12:13Z"
+      "isoformat": "2010-11-12T13:14:15Z"
     },
     "sha1": "fe05bcdcdc4928012781a5f1a2a77cbb5398e106",
     "size": 3
@@ -503,7 +486,7 @@ class ListTest(AppTestCase):
     "json": true,
     "modified": {
       "__class__": "Date",
-      "isoformat": "2010-05-10T11:12:13Z"
+      "isoformat": "2010-11-12T13:14:15Z"
     },
     "sha1": "aa8c41330509455ee5679d04ed41535d280d9a89",
     "size": 4
@@ -513,3 +496,25 @@ class ListTest(AppTestCase):
     "modified": {
       "__class__": "Date",
 """)
+
+
+class PrefixTest(AppTestCase):
+
+    def setUp(self):
+        super(PrefixTest, self).setUp()
+        Blob(key_name='myapp/mydoc/', value='').put()
+        Blob(key_name='myapp/mydoc/p/', value='').put()
+        Blob(key_name='myapp/mydoc/pq/', value='').put()
+        Blob(key_name='myapp/mydoc/pre/', value='').put()
+        Blob(key_name='myapp/mydoc/pro/', value='').put()
+        Blob(key_name='myapp/mydoc/prefix/', value='').put()
+        Blob(key_name='myapp/mydoc/ps/', value='').put()
+        self.sign_in(self.peter)
+
+    def test_prefix(self):
+        """The prefix filter should return only matching blobs."""
+        url = '/docs/mydoc/?method=LIST&keysonly=true&prefix=pr'
+        response = self.app_client.get(url)
+        decoded = json.loads(response.content)
+        self.assertEqual(set(decoded.keys()),
+                         set(['pre', 'prefix', 'pro']))
