@@ -1,85 +1,72 @@
 {% extends "page.html" %}
-{% block title %}Saving the Web{% endblock %}
+{% block full-title %}{{ SITE_NAME }} - Saving the web - One page at a time{% endblock %}
 {% block left-column %}
 <div id="home">
-    <h1>
-    Build full web applications completely in client-side JavaScript.
-    </h1>
+  <h1>
+    Cloud storage for your JavaScript applications.
+  </h1>
 
-    <div class="spacer" style="clear:both;"></div>
+  <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
+  <div class="homeCopy Left">
+    <h2>Storage in the cloud.</h2>
+    <p>
+      Use the {{ SITE_NAME}} AJAX/REST API to save application data to our
+      hosted service. Each user is given a generous free-quota for data
+      storage with premium and enterprise packages available.
+    </p>
+  </div>
 
-    <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Right">
-        <h2>Turn any JavaScript app into a web app.</h2>
-        <p>We created {{ SITE_NAME }} to enable JavaScript developerThe pageforest widget will allow your users to save the changes they've made while using your application.
-        You provide simple save and load functions, and we do all the back-end work to save your users' data.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
+  <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
+  <div class="homeCopy Right">
+    <h2>Secure data access.</h2>
+    <p>
+      {{ SITE_NAME }} puts users in charge of their data, letting them
+      grant and revoke read/write priveleges using the {{ SITE_NAME }}
+      Document Manager.
+    </p>
+  </div>
 
-    <div class="spacer2" style="clear:both;"></div>
+  <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
+  <div class="homeCopy Left">
+    <h2>Application hosting.</h2>
+    <p>
+      {{ SITE_NAME }} offers free hosting. Each application is hosted
+      on its own domain.  Build rich JavaScript-based applications
+      without having to manage or maintain your own web server.
+    </p>
+  </div>
 
-    <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Left">
-        <h2>No need to deal with user management or hosting database services.</h2>
-        <p>Your focus should stay with your web page.
-        By using pageforest, you don't have to deal with creating user accounts, or managing a back-end database infrastructure.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
+  <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
+  <div class="homeCopy Right">
+    <h2>Open source, open development.</h2>
+    <p>
+      We're committed to building {{ SITE_NAME}} for the benefit of a wide
+      range of developers and users; from hobbiests to proffessional web
+      development teams. {{ SITE_NAME }} is
+      an <a href="http://pageforest.googlecode.com">open source</a> project
+      with an open development process and unrestrictive licensing. We
+      welcome feedback and feature requests directly from our users and
+      developers.
+    </p>
+  </div>
 
-    <div class="spacer2" style="clear:both;"></div>
+  <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
+  <div class="homeCopy Left">
+    <h2>Custom solutions.</h2>
+    <p>
+      If you'd like help in building your application on the {{ SITE_NAME }}
+      platform, <a href="mailto:support@pageforest.com">email us</a>. We
+      offer both free and paid support options, and can help you get your
+      project off the ground with lower startup and ongoing maintenance
+      costs than traditional web application development.
+    </p>
+  </div>
 
-    <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Right">
-        <h2>Enable user interactions by showing your page's Save History.</h2>
-        <p>You can (optionally) add a recent Save History at the bottom of your page.
-        Users can then see proof that others are using your site and share ideas with each other.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
-
-    <div class="spacer2" style="clear:both;"></div>
-
-    <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Left">
-        <h2>Users get a unique URL of their saved page.</h2>
-        <p>We add a unique code to your own page URL each time a user saves your web page.
-        That way, they can send a link to your site via email, or IM, or share it on social bookmarking sites like Digg and faves.com.
-        You will get additional word-of-mouth traffic to your web site each time it is shared.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
-
-    <div class="spacer2" style="clear:both;"></div>
-
-    <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Right">
-        <h2>See how your web page is being used.</h2>
-        <p>Pageforest keeps track of the number of saves, views, and users of your page.
-        Understand your target market and watch as your site becomes more popular.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
-
-    <div class="spacer2" style="clear:both;"></div>
-
-    <img class="homeScreenRight" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Left">
-        <h2>Users can see all of their saved pages in one place on the pageforest.com web site.</h2>
-        <p>Whether your users save your page once, or multiple times, pageforest.com makes it easy for them to retrieve and organize all their saved information in one place.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
-
-    <div class="spacer2" style="clear:both;"></div>
-
-    <img class="homeScreenLeft" src="{{MEDIA_URL}}images/home/callout-blank.png" />
-    <div class="homeCopy Right">
-        <h2>pageforest.com links to your web site, driving more traffic.</h2>
-        <p>Pageforest drives traffic to your web site by including links from each user's profile page, and from our topic-based page galleries.  Your page may be featured based on user popularity or recent activity.
-        Page saves are fully crawl-able by the major search engines, making you site even more accessible.</p>
-        <p><a href="#">Learn More</a></p>
-    </div>
-</div>
+</div> <!-- home -->
 {% endblock %}
 
 {% block right-column %}
-<div class="CallToAction">
-        <p>Click Here to Get the Code</p>
+<div class="CallToAction" onclick="location='http://scratch.pageforest.com';return false;">
+  <p>Build an App in 5 minutes</p>
 </div>
 {% endblock %}
