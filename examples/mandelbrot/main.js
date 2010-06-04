@@ -17,6 +17,7 @@
    * Show low-resolution images in the map until the high res tile
      is available (use clipped/enlarged sections from parent tiles.
      the corner to not introduce distortion around the origin.
+   * Render priority to visible/central tiles (not FIFO order as is done now).
    * Pick better starting location.  Make outer regions be transparent
      rather than black.
    * Full-screen mode.
