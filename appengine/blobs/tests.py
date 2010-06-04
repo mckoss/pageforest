@@ -395,8 +395,8 @@ class ListTest(AppTestCase):
         """List method with depth=1 should return only direct children."""
         for url in [
             '/docs/1234?method=list&keysonly=true',
-            '/docs/1234/?method=LIST&keysonly=1',
-            '/docs/1234?keysonly=yes&method=list&depth=1',
+            '/docs/1234/?method=LIST&keysonly=true',
+            '/docs/1234?keysonly=true&method=list&depth=1',
             ]:
             self.assertContains(self.app_client.get(url), """\
 {
@@ -417,7 +417,7 @@ class ListTest(AppTestCase):
             self.assertNotContains(response, 'four')
 
     def test_depth_unlimited(self):
-        """List method with depth=unlimited should return all sub-children."""
+        """List method with depth=0 should return all sub-children."""
         four_keys = [
             'myapp/1234/one/',
             'myapp/1234/one/two/',
@@ -429,16 +429,14 @@ class ListTest(AppTestCase):
             self.assertFalse(Blob.cache_get_by_key_name(key_name))
         for url in [
             '/docs/1234?method=list&depth=0',
-            '/docs/1234/?method=LIST&depth=unlimited',
-            '/docs/1234?method=list&depth=foo&callback=foo',
             '/docs/1234?method=list&depth=4',
             '/docs/1234?method=list&depth=5',
             ]:
             response = self.app_client.get(url)
-            self.assertContains(response, '"one": {')
-            self.assertContains(response, '"one/two": {')
-            self.assertContains(response, '"one/two/three": {')
-            self.assertContains(response, '"one/two/three/four": {')
+            decoded = json.loads(response.content)
+            self.assertEqual(
+                set(decoded.keys()),
+                set(('one', 'one/two', 'one/two/three', 'one/two/three/four')))
         # Check that LIST has populated memcache again.
         for key_name in four_keys:
             self.assertTrue(Blob.cache_get_by_key_name(key_name))
@@ -447,9 +445,8 @@ class ListTest(AppTestCase):
         """List method with depth=unlimited should return all sub-children."""
         for url in [
             '/docs/1234?method=list&keysonly=true&depth=0',
-            '/docs/1234/?method=LIST&depth=unlimited&keysonly=1',
-            '/docs/1234?method=list&depth=4&keysonly=on',
-            '/docs/1234?method=list&keysonly=keysonly&depth=5',
+            '/docs/1234?method=list&depth=4&keysonly=true',
+            '/docs/1234?method=list&keysonly=true&depth=5',
             ]:
             response = self.app_client.get(url)
             self.assertContains(response, """\
