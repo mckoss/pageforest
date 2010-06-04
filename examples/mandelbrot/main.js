@@ -45,7 +45,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 ns.onError("", "Drawing speed: " +
                            '(' + tileName + ') ' +
                            format.thousands(pps) + " pixels per second.");
-                fn(ns.viewPort);
+                fn();
             });
         }
     });
@@ -70,11 +70,11 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     // Initialize the document - create a client helper object
     function onReady() {
         ns.client = new clientLib.Client(ns);
+        ns.client.setLogging(false);
         ns.m = new mandelbrot.Mandelbrot();
         ns.m.initWorkers();
 
-        // TODO: Don't need visible canvas - for debugging now.
-        ns.viewPort = $('#view-port')[0];
+        ns.m.renderKey($('#level-key')[0]);
 
         initMap();
 
@@ -106,6 +106,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         var isSignedIn = username != undefined;
         $('#username').text(isSignedIn ? username : 'anonymous');
         $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
+        if (username == "mckoss") {
+            $('.admin').show();
+        }
     }
 
     // Sign in (or out) depending on current user state.
@@ -129,15 +132,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         }
         else {
             $('#save').removeAttr('disabled');
-        }
-
-        var url = ns.client.getDocURL() + 'viewport.png';
-        var link = $('#viewport-png');
-        if (url) {
-            link.attr('href', url).show();
-        }
-        else {
-            link.hide();
         }
     }
 
