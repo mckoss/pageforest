@@ -77,6 +77,9 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
             var m = new mandelbrot.Mandelbrot();
             var msStart = new Date().getTime();
             var cInSet = 0;
+            var data = []
+
+            m.renderData(data, m.rcTop, 256, 256);
 
             var dx = (m.xMax - m.xMin) / 255;
             var dy = m.yMax / 255;

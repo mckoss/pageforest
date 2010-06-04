@@ -455,6 +455,65 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
 
 }); // startpad.base
+/* Begin file: cookies.js */
+namespace.lookup('org.startpad.cookies').define(function(ns) {
+    /*
+    Client-side cookie reader and writing helper.
+
+    Cookies can be quoted with "..." if they have spaces or other
+    special characters. Internal quotes may be escaped with a \
+    character These routines use encodeURIComponent to safely encode
+    and decode all special characters.
+    */
+    var base = namespace.lookup('org.startpad.base');
+
+    function setCookie(name, value, days, path) {
+        var expires = '';
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
+            expires = '; expires=' + date.toGMTString();
+        }
+        path = '; path=' + (path || '/');
+        document.cookie = encodeURIComponent(name) + '=' +
+            encodeURIComponent(value) + expires + path;
+    }
+
+    function getCookie(name) {
+        return ns.getCookies()[name];
+    }
+
+    function getCookies(name) {
+        var st = document.cookie;
+        var rgPairs = st.split(";");
+
+        var obj = {};
+        for (var i = 0; i < rgPairs.length; i++) {
+            // document.cookie never returns ;max-age, ;secure, etc. -
+            // just name value pairs
+            rgPairs[i] = base.strip(rgPairs[i]);
+            var rgC = rgPairs[i].split("=");
+            var val = decodeURIComponent(rgC[1]);
+            // Remove quotes around value string if any (and also
+            // replaces \" with ")
+            var rg = val.match('^"(.*)"$');
+            if (rg) {
+                val = rg[1].replace('\\"', '"');
+            }
+            obj[decodeURIComponent(rgC[0])] = val;
+        }
+        return obj;
+    }
+
+
+    // Exports
+    ns.extend({
+        setCookie: setCookie,
+        getCookie: getCookie,
+        getCookies: getCookies
+    });
+
+}); // org.startpad.cookies
 /* Begin file: random.js */
 namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
 
@@ -815,71 +874,58 @@ C.HMAC = function (hasher, message, key, options) {
 };
 
 })();
-/* Begin file: cookies.js */
-namespace.lookup('org.startpad.cookies').define(function(ns) {
-    /*
-    Client-side cookie reader and writing helper.
+/* Begin file: forms.js */
+namespace.lookup('com.pageforest.forms').define(function(ns) {
 
-    Cookies can be quoted with "..." if they have spaces or other
-    special characters. Internal quotes may be escaped with a \
-    character These routines use encodeURIComponent to safely encode
-    and decode all special characters.
-    */
-    var base = namespace.lookup('org.startpad.base');
-
-    function setCookie(name, value, days, path) {
-        var expires = '';
-        if (days) {
-            var date = new Date();
-            date.setTime(date.getTime() + days * 24 * 60 * 60 * 1000);
-            expires = '; expires=' + date.toGMTString();
-        }
-        path = '; path=' + (path || '/');
-        document.cookie = encodeURIComponent(name) + '=' +
-            encodeURIComponent(value) + expires + path;
-    }
-
-    function getCookie(name) {
-        return ns.getCookies()[name];
-    }
-
-    function getCookies(name) {
-        var st = document.cookie;
-        var rgPairs = st.split(";");
-
-        var obj = {};
-        for (var i = 0; i < rgPairs.length; i++) {
-            // document.cookie never returns ;max-age, ;secure, etc. -
-            // just name value pairs
-            rgPairs[i] = base.strip(rgPairs[i]);
-            var rgC = rgPairs[i].split("=");
-            var val = decodeURIComponent(rgC[1]);
-            // Remove quotes around value string if any (and also
-            // replaces \" with ")
-            var rg = val.match('^"(.*)"$');
-            if (rg) {
-                val = rg[1].replace('\\"', '"');
+    function showValidatorResults(fields, errors, options) {
+        var ignoreEmpty = options && options.ignoreEmpty;
+        for (var index = 0; index < fields.length; index++) {
+            var name = fields[index];
+            var html = errors[name];
+            if (ignoreEmpty && $("#id_" + name).val() === '') {
+                html = '';
+            } else if (html) {
+                html = '<span class="error">' + html + '</span>';
+            } else {
+                html = '<span class="success">OK</span>';
             }
-            obj[decodeURIComponent(rgC[0])] = val;
+            $("#validate_" + name).html(html);
         }
-        return obj;
     }
 
+    function postFormData(url, data, onSuccess, onValidate, onError) {
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: data,
+            dataType: "json",
+            success: function(message, status, xhr) {
+                if (message.status == 200) {
+                    if (onSuccess) {
+                        onSuccess(message, status, xhr);
+                    }
+                } else {
+                    if (onValidate) {
+                        onValidate(message, status, xhr);
+                    }
+                }
+            },
+            error: onError
+        });
+    }
 
-    // Exports
     ns.extend({
-        setCookie: setCookie,
-        getCookie: getCookie,
-        getCookies: getCookies
+        showValidatorResults: showValidatorResults,
+        postFormData: postFormData
     });
 
-}); // org.startpad.cookies
+}); // com.pageforest.forms
 /* Begin file: sign-up.js */
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
-    var util = namespace.util;
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
+    var forms = namespace.lookup('com.pageforest.forms');
 
     function validatePassword() {
         var password = $("#id_password").val();
@@ -898,26 +944,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         return false;
     }
 
-    function showValidatorResults(fields, errors, options) {
-        var force = options && options.force;
-        for (var index = 0; index < fields.length; index++) {
-            var name = fields[index];
-            if (name == 'tos' && !force) {
-                continue;
-            }
-            var html = errors[name];
-            if ($("#id_" + name).val() === '' && !force) {
-                html = '';
-            } else if (html) {
-                html = '<span class="error">' + html + '</span>';
-            } else {
-                html = '<span class="success">OK</span>';
-            }
-            $("#validate_" + name).html(html);
-        }
-    }
-
-    function onValidateSuccess(message, status, xhr, options) {
+    function onValidate(message, status, xhr, options) {
         // Validate password fields on the client side.
         var passwordErrors = validatePassword();
         for (var error in passwordErrors) {
@@ -925,17 +952,19 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
                 message[error] = passwordErrors[error];
             }
         }
-        showValidatorResults(
-            ["username", "password", "repeat", "email", "tos"],
-            message, options);
+        var fields = ['username', 'password', 'repeat', 'email'];
+        if (!options || !options.ignoreEmpty) {
+            fields.push('tos');
+        }
+        forms.showValidatorResults(fields, message, options);
     }
 
-    function onSubmitSuccess(message, status, xhr) {
-        if (message.status == 200) {
-            document.location = '/sign-in/';
-        } else {
-            onValidateSuccess(message, status, xhr, {force: true});
-        }
+    function onValidateIgnoreEmpty(message, status, xhr) {
+        onValidate(message, status, xhr, {ignoreEmpty: true});
+    }
+
+    function onSuccess(message, status, xhr) {
+        window.location = '/sign-in/';
     }
 
     function onError(xhr, status, message) {
@@ -954,24 +983,12 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         };
     }
 
-    function postFormData(data, success, error) {
-        $.ajax({
-            type: "POST",
-            url: "/sign-up/",
-            data: data,
-            dataType: "json",
-            success: success,
-            error: error
-        });
-    }
-
     function isChanged() {
         var username = $("#id_username").val();
         var password = $("#id_password").val();
         var repeat = $("#id_repeat").val();
         var email = $("#id_email").val();
-        var tos = $("#id_tos").attr('checked') ? 'checked' : '';
-        var oneline = [username, password, repeat, email, tos].join('|');
+        var oneline = [username, password, repeat, email].join('|');
         if (oneline == ns.previous) {
             return false;
         }
@@ -985,17 +1002,17 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         }
         var data = getFormData();
         data.validate = true;
-        postFormData(data, onValidateSuccess, onError);
+        forms.postFormData('/sign-up/', data,
+                           null, onValidateIgnoreEmpty, onError);
     }
 
     function onSubmit() {
         var errors = validatePassword();
         if (errors) {
-            showValidatorResults(['password', 'repeat'], errors,
-                                 {force: true});
+            forms.showValidatorResults(['password', 'repeat'], errors);
         } else {
-            var data = getFormData();
-            postFormData(data, onSubmitSuccess, onError);
+            forms.postFormData('/sign-up/', getFormData(),
+                               onSuccess, onValidate, onError);
         }
         return false;
     }
@@ -1043,20 +1060,23 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         resend: resend
     });
 
-}); // com.pageforest.sign-up
+}); // com.pageforest.auth.sign-up
 /* Begin file: sign-in.js */
-namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-    /*
-      Handle logging a user into Pageforest and optionally also log
-      them in to a Pageforest application.
+/*
+  Handle logging a user into Pageforest and optionally also log them
+  in to a Pageforest application.
 
-      A logged in use will get a session key on www.pageforest.com.
-      This script makes requests to appid.pageforest.com in order to
-      get a cookie set on the application domain when the user wants
-      to allow the application access to his store.
-    */
+  A logged in use will get a session key on www.pageforest.com. This
+  script makes requests to appid.pageforest.com in order to get a
+  cookie set on the application domain when the user wants to allow
+  the application access to his store.
+*/
+
+namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
+
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
+    var forms = namespace.lookup('com.pageforest.forms');
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -1156,13 +1176,27 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
     }
 
+    function onSuccess(message, status, xhr) {
+        window.location.reload();
+    }
+
+    function onValidate(message, status, xhr) {
+        forms.showValidatorResults(['username', 'password'], message);
+    }
+
+    function onError(xhr, status, message) {
+        console.error(status + ': ' + message);
+    }
+
     function onSubmit() {
-        // Replace plaintext password with HMAC-SHA1 before POST request.
-        var username = $("#id_username").val();
-        var password = $("#id_password").val();
-        var hmac = crypto.HMAC(crypto.SHA1, username, password);
-        $("#id_password").val(hmac);
-        return true;
+        var username = $('#id_username').val();
+        var password = $('#id_password').val();
+        var data = {
+            username: username,
+            password: crypto.HMAC(crypto.SHA1, username, password)
+        };
+        forms.postFormData('/sign-in/', data, onSuccess, onValidate, onError);
+        return false;
     }
 
     ns.extend({
@@ -1171,4 +1205,4 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         transferSession: transferSession
     });
 
-}); // com.pageforest.sign-in
+}); // com.pageforest.auth.sign-in

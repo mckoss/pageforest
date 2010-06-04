@@ -114,8 +114,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                             });
                         this.releaseCanvas(canvas);
                     });
-                });
-            });
+                }.fnMethod(this));
+            }.fnMethod(this));
         },
 
         updateTileImage: function (blobid) {
@@ -135,7 +135,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(blobid, undefined, this.docid,
+            this.client.getBlob(this.docid, blobid, undefined,
                                 function(status) {
                                     fn(status);
                                 });

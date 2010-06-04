@@ -13,8 +13,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         this.tileSize = new google.maps.Size(256, 256);
         this.maxZoom = 20;
 
-        this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256);
-        this.tiles.fnRender = this.renderTile.fnMethod();
+        this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256,
+                                       ns.m.rcTop);
+        this.tiles.fnRender = this.renderTile.fnMethod(this);
     }
 
     MandelbrotMapType.methods({
@@ -22,7 +23,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         alt: "Mandelbrot Map Type",
 
         getTile: function(coord, zoom) {
-            var tileName = ns.m.tileName(coord, zoom);
+            var tileName = this.tiles.tileName(coord, zoom);
             if (tileName == undefined) {
                 var div = document.createElement('div');
                 div.style.width = this.tileSize.width + 'px';
@@ -35,7 +36,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         },
 
         renderTile: function(tileName, fn) {
-            var rc = ns.m.rectFromTileName(tileName);
+            var rc = this.tiles.rectFromTileName(tileName);
             var msStart = new Date().getTime();
 
             // TODO: Use on-screen canvas now for debug purposes
