@@ -257,7 +257,7 @@ def list_remote_files():
     """
     Get the list of files on the remote server, with metadata.
     """
-    url = options.root_url + '?method=list&depth=unlimited'
+    url = options.root_url + '?method=list&depth=0'
     response = urllib2.urlopen(AuthRequest(url))
     options.listing = json.loads(response.read(), object_hook=as_datetime)
 
