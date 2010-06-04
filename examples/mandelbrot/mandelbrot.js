@@ -10,7 +10,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
     function initWorkers() {
         if (typeof Worker != 'undefined') {
-            worker = new Worker('mandelbrot-worker.js');
+            //worker = new Worker('mandelbrot-worker.js');
         }
     }
 

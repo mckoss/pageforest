@@ -15,10 +15,25 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var canvas;
             fn(canvas);
         };
-        this.fnReleaseCanvas = function (canvas) {};
     }
 
     Tiles.methods({
+        // Create the (shared) public document into which all tiles
+        // will be stored.
+        createTileDoc: function() {
+            this.client.putDoc(this.docid, {
+                title: "Tile Document - " + this.docid,
+                writers: ["public"],
+                blob: {version: this.docid}
+            }, function (saved) {
+                if (saved) {
+                    alert("Document created!");
+                    return;
+                }
+                alert("Error creating document.");
+            });
+        },
+
         // Calculate a tile name from the tile coordinates and
         // zoom level.  We choose tile prefix naming s.t.
         // childName = parentName + N (for N = 0, 1, 2, 3).
@@ -90,32 +105,46 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // and put it in the cache (and update the DOM image that
         // is displaying it when it is loaded).
         checkAndRender: function(blobid) {
-            this.checkTileExists(blobid, function (exists) {
+            // Save this in closure for use in callbacks, below.
+            var self = this;
+            console.log("car1", blobid);
+
+            self.checkTileExists(blobid, function (exists) {
+                console.log("car2", blobid);
                 // Tile already exists - no need to render it.
                 if (exists) {
                     return;
                 }
+                console.log("car3", blobid);
 
-                this.fnRender(blobid, function (canvas) {
-                    this.checkTileExists(blobid, function (exists) {
+                var canvas = document.createElement('canvas');
+                canvas.width = self.dxTile;
+                canvas.height = self.dyTile;
+
+                self.fnRender(blobid, canvas, function () {
+                    console.log("car4", blobid);
+                    self.checkTileExists(blobid, function (exists) {
+                        console.log("car5", blobid);
                         // Looks like we wasted our time - the tile is
                         // already rendered and stored in a blob by
                         // another client.
                         if (exists) {
-                            this.releaseCanvas(canvas);
-                            this.updateTileImage(blobid);
+                            self.updateTileImage(blobid);
                             return;
                         }
 
-                        this.client.putBlob(
-                            blobid, format.canvasToPNG(canvas), 'base64',
-                            this.docid, function () {
-                                this.updateTileImage(blobid);
-                            });
-                        this.releaseCanvas(canvas);
+                        console.log("car6", blobid);
+                        self.client.putBlob(self.docid, blobid,
+                                            format.canvasToPNG(canvas),
+                                            {encoding: 'base64'},
+                                            function () {
+                                                console.log("car7", blobid);
+                                                self.updateTileImage(blobid);
+                                            });
+                        console.log("car8", blobid);
                     });
-                }.fnMethod(this));
-            }.fnMethod(this));
+                });
+            });
         },
 
         updateTileImage: function (blobid) {
@@ -123,7 +152,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // REVIEW: should we add a random query param?
             var img = this.getImage(blobid);
             img.src = '';
-            img.src = this.docid + blobid;
+            img.src = this.client.getDocURL(this.docid, blobid);
         },
 
         checkTileExists: function(blobid, fn) {

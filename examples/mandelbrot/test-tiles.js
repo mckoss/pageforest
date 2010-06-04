@@ -8,7 +8,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
 
     var tilesSymbols = ['tileName', 'rectFromTileName', 'getImage',
                         'checkAndRender', 'updateTileImage',
-                        'checkTileExists'];
+                        'checkTileExists', 'createTileDoc'];
 
     function addTests(ts) {
         ts.addTest("Contract", function (ut) {
