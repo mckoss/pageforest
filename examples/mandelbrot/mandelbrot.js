@@ -143,7 +143,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             }
         },
 
-        render: function(canvas, xLeft, yTop, dx, dy, fn) {
+        render: function(canvas, rc, fn) {
             var cx = canvas.width;
             var cy = canvas.height;
             var ctx = canvas.getContext('2d');
@@ -156,8 +156,7 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                 }
             }
 
-            this.renderData(bitmap.data, xLeft, yTop, dx, dy,
-                            cx, cy,
+            this.renderData(bitmap.data, rc, cx, cy,
                             fn ? renderDone : undefined);
 
             if (!fn) {
@@ -165,12 +164,10 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             }
         },
 
-        renderData: function(data, xLeft, yTop, dx, dy, cx, cy, fn) {
+        renderData: function(data, rc, cx, cy, fn) {
             function onData(evt) {
                 var cb = cx * cy * 4;
                 var results = evt.data;
-                console.log(evt);
-                console.log("Copying " + evt.data.length + " bytes of data");
                 for (var i = 0; i < cb; i++) {
                     data[i] = results[i];
                 }
@@ -179,19 +176,19 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
             if (worker && fn) {
                 worker.onmessage = onData;
-                worker.postMessage([xLeft, yTop, dx, dy, cx, cy]);
+                worker.postMessage([rc, cx, cy]);
                 return;
             }
 
             // Per-pixel step values
-            dx = dx / cx;
-            dy = dy / cy;
+            var dx = (rc[2] - rc[0]) / cx;
+            var dy = (rc[3] - rc[1]) / cy;
 
-            var y = yTop;
+            var y = rc[1];
             var ib = 0;
             var rgba;
             for (var iy = 0; iy < cy; iy++) {
-                var x = xLeft;
+                var x = rc[0];
                 for (var ix = 0; ix < cx; ix++) {
                     var iters = this.iterations(x, y);
                     rgba = this.colorFromLevel(iters);
@@ -200,9 +197,8 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     }
                     x += dx;
                 }
-                y -= dy;
+                y += dy;
             }
-            console.log("Rendered " + ib + " bytes of data.");
             if (fn) {
                 fn();
             }

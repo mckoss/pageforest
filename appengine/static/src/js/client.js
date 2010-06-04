@@ -184,7 +184,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL(docid),
                 data: data,
                 error: this.errorHandler.fnMethod(this),
-                success: function(data) {
+                success: function() {
                     this.setCleanDoc(docid);
                     this.log('saved');
                     if (this.app.onSaveSuccess) {
@@ -387,7 +387,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 var encodedTags = base.map(options.tags, encodeURIComponent);
                 url += 'tags=' + encodedTags.join(',');
             }
-            this.log('saving blob: ' + blobid + ' (' + data.length + ')');
+            if (typeof data != "string") {
+                data = JSON.stringify(data);
+            }
+            this.log('saving blob: ' + docid + '/' + blobid +
+                     ' (' + data.length + ')');
             $.ajax({
                 type: 'PUT',
                 url: url,
@@ -401,15 +405,55 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     this.errorReport(code, message);
                     fn(false);
                 }.fnMethod(this),
-                success: function(data) {
+                success: function() {
                     this.log('saved blob: ' + blobid);
-                    if (this.app.onBlobSaveSuccess) {
-                        this.app.onBlobSaveSuccess();
-                    }
                     fn(true);
                 }.fnMethod(this)
             });
         },
+
+        // Read a child blob in the namespace of a document
+        // TODO: refactor to share code with putBlog
+        getBlob: function(docid, blobid, options, fn) {
+            fn = fn || function () {};
+            options = options || {};
+
+            if (docid == undefined) {
+                this.errorReport('unsaved_document', docUnsavedMessage);
+                fn(false);
+                return;
+            }
+
+            var url = this.getDocURL(docid) + blobid;
+            if (options.encoding || options.tags) {
+                url += '?';
+            }
+            if (options.encoding) {
+                url += 'transfer-encoding=' + options.encoding;
+            }
+            if (options.tags) {
+                var encodedTags = base.map(options.tags, encodeURIComponent);
+                url += 'tags=' + encodedTags.join(',');
+            }
+            this.log('reading blob: ' + docid + '/' + blobid);
+            $.ajax({
+                type: 'GET',
+                url: url,
+                dataType: options.dataType || 'json',
+                error: function (xmlhttp, textStatus, errorThrown) {
+                    var code = 'ajax_error/' + xmlhttp.status;
+                    var message = xmlhttp.statusText;
+                    this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+                    this.errorReport(code, message);
+                    fn(false);
+                }.fnMethod(this),
+                success: function(data) {
+                    this.log('saved blob: ' + blobid);
+                    fn(true, data);
+                }.fnMethod(this)
+            });
+        },
+
 
         // Return the URL for a document or blob.
         getDocURL: function(docid, blobid) {
