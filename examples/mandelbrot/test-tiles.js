@@ -80,7 +80,6 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
 
             for (var i = 0; i < tests.length; i++) {
                 var test = tests[i];
-                console.log(t.rectFromTileName(test[0]), test[1], i);
                 ut.assertEq(t.rectFromTileName(test[0]), test[1], i);
             }
         });
