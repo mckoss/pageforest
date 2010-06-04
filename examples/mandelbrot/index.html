@@ -31,16 +31,7 @@ $(document).ready(main.onReady);
 <fieldset>
   <div id="map_canvas"></div>
 
-  <canvas id="view-port" width="256" height="256"></canvas>
   <br/><canvas id="level-key" width="256" height="20"></canvas>
-
-  <div class="controls">
-    <p>Magnification: <span id="zoom"></span>
-      <input type="button" onclick="main.zoom(2);" value="+"/>
-      <input type="button" onclick="main.zoom(0.5);" value="-"/>
-    </p>
-    <p>Center: <span id="center"></span></p>
-  </div>
 
   <div class="save-bar">
     <input type="button" onclick="main.client.detach();" value="Make a Copy"/>
@@ -65,8 +56,6 @@ $(document).ready(main.onReady);
     computation.
   </p>
   <ol>
-    <li><a id="viewport-png" target="_blank">Saved Image</a>
-      - View the saved snapshot (PNG file).</li>
     <li><a target="_blank" href="http://en.wikipedia.org/wiki/Mandelbrot_set">The Mandelbrot Set</a>
       - Learn more about the Mandelbrot set on Wikipedia.</li>
     <li><a target="_blank" href="test-runner.html">Unit Tests</a>

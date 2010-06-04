@@ -1149,7 +1149,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     fn(false);
                 }.fnMethod(this),
                 success: function(data) {
-                    this.log('saved blob: ' + blobid);
+                    this.log('read blob: ' + url);
                     fn(true, data);
                 }.fnMethod(this)
             });

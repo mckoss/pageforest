@@ -218,8 +218,6 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             var dataOut = req.data;
             var cb = req.cb;
 
-            console.log(id, req);
-
             for (var i = 0; i < cb; i++) {
                 dataOut[i] = dataIn[i];
             }

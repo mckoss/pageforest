@@ -7,7 +7,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
 
     var mandelbrotSymbols = ['iterations', 'colorFromLevel', 'levelFromColor',
                              'render', 'renderData', 'renderKey',
-                             'rgbaFromColor', 'onData'];
+                             'rgbaFromColor', 'onData', 'initWorkers'];
 
     function addTests(ts) {
         ts.addTest("Contract", function (ut) {

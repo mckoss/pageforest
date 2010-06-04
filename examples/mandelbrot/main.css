@@ -100,3 +100,7 @@ div.save-bar {
 clear:both;
 float:right;
 }
+
+div.admin {
+display: none;
+}
