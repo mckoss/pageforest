@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import datetime
+import datetime
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -71,7 +71,7 @@ def email_verification(request, verification=None):
         except SignatureError, exception:
             error = exception.message
         if user and user.email_verified is None:
-            user.email_verified = datetime.now()
+            user.email_verified = datetime.datetime.now()
             user.put()
     else:
         if (request.method == 'POST'

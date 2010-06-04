@@ -34,12 +34,6 @@ class UserTest(AppTestCase):
         self.paul.set_password('secret')
         self.assertNotEqual(self.peter.password, self.paul.password)
 
-    def test_timestamps(self):
-        """The timestamps are properly set."""
-        self.assertTrue(self.peter.created >= self.start_time)
-        self.assertTrue(self.peter.last_login >= self.start_time)
-        self.assertTrue(self.paul.created >= self.peter.created)
-
     def test_unicode(self):
         """The __unicode__ method should return the username."""
         self.assertEqual(unicode(self.peter), 'Peter')
@@ -69,6 +63,7 @@ class MigratableTest(AppTestCase):
         User.current_schema = self.original['User.current_schema']
         User.migrate = self.original['User.migrate']
         logging.info = self.original['logging.info']
+        super(MigratableTest, self).tearDown()
 
     def test_migratable(self):
         """Test schema migration for User model."""
@@ -329,6 +324,7 @@ class SetSessionTest(AppTestCase):
 
     def tearDown(self):
         self.app_client.defaults['HTTP_REFERER'] = self.referer
+        super(SetSessionTest, self).tearDown()
 
     def test_set_session(self):
         """Simulate the JavaScript cross-site auth."""
