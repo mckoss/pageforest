@@ -5,24 +5,22 @@
 <meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
 <title>Mandelbrot Set Viewer</title>
 <link rel="stylesheet" type="text/css" href="main.css"/>
-<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js">
-    </script>
-<script src="http://maps.google.com/maps/api/js?sensor=false">
-    </script>
-<script src="/lib/0.6/js/json2.min.js"></script>
-<script src="/lib/beta/js/utils.js"></script>
-<script src="/static/src/js/vector.js"></script>
-<script src="main.js"></script>
-<script src="mandelbrot.js"></script>
-<script src="tiles.js"></script>
-<script>
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js"></script>
+<script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="/static/src/js/vector.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="mandelbrot.js"></script>
+<script type="text/javascript" src="tiles.js"></script>
+<script type="text/javascript">
 var main = namespace.lookup("com.pageforest.mandelbrot.main");
 $(document).ready(main.onReady);
 </script>
 </head>
 <body>
 <div class="page">
-<h1><script>document.write(document.title);</script></h1>
+<h1><script type="text/javascript">document.write(document.title);</script></h1>
 <div class="signin">
   <input type="button" id="signin" onclick="main.signInOut()" value="Sign in"/>
   <p>Current username: <span id="username"></span></p>
@@ -58,6 +56,7 @@ $(document).ready(main.onReady);
     computation.
   </p>
   <ol>
+    <li><a href="fullscreen.html">Fullscreen</a> - Use the entire browser window.</li>
     <li><a target="_blank" href="http://en.wikipedia.org/wiki/Mandelbrot_set">The Mandelbrot Set</a>
       - Learn more about the Mandelbrot set on Wikipedia.</li>
     <li><a target="_blank" href="test-runner.html">Unit Tests</a>
