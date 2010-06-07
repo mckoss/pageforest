@@ -51,7 +51,7 @@ def referer_is_trusted(request):
         # Trust the default domain for this app.
         return True
     for referer in request.app.referers:
-        # TODO: Accept https: if trusted_url starts with http:
+        # TODO: Accept https: if referer starts with http:
         if referer.startswith(referer):
             # Explicitly trusted by the app developer.
             return True

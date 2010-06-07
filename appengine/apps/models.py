@@ -25,7 +25,7 @@ class App(SuperDoc):
     http://github.com/username/scratch/index.html
     https://scrat.ch/
 
-    The trusted_urls property contains additional trusted URL prefixes
+    The referers property contains additional trusted URL prefixes
     for the Referer header check. If it starts with https, the Referer
     header must also start with https. Otherwise, both http and https
     are trusted. The default http://app_id.pageforest.com/ is always
