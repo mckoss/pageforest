@@ -198,6 +198,9 @@ SESSION_COOKIE_PATH = '/'
 SESSION_USER_NAME = 'sessionuser'
 JAVASCRIPT_READABLE_COOKIES = [SESSION_USER_NAME]
 
+# Limit the number of tags on each App, Doc, Blob.
+MAX_TAGS_PER_ENTITY = 10
+
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.load_template_source',

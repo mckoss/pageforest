@@ -259,18 +259,18 @@ class MimeTest(AppTestCase):
         self.assertEqual(response['Content-Type'], 'image/vnd.microsoft.icon')
 
 
-class TagsTest(AppTestCase):
+class TaggableTest(AppTestCase):
 
     def test_tags(self):
         """Query string options should set and filter tags on blobs."""
         self.sign_in(self.peter)
         self.assertContains(
-            self.app_client.put('/docs/mydoc/tagblob?tags=0,1%2C2,3+4'),
+            self.app_client.put('/docs/mydoc/tagblob?tags=0,1%2C2,3-4'),
             '"statusText": "Saved"')
         self.assertEquals(
             Blob.get_by_key_name('myapp/mydoc/tagblob/').tags,
-            ['0', '1', '2', '3 4'])
-        response = self.app_client.get('/docs/mydoc/?method=LIST&tag=3+4')
+            ['0', '1', '2', '3-4'])
+        response = self.app_client.get('/docs/mydoc/?method=LIST&tag=3-4')
         self.assertContains(response, """\
 {
   "tagblob": {
@@ -285,10 +285,20 @@ class TagsTest(AppTestCase):
       "0",
       "1",
       "2",
-      "3 4"
+      "3-4"
     ]
   }
 }""")
+
+    def test_max(self):
+        """The maximum number of tags should be enforced in the back-end."""
+        self.sign_in(self.peter)
+        self.assertContains(self.app_client.put(
+                '/docs/mydoc/tagblob?tags=0,1,2,3,4,5,6,7,8,9,10'),
+                            '"statusText": "Saved"')
+        self.assertEquals(
+            Blob.get_by_key_name('myapp/mydoc/tagblob/').tags,
+            list('0123456789'))
 
 
 class JsonArrayTest(AppTestCase):
