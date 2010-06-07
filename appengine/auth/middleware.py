@@ -43,6 +43,9 @@ def referer_is_trusted(request):
     if app_id == 'www':
         # Always trust the www front-end.
         return True
+    if app_id in settings.APPS_WITH_MIRROR:
+        # Always trust editor.pageforest.com.
+        return True
     if app_id == request.app.get_app_id():
         # Don't trust user-generated documents under /docs/.
         if path.startswith('/docs/'):
@@ -104,8 +107,12 @@ class AuthMiddleware(object):
         # Verify the session key, save error message for later.
         if session_key:
             try:
-                request.user = User.verify_session_key(
-                    session_key, request.app, request.subdomain)
+                if hasattr(request, 'original_app'):
+                    request.user = User.verify_session_key(
+                        session_key, request.original_app)
+                else:
+                    request.user = User.verify_session_key(
+                        session_key, request.app, request.subdomain)
             except SignatureError, error:
                 request.session_key_error = "Invalid %s cookie: %s" % (
                     settings.SESSION_COOKIE_NAME, unicode(error))

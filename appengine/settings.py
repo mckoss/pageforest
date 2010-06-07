@@ -108,6 +108,9 @@ DOMAINS = [
     'localhost',
 ]
 
+# Enable mirroring for trusted applications.
+APPS_WITH_MIRROR = ['editor']
+
 ANALYTICS_CODE = "UA-2072869-2"
 
 # Absolute path to the directory that holds media.
@@ -223,6 +226,7 @@ MIDDLEWARE_CLASSES = [
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.WwwMiddleware',        # Prepend www if it's missing.
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
+    'mirror.middleware.MirrorMiddleware',    # Cross-domain aliases.
     'apps.middleware.AppMiddleware',         # Get the app.
     'docs.middleware.DocMiddleware',         # Get the document.
     'auth.middleware.AuthMiddleware',        # Check access permissions.
@@ -254,6 +258,7 @@ INSTALLED_APPS = (
     'backups',
     'dashboard',
     'utils',
+    'mirror',
 )
 
 if '--with-xunit' in sys.argv:
