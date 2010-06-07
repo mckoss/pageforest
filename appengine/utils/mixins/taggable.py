@@ -43,4 +43,7 @@ class Taggable(db.Model):
         accepted = [tag for tag in tags
                     if TAG_REGEX_COMPILED.match(tag)
                     and not tag.startswith('pf:')]
+        # Limit the number of tags per entity.
+        if len(accepted + preserved) > settings.MAX_TAGS_PER_ENTITY:
+            accepted = accepted[:settings.MAX_TAGS_PER_ENTITY - len(preserved)]
         self.tags = accepted + preserved

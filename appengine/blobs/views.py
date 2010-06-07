@@ -230,8 +230,8 @@ def blob_put(request):
     blob = Blob(key_name=request.key_name, value=value)
     # Set blob tags from optional query string parameter.
     if 'tags' in request.GET:
-        blob.tags = [urllib.unquote_plus(tag)
-                     for tag in request.GET['tags'].split(',')]
+        blob.update_tags([urllib.unquote_plus(tag)
+                          for tag in request.GET['tags'].split(',')])
     # Save new blob to memcache and datastore.
     blob.put()
     response = HttpResponse('{"status": 200, "statusText": "Saved"}',
