@@ -17,10 +17,11 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
     Entity key name format: app_id/doc_id/key/with/slashes/
     The directory in this case: app_id/doc_id/key/with/
 
-    The sha1, valid_json and directory properties are automatically
-    updated before datastore put.
+    The size, sha1, valid_json and directory properties are
+    automatically updated before datastore put.
     """
     value = db.BlobProperty()
+    size = db.IntegerProperty()
     sha1 = db.StringProperty(indexed=False)
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
@@ -60,11 +61,12 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
 
     def put(self):
         """
-        Update sha1 and valid_json properties automatically before
-        each datastore put.
+        Update size, sha1, valid_json and directory properties
+        automatically before each datastore put.
         """
         key_parts = self.key().name().rstrip('/').split('/')
         self.directory = '/'.join(key_parts[:-1]) + '/'
+        self.size = len(self.value)
         self.sha1 = sha1(self.value).hexdigest()
         # Attempt to parse JSON unless the file extension indicates a
         # well-known MIME type that doesn't allow JSON data.
