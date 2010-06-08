@@ -267,10 +267,6 @@ class AppSignInTest(AppTestCase):
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertTrue(cookie['httponly'])
-        # And a copy of the app session to pass to myapp.pageforest.com
-        app_cookie = response.cookies['myapp-sessionkey']
-        self.assertTrue(app_cookie.value.startswith('myapp|peter|12'))
-        self.assertTrue(app_cookie['httponly'])
 
         # Simulate the redirect to the form
         response = self.www_client.get(SIGN_IN + 'myapp/')

@@ -43,7 +43,7 @@ $(document).ready(function() {
     <table>
     {% if user %}
         {% if cross_app %}
-            <input class="want_app" type="button" value="Sign In" onClick="signIn.transferSession('{{ session_key }}');return false;" />
+            <input class="want_app" type="button" value="Allow Access" onclick="signIn.transferSession('{{ session_key }}');return false;" />
         {% endif %}
     {% else %}
         {% for field in form %}
@@ -56,7 +56,7 @@ $(document).ready(function() {
             </tr>
         {% endfor %}
         <tr><td></td>
-          <td><input class="want_app" type="button" value="Sign In"
+          <td><input class="want_app" type="submit" value="Sign In"
                      onclick="return signIn.onSubmit()" /></td>
           <td></td>
         </tr>
@@ -68,7 +68,7 @@ $(document).ready(function() {
     {% if not user.email_verified %}
         <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
     {% endif %}
-    <p><a href="/sign-out/{{ cross_app.get_app_id }}">Sign Out</a></p>
+    <p><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
 {% else %}
     <p>Need to create account?  <a href="/sign-up">Join Now</a>.</p>
 {% endif %}

@@ -15,6 +15,7 @@ from google.appengine.api import mail
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils import crypto
+from utils.json import HttpJSONResponse
 
 from auth import SignatureError
 from auth.forms import SignUpForm, SignInForm
@@ -152,9 +153,9 @@ def sign_in(request, app_id=None):
         if app is None or app.is_www():
             return HttpResponseRedirect(reverse(sign_in))
     if app is None:
-        del form.fields['app_auth']
+        del form.fields['appauth']
     else:
-        form.fields['app_auth'].label = app_id.title()
+        form.fields['appauth'].label = app_id.title()
 
     if request.method == 'GET':
         app_session_key = None
@@ -179,20 +180,20 @@ def sign_in(request, app_id=None):
                             mimetype=settings.JSON_MIMETYPE)
 
     user = form.cleaned_data['user']
-    response = HttpResponse('{"status": 200, "statusText": "Authenticated"}',
-                            mimetype=settings.JSON_MIMETYPE)
+    json_dict = {'status': 200,
+                 'statusText': "Authenticated",
+                }
+    # If we've authorized the cross-app, set the app session key cookie.
+    if app and 'appauth' in form.cleaned_data and \
+            form.cleaned_data['appauth']:
+        json_dict['sessionKey'] = user.generate_session_key(app)
+
+    response = HttpJSONResponse(json_dict)
+
     # Whenever we sign in - generate a fresh www session key
     session_key = user.generate_session_key(request.app)
     response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
                         max_age=settings.SESSION_COOKIE_AGE)
-    # If we've authorized the cross-app, set the app session key cookie.
-    if app and 'app_auth' in form.cleaned_data and \
-            form.cleaned_data['app_auth']:
-        # Cookie names cannot contain unicode!
-        app_session_key = user.generate_session_key(app)
-        cookie_name = "%s-%s" % (str(app_id),
-                                 settings.SESSION_COOKIE_NAME)
-        response.set_cookie(cookie_name, app_session_key)
     return response
 
 
@@ -246,12 +247,6 @@ def sign_out(request, app_id=None):
     kwargs = app_id and {'app_id': app_id} or None
     response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
-    # Indicate that the sign_in page should clear the application
-    # cookie on load.
-    if app_id:
-        cookie_name = "%s-%s" % (str(app_id),
-                                settings.SESSION_COOKIE_NAME)
-        response.set_cookie(cookie_name, 'expired')
     return response
 
 
