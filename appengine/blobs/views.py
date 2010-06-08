@@ -167,6 +167,10 @@ def blob_list(request):
         prefix_filter(query, 'Blob', request.key_name, greater='>')
     strip_levels = request.key_name.count('/')
     result = {}
+    if keys_only:
+        limit = 1000
+    else:
+        limit = 100
     # FIXME: This fetches only 100 blobs with one datastore query.
     # With depth=2, deeply nested blobs will be ignored, so we may
     # return only few results even if there are more at depth 1 and 2.
@@ -176,7 +180,7 @@ def blob_list(request):
     # meta-info and tree structure, with memcache support.
     memcache_mapping = {}
     memcache_bytes = 0
-    for blob in query.fetch(100):
+    for blob in query.fetch(limit):
         if keys_only:
             key = blob
         else:
