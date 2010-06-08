@@ -2,7 +2,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var base = namespace.lookup('org.startpad.base');
 
-    /* Tiles - Heirarchical image caching library.
+    /* Tiles - Hierarchical image caching library.
      */
     function Tiles(client, docid, dx, dy, rect) {
         this.client = client;
@@ -39,18 +39,26 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // zoom level.  We choose tile prefix naming s.t.
         // childName = parentName + N (for N = 0, 1, 2, 3).
         // The top level tiles are then:
-        // '0.png',
-        // '00.png', '01.png', '02.png', '03.png',
-        // '000.png', '001.png', '002.png', ...
+        // 0.png
+        // 00.png, 01.png (02.png and 03.png are mirrored, not stored)
+        // 000.png, 001.png, 002.png, 003.png, ...
         tileName: function(coord, zoom) {
-            var maxTile = Math.pow(2, zoom) - 1;
+            var height = Math.pow(2, zoom);
             if (coord.x < 0 || coord.y < 0 ||
-                coord.x > maxTile || coord.y > maxTile) {
+                coord.x >= height || coord.y >= height) {
                 return undefined;
             }
+
+            var flip = "0";
             var name = "";
             var x = coord.x;
             var y = coord.y;
+
+            if (y >= height / 2) {
+                y = height - y - 1;
+                flip = "f";
+            }
+
             for (var i = zoom; i > 0; i--) {
                 var ix = x % 2;
                 var iy = y % 2;
@@ -58,7 +66,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 y = Math.floor(y / 2);
                 name = (2 * iy + ix).toString() + name;
             }
-            return '0' + name + '.png';
+            return flip + name + '.png';
         },
 
         rectFromTileName: function(tileName) {
@@ -96,7 +104,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = document.createElement('img');
             img.style.width = this.dxTile + 'px';
             img.style.height = this.dyTile + 'px';
-            img.src = this.client.getDocURL(this.docid, blobid);
+            img.src = this.client.getDocURL(
+                this.docid, '0' + blobid.substr(1));
+            if (blobid.charAt(0) == 'f') {
+                $(img).addClass('flip');
+            }
             this.tiles[blobid] = {img: img};
             this.checkAndRender(blobid);
             return img;
@@ -120,32 +132,23 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 canvas.height = self.dyTile;
 
                 self.fnRender(blobid, canvas, function () {
-                    self.checkTileExists(blobid, function (exists) {
-                        // Looks like we wasted our time - the tile is
-                        // already rendered and stored in a blob by
-                        // another client.
-                        if (exists) {
-                            self.updateTileImage(blobid);
-                            return;
+                    // Update the visible tile with the rendered pixels.
+                    self.tiles[blobid].img.src = canvas.toDataURL();
+                    // Upload tile to Pageforest backend for caching.
+                    blobid = '0' + blobid.substr(1);
+                    var tags = [];
+                    for (var level = 1; level <= 4; level++) {
+                        var stop = blobid.length - 4 - level;
+                        if (stop > 0) {
+                            tags.push('p' + level + ':' +
+                                      blobid.substr(0, stop));
                         }
-
-                        self.client.putBlob(self.docid, blobid,
-                                            format.canvasToPNG(canvas),
-                                            {encoding: 'base64'},
-                                            function () {
-                                                self.updateTileImage(blobid);
-                                            });
-                    });
+                    }
+                    self.client.putBlob(self.docid, blobid,
+                                        format.canvasToPNG(canvas),
+                                        {encoding: 'base64', tags: tags});
                 });
             });
-        },
-
-        updateTileImage: function (blobid) {
-            // Bounce the source field for force a reload of the tile?
-            // REVIEW: should we add a random query param?
-            var img = this.getImage(blobid);
-            img.src = this.client.getDocURL(this.docid, blobid) +
-                '?salt=' + base.randomInt(10000);
         },
 
         checkTileExists: function(blobid, fn) {
