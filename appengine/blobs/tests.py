@@ -102,6 +102,14 @@ class RestApiTest(AppTestCase):
         self.assertContains(response, '"statusText": "Deleted"')
         self.assertEqual(Blob.get_by_key_name(key_name), None)
 
+    def test_anonymous(self):
+        """Anonymous user can create blobs in a public writable document."""
+        self.doc.writers = ['public']
+        self.doc.put()
+        self.assertContains(
+            self.app_client.put('/docs/mydoc/newblob', 'data',
+                                content_type='text/plain'), '"Saved"')
+
 
 class JsonpApiTest(AppTestCase):
 
