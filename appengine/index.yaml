@@ -21,6 +21,11 @@ indexes:
   - name: youngest
     direction: desc
 
+- kind: Blob
+  properties:
+  - name: tags
+  - name: modified
+
 - kind: Doc
   properties:
   - name: owner
