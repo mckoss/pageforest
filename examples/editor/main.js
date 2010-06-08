@@ -1,12 +1,19 @@
 namespace.lookup('com.pageforest.editor').define(function (ns) {
 
-    function status(message) {
-        var lines = $('#status').html().split('<br />\n');
+    function showStatus(message) {
+        var lines = $('#status').html().split('\n');
         while (lines.length > 20) {
-            lines.pop();
+            lines.shift();
         }
-        lines.unshift(message);
-        $('#status').html(lines.join('<br />\n'));
+        lines.push(message + '<br />');
+        var div = $('div#status');
+        div.html(lines.join('\n'))
+        div.attr('scrollTop', div.attr('scrollHeight'));
+    }
+
+    // Called on any api errors.
+    function onError(xhr, status, message) {
+        showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
     function checkHash() {
@@ -33,19 +40,24 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             url: '/mirror/' + ns.app_id + '?method=list&depth=0',
             dataType: 'json',
             success: function(message) {
-                var filenames = [];
+                var lines = ['<table>'];
                 for (var filename in message) {
                     if (message.hasOwnProperty(filename)) {
                         var href = '#' + app_id + '/' + filename;
-                        filenames.push(
-                            message[filename].size +
-                            ' <a href="' + href + '">' + filename + '</a>');
+                        lines.push('<tr>' +
+                                   '<td class="quiet right">' +
+                                   message[filename].size + '</td>' +
+                                   '<td><a href="' + href + '">' +
+                                   filename + '</a></td>' +
+                                   '</tr>');
                     }
                 }
-                $('#navigator').html(filenames.join('<br />\n'));
-            }
+                lines.push('</table>');
+                $('#navigator').html(lines.join('\n'));
+                showStatus("Loaded app " + ns.app_id);
+            },
+            error: onError
         });
-        status("Loaded app " + ns.app_id);
     }
 
     function loadFile(filename) {
@@ -55,9 +67,10 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             dataType: 'text',
             success: function(message) {
                 $('div#editor textarea').val(message);
-            }
+                showStatus("Loaded file " + ns.filename);
+            },
+            error: onError
         });
-        status("Loaded file " + ns.filename);
     }
 
     function onReady() {
@@ -65,11 +78,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.app_id = '';
         ns.filename = '';
         setInterval(checkHash, 300);
-    }
-
-    // Called on any api errors.
-    function onError(status, message) {
-        $('#error').text(message);
     }
 
     // Called when the current user changes (signs in or out)
