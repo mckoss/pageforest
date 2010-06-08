@@ -377,16 +377,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             var url = this.getDocURL(docid) + blobid;
-            if (options.encoding || options.tags) {
-                url += '?';
-            }
+            var query_string = [];
             if (options.encoding) {
-                url += 'transfer-encoding=' + options.encoding;
+                query_string.push('transfer-encoding=' + options.encoding);
             }
             if (options.tags) {
-                var encodedTags = base.map(options.tags, encodeURIComponent);
-                url += 'tags=' + encodedTags.join(',');
+                query_string.push('tags=' + options.tags.join(','));
             }
+            query_string = query_string.join('&');
+            if (query_string) {
+                url += '?' + query_string;
+            }
+
             if (typeof data != "string") {
                 data = JSON.stringify(data);
             }
@@ -413,7 +415,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // Read a child blob in the namespace of a document
-        // TODO: refactor to share code with putBlog
+        // TODO: refactor to share code with putBlob
         getBlob: function(docid, blobid, options, fn) {
             fn = fn || function () {};
             options = options || {};
