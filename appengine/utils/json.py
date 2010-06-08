@@ -15,6 +15,22 @@ class ModelEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def is_valid_json(data):
+    """
+    Attempt to parse JSON data, return False if simplejson raised ValueError.
+
+    >>> is_valid_json('{}')
+    True
+    >>> is_valid_json('{')
+    False
+    """
+    try:
+        json.loads(data)
+        return True
+    except ValueError:
+        return False
+
+
 def assert_boolean(key, value):
     """
     Check that the value is True or False.

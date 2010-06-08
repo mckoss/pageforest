@@ -4,8 +4,8 @@ import mimetypes
 # Override and extend Python's mimetypes module.
 MIMETYPES = {
     '.js': 'application/javascript',
-    '.ico': 'image/vnd.microsoft.icon',
     '.json': 'application/json',
+    '.ico': 'image/vnd.microsoft.icon',
 }
 
 
@@ -24,7 +24,7 @@ def guess_mimetype(filename):
     >>> guess_mimetype('foo')
     'text/plain'
     """
-    (name, ext) = os.path.splitext(filename.lower())
+    (root, ext) = os.path.splitext(filename.lower())
     if ext in MIMETYPES:
         return MIMETYPES[ext]
     if not mimetypes.inited:
