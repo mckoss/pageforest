@@ -230,6 +230,9 @@ def blob_put(request):
         value = value.decode(transfer_encoding)
     # Create a new blob.
     blob = Blob(key_name=request.key_name, value=value)
+    # Enable incremental backup for application blobs, e.g. index.html.
+    if request.key_name.startswith('apps/'):
+        blob.tags.append('pf:backup')
     # Set blob tags from optional query string parameter.
     if 'tags' in request.GET:
         blob.update_tags([urllib.unquote_plus(tag)
