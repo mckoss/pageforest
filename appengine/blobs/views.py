@@ -11,7 +11,6 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
-from auth.decorators import login_required
 from utils.decorators import jsonp, run_in_transaction
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
@@ -213,7 +212,6 @@ def blob_list(request):
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
-@login_required
 def blob_put(request):
     """
     HTTP PUT request handler.
@@ -241,7 +239,6 @@ def blob_put(request):
     return response
 
 
-@login_required
 def blob_delete(request):
     """
     HTTP DELETE request handler.
@@ -268,7 +265,6 @@ def push_transaction(request, value, max_length):
     return len(array)
 
 
-@login_required
 def blob_push(request):
     """
     PUSH method request handler.
