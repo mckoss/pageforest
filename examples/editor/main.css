@@ -10,18 +10,35 @@ img {
   border: 0;
 }
 
+div#buttons,
 div#navigator,
-div#editor,
-div#status {
+div#status,
+div#editor {
   position: absolute;
+}
+
+div#navigator,
+div#status {
+  width: 240px;
   background: white;
+  overflow: auto;
+  padding: 5px;
+}
+
+div#buttons {
+  width: 250px;
+  text-align: right;
+  padding: 5px 0;
 }
 
 div#navigator {
-  width: 240px;
-  top: 0px;
+  top: 30px;
   bottom: 120px;
-  overflow: auto;
+}
+
+div#status {
+  height: 100px;
+  bottom: 0;
 }
 
 div#editor {
@@ -30,18 +47,6 @@ div#editor {
   top: 0;
   bottom: 0;
   padding: 0 0 0 5px;
-}
-
-div#status {
-  width: 240px;
-  height: 100px;
-  bottom: 0;
-  overflow: auto;
-}
-
-div#navigator,
-div#status {
-  padding: 5px;
 }
 
 input[type="text"] {
@@ -77,18 +82,4 @@ div#editor textarea {
   width: 100%;
   height: 100%;
   background: white;
-}
-
-input[type="button"] {
-  font-size: 24px;
-  margin: 5px;
-}
-
-div.signin {
-  text-align: right;
-}
-
-div.signin p {
-  font-style: italic;
-  font-size: 20px;
 }
