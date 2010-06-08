@@ -160,7 +160,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, blobid, {dataType: 'text'},
+            this.client.getBlob(this.docid, '0' + blobid.substr(1),
+                                {dataType: 'text'},
                                 function(status) {
                                     fn(status);
                                 });
