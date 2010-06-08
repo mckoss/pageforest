@@ -56,7 +56,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var tileLib = namespace.lookup('com.pageforest.tiles');
 
-    var tilesDocId = "v6";
+    var tilesDocId = "v7";
 
     function MandelbrotMapType() {
         this.tileSize = new google.maps.Size(256, 256);
