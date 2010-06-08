@@ -25,13 +25,9 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
         var app_id = parts.shift();
+        ns.loadApp(app_id);
         var filename = parts.join('/') || 'index.html';
-        if (app_id != ns.app_id) {
-            ns.loadApp(app_id);
-            ns.loadFile(filename);
-        } else if (filename != ns.filename) {
-            ns.loadFile(filename);
-        }
+        ns.loadFile(filename);
     }
 
     function loadApp(app_id) {
@@ -43,18 +39,19 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
                 var lines = ['<table>'];
                 for (var filename in message) {
                     if (message.hasOwnProperty(filename)) {
-                        var href = '#' + app_id + '/' + filename;
+                        var link = filename == ns.filename
+                            ? '<b>' + filename + '</b>'
+                            : '<a href="#' + app_id + '/' + filename + '">'
+                              + filename + '</a>';
                         lines.push('<tr>' +
                                    '<td class="quiet right">' +
                                    message[filename].size + '</td>' +
-                                   '<td><a href="' + href + '">' +
-                                   filename + '</a></td>' +
+                                   '<td>' + link + '</td>' +
                                    '</tr>');
                     }
                 }
                 lines.push('</table>');
                 $('#navigator').html(lines.join('\n'));
-                showStatus("Loaded app " + ns.app_id);
             },
             error: onError
         });
