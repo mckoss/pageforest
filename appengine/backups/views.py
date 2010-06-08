@@ -36,22 +36,22 @@ def download(request, key_name):
 
 
 def backup_users(request):
-    return incremental_backup(request, User, 400)
+    return incremental_backup(request, User)
 
 
 def backup_apps(request):
-    return incremental_backup(request, App, 400)
+    return incremental_backup(request, App)
 
 
 def backup_docs(request):
-    return incremental_backup(request, Doc, 200)
+    return incremental_backup(request, Doc)
 
 
 def backup_blobs(request):
-    return incremental_backup(request, Blob, 200)
+    return incremental_backup(request, Blob, limit=200)
 
 
-def incremental_backup(request, model, limit):
+def incremental_backup(request, model, limit=400):
     """
     Save recently modified entities to a zipfile for backup. The model
     (e.g. User, App, Document, Blob) must have a to_backup method that
@@ -76,7 +76,11 @@ def incremental_backup(request, model, limit):
     else:
         youngest = datetime(2010, 1, 1)
     # Find all entities that were modified since the last backup.
-    entities = model.all().filter('modified >', youngest).fetch(limit)
+    query = model.all()
+    if kind == 'Blob':
+        query.filter('tags', 'pf:backup')
+    query.filter('modified >', youngest)
+    entities = query.fetch(limit)
     if not entities:
         return HttpResponse("No %ss modified since %s." % (
                 kind.lower(), youngest.isoformat()), content_type='text/plain')
