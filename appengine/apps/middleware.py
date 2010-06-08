@@ -5,6 +5,8 @@ from django.http import HttpResponseNotFound
 
 from apps.models import App
 
+DEBUG_URL_REWRITE = False
+
 
 def app_id_from_trusted_domain(hostname):
     """
@@ -60,7 +62,7 @@ class AppMiddleware(object):
             if request.path_info.startswith('/app/'):
                 return HttpResponseNotFound("URL reserved for internal use.")
         else:
-            if settings.DEBUG:
+            if settings.DEBUG and DEBUG_URL_REWRITE:
                 logging.info(" original URL: http://" +
                              request.META.get('HTTP_HOST', '') +
                              request.get_full_path())
@@ -71,7 +73,7 @@ class AppMiddleware(object):
             request.path_info = '/app' + request.path_info
             request.META['PATH_INFO'] = request.path_info
             request.path = request.META['SCRIPT_NAME'] + request.path_info
-            if settings.DEBUG:
+            if settings.DEBUG and DEBUG_URL_REWRITE:
                 logging.info("rewritten URL: http://" +
                              request.META.get('HTTP_HOST', '') +
                              request.get_full_path())
