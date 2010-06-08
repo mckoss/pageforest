@@ -6,6 +6,8 @@ from django.conf import settings
 from django.utils import simplejson as json
 
 from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
+from utils.mime import guess_mimetype
+from utils.json import is_valid_json
 
 
 class Blob(Timestamped, Migratable, Taggable, Cacheable):
@@ -64,9 +66,12 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         key_parts = self.key().name().rstrip('/').split('/')
         self.directory = '/'.join(key_parts[:-1]) + '/'
         self.sha1 = sha1(self.value).hexdigest()
-        self.valid_json = True
-        try:
-            json.loads(self.value)
-        except ValueError:
+        # Attempt to parse JSON unless the file extension indicates a
+        # well-known MIME type that doesn't allow JSON data.
+        mimetype = guess_mimetype(key_parts[-1])
+        if mimetype.startswith('image/') or mimetype in [
+            'text/html', 'text/css', 'application/pdf']:
             self.valid_json = False
+        else:
+            self.valid_json = is_valid_json(self.value)
         super(Blob, self).put()
