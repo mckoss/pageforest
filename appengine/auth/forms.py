@@ -48,7 +48,8 @@ class UsernamePasswordForm(AjaxForm):
     Reusable form class with a username and password field.
     Both SignUpForm and SignInForm are subclasses of this.
     """
-    username = forms.CharField(min_length=2, max_length=30)
+    username = forms.CharField(min_length=2, max_length=30,
+        widget=forms.TextInput(attrs={'class': 'focus'}))
     password = forms.CharField(min_length=40, max_length=40,
         widget=forms.PasswordInput(render_value=False))
 
@@ -113,10 +114,10 @@ class SignInForm(UsernamePasswordForm):
     """
     User authentication form.
     """
-    app_auth = forms.BooleanField(
+    appauth = forms.BooleanField(
         required=False,
         label="Application",
-        widget=LabeledCheckbox(label="Allow access", field_id='app_auth'))
+        widget=LabeledCheckbox(label="Allow access", field_id='appauth'))
 
     def clean_username(self):
         """
@@ -135,6 +136,6 @@ class SignInForm(UsernamePasswordForm):
         """
         user = self.cleaned_data.get('user', None)
         password = self.cleaned_data.get('password', None)
-        if user and password and password.lower() != user.password.lower():
+        if user and password and password.lower() != user.password:
             raise forms.ValidationError("Invalid password.")
         return self.cleaned_data

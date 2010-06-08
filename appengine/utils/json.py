@@ -1,4 +1,7 @@
 from datetime import datetime
+from django.http import HttpResponse
+
+import settings
 
 from django.utils import simplejson as json
 
@@ -72,6 +75,19 @@ def assert_string_list(key, value):
     for item in value:
         if not isinstance(item, basestring):
             raise ValueError("Expected string values inside %s list." % key)
+
+
+class HttpJSONResponse(HttpResponse):
+    def __init__(self, json_dict=None, status=None):
+        if json_dict is None:
+            json_dict = {}
+        if status is None:
+            status = 200
+        json_dict['status'] = status
+        content = json.dumps(json_dict)
+        super(HttpJSONResponse, self).__init__(content,
+                                               mimetype=settings.JSON_MIMETYPE,
+                                               status=status)
 
 
 if __name__ == '__main__':
