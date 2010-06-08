@@ -184,11 +184,11 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             var dx = (rc[2] - rc[0]) / cx;
             var dy = (rc[3] - rc[1]) / cy;
 
-            var y = rc[1];
+            var y = rc[1] + dy / 2;
             var ib = 0;
             var rgba;
             for (var iy = 0; iy < cy; iy++) {
-                var x = rc[0];
+                var x = rc[0] + dx / 2;
                 for (var ix = 0; ix < cx; ix++) {
                     var iters = this.iterations(x, y);
                     rgba = this.colorFromLevel(iters);
