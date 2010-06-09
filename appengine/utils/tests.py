@@ -26,14 +26,22 @@ class CacheableTest(TestCase):
 
     def test_put_and_delete(self):
         """Test that put and delete will update memcache."""
-        entity = TestModel.cache_get_by_key_name('e')
-        self.assertEqual(entity, None)
+        # Check that the entity is not saved yet.
+        self.assertFalse(TestModel.exists('e'))
+        self.assertEqual(TestModel.cache_get_by_key_name('e'), None)
+        # Save entity.
         self.entity.put()
+        # Retrieve entity from memcache.
         entity = TestModel.cache_get_by_key_name('e')
         self.assertEqual(entity.key().name(), 'e')
+        # Test the exists method using memcache and datastore.
+        self.assertTrue(TestModel.exists('e'))
+        memcache.delete(self.entity.get_cache_key())
+        self.assertTrue(TestModel.exists('e'))
+        # Delete entity and test the exists method again.
         self.entity.delete()
-        entity = TestModel.cache_get_by_key_name('e')
-        self.assertEqual(entity, None)
+        self.assertFalse(TestModel.exists('e'))
+        self.assertEqual(TestModel.cache_get_by_key_name('e'), None)
 
     def test_get_by_key_name(self):
         """Test the overriden get_by_key_name method."""
