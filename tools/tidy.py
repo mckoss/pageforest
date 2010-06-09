@@ -3,6 +3,7 @@
 import os
 import sys
 import re
+import tempfile
 from time import time
 import subprocess
 from optparse import OptionParser
@@ -18,7 +19,7 @@ DOCTYPE_LINE = ' '.join("""
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 """.split())
 
-TEMP_FILENAME = os.path.join(pftool.root_dir, 'tidy.html')
+TEMP_FILENAME = os.path.join(tempfile.gettempdir(), 'tidy.html')
 
 IGNORE_MESSAGES = """
 """.strip().splitlines()
@@ -86,7 +87,6 @@ def main():
     parser = OptionParser(
         usage="%prog [options] module_or_package")
     parser.add_option('-v', '--verbose', action='store_true')
-    parser.add_option('-e', '--errors_only', action='store_true')
     parser.add_option('-f', '--force', action='store_true',
                       help="Force/fast - full check of all files.")
     (options, args) = parser.parse_args()
@@ -94,7 +94,7 @@ def main():
     if len(args) < 1:
         args.append('.')
 
-    command = ['tidy', '-e', '-q', '-utf8', TEMP_FILENAME]
+    command = ['tidy', '-e', '-q', '-utf8', '-xml', TEMP_FILENAME]
 
     walk = pftool.FileWalker(matches=('*.html',), pass_key='tidy')
     if options.force:
@@ -114,6 +114,9 @@ def main():
         if errors == 0:
             walk.set_passing(pass_key='tidy', file_path=filename)
         total_errors += errors
+    if os.path.exists(TEMP_FILENAME):
+        # print "Deleting", TEMP_FILENAME
+        os.unlink(TEMP_FILENAME)
 
     walk.save_pass_dict()
 
