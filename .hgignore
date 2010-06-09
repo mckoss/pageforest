@@ -7,7 +7,6 @@ syntax: glob
 \#*\#
 *.orig
 *.pass
-tidy.html
 TAGS
 nosetests.xml
 coverage.xml
