@@ -775,7 +775,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         }
 
-        this.setCleanDoc(undefined, true);
+        if (this.app.getDoc) {
+            this.setCleanDoc(undefined, true);
+        }
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -803,6 +805,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Load a document as the default document for this running application.
         load: function (docid) {
+            if (this.app.setDoc == undefined) {
+                return;
+            }
+
             // Your data is on notice.
             if (this.isDirty()) {
                 if (!this.confirmDiscard()) {
