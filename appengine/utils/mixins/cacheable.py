@@ -206,6 +206,19 @@ class Cacheable(Serializable):
         return instance
 
     @classmethod
+    def exists(cls, key_name):
+        """
+        Check if an entity with this key name exists, without actually
+        loading the entity from the datastore.
+        """
+        cache_key = cls.class_get_cache_key(key_name)
+        if memcache.get(cache_key) is not None:
+            return True
+        query = cls.all(keys_only=True)
+        query.filter('__key__', db.Key.from_path(cls.kind(), key_name))
+        return bool(query.count())
+
+    @classmethod
     def class_get_cache_key(cls, key_name):
         """
         Generate a cache key for this key_name.
