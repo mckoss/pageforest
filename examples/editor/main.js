@@ -112,8 +112,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         var isSignedIn = ns.client.username != undefined;
         if (isSignedIn) {
             ns.client.signOut();
-        }
-        else {
+        } else {
             ns.client.signIn();
         }
     }
