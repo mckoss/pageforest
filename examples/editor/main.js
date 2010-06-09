@@ -7,7 +7,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         }
         lines.push(message + '<br />');
         var div = $('div#status');
-        div.html(lines.join('\n'))
+        div.html(lines.join('\n'));
         div.attr('scrollTop', div.attr('scrollHeight'));
     }
 
