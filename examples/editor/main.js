@@ -39,10 +39,12 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
                 var lines = ['<table>'];
                 for (var filename in message) {
                     if (message.hasOwnProperty(filename)) {
-                        var link = filename == ns.filename
-                            ? '<b>' + filename + '</b>'
-                            : '<a href="#' + app_id + '/' + filename + '">'
-                              + filename + '</a>';
+                        var href = '#' + app_id + '/' + filename;
+                        var link = '<a href="' + href + '">' +
+                            filename + '</a>';
+                        if (filename == ns.filename) {
+                            link = '<b>' + filename + '</b>';
+                        }
                         lines.push('<tr>' +
                                    '<td class="quiet right">' +
                                    message[filename].size + '</td>' +
