@@ -1114,12 +1114,16 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
-    function transferSession(sessionKey) {
+    function transferSession(sessionKey, fn) {
         var url = ns.appAuthURL + "set-session/" + sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
                 return;
             }
+            if (fn) {
+                fn();
+            }
+
             // Close the window if this was used to
             // sign in to the app.
             if (sessionKey) {
@@ -1139,17 +1143,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
         ns.appId = appId;
         ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
-        // Check for a (session) cookie with the application
-        // session key. We clear it once used so it doesn't get
-        // retransmitted. This could be used to either sign-in OR
-        // sign-out of the application.
-        var sessionName = appId + "-sessionkey";
-        var appSession = cookies.getCookie(sessionName);
-        console.log("appSession: ", appSession);
-        if (appSession != undefined) {
-            cookies.setCookie(sessionName, 'expired', -1);
-            transferSession(appSession);
-        }
 
         // Nothing to do until the user signs in - page will reload
         // on form post.
@@ -1177,6 +1170,12 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSuccess(message, status, xhr) {
+        if (message.sessionKey) {
+            transferSession(message.sessionKey, function() {
+                window.location.reload();
+            });
+            return;
+        }
         window.location.reload();
     }
 
@@ -1193,16 +1192,29 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         var password = $('#id_password').val();
         var data = {
             username: username,
-            password: crypto.HMAC(crypto.SHA1, username, password)
+            password: crypto.HMAC(crypto.SHA1, username, password),
+            appauth: $('#id_appauth').attr('checked') ? 'checked' : ''
         };
-        forms.postFormData('/sign-in/', data, onSuccess, onValidate, onError);
+        forms.postFormData(window.location.pathname, data,
+                           onSuccess, onValidate, onError);
         return false;
     }
 
+    function signOut() {
+        if (ns.appId) {
+            transferSession('expired', function() {
+                window.location = '/sign-out/' + ns.appId;
+            });
+            return;
+        }
+        window.location = '/sign-out/';
+    }
+
     ns.extend({
-        onReady: onReady,
-        onSubmit: onSubmit,
-        transferSession: transferSession
+        'onReady': onReady,
+        'onSubmit': onSubmit,
+        'transferSession': transferSession,
+        'signOut': signOut
     });
 
 }); // com.pageforest.auth.sign-in
