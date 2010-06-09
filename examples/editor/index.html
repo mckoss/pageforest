@@ -7,7 +7,11 @@
   <link rel="stylesheet" type="text/css" href="main.css"/>
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js"></script>
   <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
-  <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+  <script type="text/javascript" src="/static/src/js/namespace.js"></script>
+  <script type="text/javascript" src="/static/src/js/base.js"></script>
+  <script type="text/javascript" src="/static/src/js/cookies.js"></script>
+  <script type="text/javascript" src="/static/src/js/format.js"></script>
+  <script type="text/javascript" src="/static/src/js/client.js"></script>
   <script type="text/javascript" src="main.js"></script>
   <script type="text/javascript">
     var editor = namespace.lookup("com.pageforest.editor");
@@ -15,12 +19,31 @@
   </script>
 </head>
 <body>
-  <div id="buttons">
-    <input type="button" onclick="editor.signInOut()" value="Sign In"/>
-    <input type="button" onclick="editor.saveFile()" value="Save"/>
+  <div id="top-left">
+    <form>
+      <input id="appid" type="text" name="appid" />
+      <input id="load" type="submit" value="Load"
+             onclick="editor.onClickLoad(); return false" />
+    </form>
+  </div>
+
+  <div id="top">
+    <input id="save" type="button" value="Save"
+           onclick="editor.onClickSave(); return false" />
+    <input id="revert" type="button" value="Revert"
+           onclick="editor.onClickRevert(); return false" />
+    <input id="lint" type="button"  value="Lint"
+           onclick="editor.onClickLint(); return false" />
+  </div>
+
+  <div id="top-right">
+    <span id="username">Hello, anonymous</span>
+    <input id="sign-in" type="button" value="Sign In"
+           onclick="editor.onClickSignInOut(); return false" />
   </div>
 
   <div id="navigator">
+    Enter your application ID above and click the Load button.
   </div>
 
   <div id="status">
