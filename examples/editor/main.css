@@ -10,11 +10,26 @@ img {
   border: 0;
 }
 
-div#buttons,
-div#navigator,
-div#status,
-div#editor {
+div {
   position: absolute;
+}
+
+div#top-left {
+  width: 240px;
+  padding: 5px;
+}
+
+div#top {
+  width: 240px;
+  left: 260px;
+  padding: 5px 0;
+}
+
+div#top-right {
+  width: 240px;
+  right: 0;
+  padding: 5px;
+  text-align: right;
 }
 
 div#navigator,
@@ -23,12 +38,6 @@ div#status {
   background: white;
   overflow: auto;
   padding: 5px;
-}
-
-div#buttons {
-  width: 250px;
-  text-align: right;
-  padding: 5px 0;
 }
 
 div#navigator {
@@ -44,14 +53,8 @@ div#status {
 div#editor {
   left: 260px;
   right: 0;
-  top: 0;
+  top: 30px;
   bottom: 0;
-  padding: 0 0 0 5px;
-}
-
-input[type="text"] {
-  font-size: 24px;
-  width: 800px;
 }
 
 table {

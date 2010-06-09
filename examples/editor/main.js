@@ -16,20 +16,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
-    function checkHash() {
-        var hash = window.location.hash;
-        if (hash == ns.hash) {
-            return;
-        }
-        ns.hash = hash;
-        // Split hash into app_id and filename.
-        var parts = hash.substr(1).split('/');
-        var app_id = parts.shift();
-        ns.loadApp(app_id);
-        var filename = parts.join('/') || 'index.html';
-        ns.loadFile(filename);
-    }
-
     function loadApp(app_id) {
         ns.app_id = app_id;
         $.ajax({
@@ -72,11 +58,29 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         });
     }
 
+    function checkHash() {
+        var hash = window.location.hash;
+        if (hash == ns.hash) {
+            return;
+        }
+        ns.hash = hash;
+        // Split hash into app_id and filename.
+        var parts = hash.substr(1).split('/');
+        var app_id = parts.shift();
+        loadApp(app_id);
+        var filename = parts.join('/') || 'app.json';
+        loadFile(filename);
+    }
+
     function onReady() {
+        var clientLib = namespace.lookup('com.pageforest.client');
+        ns.client = new clientLib.Client(ns);
+        ns.client.saveInterval = 0;  // Turn off auto-save.
         ns.hash = '';
         ns.app_id = '';
         ns.filename = '';
-        setInterval(checkHash, 300);
+        setInterval(checkHash, 200);
+        $('#appid').focus();
     }
 
     // Called when the current user changes (signs in or out)
@@ -86,8 +90,25 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
     }
 
+    function onClickLoad() {
+        window.location.hash = '#' + $('#appid').val();
+    }
+
+    function onClickSave() {
+        $.ajax({
+            type: 'PUT',
+            url: '/mirror/' + ns.app_id + '/' + ns.filename,
+            data: $('textarea').val(),
+            dataType: 'text',
+            success: function(message, status, xhr) {
+                showStatus(message);
+            },
+            error: onError
+        });
+    }
+
     // Sign in (or out) depending on current user state.
-    function signInOut() {
+    function onClickSignInOut() {
         var isSignedIn = ns.client.username != undefined;
         if (isSignedIn) {
             ns.client.signOut();
@@ -100,11 +121,10 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     // Exported functions
     ns.extend({
         onReady: onReady,
-        loadApp: loadApp,
-        loadFile: loadFile,
-        onError: onError,
         onUserChange: onUserChange,
-        signInOut: signInOut
+        onClickLoad: onClickLoad,
+        onClickSave: onClickSave,
+        onClickSignInOut: onClickSignInOut
     });
 
 });
