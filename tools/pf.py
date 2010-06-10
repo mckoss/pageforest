@@ -22,7 +22,7 @@ SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
-COMMANDS = ['get', 'put', 'test']  # TODO: Add list and delete.
+COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
 
@@ -262,7 +262,7 @@ def list_remote_files():
     options.listing = json.loads(response.read(), object_hook=as_datetime)
 
 
-def get(args):
+def get_command(args):
     """
     Download all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
@@ -282,7 +282,11 @@ def get(args):
         download_file(filename)
 
 
-def put(args):
+def put_command(args):
+    """
+    Upload all files for an app, except files that are already
+    up-to-date (same SHA-1 hash as remote).
+    """
     if not args:
         args = [name for name in os.listdir('.')
                 if not name.startswith('.')
@@ -304,7 +308,39 @@ def put(args):
             upload_file(path)
 
 
-def test(args):
+def list_command(args):
+    """
+    Show SHA-1 hash and filename for remote files. If args specified,
+    only show files that start with one of args.
+    """
+    list_remote_files()
+    filenames = options.listing.keys()
+    filenames.sort()
+    for filename in filenames:
+        ignore = bool(args)
+        for arg in args:
+            if filename.startswith(arg):
+                ignore = False
+        if not ignore:
+            print '%s  %s' % (options.listing[filename]['sha1'], filename)
+
+
+def sha1_command(args):
+    """
+    Print the SHA-1 hash of each argument.
+    """
+    for path in args:
+        if os.path.isdir(path):
+            sha1([os.path.join(path, filename)
+                  for filename in os.listdir(path)])
+        if os.path.isfile(path):
+            infile = open(path, 'rb')
+            data = infile.read()
+            infile.close()
+            print '%s  %s' % (hashlib.sha1(data).hexdigest(), path)
+
+
+def test_command(args):
     """
     Test all commands against a live server.
     """
@@ -353,7 +389,7 @@ def main():
     options.root_url = 'http://%s.%s.%s/' % (
         SUBDOMAIN, options.application, options.server)
     options.session_key = sign_in()
-    globals()[options.command](args)
+    globals()[options.command + '_command'](args)
     if options.save:
         save_credentials()
 
