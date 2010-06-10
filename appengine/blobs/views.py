@@ -17,7 +17,7 @@ from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
 from utils.shortcuts import get_int, get_bool, lookup_or_404
 
-from blobs.models import Blob
+from blobs.models import Blob, MAX_INTERNAL_SIZE
 
 ROOT_METHODS = ('GET', 'HEAD', 'LIST')
 INDEX_HTML_METHODS = ('GET', 'HEAD')
@@ -120,15 +120,15 @@ def blob_get(request):
 
 
 def prefix_filter(query, kind, start, stop=None,
-                  property='__key__', greater='>=', less='<'):
+                  property_name='__key__', greater='>=', less='<'):
     """
     Add a prefix filter to an existing query object.
     """
     if stop is None:
         # Increase the last character of the start value.
         stop = start[:-1] + chr(ord(start[-1]) + 1)
-    query.filter(property + ' ' + greater, db.Key.from_path(kind, start))
-    query.filter(property + ' ' + less, db.Key.from_path(kind, stop))
+    query.filter(property_name + ' ' + greater, db.Key.from_path(kind, start))
+    query.filter(property_name + ' ' + less, db.Key.from_path(kind, stop))
 
 
 def blob_list(request):
@@ -151,36 +151,27 @@ def blob_list(request):
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)
         depth = get_int(request.GET, 'depth', default=1)
-    except ValueError, e:
-        return HttpResponseBadRequest(e.message, 'text/plain')
+    except ValueError, error:
+        return HttpResponseBadRequest(error.message, 'text/plain')
     query = Blob.all(keys_only=keys_only)
     if 'tag' in request.GET:
-        tag = urllib.unquote_plus(request.GET['tag'])
-        query.filter('tags', tag)
+        query.filter('tags', urllib.unquote_plus(request.GET['tag']))
         depth = 0
     elif 'prefix' in request.GET:
-        prefix = request.GET['prefix']
-        prefix_filter(query, 'Blob', request.key_name + prefix)
+        prefix_filter(query, 'Blob', request.key_name + request.GET['prefix'])
     elif depth == 1:
         query.filter('directory', request.key_name)
     else:
         prefix_filter(query, 'Blob', request.key_name, greater='>')
     strip_levels = request.key_name.count('/')
     result = {}
-    if keys_only:
-        limit = 1000
-    else:
-        limit = 100
-    # FIXME: This fetches only 100 blobs with one datastore query.
+    # FIXME: This fetches only 1000 blobs with one datastore query.
     # With depth=2, deeply nested blobs will be ignored, so we may
     # return only few results even if there are more at depth 1 and 2.
     # To solve this, recursively run a datastore query for each child
     # up to the requested level. However, that may be very expensive.
-    # To solve this, introduce a separate model to store the blob
-    # meta-info and tree structure, with memcache support.
     memcache_mapping = {}
-    memcache_bytes = 0
-    for blob in query.fetch(limit):
+    for blob in query.fetch(1000):
         if keys_only:
             key = blob
         else:
@@ -203,12 +194,9 @@ def blob_list(request):
         if blob.tags:
             result[filename]['tags'] = blob.tags
         # Save small blobs directly to memcache.
-        if len(blob.value) < 20000 and memcache_bytes < 500000:
+        if len(blob._value) <= MAX_INTERNAL_SIZE:
             protobuf = blob.to_protobuf()
             memcache_mapping[blob.get_cache_key()] = protobuf
-            memcache_bytes += len(protobuf)
-    # REVIEW: The following line increases memory pressure in
-    # memcache. Maybe the expiration time would help?
     memcache.set_multi(memcache_mapping)
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
