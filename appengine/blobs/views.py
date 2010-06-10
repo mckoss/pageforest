@@ -195,8 +195,7 @@ def blob_list(request):
             result[filename]['tags'] = blob.tags
         # Save small blobs directly to memcache.
         if blob._value is None or len(blob._value) <= MAX_INTERNAL_SIZE:
-            protobuf = blob.to_protobuf()
-            memcache_mapping[blob.get_cache_key()] = protobuf
+            memcache_mapping[blob.get_cache_key()] = blob.to_protobuf()
     memcache.set_multi(memcache_mapping)
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
