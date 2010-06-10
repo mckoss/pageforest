@@ -604,7 +604,7 @@ class MigrationTest(AppTestCase):
         chunk = Chunk.cache_get_by_key_name(sha1)
         self.assertEqual(chunk.value, value)
         # Check that the big entity was upgraded.
-        self.assertEqual(big.schema, 2)
+        self.assertEqual(big.schema, 3)
         self.assertEqual(big.size, 2048)
         self.assertEqual(big.sha1, sha1)
         self.assertEqual(big.value, value)

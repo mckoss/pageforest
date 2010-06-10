@@ -38,12 +38,12 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
     """
     value = db.BlobProperty()
     size = db.IntegerProperty()
-    sha1 = db.StringProperty(indexed=False)
+    sha1 = db.StringProperty()
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
 
     # Schema version for Migratable mixin:
-    current_schema = 2
+    current_schema = 3
 
     def __init__(self, *args, **kwargs):
         super(Blob, self).__init__(*args, **kwargs)
