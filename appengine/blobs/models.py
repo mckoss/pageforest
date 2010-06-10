@@ -131,11 +131,14 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         result._value = self._value
         return result
 
-    def migrate(self, next_schema):
+    def migrate(self):
         """
-        Migrate from one model schema to the next.
+        Update entity to the current schema.
         """
-        if next_schema == 2:
+        if self.schema < 2:
             # Update metadata and store data in separate Chunk if large.
             value = self.__getattribute__('value')
             self.__setattr__('value', value)
+        if self.schema < 3:
+            # Datastore put will enable indexing for sha1 property.
+            pass

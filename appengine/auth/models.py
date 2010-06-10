@@ -56,9 +56,9 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         hmac = crypto.hmac_sha1(self.get_username(), password)
         return hmac == self.password
 
-    def migrate(self, next_schema):
+    def migrate(self):
         """
-        Migrate from one model schema to the next.
+        Update entity to the current schema.
         """
         pass
 
