@@ -2,7 +2,6 @@
 
 import re
 import os
-import sys
 import hmac
 import hashlib
 import urllib2
@@ -331,8 +330,8 @@ def sha1_command(args):
     """
     for path in args:
         if os.path.isdir(path):
-            sha1([os.path.join(path, filename)
-                  for filename in os.listdir(path)])
+            sha1_command([os.path.join(path, filename)
+                          for filename in os.listdir(path)])
         if os.path.isfile(path):
             infile = open(path, 'rb')
             data = infile.read()
@@ -360,12 +359,12 @@ def test_command(args):
     outfile.write(write_data)
     outfile.close()
     # Upload everything, then delete local files.
-    put([])
+    put_command([])
     os.unlink(META_FILENAME)
     os.unlink(filename)
     # TODO: Implement and test LIST command.
     # Download everything, then verify file content.
-    get([])
+    get_command([])
     infile = open(filename, 'r')
     read_data = infile.read()
     infile.close()
