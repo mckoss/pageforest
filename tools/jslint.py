@@ -41,6 +41,7 @@ Use '!==' to compare with '0'
 Do not use 'new' for side effects
 Missing radix parameter
 Read only.
+is better written in dot notation
 """.strip().splitlines(),
 
     'strict': """
