@@ -40,7 +40,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // childName = parentName + N (for N = 0, 1, 2, 3).
         // The top level tiles are then:
         // 0.png
-        // 00.png, 01.png (02.png and 03.png are mirrored, not stored)
+        // 00.png, 01.png
         // 000.png, 001.png, 002.png, 003.png, ...
         tileName: function(coord, zoom) {
             var maxTile = Math.pow(2, zoom) - 1;
@@ -126,12 +126,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     self.tiles[blobid].img.src = canvas.toDataURL();
                     // Upload tile to Pageforest backend for caching.
                     var tags = [];
+                    var tagString = blobid.substr(0, blobid.indexOf('.'));
                     for (var level = 1; level <= this.listDepth; level++) {
-                        var stop = blobid.length - this.listDepth - level;
-                        if (stop > 0) {
-                            tags.push('p' + level + ':' +
-                                      blobid.substr(0, stop));
+                        tagString = tagString.slice(0, -1);
+                        if (tagString.length == 0) {
+                            break;
                         }
+                        tags.push('p' + level + ':' + tagString);
                     }
                     self.client.putBlob(self.docid, blobid,
                                         format.canvasToPNG(canvas),
@@ -149,9 +150,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, '0' + blobid.substr(1),
-                                {dataType: 'text'},
+            this.client.getBlob(this.docid, blobid, {dataType: 'text'},
                                 function(status) {
+                                    if (tile && status) {
+                                        tile.exists = true;
+                                    }
                                     fn(status);
                                 });
         }

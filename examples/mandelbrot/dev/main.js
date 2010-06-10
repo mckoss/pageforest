@@ -72,6 +72,13 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         alt: "Mandelbrot Map Type",
 
         getTile: function(coord, zoom) {
+            var flip = false;
+
+            var count = Math.pow(2, zoom);
+            if (coord.y >= count / 2) {
+                flip = true;
+                coord.y = count - coord.y;
+            }
             var tileName = this.tiles.tileName(coord, zoom);
             if (tileName == undefined) {
                 var div = document.createElement('div');
@@ -80,7 +87,10 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 return div;
             }
 
-            return this.tiles.getImage(tileName);
+            var elt = this.tiles.getImage(tileName);
+            if (flip) {
+                $(elt).addClass('flip');
+            }
         },
 
         renderTile: function(tileName, canvas, fn) {
