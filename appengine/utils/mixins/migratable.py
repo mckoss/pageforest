@@ -19,7 +19,12 @@ class Migratable(db.Model):
     Models at once.
     """
     current_schema = 1
-    schema = db.IntegerProperty(default=1)
+    schema = db.IntegerProperty()
+
+    def __init__(self, *args, **kwargs):
+        super(Migratable, self).__init__(*args, **kwargs)
+        if not hasattr(self, 'schema') or not self.schema:
+            self.schema = self.current_schema
 
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):
@@ -41,14 +46,12 @@ class Migratable(db.Model):
         return model
 
     def update_schema(self):
-        schema_old = self.schema
-        if schema_old == self.current_schema:
+        if self.schema == self.current_schema:
             return
-
+        schema_old = self.schema
         while self.schema < self.current_schema:
             self.migrate(self.schema + 1)
             self.schema += 1
-
         self.put()
         logging.info("Updated %s entity %s from schema %d to %d" % (
                 self.kind(),
