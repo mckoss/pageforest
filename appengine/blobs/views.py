@@ -20,7 +20,6 @@ from utils.shortcuts import get_int, get_bool, lookup_or_404
 from blobs.models import Blob, MAX_INTERNAL_SIZE
 
 ROOT_METHODS = ('GET', 'HEAD', 'LIST')
-INDEX_HTML_METHODS = ('GET', 'HEAD')
 
 
 @jsonp
@@ -35,8 +34,6 @@ def dispatch(request, doc_id, key):
         if not key:
             if request.method not in ROOT_METHODS:
                 return HttpResponseNotAllowed(ROOT_METHODS)
-            if request.method in INDEX_HTML_METHODS:
-                key = 'index.html'
         # Static resources for this application.
         request.key_name = '/'.join(
             ('apps', request.app.get_app_id(), key))
@@ -96,14 +93,20 @@ def blob_get(request):
     """
     HTTP GET request handler.
     """
-    blob = lookup_or_404(Blob, request.key_name)
+    original_key_name = request.key_name
+    blob = Blob.get_by_key_name(request.key_name)
+    if blob is None and request.key_name.startswith('apps/'):
+        request.key_name += 'index.html/'
+        blob = Blob.get_by_key_name(request.key_name)
+    if blob is None:
+        raise Http404("Blob not found: " + original_key_name)
     etag = blob.get_etag()
     last_modified = http_datetime(blob.modified)
     if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
         or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
         blob = wait_for_update(request, blob)
         if blob is None:
-            raise Http404("Blob deleted: " + request.key_name)
+            raise Http404("Blob was deleted: " + request.key_name)
         etag = blob.get_etag()
         last_modified = http_datetime(blob.modified)
     if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
