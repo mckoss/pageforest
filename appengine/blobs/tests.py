@@ -1,5 +1,7 @@
 import datetime
+import hashlib
 
+from google.appengine.ext import db
 from google.appengine.api import memcache
 
 from django.conf import settings
@@ -10,32 +12,76 @@ from apps.tests import AppTestCase
 
 from apps.models import App
 from docs.models import Doc
-from blobs.models import Blob
+from blobs.models import Blob, Chunk
 
 
 class BlobTest(AppTestCase):
 
     def setUp(self):
         super(BlobTest, self).setUp()
-        self.key_name = 'myapp/mydoc/key/'
-        self.value = '<div>{"outside": "HTML", "inside": "JSON"}</div>\n'
-        self.blob = Blob(key_name=self.key_name, value=self.value)
+        self.blob = Blob(key_name='myapp/mydoc/key/', value='{"json": true}')
         self.blob.put()
+
+    def test_init(self):
+        """The constructor should update all attributes."""
+        self.assertEqual(self.blob.directory, 'myapp/mydoc/')
+        self.assertEqual(self.blob.value, '{"json": true}')
+        self.assertEqual(self.blob._value, '{"json": true}')
+        self.assertEqual(self.blob.size, 14)
+        self.assertEqual(self.blob.sha1,
+                         '3aa522f52117d62d31bd2dce6607923aacf1902f')
+        self.assertTrue(self.blob.valid_json)
+        self.assertEqual(len(self.blob.to_protobuf()), 327)
+
+    def test_clone(self):
+        """A cloned Blob should be identical, except key name and directory."""
+        clone = self.blob.clone('otherapp/mydoc/key/')
+        self.assertEqual(clone.directory, 'otherapp/mydoc/')
+        self.assertEqual(clone.value, '{"json": true}')
+        self.assertEqual(clone._value, '{"json": true}')
+        self.assertEqual(clone.size, 14)
+        self.assertEqual(clone.sha1,
+                         '3aa522f52117d62d31bd2dce6607923aacf1902f')
+        self.assertTrue(clone.valid_json)
+        self.assertEqual(len(self.blob.to_protobuf()), 327)
+
+    def test_setattr(self):
+        """Setting blob.value should update all attributes."""
+        self.blob.value = 'abc'
+        self.assertEqual(self.blob.value, 'abc')
+        self.assertEqual(self.blob._value, 'abc')
+        self.assertEqual(self.blob.size, 3)
+        self.assertEqual(self.blob.sha1,
+                         'a9993e364706816aba3e25717850c26c9cd0d89d')
+        self.assertFalse(self.blob.valid_json)
+        self.assertEqual(self.blob.directory, 'myapp/mydoc/')
+        self.assertEqual(len(self.blob.to_protobuf()), 316)
+
+    def test_setattr_chunk(self):
+        """Setting blob.value should create a new Chunk."""
+        self.blob.value = 'abc' * 1000
+        self.assertEqual(self.blob.value, 'abc' * 1000)
+        self.assertEqual(self.blob._value, None)
+        self.assertEqual(self.blob.size, 3000)
+        self.assertEqual(self.blob.sha1,
+                         '053b4dd5a9642608cc0b599e96f491154b37b2c6')
+        self.assertFalse(self.blob.valid_json)
+        self.assertEqual(self.blob.directory, 'myapp/mydoc/')
+        self.assertEqual(len(self.blob.to_protobuf()), 310)
+        self.assertTrue(Chunk.exists(self.blob.sha1))
+        self.assertEqual(Chunk.get_by_key_name(self.blob.sha1).value,
+                         'abc' * 1000)
 
     def test_get_by_key_name(self):
         """The get_by_key_name method should return the blob."""
-        blob = Blob.get_by_key_name(self.key_name)
-        self.assertEqual(blob.key().name(), self.key_name)
-        self.assertEqual(blob.value, self.value)
+        blob = Blob.get_by_key_name('myapp/mydoc/key/')
+        self.assertEqual(blob.key().name(), 'myapp/mydoc/key/')
+        self.assertEqual(blob.value, '{"json": true}')
 
     def test_get_absolute_url(self):
         """The get_absolute_url method should return the correct path."""
         self.assertEqual(self.blob.get_absolute_url(),
                          'http://myapp.pageforest.com/docs/mydoc/key/')
-
-    def test_directory(self):
-        """The parent key should be the key_name without the last level."""
-        self.assertEqual(self.blob.directory, 'myapp/mydoc/')
 
 
 class ClientErrorTest(AppTestCase):
@@ -533,3 +579,33 @@ class PrefixTest(AppTestCase):
         decoded = json.loads(response.content)
         self.assertEqual(set(decoded.keys()),
                          set(['pre', 'prefix', 'pro']))
+
+
+class MigrationTest(AppTestCase):
+
+    def test_schema_1_to_2(self):
+        """The Blob.migrate method should convert from schema 1 to 2."""
+        value = 'x' * 2048
+        sha1 = hashlib.sha1(value).hexdigest()
+        # Simulate a Blob with schema 1.
+        big = Blob(key_name='big', schema=1)
+        # Set the value directly on the big entity, without creating a Chunk.
+        db.Model.__setattr__(big, 'value', value)
+        # Old blobs with schema 1 don't have the size property.
+        big.size = None
+        self.assertEqual(big.schema, 1)
+        self.assertEqual(big.size, None)
+        self.assertEqual(big.value, value)
+        self.assertEqual(db.Model.__getattribute__(big, 'value'), value)
+        # Check that update_schema creates a Chunk.
+        self.assertFalse(Chunk.exists(sha1))
+        big.update_schema()
+        self.assertTrue(Chunk.exists(sha1))
+        chunk = Chunk.cache_get_by_key_name(sha1)
+        self.assertEqual(chunk.value, value)
+        # Check that the big entity was upgraded.
+        self.assertEqual(big.schema, 2)
+        self.assertEqual(big.size, 2048)
+        self.assertEqual(big.sha1, sha1)
+        self.assertEqual(big.value, value)
+        self.assertEqual(db.Model.__getattribute__(big, 'value'), None)
