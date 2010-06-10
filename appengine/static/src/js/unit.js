@@ -216,6 +216,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             // TODO: is there a way to get line numbers out of the callers?
             // A backtrace (outside of unit.js) would be the best way to
             // designate the location of failing asserts.
+            if (stNote == undefined) {
+                stNote = "";
+            }
             if (this.stTrace) {
                 stNote = (this.cAsserts + 1) + ". [" + this.stTrace + "] " +
                     stNote;
