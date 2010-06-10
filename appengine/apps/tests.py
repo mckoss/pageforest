@@ -13,6 +13,7 @@ from docs.models import Doc
 from blobs.models import Blob
 
 from apps.middleware import app_id_from_trusted_domain
+from utils.middleware import RequestMiddleware
 
 TAG_REGEX = re.compile(r'<[/!\w][^>]*>')
 
@@ -23,6 +24,8 @@ class AppTestCase(TestCase):
     """
 
     def setUp(self):
+        # Reset the RequestMiddleware.
+        RequestMiddleware.thread_local = None
         # Mock the datetime object.
         self.datetime = datetime.datetime
         datetime.datetime = Mock()
