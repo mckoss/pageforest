@@ -51,7 +51,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
             dataType: 'text',
             success: function(message) {
-                $('div#editor textarea').val(message);
+                $('div#editor textarea').val(message).focus();
                 showStatus("Loaded file " + ns.filename);
             },
             error: onError
