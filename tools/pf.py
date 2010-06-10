@@ -341,9 +341,10 @@ def put_command(args):
 
 
 def list_file(filename, metadata):
-    print '%s  %s  %s  (%d bytes)' % (
-        metadata['sha1'], filename,
-        metadata['modified'].strftime('%Y-%m-%d'),
+    print '%s  %s  %s\t(%d bytes)' % (
+        metadata['sha1'],
+        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
+        filename,
         metadata['size'])
 
 
