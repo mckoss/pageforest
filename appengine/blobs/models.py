@@ -47,11 +47,15 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
 
     def __init__(self, *args, **kwargs):
         super(Blob, self).__init__(*args, **kwargs)
-        if 'key_name' in kwargs:
-            key_parts = kwargs['key_name'].rstrip('/').split('/')
+        # Set the directory property from the key name.
+        key_name = kwargs.get('key_name')
+        if key_name is not None:
+            key_parts = key_name.rstrip('/').split('/')
             self.directory = '/'.join(key_parts[:-1]) + '/'
-        if 'value' in kwargs:
-            self.value = kwargs['value']
+        # Update the metadata properties: size, sha1, valid_json.
+        value = kwargs.get('value')
+        if value is not None:
+            self.__setattr__('value', value)
 
     def __getattribute__(self, name):
         """
@@ -85,12 +89,12 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         else:
             self.valid_json = is_valid_json(value)
         # Store value in a separate Chunk if it's large.
-        if self.size <= MAX_INTERNAL_SIZE:
-            super(Blob, self).__setattr__(name, value)
-        else:
-            super(Blob, self).__setattr__(name, None)
+        if self.size > MAX_INTERNAL_SIZE:
             if not Chunk.exists(self.sha1):
                 Chunk(key_name=self.sha1, value=value).put()
+            db.Model.__setattr__(self, name, None)
+        else:
+            db.Model.__setattr__(self, name, value)
 
     def get_absolute_url(self):
         """
@@ -132,5 +136,6 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         Migrate from one model schema to the next.
         """
         if next_schema == 2:
-            assert self.schema == 1
-            self.__setattr__('value', self.value)
+            # Update metadata and store data in separate Chunk if large.
+            value = self.__getattribute__('value')
+            self.__setattr__('value', value)
