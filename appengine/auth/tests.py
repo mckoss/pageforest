@@ -39,12 +39,6 @@ class UserTest(AppTestCase):
         self.assertEqual(unicode(self.peter), 'Peter')
         self.assertEqual(unicode(self.paul), 'Paul')
 
-    def test_migrate(self):
-        """The migrate method should not have side effects."""
-        self.assertEqual(self.peter.schema, 1)
-        self.peter.migrate(2)
-        self.assertEqual(self.peter.schema, 1)
-
 
 class MigratableTest(AppTestCase):
 
@@ -72,7 +66,7 @@ class MigratableTest(AppTestCase):
         self.assertEqual(self.peter.schema, 1)
         self.peter.update_schema()
         self.assertEqual(self.peter.schema, 3)
-        self.assertEqual(User.migrate.call_count, 2)
+        self.assertEqual(User.migrate.call_count, 1)
         self.assertEqual(logging.info.call_args[0][0],
                          u"Updated User entity peter from schema 1 to 3")
 

@@ -1,6 +1,7 @@
 import logging
 
 from google.appengine.ext import db
+from google.appengine.api import memcache
 
 
 class Migratable(db.Model):
@@ -11,12 +12,13 @@ class Migratable(db.Model):
     made and implement migrate() to perform the appropriate schema
     migrations to each successive version.
 
-    update_schema() - Call to ensure that the Model is using the
-        latest schema version. Note: This is called automatically
-        after each get_by_key_name and get_or_insert.
+    update_schema() - Call to ensure that the entity is using the
+        latest schema version. It will call the migrate method once
+        and then save the entity to memcache and datastore. Note: This
+        is called automatically in get_by_key_name and get_or_insert.
 
     update_schema_batch() - Migrates a group (default up to 100)
-    Models at once.
+        entities at once and save them back to memcache and datastore.
     """
     current_schema = 1
     schema = db.IntegerProperty()
@@ -32,49 +34,60 @@ class Migratable(db.Model):
         Override the Model.get_by_key_name method, to ensure the
         schema version is current after a read.
         """
-        model = super(Migratable, cls).get_by_key_name(key_name, parent)
-        if model is not None:
-            model.update_schema()
-        return model
+        entity = super(Migratable, cls).get_by_key_name(key_name, parent)
+        if entity is not None:
+            entity.update_schema()
+        return entity
 
     @classmethod
     def get_or_insert(cls, key_name, **kwargs):
-        # Look in cache first
-        model = super(Migratable, cls).get_or_insert(key_name, **kwargs)
-        if model is not None:
-            model.update_schema()
-        return model
+        """
+        Override the Model.get_or_insert method, to ensure the schema
+        version is current after a read.
+        """
+        entity = super(Migratable, cls).get_or_insert(key_name, **kwargs)
+        if entity is not None:
+            entity.update_schema()
+        return entity
 
     def update_schema(self):
+        """
+        Migrate entity to current_schema, then write it back to
+        memcache and datastore.
+        """
         if self.schema == self.current_schema:
             return
         schema_old = self.schema
-        while self.schema < self.current_schema:
-            self.migrate(self.schema + 1)
-            self.schema += 1
+        self.migrate()
+        self.schema = self.current_schema
         self.put()
         logging.info("Updated %s entity %s from schema %d to %d" % (
-                self.kind(),
-                self.key().id_or_name(),
-                schema_old,
-                self.schema))
+                self.kind(), self.key().id_or_name(), schema_old, self.schema))
 
     @classmethod
     def update_schema_batch(cls, limit=100):
         """
-        Migrate models in batch.
-
-        TODO: Deferred migration support via callback.
+        Migrate entities in batch.
         """
-        models = cls.all().filter('schema <', cls.current_schema).fetch(limit)
-        for model in models:
-            model.update_schema()
-        return len(models)
+        from utils.mixins import Cacheable
+        memcache_mapping = {}
+        query = cls.all().filter('schema <', cls.current_schema)
+        entities = query.fetch(limit)
+        for entity in entities:
+            entity.migrate()
+            entity.schema = entity.current_schema
+            if isinstance(entity, Cacheable):
+                memcache_mapping[entity.get_cache_key()] = entity.to_protobuf()
+        # Write all entities back to memcache and datastore.
+        memcache.set_multi(memcache_mapping)
+        db.put(entities)
+        return len(entities)
 
-    def migrate(self, next_schema):
+    def migrate(self):
         """
-        Abstract method, override in subclasses.
+        Abstract method, must be overriden in subclasses to update the
+        entity from self.schema to self.current_schema.
         """
         raise NotImplementedError(
-            "Application error - missing migration for %s to version %d" %
-            type(self).__name__, next_schema)
+            "Application error: %s.migrate method is not implemented." %
+            self.kind())
