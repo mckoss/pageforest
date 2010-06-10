@@ -24,6 +24,7 @@ class BlobTest(AppTestCase):
 
     def test_init(self):
         """The constructor should update all attributes."""
+        self.assertEqual(self.blob.schema, Blob.current_schema)
         self.assertEqual(self.blob.directory, 'myapp/mydoc/')
         self.assertEqual(self.blob.value, '{"json": true}')
         self.assertEqual(self.blob._value, '{"json": true}')
@@ -583,8 +584,8 @@ class PrefixTest(AppTestCase):
 
 class MigrationTest(AppTestCase):
 
-    def test_schema_1_to_2(self):
-        """The Blob.migrate method should convert from schema 1 to 2."""
+    def test_schema_1_to_3(self):
+        """The update_schema method should migrate from schema 1 to 3."""
         value = 'x' * 2048
         sha1 = hashlib.sha1(value).hexdigest()
         # Simulate a Blob with schema 1.
