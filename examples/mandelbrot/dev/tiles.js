@@ -91,6 +91,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // case it will be rendered in the client and then
         // stored in the cache.
         getImage: function(blobid) {
+            // REVIEW: Should we be caching images?  Could hamper google
+            // maps' ability to free space in the browser by dereferencing
+            // img objects.
             if (this.tiles[blobid]) {
                 return this.tiles[blobid].img;
             }
