@@ -71,6 +71,19 @@ def ago(delta):
     return "%d minute%s ago" % (minutes, plural(minutes))
 
 
+def hexdump(bytes, row=16):
+    """
+    >>> hexdump('123456789', 6)
+    31 32 33 34 35 36 '123456'
+    37 38 39 '789'
+    """
+    while bytes:
+        for char in bytes[:row]:
+            print '%02x' % ord(char),
+        print repr(bytes[:row])
+        bytes = bytes[row:]
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
