@@ -75,7 +75,7 @@ th, td {
 }
 
 div#editor textarea {
-  font-family: Inconsolata, "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono",
+  font-family: "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono",
                "Bitstream Vera Sans Mono", "Nimbus Mono L", Monaco,
                "Courier New", Courier, monospace;
   font-size: 16px;
