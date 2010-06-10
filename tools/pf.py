@@ -172,10 +172,11 @@ def upload_file(filename, url=None):
             urlpath = urlpath[2:]
         url = options.root_url + urlpath
     data = open(filename, 'rb').read()
+    keyname = filename.replace(os.path.sep, '/')
     # Check if the remote file is already up-to-date.
-    if hasattr(options, 'listing') and filename in options.listing:
+    if hasattr(options, 'listing') and keyname in options.listing:
         sha1 = hashlib.sha1(data).hexdigest()
-        if options.listing[filename]['sha1'] == sha1:
+        if options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
                 print("Already up-to-date: %s" % filename)
             return
@@ -236,7 +237,7 @@ def upload_dir(path):
         for filename in filenames:
             if filename_matches(filename, IGNORE_FILENAMES):
                 continue
-            upload_file(dirpath + '/' + filename)
+            upload_file(os.path.join(dirpath, filename))
 
 
 def sha1_file(filename):
