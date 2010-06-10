@@ -40,24 +40,18 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // childName = parentName + N (for N = 0, 1, 2, 3).
         // The top level tiles are then:
         // 0.png
-        // 00.png, 01.png (02.png and 03.png are mirrored, not stored)
+        // 00.png, 01.png
         // 000.png, 001.png, 002.png, 003.png, ...
         tileName: function(coord, zoom) {
-            var height = Math.pow(2, zoom);
+            var maxTile = Math.pow(2, zoom) - 1;
             if (coord.x < 0 || coord.y < 0 ||
-                coord.x >= height || coord.y >= height) {
+                coord.x > maxTile || coord.y > maxTile) {
                 return undefined;
             }
 
-            var flip = "0";
             var name = "";
             var x = coord.x;
             var y = coord.y;
-
-            if (y >= height / 2) {
-                y = height - y - 1;
-                flip = "f";
-            }
 
             for (var i = zoom; i > 0; i--) {
                 var ix = x % 2;
@@ -66,7 +60,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 y = Math.floor(y / 2);
                 name = (2 * iy + ix).toString() + name;
             }
-            return flip + name + '.png';
+            return '0' + name + '.png';
         },
 
         rectFromTileName: function(tileName) {
@@ -97,6 +91,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // case it will be rendered in the client and then
         // stored in the cache.
         getImage: function(blobid) {
+            // REVIEW: Should we be caching images?  Could hamper google
+            // maps' ability to free space in the browser by dereferencing
+            // img objects.
             if (this.tiles[blobid]) {
                 return this.tiles[blobid].img;
             }
@@ -104,11 +101,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = document.createElement('img');
             img.style.width = this.dxTile + 'px';
             img.style.height = this.dyTile + 'px';
-            img.src = this.client.getDocURL(
-                this.docid, '0' + blobid.substr(1));
-            if (blobid.charAt(0) == 'f') {
-                $(img).addClass('flip');
-            }
+            img.src = this.client.getDocURL(this.docid, blobid);
             this.tiles[blobid] = {img: img};
             this.checkAndRender(blobid);
             return img;
@@ -135,14 +128,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     // Update the visible tile with the rendered pixels.
                     self.tiles[blobid].img.src = canvas.toDataURL();
                     // Upload tile to Pageforest backend for caching.
-                    blobid = '0' + blobid.substr(1);
                     var tags = [];
-                    for (var level = 1; level <= 4; level++) {
-                        var stop = blobid.length - 4 - level;
-                        if (stop > 0) {
-                            tags.push('p' + level + ':' +
-                                      blobid.substr(0, stop));
+                    var tagString = blobid.substr(0, blobid.indexOf('.'));
+                    for (var level = 1; level <= this.listDepth; level++) {
+                        tagString = tagString.slice(0, -1);
+                        if (tagString.length == 0) {
+                            break;
                         }
+                        tags.push('p' + level + ':' + tagString);
                     }
                     self.client.putBlob(self.docid, blobid,
                                         format.canvasToPNG(canvas),
@@ -160,9 +153,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, '0' + blobid.substr(1),
-                                {dataType: 'text'},
+            this.client.getBlob(this.docid, blobid, {dataType: 'text'},
                                 function(status) {
+                                    if (tile && status) {
+                                        tile.exists = true;
+                                    }
                                     fn(status);
                                 });
         }

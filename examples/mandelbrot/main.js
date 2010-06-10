@@ -65,6 +65,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256,
                                        ns.m.rcTop);
         this.tiles.fnRender = this.renderTile.fnMethod(this);
+        // Keep track of our flipTiles - to update when the original
+        // is rendered.
+        this.flipTiles = {};
     }
 
     MandelbrotMapType.methods({
@@ -72,27 +75,46 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         alt: "Mandelbrot Map Type",
 
         getTile: function(coord, zoom) {
-            var tileName = this.tiles.tileName(coord, zoom);
+            var flip = false;
+            var y = coord.y;
+            var yMax = Math.pow(2, zoom);
+            var div;
+
+            // Only render tiles in the "Northern Hemisphere"
+            if (y >= yMax / 2) {
+                flip = true;
+                y = (yMax - 1) - y;
+            }
+
+            var tileName = this.tiles.tileName({x: coord.x, y: y}, zoom);
             if (tileName == undefined) {
-                var div = document.createElement('div');
+                div = document.createElement('div');
                 div.style.width = this.tileSize.width + 'px';
                 div.style.height = this.tileSize.height + 'px';
                 return div;
             }
 
-            return this.tiles.getImage(tileName);
+            if (tileName[1] == '2' || tileName[1] == '3') {
+                throw new Error("Never ask for southern hemisphere tiles!");
+            }
+
+            var img = this.tiles.getImage(tileName);
+            if (flip) {
+                var imgFlip = img.cloneNode();
+                $(imgFlip).addClass('flip');
+                this.flipTiles[tileName] = imgFlip;
+                return imgFlip;
+            }
+            return img;
         },
 
         renderTile: function(tileName, canvas, fn) {
             var rc = this.tiles.rectFromTileName(tileName);
-            var msStart = new Date().getTime();
-
+            var self = this;
             ns.m.render(canvas, rc, function() {
-                var ms = new Date().getTime() - msStart;
-                var pps = Math.floor(256 * 256 / ms * 1000);
-                ns.onError("", "Drawing speed: " +
-                           '(' + tileName + ') ' +
-                           format.thousands(pps) + " pixels per second.");
+                if (self.flipTiles[tileName]) {
+                    self.flipTiles[tileName].src = canvas.toDataURL();
+                }
                 fn();
             });
         }
