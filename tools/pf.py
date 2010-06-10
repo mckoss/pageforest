@@ -20,7 +20,7 @@ except ImportError:
 SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
-IGNORE_FILENAMES = ['pf.py', '.*', '*~', '*.bak', '*.rej', '*.orig']
+IGNORE_FILENAMES = ['pf.py', '.*', '*~', '#*#', '*.bak', '*.rej', '*.orig']
 COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
@@ -49,6 +49,13 @@ class PutRequest(AuthRequest):
 
     def get_method(self):
         return 'PUT'
+
+
+class DeleteRequest(AuthRequest):
+    """Request to remove a file with HTTP DELETE."""
+
+    def get_method(self):
+        return 'DELETE'
 
 
 def hmac_sha1(key, message):
@@ -188,6 +195,22 @@ def upload_file(filename, url=None):
         print(response.read())
 
 
+def delete_file(filename, url=None):
+    """
+    Upload one file to the server.
+    """
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = options.root_url + urlpath
+    if not options.quiet:
+        print("Deleting: %s" % url)
+    response = urllib2.urlopen(DeleteRequest(url))
+    if options.verbose:
+        print(response.read())
+
+
 def download_file(filename, url=None):
     """
     Download a file from the server.
@@ -217,7 +240,16 @@ def download_file(filename, url=None):
     outfile.close()
 
 
-def filename_matches(filename, patterns):
+def prefix_match(args, filename):
+    """
+    Check if the filename starts with one of the prefixes.
+    """
+    for arg in args:
+        if filename.startswith(arg):
+            return True
+
+
+def pattern_match(patterns, filename):
     """
     Check if the filename matches any of the patterns.
     """
@@ -235,7 +267,7 @@ def upload_dir(path):
             if dirname.startswith('.'):
                 dirnames.remove(dirname)
         for filename in filenames:
-            if filename_matches(filename, IGNORE_FILENAMES):
+            if pattern_match(IGNORE_FILENAMES, filename):
                 continue
             upload_file(os.path.join(dirpath, filename))
 
@@ -290,7 +322,7 @@ def put_command(args):
     if not args:
         args = [name for name in os.listdir('.')
                 if not name.startswith('.')
-                and not filename_matches(name, IGNORE_FILENAMES)]
+                and not pattern_match(IGNORE_FILENAMES, name)]
     # REVIEW: The following doesn't work if you use "pf put <folder>"
     # to upload some files including META_FILENAME inside <folder>.
     # Should we require that "pf put" is always run in the same folder
@@ -308,6 +340,38 @@ def put_command(args):
             upload_file(path)
 
 
+def list_file(filename, metadata):
+    print '%s  %s  %s  (%d bytes)' % (
+        metadata['sha1'], filename,
+        metadata['modified'].strftime('%Y-%m-%d'),
+        metadata['size'])
+
+
+def vacuum_command(args):
+    """
+    List remote files that no longer exist locally, then delete them
+    (after prompting the user).
+    """
+    list_remote_files()
+    filenames = options.listing.keys()
+    filenames.sort()
+    selected = []
+    for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
+        if os.path.isfile(filename):
+            continue
+        list_file(filename, options.listing[filename])
+        selected.append(filename)
+    if not selected:
+        return
+    answer = raw_input(
+        "Are you sure you want to DELETE %d remote files? " % len(selected))
+    if answer.lower().startswith('y'):
+        for filename in selected:
+            delete_file(filename)
+
+
 def list_command(args):
     """
     Show SHA-1 hash and filename for remote files. If args specified,
@@ -317,12 +381,9 @@ def list_command(args):
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
-        ignore = bool(args)
-        for arg in args:
-            if filename.startswith(arg):
-                ignore = False
-        if not ignore:
-            print '%s  %s' % (options.listing[filename]['sha1'], filename)
+        if args and not prefix_match(args, filename):
+            continue
+        list_file(filename, options.listing[filename])
 
 
 def sha1_command(args):
