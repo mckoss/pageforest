@@ -186,15 +186,15 @@ def blob_list(request):
             result[filename] = {}
             continue
         result[filename] = {
+            'size': blob.size,
+            'sha1': blob.sha1,
             'json': blob.valid_json,
             'modified': blob.modified,
-            'sha1': blob.sha1,
-            'size': len(blob.value),
             }
         if blob.tags:
             result[filename]['tags'] = blob.tags
         # Save small blobs directly to memcache.
-        if len(blob._value) <= MAX_INTERNAL_SIZE:
+        if blob._value is None or len(blob._value) <= MAX_INTERNAL_SIZE:
             protobuf = blob.to_protobuf()
             memcache_mapping[blob.get_cache_key()] = protobuf
     memcache.set_multi(memcache_mapping)
