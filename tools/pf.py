@@ -328,6 +328,8 @@ def sha1_command(args):
     """
     Print the SHA-1 hash of each argument.
     """
+    if not args:
+        args = os.listdir('.')
     for path in args:
         if os.path.isdir(path):
             sha1_command([os.path.join(path, filename)
@@ -358,11 +360,14 @@ def test_command(args):
     outfile = open(filename, 'w')
     outfile.write(write_data)
     outfile.close()
+    # Show local SHA-1 hashes.
+    sha1_command(['test.txt'])
     # Upload everything, then delete local files.
     put_command([])
     os.unlink(META_FILENAME)
     os.unlink(filename)
-    # TODO: Implement and test LIST command.
+    # Show remote SHA-1 hashes.
+    list_command([])
     # Download everything, then verify file content.
     get_command([])
     infile = open(filename, 'r')
