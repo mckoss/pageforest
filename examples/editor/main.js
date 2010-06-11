@@ -1,14 +1,7 @@
 namespace.lookup('com.pageforest.editor').define(function (ns) {
 
     function showStatus(message) {
-        var lines = $('#status').html().split('\n');
-        while (lines.length > 20) {
-            lines.shift();
-        }
-        lines.push(message + '<br />');
-        var div = $('div#status');
-        div.html(lines.join('\n'));
-        div.attr('scrollTop', div.attr('scrollHeight'));
+        $('#status').html(message);
     }
 
     // Called on any api errors.
@@ -45,27 +38,33 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         });
     }
 
+    function onLoadFileSuccess(message, status, xhr) {
+        if (ns.codemirror == undefined) {
+            $('#code').val(message).focus();
+            return;
+        }
+        ns.codemirror.setCode(message);
+        if (ns.filename.substr(-5) == '.html') {
+            ns.codemirror.setParser('HTMLMixedParser');
+        } else if (ns.filename.substr(-3) == '.js') {
+            ns.codemirror.setParser('JSParser');
+        } else if (ns.filename.substr(-5) == '.json') {
+            ns.codemirror.setParser('JSParser');
+        } else if (ns.filename.substr(-4) == '.css') {
+            ns.codemirror.setParser('CSSParser');
+        } else {
+            ns.codemirror.setParser('DummyParser');
+        }
+        ns.codemirror.focus();
+        showStatus("Loaded file " + ns.filename);
+    }
+
     function loadFile(filename) {
         ns.filename = filename;
         $.ajax({
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
             dataType: 'text',
-            success: function(message) {
-                ns.codemirror.setCode(message);
-                if (filename.substr(-5) == '.html') {
-                    ns.codemirror.setParser('HTMLMixedParser');
-                } else if (filename.substr(-3) == '.js') {
-                    ns.codemirror.setParser('JSParser');
-                } else if (filename.substr(-5) == '.json') {
-                    ns.codemirror.setParser('JSParser');
-                } else if (filename.substr(-4) == '.css') {
-                    ns.codemirror.setParser('CSSParser');
-                } else {
-                    ns.codemirror.setParser('DummyParser');
-                }
-                ns.codemirror.focus();
-                showStatus("Loaded file " + ns.filename);
-            },
+            success: onLoadFileSuccess,
             error: onError
         });
     }
@@ -91,8 +90,13 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.hash = '';
         ns.app_id = '';
         ns.filename = '';
-        // Load CodeMirror editor.
-        ns.codemirror = CodeMirror.fromTextArea("code", {
+        // Start polling for window.location.hash changes.
+        setInterval(checkHash, 200);
+    }
+
+    // Convert textarea to CodeMirror editor with syntax highlighting.
+    function onClickCodeMirror() {
+        ns.codemirror = window.CodeMirror.fromTextArea("code", {
             height: "100%",
             path: "codemirror/js/",
             parserfile: [
@@ -101,14 +105,14 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
                 "tokenizejavascript.js",
                 "parsejavascript.js",
                 "parsehtmlmixed.js",
-                "parsedummy.js"],
+                "parsedummy.js"
+            ],
             stylesheet: [
                 "codemirror/css/xmlcolors.css",
                 "codemirror/css/csscolors.css",
-                "codemirror/css/jscolors.css"]
+                "codemirror/css/jscolors.css"
+            ]
         });
-        // Start polling for window.location.hash changes.
-        setInterval(checkHash, 200);
     }
 
     // Called when the current user changes (signs in or out)
@@ -118,8 +122,8 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
     }
 
-    function onClickLoad() {
-        window.location.hash = '#' + $('#appid').val();
+    function onChangeFilename() {
+        window.location.hash = '#' + ns.app_id + '/' + $('#filename').val();
     }
 
     function onClickSave() {
@@ -149,9 +153,10 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     ns.extend({
         onReady: onReady,
         onUserChange: onUserChange,
-        onClickLoad: onClickLoad,
+        onChangeFilename: onChangeFilename,
         onClickSave: onClickSave,
-        onClickSignInOut: onClickSignInOut
+        onClickSignInOut: onClickSignInOut,
+        onClickCodeMirror: onClickCodeMirror
     });
 
 });
