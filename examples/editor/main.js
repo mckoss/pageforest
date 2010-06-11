@@ -9,38 +9,75 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
+    function topLevel(listing) {
+        var result = [];
+        for (var filename in listing) {
+            if (listing.hasOwnProperty(filename)) {
+                var parts = filename.split('/');
+                var top = parts.shift();
+                if (parts.length) {
+                    top += '/';
+                }
+                if (result.indexOf(top) == -1) {
+                    result.push(top);
+                }
+            }
+        }
+        result.sort();
+        return result;
+    }
+
+    function onSuccessList(listing, status, xhr) {
+        var options = [];
+        var filenames = topLevel(listing);
+        filenames.forEach(function(filename) {
+            options.push('<option value="' + filename + '">' +
+                         filename + '</option>');
+        });
+        $('#filename').html(options.join('\n'));
+    }
+
     function loadApp(app_id) {
+        console.log('loadApp ' + app_id);
         ns.app_id = app_id;
         $.ajax({
-            url: '/mirror/' + ns.app_id + '?method=list&depth=0',
+            url: '/mirror/' + ns.app_id +
+                '?method=list&depth=0&keysonly=true',
             dataType: 'json',
-            success: function(message) {
-                var lines = ['<table>'];
-                for (var filename in message) {
-                    if (message.hasOwnProperty(filename)) {
-                        var href = '#' + app_id + '/' + filename;
-                        var link = '<a href="' + href + '">' +
-                            filename + '</a>';
-                        if (filename == ns.filename) {
-                            link = '<b>' + filename + '</b>';
-                        }
-                        lines.push('<tr>' +
-                                   '<td class="quiet right">' +
-                                   message[filename].size + '</td>' +
-                                   '<td>' + link + '</td>' +
-                                   '</tr>');
-                    }
-                }
-                lines.push('</table>');
-                $('#navigator').html(lines.join('\n'));
-            },
+            success: onSuccessList,
             error: onError
         });
+    }
+
+    // Make the text area longer if the user added more lines.
+    function growTextArea() {
+        var textarea = $('#code');
+        var scrollHeight = textarea.attr('scrollHeight');
+        var offsetHeight = textarea.attr('offsetHeight');
+        if (scrollHeight > offsetHeight) {
+            console.log('growTextArea ' + offsetHeight + ' ' + scrollHeight);
+            textarea.css('height', scrollHeight + 'px');
+        }
+    }
+
+    // Make the text area shorter or longer, after a new file is loaded.
+    function adjustTextArea() {
+        var textarea = $('#code');
+        var scrollHeight = textarea.attr('scrollHeight');
+        var offsetHeight = textarea.attr('offsetHeight');
+        while (scrollHeight == offsetHeight) {
+            textarea.css('height', (offsetHeight / 2) + 'px');
+            scrollHeight = textarea.attr('scrollHeight');
+            offsetHeight = textarea.attr('offsetHeight');
+        }
+        console.log('adjustTextArea ' + offsetHeight + ' ' + scrollHeight);
+        textarea.css('height', scrollHeight + 'px');
     }
 
     function onLoadFileSuccess(message, status, xhr) {
         if (ns.codemirror == undefined) {
             $('#code').val(message).focus();
+            adjustTextArea();
             return;
         }
         ns.codemirror.setCode(message);
@@ -61,26 +98,41 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
 
     function loadFile(filename) {
         ns.filename = filename;
-        $.ajax({
-            url: '/mirror/' + ns.app_id + '/' + ns.filename,
-            dataType: 'text',
-            success: onLoadFileSuccess,
-            error: onError
-        });
+        if (filename.substr(-1) == '/') {
+            $.ajax({
+                url: '/mirror/' + ns.app_id + '/' + ns.filename +
+                    '?method=list&depth=0&keysonly=true',
+                dataType: 'text',
+                success: onLoadFileSuccess,
+                error: onError
+            });
+        } else {
+            $.ajax({
+                url: '/mirror/' + ns.app_id + '/' + ns.filename,
+                dataType: 'text',
+                success: onLoadFileSuccess,
+                error: onError
+            });
+        }
     }
 
     function checkHash() {
         var hash = window.location.hash;
         if (hash == ns.hash) {
+            growTextArea();
             return;
         }
         ns.hash = hash;
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
         var app_id = parts.shift();
-        loadApp(app_id);
         var filename = parts.join('/') || 'app.json';
-        loadFile(filename);
+        if (app_id != ns.app_id) {
+            loadApp(app_id);
+            loadFile(filename);
+        } else if (filename != ns.filename) {
+            loadFile(filename);
+        }
     }
 
     function onReady() {
