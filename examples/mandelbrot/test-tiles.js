@@ -109,8 +109,9 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             var div = t.getImage("0.png");
             ut.assertEq(div.tagName, 'DIV');
 
-            // You can't measure the elements until they are added to
-            // the document.
+            // Note: you can't measure the elements until they are
+            // added to the document.
+
             ut.assertEq(div.offsetWidth, 0);
             document.body.appendChild(div);
             ut.assertEq(div.offsetWidth, 256, 'div width');
@@ -120,12 +121,8 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             ut.assertEq(img.offsetWidth, 256, 'img width');
             ut.assertEq(img.offsetHeight, 256, 'img height');
 
-
             div = t.getImage("01.png");
             ut.assertEq(div.tagName, 'DIV');
-
-            // You can't measure the elements until they are added to
-            // the document.
             ut.assertEq(div.offsetWidth, 0);
             document.body.appendChild(div);
             ut.assertEq(div.offsetWidth, 256, 'div width');
