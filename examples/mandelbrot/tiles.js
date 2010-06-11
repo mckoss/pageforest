@@ -136,6 +136,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = this.tiles[blobid].img;
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
+            console.log("setting tile size: " + (rcParent[2] - rcParent[0]));
             this.setTileSize(img, rcParent);
             img.src = this.client.getDocURL(this.docid, parentBlobid);
             this.checkAndRender(blobid);
