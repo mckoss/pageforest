@@ -75,7 +75,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     break;
                 }
             }
-            console.log("Parent of " + blobid + " is " + quad + '.png');
             return quad + '.png';
         },
 
@@ -139,7 +138,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var rcParent = this.relativeRect(blobid, parentBlobid);
             this.setTileSize(img, rcParent);
             img.src = this.client.getDocURL(this.docid, parentBlobid);
-            console.log("display for ", blobid, img);
             this.checkAndRender(blobid);
             return this.tiles[blobid].div;
         },
@@ -156,7 +154,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         copyTileAttrs: function(destDiv, srcDiv) {
             var destImg = destDiv.firstChild;
             var srcImg = srcDiv.firstChild;
-            var styles = ['top', 'left', 'width', 'height'];
+            var styles = ['top', 'left', 'width', 'height', 'position'];
 
             destImg.src = srcImg.src;
             for (var i = 0; i < styles.length; i++) {
@@ -186,7 +184,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var self = this;
 
             // SHORT CIRCUIT
-            return;
+            if (true) {
+                return;
+            }
 
             self.checkTileExists(blobid, function (exists) {
                 var img = self.tiles[blobid].img;
