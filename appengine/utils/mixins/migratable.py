@@ -2,6 +2,7 @@ import logging
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.runtime import apiproxy_errors
 
 
 class Migratable(db.Model):
@@ -60,26 +61,31 @@ class Migratable(db.Model):
         schema_old = self.schema
         self.migrate()
         self.schema = self.current_schema
-        self.put()
-        logging.info("Updated %s entity %s from schema %d to %d" % (
-                self.kind(), self.key().id_or_name(), schema_old, self.schema))
+        description = "%s entity %s from schema %d to %d" % (
+            self.kind(), self.key().id_or_name(), schema_old, self.schema)
+        try:
+            self.put()
+        except apiproxy_errors.Error:
+            logging.warning(
+                "Datastore put failed when trying to update " + description)
+        else:
+            logging.info("Updated " + description)
 
     @classmethod
-    def update_schema_batch(cls, limit=100):
+    def update_schema_batch(cls, limit=100, write_to_memcache=False):
         """
         Migrate entities in batch.
         """
-        from utils.mixins import Cacheable
         memcache_mapping = {}
         query = cls.all().filter('schema <', cls.current_schema)
         entities = query.fetch(limit)
         for entity in entities:
             entity.migrate()
             entity.schema = entity.current_schema
-            if isinstance(entity, Cacheable):
+            if write_to_memcache:
                 memcache_mapping[entity.get_cache_key()] = entity.to_protobuf()
-        # Write all entities back to memcache and datastore.
-        memcache.set_multi(memcache_mapping)
+        if write_to_memcache:
+            memcache.set_multi(memcache_mapping)
         db.put(entities)
         return len(entities)
 
