@@ -3,14 +3,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
 <head>
   <title>Pageforest Application Editor</title>
-  <link rel="stylesheet" type="text/css" href="main.css"/>
+  <link rel="stylesheet" type="text/css" href="main.css" />
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js"></script>
   <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
-  <script type="text/javascript" src="/static/src/js/namespace.js"></script>
-  <script type="text/javascript" src="/static/src/js/base.js"></script>
-  <script type="text/javascript" src="/static/src/js/cookies.js"></script>
-  <script type="text/javascript" src="/static/src/js/format.js"></script>
-  <script type="text/javascript" src="/static/src/js/client.js"></script>
+  <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+  <script type="text/javascript" src="/codemirror/js/codemirror.js"></script>
   <script type="text/javascript" src="main.js"></script>
   <script type="text/javascript">
     var editor = namespace.lookup("com.pageforest.editor");
@@ -49,7 +46,7 @@
   </div>
 
   <div id="editor">
-    <textarea></textarea>
+    <textarea id="code"></textarea>
   </div>
 
   <script type="text/javascript">

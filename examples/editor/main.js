@@ -51,7 +51,19 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
             dataType: 'text',
             success: function(message) {
-                $('div#editor textarea').val(message).focus();
+                ns.codemirror.setCode(message);
+                if (filename.substr(-5) == '.html') {
+                    ns.codemirror.setParser('HTMLMixedParser');
+                } else if (filename.substr(-3) == '.js') {
+                    ns.codemirror.setParser('JSParser');
+                } else if (filename.substr(-5) == '.json') {
+                    ns.codemirror.setParser('JSParser');
+                } else if (filename.substr(-4) == '.css') {
+                    ns.codemirror.setParser('CSSParser');
+                } else {
+                    ns.codemirror.setParser('DummyParser');
+                }
+                ns.codemirror.focus();
                 showStatus("Loaded file " + ns.filename);
             },
             error: onError
@@ -79,8 +91,24 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.hash = '';
         ns.app_id = '';
         ns.filename = '';
+        // Load CodeMirror editor.
+        ns.codemirror = CodeMirror.fromTextArea("code", {
+            height: "100%",
+            path: "codemirror/js/",
+            parserfile: [
+                "parsexml.js",
+                "parsecss.js",
+                "tokenizejavascript.js",
+                "parsejavascript.js",
+                "parsehtmlmixed.js",
+                "parsedummy.js"],
+            stylesheet: [
+                "codemirror/css/xmlcolors.css",
+                "codemirror/css/csscolors.css",
+                "codemirror/css/jscolors.css"]
+        });
+        // Start polling for window.location.hash changes.
         setInterval(checkHash, 200);
-        $('#appid').focus();
     }
 
     // Called when the current user changes (signs in or out)
