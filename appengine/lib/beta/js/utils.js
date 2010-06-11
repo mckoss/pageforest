@@ -1124,6 +1124,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         getBlob: function(docid, blobid, options, fn) {
             fn = fn || function () {};
             options = options || {};
+            var type = 'GET';
 
             if (docid == undefined) {
                 this.errorReport('unsaved_document', docUnsavedMessage);
@@ -1142,21 +1143,25 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 var encodedTags = base.map(options.tags, encodeURIComponent);
                 url += 'tags=' + encodedTags.join(',');
             }
+            if (options.headOnly) {
+                type = 'HEAD';
+                console.log(type);
+            }
             this.log('reading blob: ' + docid + '/' + blobid);
             $.ajax({
-                type: 'GET',
-                url: url,
+                'type': type,
+                'url': url,
                 // REVIEW: Is this the right default - note that 200 return
                 // codes can return error because the data is NOT json!
-                dataType: options.dataType || 'json',
-                error: function (xmlhttp, textStatus, errorThrown) {
+                'dataType': options.dataType || 'json',
+                'error': function (xmlhttp, textStatus, errorThrown) {
                     var code = 'ajax_error/' + xmlhttp.status;
                     var message = xmlhttp.statusText;
                     this.log(message + ' (' + code + ')', {'obj': xmlhttp});
                     this.errorReport(code, message);
                     fn(false);
                 }.fnMethod(this),
-                success: function(data) {
+                'success': function(data) {
                     this.log('read blob: ' + url);
                     fn(true, data);
                 }.fnMethod(this)

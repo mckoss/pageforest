@@ -136,7 +136,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = this.tiles[blobid].img;
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            console.log("setting tile size: " + (rcParent[2] - rcParent[0]));
             this.setTileSize(img, rcParent);
             img.src = this.client.getDocURL(this.docid, parentBlobid);
             this.checkAndRender(blobid);
@@ -189,6 +188,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
+                    console.log("Loaded: " + blobid);
                     self.setTileSize(img);
                     img.src = self.client.getDocURL(self.docid, blobid);
                     self.fnUpdated(blobid, self.tiles[blobid].div);
@@ -238,7 +238,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, blobid, {dataType: 'text'},
+            this.client.getBlob(this.docid, blobid, {dataType: "image/png",
+                                                     headOnly: true},
                                 function(status) {
                                     if (status) {
                                         self.setTileExists(blobid);

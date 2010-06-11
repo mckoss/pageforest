@@ -143,7 +143,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     // Initialize the document - create a client helper object
     function onReady() {
         ns.client = new clientLib.Client(ns);
-        ns.client.setLogging(false);
+        ns.client.setLogging(true);
         ns.m = new mandelbrot.Mandelbrot();
         ns.m.initWorkers();
 
