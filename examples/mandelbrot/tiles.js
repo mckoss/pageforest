@@ -102,11 +102,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return [x, y, x + dx, y + dy];
         },
 
-        relativeRect: function(tileName, tileOther) {
+        pixelRect: function(tileName, rcOther) {
+            // Convert virtual rectangle to pixels in the given tile.
             var rc = this.rectFromTileName(tileName);
-            var rcOther = this.rectFromTileName(tileOther);
-            var scale = (rcOther[2] - rcOther[0]) / (rc[2] - rc[0]);
-            scale *= this.dxTile;
+            var scale = [this.dxTile / (rc[2] - rc[0]),
+                         this.dyTile / (rc[3] - rc[1])];
 
             rcOther[0] -= rc[0];
             rcOther[1] -= rc[1];
@@ -114,9 +114,15 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             rcOther[3] -= rc[1];
 
             for (var i = 0; i < 4; i++) {
-                rcOther[i] = Math.floor(rcOther[i] * scale + 0.5);
+                rcOther[i] = Math.floor(rcOther[i] * scale[i % 2] + 0.5);
             }
             return rcOther;
+        },
+
+        relativeRect: function(tileName, tileOther) {
+            // Return the (pixel) coordinates of the other tile in
+            // relation to the current one.
+            return this.pixelRect(tileName, this.rectFromTileName(tileOther));
         },
 
         getImage: function(blobid) {
@@ -133,7 +139,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var rcParent = this.relativeRect(blobid, parentBlobid);
             this.setTileSize(img, rcParent);
             img.src = this.client.getDocURL(this.docid, parentBlobid);
-            console.log("Displaying parent", img, rcParent);
+            console.log("display for ", blobid, img);
             this.checkAndRender(blobid);
             return this.tiles[blobid].div;
         },
@@ -166,11 +172,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Google Maps), and the child image is absolute
             // positioned within the parent div.
             elt.style.position = 'absolute';
-            //elt.style.left = rc[0] + 'px';
-            $(elt).css('left', rc[0] + 'px');
+            elt.style.left = rc[0] + 'px';
             elt.style.top = rc[1] + 'px';
-            //elt.style.width = (rc[2] - rc[0]) + 'px';
-            $(elt).css('width', (rc[2] - rc[0]) + 'px');
+            elt.style.width = (rc[2] - rc[0]) + 'px';
             elt.style.height = (rc[3] - rc[1]) + 'px';
         },
 
@@ -181,12 +185,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Save this in closure for use in callbacks, below.
             var self = this;
 
+            // SHORT CIRCUIT
+            return;
+
             self.checkTileExists(blobid, function (exists) {
                 var img = self.tiles[blobid].img;
 
                 // Set the native URL
                 if (exists) {
-                    console.log("Tile exists: " + blobid);
                     self.setTileSize(img);
                     img.src = self.client.getDocURL(self.docid, blobid);
                     self.fnUpdated(blobid, self.tiles[blobid].div);
@@ -222,9 +228,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                                 {'encoding': 'base64', 'tags': tags});
         },
 
+        setTileExists: function(blobid) {
+            this.tiles[blobid].exists = true;
+        },
+
         checkTileExists: function(blobid, fn) {
             // TODO: Load the current tile states using the LIST
             // command using clustered tags.
+            var self = this;
             var tile = this.tiles[blobid];
             if (tile && tile.exists) {
                 fn(true);
@@ -233,8 +244,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
             this.client.getBlob(this.docid, blobid, {dataType: 'text'},
                                 function(status) {
-                                    if (tile && status) {
-                                        tile.exists = true;
+                                    if (status) {
+                                        self.setTileExists(blobid);
                                     }
                                     fn(status);
                                 });

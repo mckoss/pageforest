@@ -7,7 +7,10 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
                      '_isDefined', '_referenced', '_parent', '_path', 'test'];
 
     var tilesSymbols = ['tileName', 'rectFromTileName', 'getImage',
-                        'checkAndRender', 'checkTileExists', 'createTileDoc'];
+                        'checkAndRender', 'checkTileExists', 'createTileDoc',
+                        'findParent', 'relativeRect', 'buildTile',
+                        'copyTileAttrs', 'cachePNG', 'setTileSize',
+                        'setTileExists', 'pixelRect'];
 
     function addTests(ts) {
         ts.addTest("Contract", function (ut) {
@@ -66,7 +69,9 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
         });
 
         ts.addTest("rectFromTileName", function (ut) {
-            var client = new clientLib.Client({});
+            var client = new clientLib.Client({getDoc: function () {
+                return {};
+            }});
             var t = new tiles.Tiles(client, 'v1', 256, 256,
                                     [-2, -2, 2, 2]);
             var tests = [
@@ -81,6 +86,68 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
                 var test = tests[i];
                 ut.assertEq(t.rectFromTileName(test[0]), test[1], i);
             }
+        });
+
+        ts.addTest("relativeRect", function(ut) {
+            var client = new clientLib.Client({getDoc: function () {
+                return {};
+            }});
+            var t = new tiles.Tiles(client, 'v1', 256, 256,
+                                    [-2, -2, 2, 2]);
+
+            var rc = t.relativeRect('0.png', '00.png');
+            ut.assertEq(rc, [0, 0, 128, 128]);
+        });
+
+        ts.addTest("getImage", function(ut) {
+            var client = new clientLib.Client({getDoc: function () {
+                return {};
+            }});
+            var t = new tiles.Tiles(client, 'v1', 256, 256,
+                                    [-2, -2, 2, 2]);
+
+            var div = t.getImage("0.png");
+            ut.assertEq(div.tagName, 'DIV');
+
+            // You can't measure the elements until they are added to
+            // the document.
+            ut.assertEq(div.offsetWidth, 0);
+            document.body.appendChild(div);
+            ut.assertEq(div.offsetWidth, 256, 'div width');
+            ut.assertEq(div.offsetHeight, 256, 'div height');
+            var img = div.firstChild;
+            ut.assertEq(img.tagName, 'IMG');
+            ut.assertEq(img.offsetWidth, 256, 'img width');
+            ut.assertEq(img.offsetHeight, 256, 'img height');
+
+
+            div = t.getImage("01.png");
+            ut.assertEq(div.tagName, 'DIV');
+
+            // You can't measure the elements until they are added to
+            // the document.
+            ut.assertEq(div.offsetWidth, 0);
+            document.body.appendChild(div);
+            ut.assertEq(div.offsetWidth, 256, 'div width');
+            ut.assertEq(div.offsetHeight, 256, 'div height');
+            img = div.firstChild;
+            ut.assertEq(img.tagName, 'IMG');
+            ut.assertEq(img.offsetWidth, 512, 'img width');
+            ut.assertEq(img.offsetHeight, 512, 'img height');
+        });
+
+        ts.addTest("findParent", function(ut) {
+            var client = new clientLib.Client({getDoc: function () {
+                return {};
+            }});
+            var t = new tiles.Tiles(client, 'v1', 256, 256,
+                                    [-2, -2, 2, 2]);
+
+            ut.assertEq(t.findParent('01.png'), '0.png');
+            ut.assertEq(t.findParent('013.png'), '0.png');
+            t.getImage('01.png');
+            t.setTileExists('01.png');
+            ut.assertEq(t.findParent('013.png'), '01.png');
         });
     }
 

@@ -118,11 +118,9 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         },
 
         tileUpdated: function(tileName, tile) {
-            console.log("Updating " + tileName);
             var flipTile = this.flipTiles[tileName];
             if (flipTile) {
                 this.tiles.copyTileAttrs(flipTile, tile);
-                console.log("Updated Div: ", flipTile);
             }
         }
     });
