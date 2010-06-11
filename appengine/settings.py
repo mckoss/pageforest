@@ -223,6 +223,7 @@ TEMPLATE_CONTEXT_PROCESSORS = (
 
 MIDDLEWARE_CLASSES = [
     'utils.middleware.ResponseNotFoundMiddleware',  # Render HTML for 404.
+    'utils.middleware.ApiProxyErrorMiddleware',  # Return 503 for read-only.
     'utils.middleware.RequestMiddleware',    # Put request in threading.local()
     'utils.middleware.WwwMiddleware',        # Prepend www if it's missing.
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
