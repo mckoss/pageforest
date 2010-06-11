@@ -16,33 +16,25 @@
 </head>
 <body>
   <div id="top-left">
-    <form>
-      <input id="appid" type="text" name="appid" />
-      <input id="load" type="submit" value="Load"
-             onclick="editor.onClickLoad(); return false" />
-    </form>
-  </div>
-
-  <div id="top">
+    <span id="breadcrumbs"></span>
+    <select id="filename" onchange="editor.onChangeFilename()">
+      <option value="index.html">index.html</option>
+      <option value="main.js">main.js</option>
+      <option value="main.css">main.css</option>
+    </select>
     <input id="save" type="button" value="Save"
-           onclick="editor.onClickSave(); return false" />
+           onclick="editor.onClickSave()" />
     <input id="revert" type="button" value="Revert"
-           onclick="editor.onClickRevert(); return false" />
+           onclick="editor.onClickRevert()" />
     <input id="lint" type="button"  value="Lint"
-           onclick="editor.onClickLint(); return false" />
+           onclick="editor.onClickLint()" />
+    <span id="status"></span>
   </div>
 
   <div id="top-right">
-    <span id="username">Hello, anonymous</span>
+    <span id="username">anonymous</span>
     <input id="signin" type="button" value="Sign In"
-           onclick="editor.onClickSignInOut(); return false" />
-  </div>
-
-  <div id="navigator">
-    Enter your application ID above and click the Load button.
-  </div>
-
-  <div id="status">
+           onclick="editor.onClickSignInOut()" />
   </div>
 
   <div id="editor">
