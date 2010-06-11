@@ -100,7 +100,10 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
             var img = this.tiles.getImage(tileName);
             if (flip) {
-                var imgFlip = img.cloneNode();
+                var imgFlip = document.createElement('img');
+                imgFlip.style.width = this.tileSize.width + 'px';
+                imgFlip.style.height = this.tileSize.height + 'px';
+                imgFlip.src = img.src;
                 $(imgFlip).addClass('flip');
                 this.flipTiles[tileName] = imgFlip;
                 return imgFlip;
