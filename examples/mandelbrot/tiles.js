@@ -70,10 +70,12 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var quad = blobid.substr(0, blobid.indexOf('.'));
             while (quad.length > 1) {
                 quad = quad.slice(0, -1);
-                if (this.tiles[quad + '.png']) {
+                var tile = this.tiles[quad + '.png'];
+                if (tile && tile.exists) {
                     break;
                 }
             }
+            console.log("Parent of " + blobid + " is " + quad + '.png');
             return quad + '.png';
         },
 
@@ -126,12 +128,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             }
 
             this.tiles[blobid] = this.buildTile();
+            var img = this.tiles[blobid].img;
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            this.setTileSize(this.tiles[blobid].img, rcParent);
-            this.tiles[blobid].img.src = this.client.getDocURL(this.docid, parentBlobid);
+            this.setTileSize(img, rcParent);
+            img.src = this.client.getDocURL(this.docid, parentBlobid);
+            console.log("Displaying parent", img, rcParent);
             this.checkAndRender(blobid);
-            return div;
+            return this.tiles[blobid].div;
         },
 
         buildTile: function() {
@@ -141,16 +145,32 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = document.createElement('img');
             div.appendChild(img);
             return {'div': div, 'img': img};
-        }
+        },
+
+        copyTileAttrs: function(destDiv, srcDiv) {
+            var destImg = destDiv.firstChild;
+            var srcImg = srcDiv.firstChild;
+            var styles = ['top', 'left', 'width', 'height'];
+
+            destImg.src = srcImg.src;
+            for (var i = 0; i < styles.length; i++) {
+                destImg.style[styles[i]] = srcImg.style[styles[i]];
+            }
+        },
 
         setTileSize: function(elt, rc) {
             if (rc == undefined) {
                 rc = [0, 0, this.dxTile, this.dyTile];
             }
-            elt.style.position = 'relative';
-            elt.style.left = rc[0];
-            elt.style.top = rc[1];
-            elt.style.width = (rc[2] - rc[0]) + 'px';
+            // Note that the parent div is aboslute positioned (by
+            // Google Maps), and the child image is absolute
+            // positioned within the parent div.
+            elt.style.position = 'absolute';
+            //elt.style.left = rc[0] + 'px';
+            $(elt).css('left', rc[0] + 'px');
+            elt.style.top = rc[1] + 'px';
+            //elt.style.width = (rc[2] - rc[0]) + 'px';
+            $(elt).css('width', (rc[2] - rc[0]) + 'px');
             elt.style.height = (rc[3] - rc[1]) + 'px';
         },
 
@@ -162,13 +182,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var self = this;
 
             self.checkTileExists(blobid, function (exists) {
-                var img = self.tiles[blobid];
+                var img = self.tiles[blobid].img;
 
                 // Set the native URL
                 if (exists) {
+                    console.log("Tile exists: " + blobid);
                     self.setTileSize(img);
                     img.src = self.client.getDocURL(self.docid, blobid);
-                    self.fnUpdated(blobid, self.tiles[blobid]);
+                    self.fnUpdated(blobid, self.tiles[blobid].div);
                     return;
                 }
 
@@ -180,7 +201,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     // Update the visible tile with the rendered pixels.
                     self.setTileSize(img);
                     img.src = canvas.toDataURL();
-                    self.fnUpdated(blobid, self.tiles[blobid]);
+                    self.fnUpdated(blobid, self.tiles[blobid].div);
                     self.cachePNG(blobid, canvas);
                 });
             });
@@ -196,7 +217,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 }
                 tags.push('p' + level + ':' + tagString);
             }
-            self.client.putBlob(this.docid, blobid,
+            this.client.putBlob(this.docid, blobid,
                                 format.canvasToPNG(canvas),
                                 {'encoding': 'base64', 'tags': tags});
         },

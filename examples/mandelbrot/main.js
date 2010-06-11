@@ -65,6 +65,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         this.tiles = new tileLib.Tiles(ns.client, tilesDocId, 256, 256,
                                        ns.m.rcTop);
         this.tiles.fnRender = this.renderTile.fnMethod(this);
+        this.tiles.fnUpdated = this.tileUpdated.fnMethod(this);
         // Keep track of our flipTiles - to update when the original
         // is rendered.
         this.flipTiles = {};
@@ -98,28 +99,31 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 throw new Error("Never ask for southern hemisphere tiles!");
             }
 
-            var img = this.tiles.getImage(tileName);
+            var tile = this.tiles.getImage(tileName);
             if (flip) {
-                var imgFlip = document.createElement('img');
-                imgFlip.style.width = this.tileSize.width + 'px';
-                imgFlip.style.height = this.tileSize.height + 'px';
-                imgFlip.src = img.src;
-                $(imgFlip).addClass('flip');
-                this.flipTiles[tileName] = imgFlip;
-                return imgFlip;
+                var tileFlip = this.tiles.buildTile().div;
+                this.tiles.copyTileAttrs(tileFlip, tile);
+                $(tileFlip).addClass('flip');
+                this.flipTiles[tileName] = tileFlip;
+                return tileFlip;
             }
-            return img;
+            return tile;
         },
 
         renderTile: function(tileName, canvas, fn) {
+            // HACK: Short circuit to display only scaled available tiles.
+            return;
             var rc = this.tiles.rectFromTileName(tileName);
-            var self = this;
-            ns.m.render(canvas, rc, function() {
-                if (self.flipTiles[tileName]) {
-                    self.flipTiles[tileName].src = canvas.toDataURL();
-                }
-                fn();
-            });
+            ns.m.render(canvas, rc, fn);
+        },
+
+        tileUpdated: function(tileName, tile) {
+            console.log("Updating " + tileName);
+            var flipTile = this.flipTiles[tileName];
+            if (flipTile) {
+                this.tiles.copyTileAttrs(flipTile, tile);
+                console.log("Updated Div: ", flipTile);
+            }
         }
     });
 
