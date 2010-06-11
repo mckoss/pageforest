@@ -111,10 +111,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         },
 
         renderTile: function(tileName, canvas, fn) {
-            // HACK: Short circuit to display only scaled available tiles.
-            if (true) {
-                return;
-            }
             var rc = this.tiles.rectFromTileName(tileName);
             ns.m.render(canvas, rc, fn);
         },

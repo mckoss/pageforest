@@ -183,11 +183,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Save this in closure for use in callbacks, below.
             var self = this;
 
-            // SHORT CIRCUIT
-            if (true) {
-                return;
-            }
-
             self.checkTileExists(blobid, function (exists) {
                 var img = self.tiles[blobid].img;
 
