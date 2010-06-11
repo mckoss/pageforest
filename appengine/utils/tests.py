@@ -6,6 +6,7 @@ from django.test import TestCase
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
+from google.appengine.runtime import apiproxy_errors
 
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils.mixins.cacheable import CacheHistory
@@ -116,3 +117,21 @@ class DocTest(TestCase):
             mod = imp.load_module('utils.' + base, file, pathname, desc)
             (failures, tests) = doctest.testmod(mod)
             self.assertEqual(failures, 0)
+
+
+class ApiProxyErrorTest(TestCase):
+
+    def test_capability_disabled(self):
+        """CapabilityDisabledError should return status code 503."""
+        self.assertContains(self.client.get('/errors/capability-disabled'),
+                            "disabled", status_code=503)
+
+    def test_over_quota(self):
+        """OverQuotaError should return status code 503."""
+        self.assertContains(self.client.get('/errors/over-quota'),
+                            "quota", status_code=503)
+
+    def test_apiproxy_error(self):
+        """Other API proxy errors should not be caught."""
+        self.assertRaises(apiproxy_errors.Error,
+                          self.client.get, '/errors/apiproxy-error')

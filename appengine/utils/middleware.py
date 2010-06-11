@@ -2,6 +2,9 @@ import threading
 
 from django.conf import settings
 from django.shortcuts import redirect
+from django.http import HttpResponse
+
+from google.appengine.runtime import apiproxy_errors
 
 from utils.shortcuts import render_to_response
 
@@ -22,6 +25,21 @@ class ResponseNotFoundMiddleware(object):
 
     def process_exception(self, request, exception):
         request.exception = exception
+
+
+class ApiProxyErrorMiddleware(object):
+    """
+    Catch certain API proxy errors and return 503 Service Unavailable.
+    """
+
+    def process_exception(self, request, exception):
+        if isinstance(exception, (
+                apiproxy_errors.CapabilityDisabledError,
+                apiproxy_errors.OverQuotaError)):
+            response = HttpResponse(
+                str(exception), mimetype='text/plain', status=503)
+            response['Retry-After'] = '300'
+            return response
 
 
 class RequestMiddleware(object):

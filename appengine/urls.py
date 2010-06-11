@@ -30,4 +30,9 @@ urlpatterns = patterns(
     (r'^app/admin/app.json/$', 'apps.views.app_json'),
     (r'^app/(admin/)?(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)',
      'blobs.views.dispatch'),
+
+    # Simulate different API proxy errors.
+    (r'^errors/capability-disabled/$', 'utils.views.capability_disabled'),
+    (r'^errors/over-quota/$', 'utils.views.over_quota'),
+    (r'^errors/apiproxy-error/$', 'utils.views.apiproxy_error'),
 )
