@@ -16,6 +16,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var canvas;
             fn(canvas);
         };
+        this.fnUpdated = function(blobid, obj) {
+        };
     }
 
     Tiles.methods({
@@ -63,6 +65,18 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return '0' + name + '.png';
         },
 
+        findParent: function(blobid) {
+            // Always assume 0.png is available.
+            var quad = blobid.substr(0, blobid.indexOf('.'));
+            while (quad.length > 1) {
+                quad = quad.slice(0, -1);
+                if (this.tiles[quad + '.png']) {
+                    break;
+                }
+            }
+            return quad + '.png';
+        },
+
         rectFromTileName: function(tileName) {
             var x = this.rect[0];
             var y = this.rect[1];
@@ -86,25 +100,58 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return [x, y, x + dx, y + dy];
         },
 
-        // Return a DOM img element for the given blobid.
-        // The image may not be available in the cache, in which
-        // case it will be rendered in the client and then
-        // stored in the cache.
+        relativeRect: function(tileName, tileOther) {
+            var rc = this.rectFromTileName(tileName);
+            var rcOther = this.rectFromTileName(tileOther);
+            var scale = (rcOther[2] - rcOther[0]) / (rc[2] - rc[0]);
+            scale *= this.dxTile;
+
+            rcOther[0] -= rc[0];
+            rcOther[1] -= rc[1];
+            rcOther[2] -= rc[0];
+            rcOther[3] -= rc[1];
+
+            for (var i = 0; i < 4; i++) {
+                rcOther[i] = Math.floor(rcOther[i] * scale + 0.5);
+            }
+            return rcOther;
+        },
+
         getImage: function(blobid) {
             // REVIEW: Should we be caching images?  Could hamper google
             // maps' ability to free space in the browser by dereferencing
             // img objects.
             if (this.tiles[blobid]) {
-                return this.tiles[blobid].img;
+                return this.tiles[blobid].div;
             }
 
-            var img = document.createElement('img');
-            img.style.width = this.dxTile + 'px';
-            img.style.height = this.dyTile + 'px';
-            img.src = this.client.getDocURL(this.docid, blobid);
-            this.tiles[blobid] = {img: img};
+            this.tiles[blobid] = this.buildTile();
+            var parentBlobid = this.findParent(blobid);
+            var rcParent = this.relativeRect(blobid, parentBlobid);
+            this.setTileSize(this.tiles[blobid].img, rcParent);
+            this.tiles[blobid].img.src = this.client.getDocURL(this.docid, parentBlobid);
             this.checkAndRender(blobid);
-            return img;
+            return div;
+        },
+
+        buildTile: function() {
+            var div = document.createElement('div');
+            this.setTileSize(div);
+            div.style.overflow = 'hidden';
+            var img = document.createElement('img');
+            div.appendChild(img);
+            return {'div': div, 'img': img};
+        }
+
+        setTileSize: function(elt, rc) {
+            if (rc == undefined) {
+                rc = [0, 0, this.dxTile, this.dyTile];
+            }
+            elt.style.position = 'relative';
+            elt.style.left = rc[0];
+            elt.style.top = rc[1];
+            elt.style.width = (rc[2] - rc[0]) + 'px';
+            elt.style.height = (rc[3] - rc[1]) + 'px';
         },
 
         // Check if an image exists in the cache.  If not, render it
@@ -115,8 +162,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var self = this;
 
             self.checkTileExists(blobid, function (exists) {
-                // Tile already exists - no need to render it.
+                var img = self.tiles[blobid];
+
+                // Set the native URL
                 if (exists) {
+                    self.setTileSize(img);
+                    img.src = self.client.getDocURL(self.docid, blobid);
+                    self.fnUpdated(blobid, self.tiles[blobid]);
                     return;
                 }
 
@@ -126,22 +178,27 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 self.fnRender(blobid, canvas, function () {
                     // Update the visible tile with the rendered pixels.
-                    self.tiles[blobid].img.src = canvas.toDataURL();
-                    // Upload tile to Pageforest backend for caching.
-                    var tags = [];
-                    var tagString = blobid.substr(0, blobid.indexOf('.'));
-                    for (var level = 1; level <= this.listDepth; level++) {
-                        tagString = tagString.slice(0, -1);
-                        if (tagString.length == 0) {
-                            break;
-                        }
-                        tags.push('p' + level + ':' + tagString);
-                    }
-                    self.client.putBlob(self.docid, blobid,
-                                        format.canvasToPNG(canvas),
-                                        {encoding: 'base64', tags: tags});
+                    self.setTileSize(img);
+                    img.src = canvas.toDataURL();
+                    self.fnUpdated(blobid, self.tiles[blobid]);
+                    self.cachePNG(blobid, canvas);
                 });
             });
+        },
+
+        cachePNG: function(blobid, canvas) {
+            var tags = [];
+            var tagString = blobid.substr(0, blobid.indexOf('.'));
+            for (var level = 1; level <= this.listDepth; level++) {
+                tagString = tagString.slice(0, -1);
+                if (tagString.length == 0) {
+                    break;
+                }
+                tags.push('p' + level + ':' + tagString);
+            }
+            self.client.putBlob(this.docid, blobid,
+                                format.canvasToPNG(canvas),
+                                {'encoding': 'base64', 'tags': tags});
         },
 
         checkTileExists: function(blobid, fn) {
