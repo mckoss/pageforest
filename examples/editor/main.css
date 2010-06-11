@@ -47,6 +47,7 @@ div#status {
 }
 
 div#editor {
+  background: white;
   left: 260px;
   right: 0;
   top: 30px;
