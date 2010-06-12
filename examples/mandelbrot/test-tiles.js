@@ -132,8 +132,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             ut.assertEq(div.offsetHeight, 256, 'div height');
             var img = div.firstChild;
             ut.assertEq(img.tagName, 'IMG');
-            ut.assertEq(img.offsetWidth, 256, 'img width');
-            ut.assertEq(img.offsetHeight, 256, 'img height');
+            ut.assertEq(img.style.display, 'none');
             img = img.nextSibling;
             ut.assertEq(img.tagName, 'IMG');
             ut.assertEq(img.offsetWidth, 256, 'img width');

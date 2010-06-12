@@ -133,11 +133,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             }
 
             this.tiles[blobid] = this.buildTile();
+            var img = this.tiles[blobid].img;
             var imgProxy = this.tiles[blobid].imgProxy;
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
             this.setTileSize(imgProxy, rcParent);
             imgProxy.src = this.client.getDocURL(this.docid, parentBlobid);
+            //img.src = this.client.getDocURL(this.docid, blobid);
             this.checkAndRender(blobid);
             return this.tiles[blobid].div;
         },
@@ -150,15 +152,17 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = document.createElement('img');
             this.setTileSize(img);
             img.style.display = 'none';
+            img.style.zIndex = 2;
             div.appendChild(img);
 
             var imgProxy = document.createElement('img');
             this.setTileSize(imgProxy);
+            imgProxy.style.zIndex = 1;
             div.appendChild(imgProxy);
 
             $(img).bind('load', function() {
                 img.style.display = 'block';
-                imgProxy.style.display = 'none';
+                //imgProxy.style.display = 'none';
             });
 
             return {'div': div, 'img': img, 'imgProxy': imgProxy};
@@ -205,7 +209,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
-                    img.src = self.client.getDocURL(self.docid, blobid);
+                    img.src = self.client.getDocURL(self.docid, blobid) +
+                        '?salt=' + base.randomInt(10000);
+                    img.style.display = 'block';
                     self.fnUpdated(blobid, self.tiles[blobid].div);
                     return;
                 }
