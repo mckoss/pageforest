@@ -133,11 +133,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             }
 
             this.tiles[blobid] = this.buildTile();
-            var img = this.tiles[blobid].img;
+            var imgProxy = this.tiles[blobid].imgProxy;
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            this.setTileSize(img, rcParent);
-            img.src = this.client.getDocURL(this.docid, parentBlobid);
+            this.setTileSize(imgProxy, rcParent);
+            imgProxy.src = this.client.getDocURL(this.docid, parentBlobid);
             this.checkAndRender(blobid);
             return this.tiles[blobid].div;
         },
@@ -146,19 +146,36 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var div = document.createElement('div');
             this.setTileSize(div);
             div.style.overflow = 'hidden';
+
             var img = document.createElement('img');
+            this.setTileSize(img);
+            img.style.display = 'none';
             div.appendChild(img);
-            return {'div': div, 'img': img};
+
+            var imgProxy = document.createElement('img');
+            this.setTileSize(imgProxy);
+            div.appendChild(imgProxy);
+
+            $(img).bind('load', function() {
+                img.style.display = 'block';
+                imgProxy.style.display = 'none';
+            });
+
+            return {'div': div, 'img': img, 'imgProxy': imgProxy};
         },
 
         copyTileAttrs: function(destDiv, srcDiv) {
-            var destImg = destDiv.firstChild;
-            var srcImg = srcDiv.firstChild;
-            var styles = ['top', 'left', 'width', 'height', 'position'];
+            var styles = ['top', 'left', 'width', 'height',
+                          'position', 'display'];
 
-            destImg.src = srcImg.src;
-            for (var i = 0; i < styles.length; i++) {
-                destImg.style[styles[i]] = srcImg.style[styles[i]];
+            for (var j = 0; j < srcDiv.childNodes.length; j++) {
+                var destImg = destDiv.childNodes[j];
+                var srcImg = srcDiv.childNodes[j];
+
+                destImg.src = srcImg.src;
+                for (var i = 0; i < styles.length; i++) {
+                    destImg.style[styles[i]] = srcImg.style[styles[i]];
+                }
             }
         },
 
@@ -188,8 +205,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
-                    console.log("Loaded: " + blobid);
-                    self.setTileSize(img);
                     img.src = self.client.getDocURL(self.docid, blobid);
                     self.fnUpdated(blobid, self.tiles[blobid].div);
                     return;
