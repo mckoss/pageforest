@@ -99,6 +99,20 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             ut.assertEq(rc, [0, 0, 128, 128]);
         });
 
+        ts.addTest("buildTile", function(ut) {
+            var client = new clientLib.Client({getDoc: function () {
+                return {};
+            }});
+            var t = new tiles.Tiles(client, 'v1', 256, 256,
+                                    [-2, -2, 2, 2]);
+
+            var tile = t.buildTile();
+            ut.assertEq(tile.div.tagName, 'DIV');
+            ut.assertEq(tile.div.childNodes.length, 2);
+            ut.assertIdent(tile.div.firstChild, tile.img);
+            ut.assertIdent(tile.div.childNodes[1], tile.imgProxy);
+        });
+
         ts.addTest("getImage", function(ut) {
             var client = new clientLib.Client({getDoc: function () {
                 return {};
@@ -120,6 +134,10 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             ut.assertEq(img.tagName, 'IMG');
             ut.assertEq(img.offsetWidth, 256, 'img width');
             ut.assertEq(img.offsetHeight, 256, 'img height');
+            img = img.nextSibling;
+            ut.assertEq(img.tagName, 'IMG');
+            ut.assertEq(img.offsetWidth, 256, 'img width');
+            ut.assertEq(img.offsetHeight, 256, 'img height');
 
             div = t.getImage("01.png");
             ut.assertEq(div.tagName, 'DIV');
@@ -127,7 +145,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             document.body.appendChild(div);
             ut.assertEq(div.offsetWidth, 256, 'div width');
             ut.assertEq(div.offsetHeight, 256, 'div height');
-            img = div.firstChild;
+            img = div.childNodes[1];
             ut.assertEq(img.tagName, 'IMG');
             ut.assertEq(img.offsetWidth, 512, 'img width');
             ut.assertEq(img.offsetHeight, 512, 'img height');

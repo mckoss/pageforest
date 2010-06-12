@@ -1145,7 +1145,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             if (options.headOnly) {
                 type = 'HEAD';
-                console.log(type);
             }
             this.log('reading blob: ' + docid + '/' + blobid);
             $.ajax({
