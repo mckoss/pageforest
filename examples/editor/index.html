@@ -15,29 +15,61 @@
   </script>
 </head>
 <body>
-  <div id="top-left">
-    <span id="breadcrumbs"></span>
-    <select id="filename" onchange="editor.onChangeFilename()">
-      <option value="index.html">index.html</option>
-      <option value="main.js">main.js</option>
-      <option value="main.css">main.css</option>
-    </select>
-    <input id="save" type="button" value="Save"
-           onclick="editor.onClickSave()" />
-    <input id="revert" type="button" value="Revert"
-           onclick="editor.onClickRevert()" />
-    <input id="lint" type="button"  value="Lint"
-           onclick="editor.onClickLint()" />
-    <span id="status"></span>
+  <div id="left">
+    <input type="button" value="Open" onclick="$('#open').slideToggle()" />
+    <input type="button" value="Save" onclick="editor.onSave()" />
+    <input type="button" value="More" onclick="$('#more').sliteToggle()" />
+    <span id="status">editor/dev/index.html</span>
   </div>
 
-  <div id="top-right">
+  <div id="right">
     <span id="username">anonymous</span>
-    <input id="signin" type="button" value="Sign In"
-           onclick="editor.onClickSignInOut()" />
+    <input type="button" value="Sign In" onclick="editor.onSignInOut()" />
+    <input type="button" value="Options"
+           onclick="$('#options').slideToggle();" />
+    <input type="button" value="Help" onclick="editor.onHelp()" />
   </div>
 
-  <textarea id="code"></textarea>
+  <div id="apps" style="display:none">
+    <h2>Apps</h2>
+    <a href="#editor">editor</a><br />
+    <a href="#mandelbrot">mandelbrot</a><br />
+    <a href="#scratch">scratch</a><br />
+  </div>
+
+  <div id="content">
+    <div id="listing">
+      <table>
+      </table>
+    </div>
+    <textarea id="code"></textarea>
+  </div>
+
+  <div id="more" class="dialog" style="display:none">
+    <input type="button" value="Revert" onclick="editor.onRevert()" />
+    <input type="button" value="Lint" onclick="editor.onLint()" />
+    <input type="button" value="Save as" onclick="editor.onSaveAs()" />
+  </div>
+
+  <div id="options" class="dialog" style="display:none">
+    <h2>Options</h2>
+    <div>Editor:
+      <select id="editor">
+        <option value="textarea">Textarea</option>
+        <option value="codemirror">CodeMirror</option>
+        <option value="ymacs">Ymacs</option>
+      </select>
+    </div>
+    <div>Font:
+      <select id="font">
+        <option value="Courier New">Courier New</option>
+        <option value="Inconsolata">Inconsolata</option>
+        <option value="Andale Mono">Andale Mono</option>
+      </select>
+      <input type="button" value="Smaller" onclick="editor.onSmaller()" />
+      <input type="button" value="Larger" onclick="editor.onLarger()" />
+    </div>
+  </div>
 
   <script type="text/javascript">
     var _gaq = _gaq || [];

@@ -1,55 +1,103 @@
 namespace.lookup('com.pageforest.editor').define(function (ns) {
 
+    function keys(obj) {
+        var result = [];
+        for (var key in obj) {
+            if (obj.hasOwnProperty(key)) {
+                result.push(key);
+            }
+        }
+        return result;
+    }
+
     function showStatus(message) {
         $('#status').html(message);
     }
 
-    // Called on any api errors.
     function onError(xhr, status, message) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
-    function topLevel(listing) {
-        var result = [];
-        for (var filename in listing) {
-            if (listing.hasOwnProperty(filename)) {
-                var parts = filename.split('/');
-                var top = parts.shift();
-                if (parts.length) {
-                    top += '/';
-                }
-                if (result.indexOf(top) == -1) {
-                    result.push(top);
+    function listFiles(directory) {
+        var html = [];
+        html.push('<table>');
+        html.push('<tr>' +
+                  '<th>Filename</th>' +
+                  '<th>Size</th>' +
+                  '<th>Modified</th>' +
+                  '</tr>');
+        for (var path in ns.listing) {
+            if (ns.listing.hasOwnProperty(path)) {
+                var parts = path.split('/');
+                var filename = parts.pop();
+                if (parts.join('/') == directory) {
+                    var href = '#' + ns.app_id + '/' + directory;
+                    if (href.substr(-1) != '/') {
+                        href += '/';
+                    }
+                    href += filename;
+                    html.push(
+'<tr>' +
+'<td><a href="' + href + '">' + filename + '</a></td>' +
+'<td>' + ns.listing[path].size + '</td>' +
+'<td>' + ns.listing[path].modified.isoformat + '</td>' +
+'</tr>');
                 }
             }
         }
-        result.sort();
-        return result;
+        html.push('</table>');
+        return html.join('\n');
     }
 
-    function onSuccessList(listing, status, xhr) {
-        var options = [];
-        var filenames = topLevel(listing);
+    function updateOpenDialog() {
+        var html = [];
+        var directories = keys(ns.directories);
+        directories.sort();
+        directories.forEach(function (directory) {
+            html.push('<a href="#' + ns.app_id + '/' + directory + '/">' +
+                      (directory || 'top') + '</a>');
+        });
+        var filenames = ns.directories[ns.directory || ''];
         filenames.forEach(function(filename) {
-            options.push('<option value="' + filename + '">' +
+            html.push('<option value="' + filename + '">' +
                          filename + '</option>');
         });
-        $('#filename').html(options.join('\n'));
+        $('#filename').html(html.join('\n'));
+    }
+
+    function extractDirectories(message) {
+        ns.directories = {};
+        for (var path in message) {
+            if (message.hasOwnProperty(path)) {
+                var parts = path.split('/');
+                var filename = path.pop();
+                var directory = path.join('/');
+                if (ns.directories.hasOwnProperty(directory)) {
+                    ns.directories[directory].push(filename);
+                } else {
+                    ns.directories[directory] = [filename];
+                }
+            }
+        }
+    }
+
+    function onListSuccess(message, status, xhr) {
+        ns.listing = message;
+        $('#listing').html(listFiles(ns.directory || ''));
     }
 
     function loadApp(app_id) {
         console.log('loadApp ' + app_id);
         ns.app_id = app_id;
         $.ajax({
-            url: '/mirror/' + ns.app_id +
-                '?method=list&depth=0&keysonly=true',
+            url: '/mirror/' + ns.app_id + '?method=list&depth=0',
             dataType: 'json',
-            success: onSuccessList,
+            success: onListSuccess,
             error: onError
         });
     }
 
-    // Make the text area longer if the user added more lines.
+    // Make the text area longer, if the user has added more lines.
     function growTextArea() {
         var textarea = $('#code');
         var scrollHeight = textarea.attr('scrollHeight');
@@ -75,24 +123,24 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     }
 
     function onLoadFileSuccess(message, status, xhr) {
-        if (ns.codemirror == undefined) {
+        if (typeof ns.codemirror == 'object') {
+            ns.codemirror.setCode(message);
+            if (ns.filename.substr(-5) == '.html') {
+                ns.codemirror.setParser('HTMLMixedParser');
+            } else if (ns.filename.substr(-3) == '.js') {
+                ns.codemirror.setParser('JSParser');
+            } else if (ns.filename.substr(-5) == '.json') {
+                ns.codemirror.setParser('JSParser');
+            } else if (ns.filename.substr(-4) == '.css') {
+                ns.codemirror.setParser('CSSParser');
+            } else {
+                ns.codemirror.setParser('DummyParser');
+            }
+            ns.codemirror.focus();
+        } else {
             $('#code').val(message).focus();
             adjustTextArea();
-            return;
         }
-        ns.codemirror.setCode(message);
-        if (ns.filename.substr(-5) == '.html') {
-            ns.codemirror.setParser('HTMLMixedParser');
-        } else if (ns.filename.substr(-3) == '.js') {
-            ns.codemirror.setParser('JSParser');
-        } else if (ns.filename.substr(-5) == '.json') {
-            ns.codemirror.setParser('JSParser');
-        } else if (ns.filename.substr(-4) == '.css') {
-            ns.codemirror.setParser('CSSParser');
-        } else {
-            ns.codemirror.setParser('DummyParser');
-        }
-        ns.codemirror.focus();
         showStatus("Loaded file " + ns.filename);
     }
 
@@ -149,7 +197,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     // Convert textarea to CodeMirror editor with syntax highlighting.
     function onClickCodeMirror() {
         ns.codemirror = window.CodeMirror.fromTextArea("code", {
-            height: "100%",
             path: "codemirror/js/",
             parserfile: [
                 "parsexml.js",
@@ -178,7 +225,15 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         window.location.hash = '#' + ns.app_id + '/' + $('#filename').val();
     }
 
-    function onClickSave() {
+    function onOpen() {
+
+    }
+
+    function onOptions() {
+        $('#options').slideToggle();
+    }
+
+    function onSave() {
         $.ajax({
             type: 'PUT',
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
@@ -192,7 +247,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     }
 
     // Sign in (or out) depending on current user state.
-    function onClickSignInOut() {
+    function onSignInOut() {
         var isSignedIn = ns.client.username != undefined;
         if (isSignedIn) {
             ns.client.signOut();
@@ -205,10 +260,9 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     ns.extend({
         onReady: onReady,
         onUserChange: onUserChange,
-        onChangeFilename: onChangeFilename,
-        onClickSave: onClickSave,
-        onClickSignInOut: onClickSignInOut,
-        onClickCodeMirror: onClickCodeMirror
+        onOpen: onOpen,
+        onSave: onSave,
+        onSignInOut: onSignInOut
     });
 
 });
