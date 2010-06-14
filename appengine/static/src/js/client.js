@@ -51,7 +51,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.appid = this.appHost.substr(0, dot);
         this.wwwHost = 'www' + this.appHost.substr(dot);
 
-        this.state = 'clean';
+        this.state = 'init';
         this.username = undefined;
         this.fLogging = true;
         this.fFirstPoll = true;
@@ -74,10 +74,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     app[newName] = app[oldName];
                 }
             }
-        }
-
-        if (this.app.getDoc) {
-            this.setCleanDoc(undefined, true);
         }
 
         // REVIEW: When we support multiple clients per page, we can
@@ -527,6 +523,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
         poll: function () {
+            // Callbacks to app are deferred until poll is called.
+            if (this.state == 'init') {
+                if (this.app.getDoc) {
+                    this.setCleanDoc(undefined, true);
+                }
+            }
+
             if (this.lastHash != window.location.hash) {
                 this.lastHash = window.location.hash;
                 this.load(window.location.hash.substr(1));
