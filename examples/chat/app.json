@@ -1,0 +1,8 @@
+{
+  "application": "chat",
+  "url": "http://chat.pageforest.com/",
+  "title": "Chat",
+  "tags": ["demo", "sample", "chat", "multiplayer"],
+  "writers": ["mike", "mckoss", "johann", "jcrocholl"],
+  "readers": ["public"]
+}

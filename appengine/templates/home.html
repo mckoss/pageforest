@@ -1,0 +1,71 @@
+{% extends "page.html" %}
+{% block full-title %}{{ SITE_NAME }} - Saving the web - One page at a time{% endblock %}
+{% block left-column %}
+<div id="home">
+  <h1>
+    Pageforest Cloud Services Streamline the Development of your JavaScript Apps
+  </h1>
+
+  <h2>Develop Faster</h2>
+  <ul>
+    <li>Simply add a few lines of code to your app to empower your users to save and manage their data.
+    <li>Write your app inside your browser: no downloads, installation, or setup needed.
+  </ul>
+
+  <h2>More Fun</h2>
+  <ul>
+    <li>Build rich JavaScript-based apps without having to manage or maintain your own web server.
+    <li>You write the front end of your app and leave the server side to us.
+  </ul>
+
+  <h2>Worry Free</h2>
+  <ul>
+    <li>Our hosted service stores your users' data.
+    <li>With a Pageforest account, users can log into and access their saved data from all of your apps.
+    <li>We focus on keeping your data secure so you can spend your coding time focused on creating.
+  </ul>
+
+  <h2>More Power</h2>
+  <ul>
+    <li>Multiple users can interact on the same page collaboratively- or when playing games, competitively.
+    <li>Each app gets its own custom pageforest.com sub-domain.
+    <li>Each user gets a generous free-quota for data storage.
+  </ul>
+
+  <h2>Pageforest Features</h2>
+  <ul>
+    <li><b>Document and Blob Storage</b> - Store documents of up to 1 Megabyte in size.  Each document
+      can contain an unlimited number of additional "blobs" - containing any type of internet data (JSON,
+      images, pdfs, etc.).
+    <li><b>User Accounts</b> - Grant access to applications and documents on a per-user basis.
+    <li><b>Application Hosting</b> - We host your static HTML and JavaScript on a custom sub-domain.
+  </ul>
+
+  <h2>Open source, open development.</h2>
+  <p>
+    We're committed to building {{ SITE_NAME}} for the benefit of a wide
+    range of developers and users; from hobbiests to proffessional web
+    development teams. {{ SITE_NAME }} is
+    an <a href="http://pageforest.googlecode.com">open source</a> project
+    with an open development process and unrestrictive licensing. We
+    welcome feedback and feature requests directly from our users and
+    developers.
+  </p>
+
+  <h2>Custom solutions.</h2>
+  <p>
+    If you'd like help in building your application on the {{ SITE_NAME }}
+    platform, <a href="mailto:support@pageforest.com">email us</a>. We
+    offer both free and paid support options, and can help you get your
+    project off the ground with lower startup and ongoing maintenance
+    costs than traditional web application development.
+  </p>
+
+</div> <!-- home -->
+{% endblock %}
+
+{% block right-column %}
+<div class="CallToAction" onclick="location='http://scratch.pageforest.com';return false;">
+  <p>Build an App in 5 minutes</p>
+</div>
+{% endblock %}

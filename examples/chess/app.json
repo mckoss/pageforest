@@ -1,0 +1,8 @@
+{
+  "application": "chess",
+  "title": "Chess",
+  "tags": ["chess", "game", "multiplayer", "touch"],
+  "readers": ["public"],
+  "writers": ["mike", "mckoss", "johann", "jcrocholl"],
+  "url": "http://chess.pageforest.com/"
+}

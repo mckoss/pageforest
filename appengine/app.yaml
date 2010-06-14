@@ -1,0 +1,45 @@
+application: pageforest
+version: dev
+runtime: python
+api_version: 1
+default_expiration: 10s
+
+handlers:
+- url: /static/
+  static_dir: static
+
+- url: /lib/
+  static_dir: lib
+
+- url: /shell/.*
+  script: shell_main.py
+  secure: optional
+  login: admin
+
+- url: /.remote_api
+  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
+  secure: optional
+  login: admin
+
+- url: /stats/.*
+  script: appstats_main.py
+
+- url: /backups/.*
+  script: main.py
+  secure: optional
+  login: admin
+
+- url: /.*
+  script: main.py
+
+skip_files:
+- ^local/
+- ^app\.yaml$
+- ^index\.yaml$
+- ^.*\#$
+- ^.*~$
+- ^.*\.py[co]$
+- ^(.*/)?\.
+- ^.*\.bak$
+- ^.*\.orig$
+- ^.*/TAGS$

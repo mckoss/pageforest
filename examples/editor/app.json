@@ -1,0 +1,8 @@
+{
+  "application": "editor",
+  "title": "Pageforest Application Editor",
+  "tags": ["meta", "editor"],
+  "readers": ["public"],
+  "writers": ["mike", "mckoss", "johann", "jcrocholl"],
+  "url": "http://editor.pageforest.com/"
+}

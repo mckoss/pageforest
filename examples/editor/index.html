@@ -1,0 +1,89 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+  <title>Pageforest Application Editor</title>
+  <link rel="stylesheet" type="text/css" href="main.css" />
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.js"></script>
+  <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+  <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+  <script type="text/javascript" src="/codemirror/js/codemirror.js"></script>
+  <script type="text/javascript" src="main.js"></script>
+  <script type="text/javascript">
+    var editor = namespace.lookup("com.pageforest.editor");
+    $(document).ready(editor.onReady);
+  </script>
+</head>
+<body>
+  <div id="left">
+    <input type="button" value="Open" onclick="$('#open').slideToggle()" />
+    <input type="button" value="Save" onclick="editor.onSave()" />
+    <input type="button" value="More" onclick="$('#more').sliteToggle()" />
+    <span id="status">editor/dev/index.html</span>
+  </div>
+
+  <div id="right">
+    <span id="username">anonymous</span>
+    <input type="button" value="Sign In" onclick="editor.onSignInOut()" />
+    <input type="button" value="Options"
+           onclick="$('#options').slideToggle();" />
+    <input type="button" value="Help" onclick="editor.onHelp()" />
+  </div>
+
+  <div id="apps" style="display:none">
+    <h2>Apps</h2>
+    <a href="#editor">editor</a><br />
+    <a href="#mandelbrot">mandelbrot</a><br />
+    <a href="#scratch">scratch</a><br />
+  </div>
+
+  <div id="content">
+    <div id="listing">
+      <table>
+      </table>
+    </div>
+    <textarea id="code"></textarea>
+  </div>
+
+  <div id="more" class="dialog" style="display:none">
+    <input type="button" value="Revert" onclick="editor.onRevert()" />
+    <input type="button" value="Lint" onclick="editor.onLint()" />
+    <input type="button" value="Save as" onclick="editor.onSaveAs()" />
+  </div>
+
+  <div id="options" class="dialog" style="display:none">
+    <h2>Options</h2>
+    <div>Editor:
+      <select id="editor">
+        <option value="textarea">Textarea</option>
+        <option value="codemirror">CodeMirror</option>
+        <option value="ymacs">Ymacs</option>
+      </select>
+    </div>
+    <div>Font:
+      <select id="font">
+        <option value="Courier New">Courier New</option>
+        <option value="Inconsolata">Inconsolata</option>
+        <option value="Andale Mono">Andale Mono</option>
+      </select>
+      <input type="button" value="Smaller" onclick="editor.onSmaller()" />
+      <input type="button" value="Larger" onclick="editor.onLarger()" />
+    </div>
+  </div>
+
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-2072869-7']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+      var ga = document.createElement('script');
+      ga.type = 'text/javascript';
+      ga.async = true;
+      ga.src = ('https:' == document.location.protocol ?
+        'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0];
+      s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+</body>
+</html>
