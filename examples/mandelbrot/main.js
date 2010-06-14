@@ -112,10 +112,19 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
         renderTile: function(tileName, canvas, fn) {
             var rc = this.tiles.rectFromTileName(tileName);
-            ns.m.render(canvas, rc, fn);
+            ns.backlog++;
+            ns.updateStats();
+            ns.m.render(canvas, rc, function() {
+                ns.rendered++;
+                ns.backlog--;
+                ns.updateStats();
+                fn();
+            });
         },
 
         tileUpdated: function(tileName, tile) {
+            ns.loaded++;
+            ns.updateStats();
             var flipTile = this.flipTiles[tileName];
             if (flipTile) {
                 this.tiles.copyTileAttrs(flipTile, tile);
@@ -160,10 +169,24 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             ns.m.renderKey(key);
         }
 
+        ns.loaded = 0;
+        ns.rendered = 0;
+        ns.backlog = 0;
+        ns.updateStats();
+
         initMap();
 
         ns.client.setLogging(false);
         ns.client.poll();
+    }
+
+    function updateStats() {
+        var stats = ['loaded', 'rendered', 'backlog'];
+
+        for (var i = 0; i < stats.length; i++) {
+            var stat = stats[i];
+            $('#' + stat).text(ns[stat]);
+        }
     }
 
     // This function is called whenever your document should be reloaded.
@@ -231,6 +254,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     // Exported functions
     ns.extend({
         'onReady': onReady,
+        'updateStats': updateStats,
         'getDoc': getDoc,
         'setDoc': setDoc,
         'onUserChange': onUserChange,
