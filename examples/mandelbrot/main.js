@@ -138,12 +138,20 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         ns.mapType = new MandelbrotMapType();
         ns.map.mapTypes.set('mandelbrot', ns.mapType);
         ns.map.setMapTypeId('mandelbrot');
+
+        ns.zoom = ns.map.getZoom();
+        ns.center = ns.map.getCenter();
+
+        // Called after each pan/zoom change
+        google.maps.event.addListener(ns.map, "idle", function() {
+            ns.zoom = ns.map.getZoom();
+            ns.center = ns.map.getCenter();
+        });
     }
 
     // Initialize the document - create a client helper object
     function onReady() {
         ns.client = new clientLib.Client(ns);
-        ns.client.setLogging(false);
         ns.m = new mandelbrot.Mandelbrot();
         ns.m.initWorkers();
 
@@ -154,27 +162,30 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
         initMap();
 
+        ns.client.setLogging(false);
         ns.client.poll();
     }
 
     // This function is called whenever your document should be reloaded.
     function setDoc(json) {
+        ns.zoom = json.blob.zoom;
+        ns.center = json.blob.center;
+        ns.center = new google.maps.LatLng(ns.center[0], ns.center[1]);
+        ns.map.setZoom(ns.zoom);
+        ns.map.setCenter(ns.center);
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
     function getDoc() {
         return {
-            "title": "Mandelbrot Set",
-            "blob": {
+            'title': "Mandelbrot Set",
+            'blob': {
+                'zoom': ns.zoom,
+                'center': [ns.center.lat(), ns.center.lng()]
             },
-            "readers": ["public"]
+            'readers': ["public"]
         };
-    }
-
-    // Called on any api errors.
-    function onError(status, message) {
-        $('#error').text(message);
     }
 
     // Called when the current user changes (signs in or out)
@@ -222,7 +233,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         'onReady': onReady,
         'getDoc': getDoc,
         'setDoc': setDoc,
-        'onError': onError,
         'onUserChange': onUserChange,
         'onStateChange': onStateChange,
         'signInOut': signInOut,
