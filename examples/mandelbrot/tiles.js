@@ -139,7 +139,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var rcParent = this.relativeRect(blobid, parentBlobid);
             this.setTileSize(imgProxy, rcParent);
             imgProxy.src = this.client.getDocURL(this.docid, parentBlobid);
-            //img.src = this.client.getDocURL(this.docid, blobid);
             this.checkAndRender(blobid);
             return this.tiles[blobid].div;
         },
@@ -209,8 +208,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
-                    img.src = self.client.getDocURL(self.docid, blobid) +
-                        '?salt=' + base.randomInt(10000);
+                    img.src = self.client.getDocURL(self.docid, blobid);
                     img.style.display = 'block';
                     self.fnUpdated(blobid, self.tiles[blobid].div);
                     return;
