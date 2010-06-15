@@ -1,5 +1,6 @@
 import time
 import urllib
+import hashlib
 import logging
 
 from django.conf import settings
@@ -18,6 +19,7 @@ from utils.json import ModelEncoder
 from utils.shortcuts import get_int, get_bool, lookup_or_404
 
 from blobs.models import Blob, MAX_INTERNAL_SIZE
+from apps.views import app_json_get
 
 ROOT_METHODS = ('GET', 'HEAD', 'LIST')
 
@@ -200,6 +202,17 @@ def blob_list(request):
         if blob._value is None or len(blob._value) <= MAX_INTERNAL_SIZE:
             memcache_mapping[blob.get_cache_key()] = blob.to_protobuf()
     memcache.set_multi(memcache_mapping)
+    # Add app.json at the top level of a Pageforest application.
+    if request.key_name == 'apps/' + request.app.get_app_id() + '/':
+        response = app_json_get(request)
+        assert response.status_code == 200
+        app_json = response.content
+        result['app.json'] = {
+            'size': len(app_json),
+            'sha1': hashlib.sha1(app_json).hexdigest(),
+            'json': True,
+            'modified': request.app.modified,
+            }
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
