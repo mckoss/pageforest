@@ -88,7 +88,8 @@ def main():
     walk = pftool.FileWalker(matches=('*.js', '*.json'),
                              ignored=options.ignored,
                              pass_key='jslint-' + options.level)
-    dirty_files = list(walk.walk_files(*args))
+    dirty_files = [path for path in walk.walk_files(*args)
+                   if not pftool.is_third_party(path)]
 
     # LAME: This chdir is need because jslint-cl has a load that only
     # works in the tools directory and rhino has no way to discover

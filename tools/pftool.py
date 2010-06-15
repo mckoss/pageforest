@@ -33,6 +33,15 @@ PASS_FILE = os.path.join(tools_dir, ".pass")
 reg_ext = re.compile(r".*\.([^\.]+)$")
 
 
+def is_third_party(path):
+    """
+    Return true if this filename path is part of third-party source code.
+    Then we skip certain checks, e.g. jslint.
+    """
+    parts = path.split(os.path.sep)
+    return 'codemirror' in parts or 'fancybox' in parts
+
+
 def tool_path(file_name):
     return os.path.join(tools_dir, file_name)
 

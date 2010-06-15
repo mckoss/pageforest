@@ -66,6 +66,8 @@ def main():
     total_errors = 0
     walk = pftool.FileWalker(ignored=IGNORE_FILES, pass_key='whitespace')
     for filename in walk.walk_files(*args):
+        if pftool.is_third_party(filename):
+            continue
         if options.verbose:
             print("checking %s" % filename)
         errors = check(filename)
