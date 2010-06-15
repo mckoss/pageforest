@@ -299,8 +299,8 @@ def get_command(args):
     Download all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
     """
-    download_file(META_FILENAME)
     list_remote_files()
+    download_file(META_FILENAME)
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
@@ -319,6 +319,7 @@ def put_command(args):
     Upload all files for an app, except files that are already
     up-to-date (same SHA-1 hash as remote).
     """
+    list_remote_files()
     if not args:
         args = [name for name in os.listdir('.')
                 if not name.startswith('.')
@@ -332,7 +333,6 @@ def put_command(args):
         args.remove(META_FILENAME)
     if not args:
         return
-    list_remote_files()
     for path in args:
         if os.path.isdir(path):
             upload_dir(path)
