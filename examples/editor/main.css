@@ -41,12 +41,13 @@ div#content {
 }
 
 textarea {
-  font-family: "Monaco", "Courier New", Courier, monospace;
-  font-size: 16px;
+  font-family: "Monaco", "Andale Mono", "Courier New", Courier, monospace;
+  font-size: 14px;
   color: black;
   margin: 0;
   padding: 0;
   border: none;
+  width: 100%;
 }
 
 div.dialog {
