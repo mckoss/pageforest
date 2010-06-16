@@ -17,17 +17,23 @@
 </head>
 <body>
   <div id="left">
-    <input type="button" value="Open" onclick="$('#open').slideToggle()" />
+    <a href="#editor">editor</a>
+    <span class="quiet">|</span>
+    <a href="#editor/dev">dev</a>
+    <span class="quiet">|</span>
+    <a href="#editor/dev/index.html">index.html</a>
     <input type="button" value="Save" onclick="editor.onSave()" />
     <input type="button" value="More" onclick="$('#more').slideToggle()" />
-    <span id="status">editor/dev/index.html</span>
   </div>
 
   <div id="right">
     <span id="username">anonymous</span>
-    <input type="button" value="Sign In" onclick="editor.onSignInOut()" />
-    <input type="button" value="Options" onclick="$('#options').slideToggle();" />
-    <input type="button" value="Help" onclick="editor.onHelp()" />
+    <span class="quiet">|</span>
+    <a href="http://www.pageforest.com/sign-in/editor" target="_blank">Sign in</a>
+    <span class="quiet">|</span>
+    <a href="#" onclick="$('#options').slideToggle(); return false;">Options</a>
+    <span class="quiet">|</span>
+    <a href="http://code.google.com/p/pageforest/wiki" target="_blank">Help</a>
   </div>
 
   <div id="content">

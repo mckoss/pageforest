@@ -83,3 +83,7 @@ div#apps {
   float: left;
   margin-right: 10px;
 }
+
+.quiet {
+  color: #ccc;
+}
