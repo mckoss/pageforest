@@ -1,5 +1,12 @@
 namespace.lookup('com.pageforest.editor').define(function (ns) {
 
+    function readableBytes(bytes) {
+        var s = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
+        var e = Math.floor(Math.log(bytes) / Math.log(1024));
+        return !e ? bytes :
+            (bytes / Math.pow(1024, Math.floor(e))).toFixed(1) + s[e];
+    }
+
     function keys(obj) {
         var result = [];
         for (var key in obj) {
@@ -18,7 +25,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
-    function listFiles(directory) {
+    function showFiles(directory) {
         var html = [];
         html.push('<table>');
         html.push('<tr>' +
@@ -30,60 +37,35 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             if (ns.listing.hasOwnProperty(path)) {
                 var parts = path.split('/');
                 var filename = parts.pop();
-                if (parts.join('/') == directory) {
-                    var href = '#' + ns.app_id + '/' + directory;
-                    if (href.substr(-1) != '/') {
-                        href += '/';
-                    }
-                    href += filename;
-                    html.push(
-'<tr>' +
-'<td><a href="' + href + '">' + filename + '</a></td>' +
-'<td>' + ns.listing[path].size + '</td>' +
-'<td>' + ns.listing[path].modified.isoformat + '</td>' +
-'</tr>');
+                if (parts.join('/') != directory) {
+                    continue;
                 }
+                var href = '#' + ns.app_id + '/' + directory;
+                if (href.substr(-1) != '/') {
+                    href += '/';
+                }
+                href += filename;
+                var dot = filename.lastIndexOf('.');
+                var ext = filename.substr(dot + 1).toLowerCase();
+                var icon = '<img width="16" height="16" src="icons/' +
+                    ext + '.png" alt="' + ext + '" />';
+                html.push('<tr><td>' + [
+                    '<a href="' + href + '">' + icon + '</a> ' +
+                        '<a href="' + href + '">' + filename + '</a>' +
+                        '</td><td style="text-align:right">' +
+                        readableBytes(ns.listing[path].size),
+                    humane_date(ns.listing[path].modified.isoformat
+                                .substr(0, 19) + 'Z')
+                ].join('</td><td>') + '</td></tr>');
             }
         }
         html.push('</table>');
-        return html.join('\n');
-    }
-
-    function updateOpenDialog() {
-        var html = [];
-        var directories = keys(ns.directories);
-        directories.sort();
-        directories.forEach(function (directory) {
-            html.push('<a href="#' + ns.app_id + '/' + directory + '/">' +
-                      (directory || 'top') + '</a>');
-        });
-        var filenames = ns.directories[ns.directory || ''];
-        filenames.forEach(function(filename) {
-            html.push('<option value="' + filename + '">' +
-                         filename + '</option>');
-        });
-        $('#filename').html(html.join('\n'));
-    }
-
-    function extractDirectories(message) {
-        ns.directories = {};
-        for (var path in message) {
-            if (message.hasOwnProperty(path)) {
-                var parts = path.split('/');
-                var filename = path.pop();
-                var directory = path.join('/');
-                if (ns.directories.hasOwnProperty(directory)) {
-                    ns.directories[directory].push(filename);
-                } else {
-                    ns.directories[directory] = [filename];
-                }
-            }
-        }
+        $('#content').html(html.join('\n'));
     }
 
     function onListSuccess(message, status, xhr) {
         ns.listing = message;
-        $('#listing').html(listFiles(ns.directory || ''));
+        showFiles(ns.directory || '');
     }
 
     function loadApp(app_id) {
@@ -113,7 +95,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         var textarea = $('#code');
         var scrollHeight = textarea.attr('scrollHeight');
         var offsetHeight = textarea.attr('offsetHeight');
-        while (scrollHeight == offsetHeight) {
+        while (offsetHeight && scrollHeight == offsetHeight) {
             textarea.css('height', (offsetHeight / 2) + 'px');
             scrollHeight = textarea.attr('scrollHeight');
             offsetHeight = textarea.attr('offsetHeight');

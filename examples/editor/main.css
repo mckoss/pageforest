@@ -5,6 +5,11 @@ body {
   font-size: 16px;
 }
 
+img {
+  border: none;
+  vertical-align: middle;
+}
+
 input, select {
   height: 23px;
 }
@@ -38,6 +43,11 @@ div#content {
   width: 100%;
   top: 40px;
   height: 400px;
+}
+
+th, td {
+  text-align: left;
+  padding: 4px 8px 4px 0;
 }
 
 textarea {

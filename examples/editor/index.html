@@ -8,6 +8,7 @@
   <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
   <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
   <script type="text/javascript" src="/codemirror/js/codemirror.js"></script>
+  <script type="text/javascript" src="humane.js"></script>
   <script type="text/javascript" src="main.js"></script>
   <script type="text/javascript">
     var editor = namespace.lookup("com.pageforest.editor");
@@ -18,31 +19,18 @@
   <div id="left">
     <input type="button" value="Open" onclick="$('#open').slideToggle()" />
     <input type="button" value="Save" onclick="editor.onSave()" />
-    <input type="button" value="More" onclick="$('#more').sliteToggle()" />
+    <input type="button" value="More" onclick="$('#more').slideToggle()" />
     <span id="status">editor/dev/index.html</span>
   </div>
 
   <div id="right">
     <span id="username">anonymous</span>
     <input type="button" value="Sign In" onclick="editor.onSignInOut()" />
-    <input type="button" value="Options"
-           onclick="$('#options').slideToggle();" />
+    <input type="button" value="Options" onclick="$('#options').slideToggle();" />
     <input type="button" value="Help" onclick="editor.onHelp()" />
   </div>
 
-  <div id="apps" style="display:none">
-    <h2>Apps</h2>
-    <a href="#editor">editor</a><br />
-    <a href="#mandelbrot">mandelbrot</a><br />
-    <a href="#scratch">scratch</a><br />
-  </div>
-
   <div id="content">
-    <div id="listing">
-      <table>
-      </table>
-    </div>
-    <textarea id="code"></textarea>
   </div>
 
   <div id="more" class="dialog" style="display:none">
@@ -52,7 +40,6 @@
   </div>
 
   <div id="options" class="dialog" style="display:none">
-    <h2>Options</h2>
     <div>Editor:
       <select id="editor">
         <option value="textarea">Textarea</option>
