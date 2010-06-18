@@ -1,13 +1,4 @@
-/*global humane_date */
-
 namespace.lookup('com.pageforest.editor').define(function (ns) {
-
-    function readableBytes(bytes) {
-        var s = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
-        var e = Math.floor(Math.log(bytes) / Math.log(1024));
-        return !e ? bytes :
-            (bytes / Math.pow(1024, Math.floor(e))).toFixed(1) + s[e];
-    }
 
     function keys(obj) {
         var result = [];
