@@ -303,20 +303,24 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                     return;
                 }
 
-                this.assertContains(v1, v2);
-                var cProp1 = this.propCount(v1);
-                var cProp2 = this.propCount(v2);
-                this.assert(cProp1 == cProp2,
-                            "Objects have different property counts (" +
-                            cProp1 + " != " + cProp2 + ")");
                 // Make sure Dates match
                 if (v1.constructor == Date) {
                     this.assertEq(v2.constructor, Date);
                     if (v2.constructor == Date) {
                         this.assertEq(v1.toString(), v2.toString());
                     }
+                    return;
                 }
+
+                this.assertContains(v1, v2);
+                var cProp1 = this.propCount(v1);
+                var cProp2 = this.propCount(v2);
+                this.assert(cProp1 == cProp2,
+                            "Objects have different property counts (" +
+                            base.keys(v1).join(',') + " != " +
+                            base.keys(v2).join(',') + ")");
                 break;
+
             default:
                 this.assert(v1 == v2, v1 + " == " +
                             v2 + " (type: " + typeof v1 + ")", stNote);
