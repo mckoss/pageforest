@@ -1,3 +1,5 @@
+/*global humane_date */
+
 namespace.lookup('com.pageforest.editor').define(function (ns) {
 
     function readableBytes(bytes) {
