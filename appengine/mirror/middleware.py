@@ -15,8 +15,7 @@ class MirrorMiddleware(object):
     """
 
     def process_request(self, request):
-        match = MIRROR_REGEX.match(request.path_info)
-        if not match:
+        if not request.path_info.startswith('/mirror/'):
             return
         # Only allow /mirror/ on special trusted domains.
         hostname = request.META['HTTP_HOST'] or 'unspecified'
@@ -26,6 +25,10 @@ class MirrorMiddleware(object):
                 "Mirror is only available on trusted apps.")
         request.original_app = App.lookup(original_app_id)
         # Rewrite Host header and path for this request.
+        match = MIRROR_REGEX.match(request.path_info)
+        if not match:
+            # This request should be handled directly by urls.py.
+            return
         app_id = match.group(1)
         path = match.group(2) or '/'
         request.META['HTTP_HOST'] = 'admin.%s.%s' % (
