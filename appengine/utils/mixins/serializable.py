@@ -1,6 +1,7 @@
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
+from google.appengine.datastore import entity_pb
 
 from utils.json import ModelEncoder
 
@@ -12,6 +13,13 @@ class Serializable(db.Model):
         Serialize a datastore entity to a protocol buffer.
         """
         return db.model_to_protobuf(self).Encode()
+
+    @classmethod
+    def from_protobuf(cls, binary):
+        """
+        Restore an entity from a binary protocol buffer.
+        """
+        return db.model_from_protobuf(entity_pb.EntityProto(binary))
 
     def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
