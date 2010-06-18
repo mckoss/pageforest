@@ -90,10 +90,11 @@ def app_json_get(request):
     """
     if not request.app.is_readable(request.user):
         return AccessDenied(request)
-    extra = {"application": request.app.get_app_id(),
-             "cloneable": bool(request.app.cloneable)}
-    content = request.app.to_json(exclude=settings.HIDDEN_PROPERTIES,
-                                  extra=extra)
+    # Timestamps are excluded to avoid uploading app.json again and
+    # again because the SHA-1 hash keeps changing.
+    content = request.app.to_json(
+        exclude=settings.HIDDEN_PROPERTIES + ('created', 'modified'),
+        extra={"application": request.app.get_app_id()})
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
 
 
