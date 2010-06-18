@@ -177,29 +177,34 @@ class Cacheable(Serializable):
         """
         Get a list of model instances from memcache or datastore.
         """
+        result = {}
+        # Try to load entities from memcache.
         cache_keys = [cls.class_get_cache_key(key_name)
                       for key_name in key_name_list]
-        found = memcache.get_multi(cache_keys)
-        missing = [key_name
-                   for key_name, cache_key in zip(key_name_list, cache_keys)
-                   if cache_key not in found]
-        loaded = super(Cacheable, cls).get_by_key_name(missing, parent)
-        memcache_mapping = dict(
-            [(instance.get_cache_key(), instance.to_protobuf())
-             for instance in loaded])
-        memcache.set_multi(memcache_mapping)
-        found.update(memcache_mapping)
-        return [cls.from_protobuf(found[cache_key])
-                for cache_key in cache_keys]
+        from_memcache = memcache.get_multi(cache_keys)
+        # Find the key names of missing entities.
+        missing = []
+        for key_name, cache_key in zip(key_name_list, cache_keys):
+            if cache_key in from_memcache:
+                result[key_name] = cls.from_protobuf(from_memcache[cache_key])
+            else:
+                missing.append(key_name)
+        # Load missing entities from datastore.
+        if missing:
+            from_datastore = super(Cacheable, cls).get_by_key_name(
+                missing, parent)
+            # Save loaded entities to memcache.
+            to_memcache = {}
+            for key_name, instance in zip(missing, from_datastore):
+                result[key_name] = instance
+                to_memcache[instance.get_cache_key()] = instance.to_protobuf()
+            memcache.set_multi(to_memcache)
+        return [result[key_name] for key_name in key_name_list]
 
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):
         """
         Look in memcache before datastore.
-        The key_name must be str or unicode, not a list.
-
-        TODO: Support list of key names - will need to fetch partial
-        list from datastore for those keys that are not yet cached!
         """
         if not isinstance(key_name, basestring):
             return cls.get_by_key_name_list(key_name, parent=parent)
