@@ -63,6 +63,9 @@ class CacheableTest(TestCase):
         self.assertEqual(len(entities), 2)
         self.assertEqual(entities[0].key().name(), 'e')
         self.assertEqual(entities[1].key().name(), 's')
+        # Both entities should be in memcache now.
+        self.assertTrue(memcache.get(self.entity.get_cache_key()))
+        self.assertTrue(memcache.get(self.saved.get_cache_key()))
 
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
