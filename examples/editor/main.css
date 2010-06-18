@@ -45,9 +45,17 @@ div#content {
   height: 400px;
 }
 
-th, td {
-  text-align: left;
-  padding: 4px 8px 4px 0;
+div.icon {
+  float: left;
+  width: 120px;
+  height: 100px;
+  margin: 20px;
+  padding: 0;
+  text-align: center;
+}
+
+div.icon img {
+  margin: 0 0 10px;
 }
 
 textarea {
