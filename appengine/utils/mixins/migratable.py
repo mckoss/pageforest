@@ -35,10 +35,13 @@ class Migratable(db.Model):
         Override the Model.get_by_key_name method, to ensure the
         schema version is current after a read.
         """
-        entity = super(Migratable, cls).get_by_key_name(key_name, parent)
-        if entity is not None:
-            entity.update_schema()
-        return entity
+        result = super(Migratable, cls).get_by_key_name(key_name, parent)
+        if isinstance(key_name, basestring):
+            if result is not None:
+                result.update_schema()
+        elif isinstance(key_name, list):
+            cls.update_schema_list(result, write_to_memcache=True)
+        return result
 
     @classmethod
     def get_or_insert(cls, key_name, **kwargs):
@@ -76,18 +79,31 @@ class Migratable(db.Model):
         """
         Migrate entities in batch.
         """
-        memcache_mapping = {}
         query = cls.all().filter('schema <', cls.current_schema)
         entities = query.fetch(limit)
+        cls.update_schema_list(entities, write_to_memcache)
+        return len(entities)
+
+    @classmethod
+    def update_schema_list(cls, entities, write_to_memcache=False):
+        """
+        Update the schema for a list of entities. This method is
+        called by get_by_key_name_list and update_schema_batch.
+        """
+        put_entities = []
+        memcache_mapping = {}
         for entity in entities:
+            if entity is None or entity.schema == cls.current_schema:
+                continue
             entity.migrate()
             entity.schema = entity.current_schema
+            put_entities.append(entity)
             if write_to_memcache:
                 memcache_mapping[entity.get_cache_key()] = entity.to_protobuf()
-        if write_to_memcache:
+        if memcache_mapping:
             memcache.set_multi(memcache_mapping)
-        db.put(entities)
-        return len(entities)
+        if put_entities:
+            db.put(put_entities)
 
     def migrate(self):
         """

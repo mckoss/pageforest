@@ -72,16 +72,22 @@ class Cacheable(Serializable):
     """
 
     def __init__(self, *args, **kwargs):
-        # Make sure that Cacheable is the last mixin in the MRO.
+        if not settings.RUNNING_ON_GAE:
+            self.check_mro()
+        super(Cacheable, self).__init__(*args, **kwargs)
+
+    def check_mro(self):
+        """
+        Make sure that Cacheable is the last mixin in the MRO.
+        """
         found = False
         for cls in self.__class__.__mro__:
             if found and cls not in (Serializable, db.Model, object):
-                mro = [c.__name__ for c in self.__class__.__mro__]
-                mro.insert(0, "Cacheable must be the last mixin in the MRO:")
-                raise TypeError(' '.join(mro))
+                raise TypeError(
+                    "Cacheable must be the last mixin: " + ' '.join(
+                        [c.__name__ for c in self.__class__.__mro__]))
             if cls is Cacheable:
                 found = True
-        super(Cacheable, self).__init__(*args, **kwargs)
 
     def cache_put(self):
         """Save this entity to memcache, using protocol buffers."""
@@ -154,6 +160,8 @@ class Cacheable(Serializable):
         Get a model instance from memcache, using protocol buffers.
         Return None if the instance was not found in memcache.
         """
+        if isinstance(key_name, list):
+            return cls.cache_get_by_key_name_list(key_name)
         cache_key = cls.class_get_cache_key(key_name)
         binary = memcache.get(cache_key)
         if binary is None:
@@ -165,6 +173,26 @@ class Cacheable(Serializable):
         return instance
 
     @classmethod
+    def get_by_key_name_list(cls, key_name_list, parent=None):
+        """
+        Get a list of model instances from memcache or datastore.
+        """
+        cache_keys = [cls.class_get_cache_key(key_name)
+                      for key_name in key_name_list]
+        found = memcache.get_multi(cache_keys)
+        missing = [key_name
+                   for key_name, cache_key in zip(key_name_list, cache_keys)
+                   if cache_key not in found]
+        loaded = super(Cacheable, cls).get_by_key_name(missing, parent)
+        memcache_mapping = dict(
+            [(instance.get_cache_key(), instance.to_protobuf())
+             for instance in loaded])
+        memcache.set_multi(memcache_mapping)
+        found.update(memcache_mapping)
+        return [cls.from_protobuf(found[cache_key])
+                for cache_key in cache_keys]
+
+    @classmethod
     def get_by_key_name(cls, key_name, parent=None):
         """
         Look in memcache before datastore.
@@ -173,7 +201,8 @@ class Cacheable(Serializable):
         TODO: Support list of key names - will need to fetch partial
         list from datastore for those keys that are not yet cached!
         """
-        assert isinstance(key_name, basestring)
+        if not isinstance(key_name, basestring):
+            return cls.get_by_key_name_list(key_name, parent=parent)
         instance = cls.cache_get_by_key_name(key_name)
         if instance is not None:
             return instance

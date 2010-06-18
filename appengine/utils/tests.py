@@ -26,7 +26,7 @@ class CacheableTest(TestCase):
         self.saved.put()
 
     def test_put_and_delete(self):
-        """Test that put and delete will update memcache."""
+        """Put and delete should update memcache."""
         # Check that the entity is not saved yet.
         self.assertFalse(TestModel.exists('e'))
         self.assertEqual(TestModel.cache_get_by_key_name('e'), None)
@@ -45,13 +45,24 @@ class CacheableTest(TestCase):
         self.assertEqual(TestModel.cache_get_by_key_name('e'), None)
 
     def test_get_by_key_name(self):
-        """Test the overriden get_by_key_name method."""
+        """The get_by_key_name method should load from memcache."""
         entity = TestModel.get_by_key_name('s')
         self.assertEqual(entity.key().name(), 's')
         # Expire memcache and try again.
         memcache.delete(entity.get_cache_key())
         entity = TestModel.get_by_key_name('s')
         self.assertEqual(entity.key().name(), 's')
+
+    def test_get_by_key_name_list(self):
+        """The get_by_key_name method should support a list of names."""
+        # Make sure that one entity is in memcache and the other isn't.
+        self.entity.cache_put()
+        self.saved.cache_delete()
+        # Try to load both entities.
+        entities = TestModel.get_by_key_name(['e', 's'])
+        self.assertEqual(len(entities), 2)
+        self.assertEqual(entities[0].key().name(), 'e')
+        self.assertEqual(entities[1].key().name(), 's')
 
     def test_write_rate_limit(self):
         """Test that the datastore put rate is limited."""
