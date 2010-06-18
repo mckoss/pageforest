@@ -32,10 +32,11 @@ function humane_date(date_str) {
         [4730400000, '1 Century'] // 60*60*24*365*100*1.5
     ];
 
-    var time = ('' + date_str).replace(/-/g, "/").replace(/[TZ]/g, " "),
-    dt = new Date(),
-    seconds = ((dt - new Date(time) + (dt.getTimezoneOffset() * 60000)) / 1000),
-    token = ' Ago';
+    var time = ('' + date_str).replace(/-/g, "/").replace(/[TZ]/g, " ");
+    var dt = new Date();
+    var seconds = ((dt - new Date(time) +
+                    (dt.getTimezoneOffset() * 60000)) / 1000);
+    var token = ' Ago';
 
     if (seconds < 0) {
         seconds = Math.abs(seconds);
