@@ -27,47 +27,50 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
-    function showFiles(directory) {
+    function getIconExt(filename) {
+        var dot = filename.lastIndexOf('.');
+        if (dot == -1) {
+            return 'txt';
+        }
+        var ext = filename.substr(dot + 1).toLowerCase();
+        if (ext == 'json') {
+            return 'js';
+        }
+        return ext;
+    }
+
+    function showFiles(path) {
+        // Remove trailing slash.
+        if (path.substr(-1) == '/') {
+            path = path.substr(0, path.length - 1);
+        }
         var html = [];
-        html.push('<table>');
-        html.push('<tr>' +
-                  '<th>Filename</th>' +
-                  '<th>Size</th>' +
-                  '<th>Modified</th>' +
-                  '</tr>');
-        for (var path in ns.listing) {
-            if (ns.listing.hasOwnProperty(path)) {
-                var parts = path.split('/');
+        for (var filepath in ns.listing) {
+            if (ns.listing.hasOwnProperty(filepath)) {
+                var parts = filepath.split('/');
                 var filename = parts.pop();
-                if (parts.join('/') != directory) {
+                if (parts.join('/') != path) {
                     continue;
                 }
-                var href = '#' + ns.app_id + '/' + directory;
+                var href = '#' + ns.app_id + '/' + path;
                 if (href.substr(-1) != '/') {
                     href += '/';
                 }
                 href += filename;
-                var dot = filename.lastIndexOf('.');
-                var ext = filename.substr(dot + 1).toLowerCase();
-                var icon = '<img width="16" height="16" src="icons/' +
-                    ext + '.png" alt="' + ext + '" />';
-                html.push('<tr><td>' + [
-                    '<a href="' + href + '">' + icon + '</a> ' +
-                        '<a href="' + href + '">' + filename + '</a>' +
-                        '</td><td style="text-align:right">' +
-                        readableBytes(ns.listing[path].size),
-                    humane_date(ns.listing[path].modified.isoformat
-                                .substr(0, 19) + 'Z')
-                ].join('</td><td>') + '</td></tr>');
+                var icon = '<img width="54" height="64" src="/icons/64/' +
+                    getIconExt(filename) + '.png" alt="" />';
+                html.push('<div class="icon">');
+                html.push('<a href="' + href + '">' + icon + '</a><br />');
+                html.push('<a href="' + href + '">' + filename + '</a>');
+                html.push('</div>');
             }
         }
-        html.push('</table>');
         $('#content').html(html.join('\n'));
     }
 
     function onListSuccess(message, status, xhr) {
         ns.listing = message;
-        showFiles(ns.directory || '');
+        showFiles(ns.filename);
     }
 
     function loadApp(app_id) {
@@ -131,13 +134,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     function loadFile(filename) {
         ns.filename = filename;
         if (filename.substr(-1) == '/') {
-            $.ajax({
-                url: '/mirror/' + ns.app_id + '/' + ns.filename +
-                    '?method=list&depth=0&keysonly=true',
-                dataType: 'text',
-                success: onLoadFileSuccess,
-                error: onError
-            });
+            showFiles(filename);
         } else {
             $.ajax({
                 url: '/mirror/' + ns.app_id + '/' + ns.filename,
@@ -174,6 +171,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.hash = '';
         ns.app_id = '';
         ns.filename = '';
+        ns.editor = 'textarea';
         // Start polling for window.location.hash changes.
         setInterval(checkHash, 200);
     }
