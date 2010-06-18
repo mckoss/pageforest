@@ -17,10 +17,12 @@
 </head>
 <body>
   <div id="left">
+    <a href="#">apps</a>
+    <span class="quiet">/</span>
     <a href="#editor">editor</a>
-    <span class="quiet">|</span>
+    <span class="quiet">/</span>
     <a href="#editor/dev">dev</a>
-    <span class="quiet">|</span>
+    <span class="quiet">/</span>
     <a href="#editor/dev/index.html">index.html</a>
     <input type="button" value="Save" onclick="editor.onSave()" />
     <input type="button" value="More" onclick="$('#more').slideToggle()" />
@@ -29,7 +31,8 @@
   <div id="right">
     <span id="username">anonymous</span>
     <span class="quiet">|</span>
-    <a href="http://www.pageforest.com/sign-in/editor" target="_blank">Sign in</a>
+    <a href="http://www.pageforest.com/sign-in/editor" target="_blank"
+       onclick="editor.onSignInOut(); return false">Sign in</a>
     <span class="quiet">|</span>
     <a href="#" onclick="$('#options').slideToggle(); return false;">Options</a>
     <span class="quiet">|</span>
