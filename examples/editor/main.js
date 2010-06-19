@@ -18,16 +18,47 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         showStatus(xhr.status + ' ' + xhr.statusText);
     }
 
-    function getIconExt(filename) {
+    function getIcon(filename) {
+        if (filename.substr(-1) == '/') {
+            return '<img width="83" height="64" ' +
+                'src="/icons/64/folder.png" alt="" />';
+        }
+        var ext = 'txt';
         var dot = filename.lastIndexOf('.');
-        if (dot == -1) {
-            return 'txt';
+        if (dot > 0) {
+            ext = filename.substr(dot + 1).toLowerCase();
+            if (ext == 'json') {
+                ext = 'js';
+            }
         }
-        var ext = filename.substr(dot + 1).toLowerCase();
-        if (ext == 'json') {
-            return 'js';
+        return '<img width="54" height="64" ' +
+            'src="/icons/64/' + ext + '.png" alt="" />';
+    }
+
+    function getFoldersAndFiles(path) {
+        // Remove trailing slash.
+        if (path.substr(-1) == '/') {
+            path = path.substr(0, path.length - 1);
         }
-        return ext;
+        var pathLength = path.length || -1;
+        var result = [];
+        for (var filepath in ns.listing) {
+            if (ns.listing.hasOwnProperty(filepath) &&
+                (path == '' ||
+                 (filepath.charAt(pathLength) == '/' &&
+                  filepath.substr(0, path.length) == path))) {
+                var parts = filepath.substr(pathLength + 1).split('/');
+                if (parts.length == 1) {
+                    result.push(parts[0]);
+                } else {
+                    var folder = parts[0] + '/';
+                    if (result.indexOf(folder) == -1) {
+                        result.push(folder);
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     function showFiles(path) {
@@ -36,26 +67,18 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             path = path.substr(0, path.length - 1);
         }
         var html = [];
-        for (var filepath in ns.listing) {
-            if (ns.listing.hasOwnProperty(filepath)) {
-                var parts = filepath.split('/');
-                var filename = parts.pop();
-                if (parts.join('/') != path) {
-                    continue;
-                }
-                var href = '#' + ns.app_id + '/' + path;
-                if (href.substr(-1) != '/') {
-                    href += '/';
-                }
-                href += filename;
-                var icon = '<img width="54" height="64" src="/icons/64/' +
-                    getIconExt(filename) + '.png" alt="" />';
-                html.push('<div class="icon">');
-                html.push('<a href="' + href + '">' + icon + '</a><br />');
-                html.push('<a href="' + href + '">' + filename + '</a>');
-                html.push('</div>');
+        getFoldersAndFiles(path).forEach(function(filename) {
+            var href = '#' + ns.app_id + '/' + path;
+            if (href.substr(-1) != '/') {
+                href += '/';
             }
-        }
+            href += filename;
+            var icon = getIcon(filename);
+            html.push('<div class="icon">');
+            html.push('<a href="' + href + '">' + icon + '</a><br />');
+            html.push('<a href="' + href + '">' + filename + '</a>');
+            html.push('</div>');
+        });
         $('#content').html(html.join('\n'));
     }
 
@@ -124,7 +147,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
 
     function loadFile(filename) {
         ns.filename = filename;
-        if (filename.substr(-1) == '/') {
+        if (filename == '' || filename.substr(-1) == '/') {
             showFiles(filename);
         } else {
             $.ajax({
@@ -146,7 +169,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
         var app_id = parts.shift();
-        var filename = parts.join('/') || 'app.json';
+        var filename = parts.join('/');
         if (app_id != ns.app_id) {
             loadApp(app_id);
             loadFile(filename);
