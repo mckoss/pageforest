@@ -23,6 +23,10 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             return '<img width="83" height="64" ' +
                 'src="/icons/64/folder.png" alt="" />';
         }
+        if (filename.substr(-4) == '.png') {
+            return '<img height="64" ' +
+                'src="/mirror/' + filename + '" alt="" />';
+        }
         var ext = 'txt';
         var dot = filename.lastIndexOf('.');
         if (dot > 0) {
@@ -68,15 +72,11 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         }
         var html = [];
         getFoldersAndFiles(path).forEach(function(filename) {
-            var href = '#' + ns.app_id + '/' + path;
-            if (href.substr(-1) != '/') {
-                href += '/';
-            }
-            href += filename;
-            var icon = getIcon(filename);
+            var href = ns.app_id + '/' + (path ? path + '/' : '') + filename;
+            var icon = getIcon(href);
             html.push('<div class="icon">');
-            html.push('<a href="' + href + '">' + icon + '</a><br />');
-            html.push('<a href="' + href + '">' + filename + '</a>');
+            html.push('<a href="#' + href + '">' + icon + '</a><br />');
+            html.push('<a href="#' + href + '">' + filename + '</a>');
             html.push('</div>');
         });
         $('#content').html(html.join('\n'));
