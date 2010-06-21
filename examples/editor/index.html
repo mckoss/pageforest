@@ -26,13 +26,14 @@
   <div id="right">
     <span id="username">anonymous</span>
     <span class="quiet">|</span>
+    <a onclick="$('#settings').slideToggle(); return false;"
+       href="#">Settings</a>
+    <span class="quiet">|</span>
+    <a href="http://code.google.com/p/pageforest/wiki" target="_blank">Help</a>
+    <span class="quiet">|</span>
     <a id="signin" target="_blank"
        href="http://www.pageforest.com/sign-in/editor"
        onclick="editor.onSignInOut(); return false">Sign in</a>
-    <span class="quiet">|</span>
-    <a href="#" onclick="$('#options').slideToggle(); return false;">Options</a>
-    <span class="quiet">|</span>
-    <a href="http://code.google.com/p/pageforest/wiki" target="_blank">Help</a>
   </div>
 
   <div id="content">
@@ -44,7 +45,7 @@
     <input type="button" value="Save as" onclick="editor.onSaveAs()" />
   </div>
 
-  <div id="options" class="dialog" style="display:none">
+  <div id="settings" class="dialog" style="display:none">
     <h2>Editor</h2>
     <p>
       <select id="editor">
