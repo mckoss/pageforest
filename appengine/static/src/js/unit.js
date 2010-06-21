@@ -299,7 +299,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 break;
             case "object":
                 if (v1 instanceof Array) {
-                    this.assertDeepEq(v1, v2);
+                    this.assertDeepEq(v1, v2, stNote);
                     return;
                 }
 
@@ -307,7 +307,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 if (v1.constructor == Date) {
                     this.assertEq(v2.constructor, Date);
                     if (v2.constructor == Date) {
-                        this.assertEq(v1.toString(), v2.toString());
+                        this.assertEq(v1.toString(), v2.toString(), stNote);
                     }
                     return;
                 }
@@ -318,7 +318,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assert(cProp1 == cProp2,
                             "Objects have different property counts (" +
                             base.keys(v1).join(',') + " != " +
-                            base.keys(v2).join(',') + ")");
+                            base.keys(v2).join(',') + ")",
+                            stNote);
                 break;
 
             default:
@@ -329,15 +330,15 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         // Compare two arrays for equality (recursively)
-        assertDeepEq: function(v1, v2) {
+        assertDeepEq: function(v1, v2, stNote) {
             if (!(v1 instanceof Array)) {
-                this.assertEq(v1, v2);
+                this.assertEq(v1, v2, stNote);
                 return;
             }
-            this.assertType(v2, Array);
-            this.assertEq(v1.length, v2.length);
+            this.assertType(v2, Array, stNote);
+            this.assertEq(v1.length, v2.length, stNote);
             for (var i = 0; i < v1.length; i++) {
-                this.assertDeepEq(v1[i], v2[i]);
+                this.assertDeepEq(v1[i], v2[i], stNote);
             }
             return true;
         },
