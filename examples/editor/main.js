@@ -244,13 +244,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         });
     }
 
-    // Called when the current user changes (signs in or out)
-    function onUserChange(username) {
-        var isSignedIn = username != undefined;
-        $('#username').text(isSignedIn ? username : 'anonymous');
-        $('#signin').text(isSignedIn ? 'Sign Out' : 'Sign In');
-    }
-
     function onSave() {
         $.ajax({
             type: 'PUT',
@@ -262,6 +255,19 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             },
             error: onError
         });
+    }
+
+    // Called when the current user has changed (signed in or out)
+    function onUserChange(username) {
+        if (username == undefined) {
+            $('#username').text('anonymous');
+            $('#signin').text('Sign In')
+                .attr('href', 'http://www.pageforest.com/sign-in/editor');
+        } else {
+            $('#username').text(username);
+            $('#signin').text('Sign Out')
+                .attr('href', 'http://www.pageforest.com/sign-out/editor');
+        }
     }
 
     // Sign in (or out) depending on current user state.
