@@ -111,13 +111,13 @@ def blob_get(request):
             raise Http404("Blob was deleted: " + request.key_name)
         etag = blob.get_etag()
         last_modified = http_datetime(blob.modified)
+    mimetype = guess_mimetype(request.key_name.rstrip('/'))
+    if mimetype == 'text/plain' and blob.valid_json:
+        mimetype = settings.JSON_MIMETYPE
     if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
         or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
-        response = HttpResponseNotModified()
+        response = HttpResponseNotModified(mimetype=mimetype)
     else:
-        mimetype = guess_mimetype(request.key_name.rstrip('/'))
-        if mimetype == 'text/plain' and blob.valid_json:
-            mimetype = settings.JSON_MIMETYPE
         response = HttpResponse(blob.value, mimetype=mimetype)
     response['Last-Modified'] = last_modified
     response['ETag'] = etag
