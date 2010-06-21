@@ -65,7 +65,32 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         return result;
     }
 
-    function showFiles(path) {
+    function updateBreadcrumbs() {
+        var html = [];
+        html.push('<a href="#">apps</a>');
+        html.push('<span class="quiet">/</span>');
+        if (ns.app_id) {
+            html.push('<a href="#' + ns.app_id + '">' + ns.app_id + '</a>');
+            html.push('<span class="quiet">/</span>');
+            var href = '#' + ns.app_id + '/';
+            var parts = ns.filename.split('/');
+            for (var i = 0; parts[i]; i++) {
+                var part = parts[i];
+                href += part;
+                if (i < parts.length - 1) {
+                    href += '/';
+                }
+                html.push('<a href="' + href + '">' + part + '</a>');
+                if (href.substr(-1) == '/') {
+                    html.push('<span class="quiet">/</span>');
+                }
+            }
+        }
+        $('#breadcrumbs').html(html.join('\n'));
+    }
+
+    function showFiles() {
+        var path = ns.filename;
         // Remove trailing slash.
         if (path.substr(-1) == '/') {
             path = path.substr(0, path.length - 1);
@@ -80,11 +105,12 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             html.push('</div>');
         });
         $('#content').html(html.join('\n'));
+        updateBreadcrumbs();
     }
 
     function onListSuccess(message, status, xhr) {
         ns.listing = message;
-        showFiles(ns.filename);
+        showFiles();
     }
 
     function loadApp(app_id) {
@@ -143,12 +169,13 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             adjustTextArea();
         }
         showStatus("Loaded file " + ns.filename);
+        updateBreadcrumbs();
     }
 
     function loadFile(filename) {
         ns.filename = filename;
         if (filename == '' || filename.substr(-1) == '/') {
-            showFiles(filename);
+            showFiles();
         } else {
             $.ajax({
                 url: '/mirror/' + ns.app_id + '/' + ns.filename,
@@ -182,6 +209,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(ns);
         ns.client.saveInterval = 0;  // Turn off auto-save.
+        ns.client.state = 'clean';   // Turn off beforeUnload.
         ns.hash = '';
         ns.app_id = '';
         ns.filename = '';

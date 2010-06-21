@@ -16,13 +16,9 @@
 </head>
 <body>
   <div id="left">
-    <a href="#">apps</a>
-    <span class="quiet">/</span>
-    <a href="#editor">editor</a>
-    <span class="quiet">/</span>
-    <a href="#editor/dev">dev</a>
-    <span class="quiet">/</span>
-    <a href="#editor/dev/index.html">index.html</a>
+    <span id="breadcrumbs">
+      <a href="#">apps</a>
+    </span>
     <input type="button" value="Save" onclick="editor.onSave()" />
     <a href="#more" onclick="$('#more').slideToggle(); return false">More</a>
   </div>
