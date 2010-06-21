@@ -18,7 +18,7 @@ zxcvbnm,./
 yxcvbnm,.-
 """.split()
 
-USERNAME_REGEX_MATCH = re.compile(settings.USERNAME_REGEX).match
+USERNAME_REGEX_MATCH = re.compile('^%s$' % settings.USERNAME_REGEX).match
 
 
 class LabeledCheckbox(forms.CheckboxInput):
