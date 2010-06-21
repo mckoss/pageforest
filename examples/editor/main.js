@@ -105,7 +105,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             html.push('</div>');
         });
         $('#content').html(html.join('\n'));
-        updateBreadcrumbs();
     }
 
     function onListSuccess(message, status, xhr) {
@@ -149,31 +148,41 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         textarea.css('height', scrollHeight + 'px');
     }
 
-    function onLoadFileSuccess(message, status, xhr) {
-        if (typeof ns.codemirror == 'object') {
-            ns.codemirror.setCode(message);
-            if (ns.filename.substr(-5) == '.html') {
-                ns.codemirror.setParser('HTMLMixedParser');
-            } else if (ns.filename.substr(-3) == '.js') {
-                ns.codemirror.setParser('JSParser');
-            } else if (ns.filename.substr(-5) == '.json') {
-                ns.codemirror.setParser('JSParser');
-            } else if (ns.filename.substr(-4) == '.css') {
-                ns.codemirror.setParser('CSSParser');
-            } else {
-                ns.codemirror.setParser('DummyParser');
-            }
-            ns.codemirror.focus();
+    function showTextArea(data) {
+        var code = $('<textarea id="code"></textarea>');
+        $('#content').empty().append(code);
+        code.val(data).focus();
+        adjustTextArea();
+    }
+
+    function showCodeMirror(data) {
+        ns.codemirror.setCode(data);
+        if (ns.filename.substr(-5) == '.html') {
+            ns.codemirror.setParser('HTMLMixedParser');
+        } else if (ns.filename.substr(-3) == '.js') {
+            ns.codemirror.setParser('JSParser');
+        } else if (ns.filename.substr(-5) == '.json') {
+            ns.codemirror.setParser('JSParser');
+        } else if (ns.filename.substr(-4) == '.css') {
+            ns.codemirror.setParser('CSSParser');
         } else {
-            $('#code').val(message).focus();
-            adjustTextArea();
+            ns.codemirror.setParser('DummyParser');
+        }
+        ns.codemirror.focus();
+    }
+
+    function onLoadFileSuccess(message, status, xhr) {
+        if (ns.editor == 'textarea') {
+            showTextArea(message);
+        } else if (ns.editor == 'codemirror') {
+            showCodeMirror(message);
         }
         showStatus("Loaded file " + ns.filename);
-        updateBreadcrumbs();
     }
 
     function loadFile(filename) {
         ns.filename = filename;
+        updateBreadcrumbs();
         if (filename == '' || filename.substr(-1) == '/') {
             showFiles();
         } else {
