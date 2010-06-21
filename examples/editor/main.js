@@ -251,7 +251,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     function onUserChange(username) {
         var isSignedIn = username != undefined;
         $('#username').text(isSignedIn ? username : 'anonymous');
-        $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
+        $('#signin').text(isSignedIn ? 'Sign Out' : 'Sign In');
     }
 
     function onChangeFilename() {
