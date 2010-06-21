@@ -251,18 +251,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $('#signin').text(isSignedIn ? 'Sign Out' : 'Sign In');
     }
 
-    function onChangeFilename() {
-        window.location.hash = '#' + ns.app_id + '/' + $('#filename').val();
-    }
-
-    function onOpen() {
-
-    }
-
-    function onOptions() {
-        $('#options').slideToggle();
-    }
-
     function onSave() {
         $.ajax({
             type: 'PUT',
@@ -289,9 +277,8 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     // Exported functions
     ns.extend({
         onReady: onReady,
-        onUserChange: onUserChange,
-        onOpen: onOpen,
         onSave: onSave,
+        onUserChange: onUserChange,
         onSignInOut: onSignInOut
     });
 
