@@ -45,22 +45,27 @@
   </div>
 
   <div id="options" class="dialog" style="display:none">
-    <div>Editor:
+    <h2>Editor</h2>
+    <p>
       <select id="editor">
         <option value="textarea">Textarea</option>
         <option value="codemirror">CodeMirror</option>
         <option value="ymacs">Ymacs</option>
       </select>
-    </div>
-    <div>Font:
+    </p>
+    <h2>Font</h2>
+    <p>
       <select id="font">
         <option value="Courier New">Courier New</option>
         <option value="Inconsolata">Inconsolata</option>
         <option value="Andale Mono">Andale Mono</option>
       </select>
+      <br />
       <input type="button" value="Smaller" onclick="editor.onSmaller()" />
       <input type="button" value="Larger" onclick="editor.onLarger()" />
-    </div>
+      <br />
+      <label for="bold"><input type="checkbox" id="bold" /> <b>Bold</b></label>
+    </p>
   </div>
 
   <script type="text/javascript">
