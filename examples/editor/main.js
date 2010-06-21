@@ -113,7 +113,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     }
 
     function loadApp(app_id) {
-        console.log('loadApp ' + app_id);
         ns.app_id = app_id;
         $.ajax({
             url: '/mirror/' + ns.app_id + '?method=list&depth=0',
@@ -129,7 +128,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         var scrollHeight = textarea.attr('scrollHeight');
         var offsetHeight = textarea.attr('offsetHeight');
         if (scrollHeight > offsetHeight) {
-            console.log('growTextArea ' + offsetHeight + ' ' + scrollHeight);
             textarea.css('height', scrollHeight + 'px');
         }
     }
@@ -144,7 +142,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             scrollHeight = textarea.attr('scrollHeight');
             offsetHeight = textarea.attr('offsetHeight');
         }
-        console.log('adjustTextArea ' + offsetHeight + ' ' + scrollHeight);
         textarea.css('height', scrollHeight + 'px');
     }
 
