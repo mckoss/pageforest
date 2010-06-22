@@ -89,6 +89,16 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $('#breadcrumbs').html(html.join('\n'));
     }
 
+    function showApps() {
+        var html = [];
+        for (var name in ns.appListing) {
+            if (ns.appListing.hasOwnProperty(name)) {
+                html.push(name);
+            }
+        }
+        $('#content').html(html.join('\n'));
+    }
+
     function showFiles() {
         var path = ns.filename;
         // Remove trailing slash.
@@ -107,9 +117,20 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $('#content').html(html.join('\n'));
     }
 
-    function onListSuccess(message, status, xhr) {
-        ns.listing = message;
-        showFiles();
+    function loadAppList() {
+        ns.app_id = '';
+        console.log('loadAppList');
+        $.ajax({
+            url: '/mirror?method=list&depth=0',
+            dataType: 'json',
+            error: onError,
+            success: function(message) {
+                ns.appListing = message;
+                if (!ns.app_id) {
+                    showApps();
+                }
+            }
+        });
     }
 
     function loadApp(app_id) {
@@ -117,8 +138,13 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $.ajax({
             url: '/mirror/' + ns.app_id + '?method=list&depth=0',
             dataType: 'json',
-            success: onListSuccess,
-            error: onError
+            error: onError,
+            success: function(message) {
+                ns.listing = message;
+                if (!ns.filename || ns.filename.substr(-1) == '/') {
+                    showFiles();
+                }
+            }
         });
     }
 
@@ -201,9 +227,13 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.hash = hash;
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
+        console.log('parts: [' + parts + ']');
         var app_id = parts.shift();
         var filename = parts.join('/');
-        if (app_id != ns.app_id) {
+        console.log('app_id: [' + app_id + ']');
+        if (!app_id) {
+            loadAppList();
+        } else if (app_id != ns.app_id) {
             loadApp(app_id);
             loadFile(filename);
         } else if (filename != ns.filename) {
@@ -216,7 +246,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.client = new clientLib.Client(ns);
         ns.client.saveInterval = 0;  // Turn off auto-save.
         ns.client.state = 'clean';   // Turn off beforeUnload.
-        ns.hash = '';
+        ns.hash = '###';  // Not initialized, wait for checkHash to update.
         ns.app_id = '';
         ns.filename = '';
         ns.editor = 'textarea';
