@@ -1,8 +1,23 @@
 {
   "application": "chess",
+  "cloneable": false,
+  "owner": "johann",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "chess",
+    "game",
+    "multiplayer",
+    "touch"
+  ],
   "title": "Chess",
-  "tags": ["chess", "game", "multiplayer", "touch"],
-  "readers": ["public"],
-  "writers": ["mike", "mckoss", "johann", "jcrocholl"],
-  "url": "http://chess.pageforest.com/"
+  "url": "http://chess.pageforest.com/",
+  "writers": [
+    "mike",
+    "mckoss",
+    "johann",
+    "jcrocholl"
+  ]
 }
