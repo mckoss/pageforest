@@ -203,7 +203,9 @@ def blob_list(request):
             memcache_mapping[blob.get_cache_key()] = blob.to_protobuf()
     memcache.set_multi(memcache_mapping)
     # Add app.json at the top level of a Pageforest application.
-    if request.key_name == 'apps/' + request.app.get_app_id() + '/':
+    if (request.key_name == 'apps/' + request.app.get_app_id() + '/'
+        and 'app.json'.startswith(request.GET.get('prefix', ''))
+        and 'tag' not in request.GET):
         response = app_json_get(request)
         assert response.status_code == 200
         app_json = response.content
