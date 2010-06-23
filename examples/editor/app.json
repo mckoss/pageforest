@@ -1,7 +1,8 @@
 {
   "application": "editor",
   "cloneable": false,
-  "owner": "johann",
+  "icon": "images/icon.png",
+  "owner": "jcrocholl",
   "readers": [
     "public"
   ],
@@ -13,9 +14,7 @@
   "title": "Pageforest Application Editor",
   "url": "http://editor.pageforest.com/",
   "writers": [
-    "mike",
     "mckoss",
-    "johann",
     "jcrocholl"
   ]
 }
