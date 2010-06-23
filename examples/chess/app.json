@@ -1,7 +1,8 @@
 {
   "application": "chess",
   "cloneable": false,
-  "owner": "johann",
+  "icon": "images/icon.png",
+  "owner": "jcrocholl",
   "readers": [
     "public"
   ],
@@ -15,9 +16,7 @@
   "title": "Chess",
   "url": "http://chess.pageforest.com/",
   "writers": [
-    "mike",
     "mckoss",
-    "johann",
     "jcrocholl"
   ]
 }
