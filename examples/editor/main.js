@@ -11,11 +11,22 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     }
 
     function showStatus(message) {
-        $('#status').html(message);
+        $('#status').text(message);
     }
 
     function onError(xhr, status, message) {
         showStatus(xhr.status + ' ' + xhr.statusText);
+    }
+
+    function getAppIcon(app_id) {
+        if (ns.appListing[app_id].icon) {
+            return '<img width="64" height="64" ' +
+                'src="/mirror/' + app_id + '/' +
+                ns.appListing[app_id].icon + '" alt="" />';
+        } else {
+            return '<img width="83" height="64" ' +
+                'src="/icons/64/folder.png" alt="" />';
+        }
     }
 
     function getIcon(filename) {
@@ -93,7 +104,11 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         var html = [];
         for (var name in ns.appListing) {
             if (ns.appListing.hasOwnProperty(name)) {
-                html.push(name);
+                var icon = getAppIcon(name);
+                html.push('<div class="icon">');
+                html.push('<a href="#' + name + '">' + icon + '</a><br />');
+                html.push('<a href="#' + name + '">' + name + '</a>');
+                html.push('</div>');
             }
         }
         $('#content').html(html.join('\n'));
