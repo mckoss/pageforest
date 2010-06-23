@@ -35,6 +35,7 @@ class App(SuperDoc):
     referers = db.StringListProperty()  # URL prefixes for referer check.
     cloneable = db.BooleanProperty(default=False)  # Opt-in to allow clones.
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
+    icon = db.StringProperty()          # Favicon for editor and www.
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
@@ -97,6 +98,7 @@ class App(SuperDoc):
     def update_from_json(self, parsed, **kwargs):
         super(App, self).update_from_json(parsed, **kwargs)
         self.update_string_property(parsed, 'url', **kwargs)
+        self.update_string_property(parsed, 'icon', **kwargs)
         self.update_string_list_property(parsed, 'referers', **kwargs)
         self.update_boolean_property(parsed, 'cloneable', **kwargs)
 
