@@ -12,3 +12,4 @@ nosetests.xml
 coverage.xml
 .coverage
 .passwd
+.DS_Store
