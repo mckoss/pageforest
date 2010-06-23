@@ -1,15 +1,7 @@
 {
   "application": "mandelbrot",
   "cloneable": false,
-  "created": {
-    "__class__": "Date",
-    "isoformat": "2010-05-29T14:02:26.081896Z"
-  },
-  "modified": {
-    "__class__": "Date",
-    "isoformat": "2010-05-29T14:02:26.089815Z"
-  },
-  "owner": "mckoss",
+  "owner": "johann",
   "readers": [
     "public"
   ],
