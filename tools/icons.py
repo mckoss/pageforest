@@ -36,11 +36,11 @@ def main():
     source = Image.open(filename)
     for size in sizes:
         if size == 64:
-            outfilename = 'favicon.png'
+            outfilename = 'images/icon.png'
         elif size == 114:
-            outfilename = 'apple-touch-icon.png'
+            outfilename = 'images/touch.png'
         else:
-            outfilename = 'favicon%d.png' % size
+            outfilename = 'images/icon%d.png' % size
         image = source.copy()
         if size in (57, 72, 114):
             channels = image.split()
@@ -55,8 +55,8 @@ def main():
             len(image.getcolors(size * size)),
             os.path.getsize(outfilename))
     print """
-<link rel="icon" type="image/png" href="favicon.png" />
-<link rel="apple-touch-icon-precomposed" href="apple-touch-icon.png" />
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="translucent" />
 """.strip()
