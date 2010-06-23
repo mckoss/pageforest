@@ -1,8 +1,20 @@
 {
   "application": "scratch",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "demo",
+    "sample"
+  ],
   "title": "Pageforest Sample Application",
-  "tags": ["demo", "sample"],
-  "readers": ["public"],
-  "writers": ["mike", "mckoss", "johann", "jcrocholl"],
-  "url": "http://scratch.pageforest.com/"
+  "url": "http://scratch.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
 }
