@@ -9,6 +9,21 @@ from utils.decorators import jsonp, method_required
 from auth.decorators import login_required
 
 from apps.models import App
+from blobs.models import Blob
+
+
+def find_app_icons(filename, result):
+    """
+    Find icons for the specified apps, and add them to the dictionary.
+    """
+    app_ids = result.keys()
+    key_names = ['apps/' + app_id + '/' + filename + '/'
+                 for app_id in app_ids
+                 if 'icon' not in result[app_id]]
+    blobs = Blob.get_by_key_name(key_names)
+    for app_id, blob in zip(app_ids, blobs):
+        if blob is not None:
+            result[app_id]['icon'] = filename
 
 
 @login_required
@@ -40,6 +55,10 @@ def mirror_list(request):
             }
         if app.tags:
             result[app.get_app_id()]['tags'] = app.tags
+    find_app_icons('favicon.png', result)
+    find_app_icons('apple-touch-icon.png', result)
+    find_app_icons('apple-touch-icon-precomposed.png', result)
+    find_app_icons('favicon.ico', result)
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
