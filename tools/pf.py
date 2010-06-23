@@ -311,6 +311,8 @@ def get_command(args):
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
         # Make directory if needed.
         dirname = os.path.dirname(filename)
         if dirname and not os.path.exists(dirname):
