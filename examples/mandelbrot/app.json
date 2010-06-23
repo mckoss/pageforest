@@ -1,7 +1,8 @@
 {
   "application": "mandelbrot",
   "cloneable": false,
-  "owner": "johann",
+  "icon": "images/icon.png",
+  "owner": "mckoss",
   "readers": [
     "public"
   ],
@@ -14,9 +15,7 @@
   "title": "Mandelbrot Set Viewer",
   "url": "http://mandelbrot.pageforest.com/",
   "writers": [
-    "mike",
     "mckoss",
-    "johann",
     "jcrocholl"
   ]
 }
