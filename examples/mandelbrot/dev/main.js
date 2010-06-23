@@ -179,7 +179,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         var isSignedIn = username != undefined;
         $('#username').text(isSignedIn ? username : 'anonymous');
         $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
-        if (username == "mckoss" || username == "johann") {
+        if (username == "mckoss" || username == "jcrocholl") {
             $('.admin').show();
         }
     }
