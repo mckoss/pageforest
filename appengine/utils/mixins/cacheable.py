@@ -196,10 +196,12 @@ class Cacheable(Serializable):
             # Save loaded entities to memcache.
             to_memcache = {}
             for key_name, instance in zip(missing, from_datastore):
+                if instance is None:
+                    continue
                 result[key_name] = instance
                 to_memcache[instance.get_cache_key()] = instance.to_protobuf()
             memcache.set_multi(to_memcache)
-        return [result[key_name] for key_name in key_name_list]
+        return [result.get(key_name) for key_name in key_name_list]
 
     @classmethod
     def get_by_key_name(cls, key_name, parent=None):
