@@ -106,6 +106,8 @@ def main():
         args.append('.')
 
     command = ['pylint']
+    if options.errors_only:
+        command.append('--errors-only')
     command.append('--ignore=shell.py')
     command.append('--output-format=parseable')
     command.append('--include-ids=yes')
@@ -113,9 +115,7 @@ def main():
     command.append('--notes=FIXME,XXX,TODO,REVIEW')
     command.append('--deprecated-modules=' + ','.join(DEPRECATED_MODULES))
     command.append('--good-names=ip')
-    command.append('--disable-msg=' + disable_msg())
-    if options.errors_only:
-        command.append('-e')
+    command.append('--disable=' + disable_msg())
 
     walk = pftool.FileWalker(matches=('*.py',),
                              pass_key='pylint')
