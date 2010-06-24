@@ -6,7 +6,7 @@ import sys
 import pftool
 
 if __name__ == '__main__':
-    command = ('dev_appserver.py -a pageforest -p 80 ' + \
+    command = ('dev_appserver.py -a pageforest ' + \
         '--show_mail_body %s') % ' '.join(sys.argv[1:])
     command += ' ' + pftool.app_dir
     print(command)
