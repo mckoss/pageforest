@@ -125,10 +125,11 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     function onSubmit() {
         var username = $('#id_username').val();
+        var lower = username.toLowerCase();
         var password = $('#id_password').val();
         var data = {
             username: username,
-            password: crypto.HMAC(crypto.SHA1, username, password),
+            password: crypto.HMAC(crypto.SHA1, lower, password),
             appauth: $('#id_appauth').attr('checked') ? 'checked' : ''
         };
         forms.postFormData(window.location.pathname, data,
