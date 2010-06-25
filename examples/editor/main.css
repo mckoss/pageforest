@@ -40,9 +40,8 @@ div#right {
 div#content {
   position: absolute;
   left: 0;
-  width: 100%;
+  right: 0;
   top: 40px;
-  height: 400px;
 }
 
 div.icon {
