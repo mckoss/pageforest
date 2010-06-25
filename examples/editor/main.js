@@ -112,6 +112,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             }
         }
         $('#content').html(html.join('\n'));
+        showStatus("Loaded app list");
     }
 
     function showFiles() {
@@ -120,16 +121,20 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         if (path.substr(-1) == '/') {
             path = path.substr(0, path.length - 1);
         }
+        console.log('showFiles: ' + ns.listing + ' ' + path);
         var html = [];
-        getFoldersAndFiles(path).forEach(function(filename) {
+        var filenames = getFoldersAndFiles(path);
+        for (var i = 0; i < filenames.length; i++) {
+            var filename = filenames[i];
             var href = ns.app_id + '/' + (path ? path + '/' : '') + filename;
             var icon = getIcon(href);
             html.push('<div class="icon">');
             html.push('<a href="#' + href + '">' + icon + '</a><br />');
             html.push('<a href="#' + href + '">' + filename + '</a>');
             html.push('</div>');
-        });
+        }
         $('#content').html(html.join('\n'));
+        showStatus("Loaded directory: " + ns.app_id + '/' + path);
     }
 
     function loadAppList() {
@@ -138,11 +143,20 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $.ajax({
             url: '/mirror?method=list&depth=0',
             dataType: 'json',
-            error: onError,
             success: function(message) {
                 ns.appListing = message;
                 if (!ns.app_id) {
                     showApps();
+                }
+            },
+            error: function(xhr, status, message) {
+                if (xhr.status == 403) {
+                    $('#content').empty();
+                    $('#status').html('<span class="error">' +
+                                      "Please sign in to edit your apps." +
+                                      '</span>');
+                } else {
+                    onError(xhr, status, message);
                 }
             }
         });
@@ -163,12 +177,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         });
     }
 
-    function onLoadFileSuccess(message, status, xhr) {
-        ns.editor.createEditor(ns.filename, message);
-        ns.editor.adjustHeight('shrink');
-        showStatus("Loaded file " + ns.filename);
-    }
-
     function loadFile(filename) {
         ns.filename = filename;
         updateBreadcrumbs();
@@ -178,8 +186,12 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             $.ajax({
                 url: '/mirror/' + ns.app_id + '/' + ns.filename,
                 dataType: 'text',
-                success: onLoadFileSuccess,
-                error: onError
+                error: onError,
+                success: function(message) {
+                    ns.editor.createEditor(ns.filename, message);
+                    ns.editor.adjustHeight('shrink');
+                    showStatus("Loaded file: " + ns.filename);
+                }
             });
         }
     }
@@ -201,7 +213,11 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             loadAppList();
         } else if (app_id != ns.app_id) {
             loadApp(app_id);
-            loadFile(filename);
+            if (filename) {
+                loadFile(filename);
+            } else {
+                ns.filename = '';
+            }
         } else if (filename != ns.filename) {
             loadFile(filename);
         }
@@ -230,26 +246,6 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         setInterval(checkHash, 200);
     }
 
-    // Convert textarea to CodeMirror editor with syntax highlighting.
-    function onClickCodeMirror() {
-        ns.codemirror = window.CodeMirror.fromTextArea("code", {
-            path: "codemirror/js/",
-            parserfile: [
-                "parsexml.js",
-                "parsecss.js",
-                "tokenizejavascript.js",
-                "parsejavascript.js",
-                "parsehtmlmixed.js",
-                "parsedummy.js"
-            ],
-            stylesheet: [
-                "codemirror/css/xmlcolors.css",
-                "codemirror/css/csscolors.css",
-                "codemirror/css/jscolors.css"
-            ]
-        });
-    }
-
     function onSave() {
         $.ajax({
             type: 'PUT',
@@ -267,12 +263,15 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     function onUserChange(username) {
         if (username == undefined) {
             $('#username').text('anonymous');
-            $('#signin').text('Sign In')
+            $('#signin').text('Sign in')
                 .attr('href', 'http://www.pageforest.com/sign-in/editor');
         } else {
             $('#username').text(username);
-            $('#signin').text('Sign Out')
+            $('#signin').text('Sign out')
                 .attr('href', 'http://www.pageforest.com/sign-out/editor');
+        }
+        if (!ns.app_id) {
+            loadAppList();
         }
     }
 

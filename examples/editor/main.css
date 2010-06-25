@@ -93,3 +93,7 @@ div#apps {
 .quiet {
   color: #ccc;
 }
+
+.error {
+  color: red;
+}
