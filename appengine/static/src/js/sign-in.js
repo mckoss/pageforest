@@ -39,7 +39,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
     }
 
-    // Display success, and close window in 5 seconds.
+    // Display success, and close window in 2 seconds.
     function closeForm() {
         if (ns.appId) {
             $(".have_app").show();
