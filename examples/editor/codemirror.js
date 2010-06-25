@@ -53,17 +53,12 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
     function adjustHeight(shrink) {
-        var editor = $('#code');
-        var scrollHeight = editor.attr('scrollHeight');
-        var offsetHeight = editor.attr('offsetHeight');
-        while (shrink && offsetHeight && scrollHeight == offsetHeight) {
-            editor.css('height', (offsetHeight / 2) + 'px');
-            scrollHeight = editor.attr('scrollHeight');
-            offsetHeight = editor.attr('offsetHeight');
-        }
-        if (scrollHeight > offsetHeight) {
-            editor.css('height', scrollHeight + 'px');
-        }
+        var body = ns.codemirror.editor.container;
+        var scrollHeight = body.scrollHeight;
+        // var offsetHeight = body.offsetHeight;
+        // console.log(body, scrollHeight, offsetHeight);
+        var wrapping = $('.CodeMirror-wrapping');
+        wrapping.css('height', scrollHeight + 'px');
     }
 
     ns.extend({
