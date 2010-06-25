@@ -163,58 +163,9 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         });
     }
 
-    // Make the text area longer, if the user has added more lines.
-    function growTextArea() {
-        var textarea = $('#code');
-        var scrollHeight = textarea.attr('scrollHeight');
-        var offsetHeight = textarea.attr('offsetHeight');
-        if (scrollHeight > offsetHeight) {
-            textarea.css('height', scrollHeight + 'px');
-        }
-    }
-
-    // Make the text area shorter or longer, after a new file is loaded.
-    function adjustTextArea() {
-        var textarea = $('#code');
-        var scrollHeight = textarea.attr('scrollHeight');
-        var offsetHeight = textarea.attr('offsetHeight');
-        while (offsetHeight && scrollHeight == offsetHeight) {
-            textarea.css('height', (offsetHeight / 2) + 'px');
-            scrollHeight = textarea.attr('scrollHeight');
-            offsetHeight = textarea.attr('offsetHeight');
-        }
-        textarea.css('height', scrollHeight + 'px');
-    }
-
-    function showTextArea(data) {
-        var code = $('<textarea id="code"></textarea>');
-        $('#content').empty().append(code);
-        code.val(data).focus();
-        adjustTextArea();
-    }
-
-    function showCodeMirror(data) {
-        ns.codemirror.setCode(data);
-        if (ns.filename.substr(-5) == '.html') {
-            ns.codemirror.setParser('HTMLMixedParser');
-        } else if (ns.filename.substr(-3) == '.js') {
-            ns.codemirror.setParser('JSParser');
-        } else if (ns.filename.substr(-5) == '.json') {
-            ns.codemirror.setParser('JSParser');
-        } else if (ns.filename.substr(-4) == '.css') {
-            ns.codemirror.setParser('CSSParser');
-        } else {
-            ns.codemirror.setParser('DummyParser');
-        }
-        ns.codemirror.focus();
-    }
-
     function onLoadFileSuccess(message, status, xhr) {
-        if (ns.editor == 'textarea') {
-            showTextArea(message);
-        } else if (ns.editor == 'codemirror') {
-            showCodeMirror(message);
-        }
+        ns.editor.createEditor(ns.filename, message);
+        ns.editor.adjustHeight('shrink');
         showStatus("Loaded file " + ns.filename);
     }
 
@@ -236,7 +187,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
     function checkHash() {
         var hash = window.location.hash;
         if (hash == ns.hash) {
-            growTextArea();
+            ns.editor.adjustHeight();
             return;
         }
         ns.hash = hash;
@@ -256,15 +207,25 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         }
     }
 
+    function guessEditor() {
+        // console.log('User-Agent: ' + navigator.userAgent);
+        var codemirror = namespace.lookup('com.pageforest.editor.codemirror');
+        if (codemirror.isProbablySupported()) {
+            return codemirror;
+        } else {
+            return namespace.lookup('com.pageforest.editor.textarea');
+        }
+    }
+
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(ns);
         ns.client.saveInterval = 0;  // Turn off auto-save.
         ns.client.state = 'clean';   // Turn off beforeUnload.
         ns.hash = '###';  // Not initialized, wait for checkHash to update.
+        ns.editor = guessEditor();
         ns.app_id = '';
         ns.filename = '';
-        ns.editor = 'textarea';
         // Start polling for window.location.hash changes.
         setInterval(checkHash, 200);
     }
