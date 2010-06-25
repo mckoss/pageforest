@@ -13,7 +13,7 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
         var options = {
             path: '/codemirror/js/',
             width: '100%',
-            height: '400px',
+            height: '100px',
             content: data
         };
         var lower = filename.toLowerCase();
@@ -53,6 +53,9 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
     function adjustHeight(shrink) {
+        if (!ns.codemirror || !ns.codemirror.editor) {
+            return;
+        }
         var body = ns.codemirror.editor.container;
         var scrollHeight = body.scrollHeight;
         // var offsetHeight = body.offsetHeight;
