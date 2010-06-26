@@ -973,11 +973,11 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
     function getFormData() {
         var username = $("#id_username").val();
+        var lower = username.toLowerCase();
         var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
         return {
             username: username,
-            password: crypto.HMAC(crypto.SHA1, username, password),
+            password: crypto.HMAC(crypto.SHA1, lower, password),
             email: $("#id_email").val(),
             tos: $("#id_tos").attr('checked') ? 'checked' : ''
         };
@@ -1103,7 +1103,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
     }
 
-    // Display success, and close window in 5 seconds.
+    // Display success, and close window in 2 seconds.
     function closeForm() {
         if (ns.appId) {
             $(".have_app").show();
@@ -1147,12 +1147,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         // Nothing to do until the user signs in - page will reload
         // on form post.
         if (!username) {
-            return;
-        }
-
-        // Just logging in to pageforest - done.
-        if (!appId) {
-            closeForm();
             return;
         }
 
