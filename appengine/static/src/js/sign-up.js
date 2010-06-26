@@ -50,11 +50,11 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
     function getFormData() {
         var username = $("#id_username").val();
+        var lower = username.toLowerCase();
         var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
         return {
             username: username,
-            password: crypto.HMAC(crypto.SHA1, username, password),
+            password: crypto.HMAC(crypto.SHA1, lower, password),
             email: $("#id_email").val(),
             tos: $("#id_tos").attr('checked') ? 'checked' : ''
         };
