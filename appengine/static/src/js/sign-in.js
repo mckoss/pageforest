@@ -86,12 +86,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             return;
         }
 
-        // Just logging in to pageforest - done.
-        if (!appId) {
-            closeForm();
-            return;
-        }
-
         // Check (once) if we're also currently logged in @ appId
         // without having to sign-in again.
         // REVIEW: Isn't this insecure?
