@@ -163,6 +163,25 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return res;
     }
 
+    // Calls fn(element, index) for each (defined) element.
+    // Works for Arrays and Objects
+    function forEach(a, fn) {
+        if (a instanceof Array) {
+            for (var i = 0; i < a.length; i++) {
+                if (a[i] != undefined) {
+                    fn(a[i], i);
+                }
+            }
+            return;
+        }
+
+        for (var prop in a) {
+            if (a.hasOwnProperty(prop)) {
+                fn(a[prop], prop);
+            }
+        }
+    }
+
     ns.extend({
         extendObject: util.extendObject,
         Enum: Enum,
@@ -177,9 +196,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'map': map,
         'filter': filter,
         'reduce': reduce,
-        'keys': keys
+        'keys': keys,
+        'forEach': forEach
     });
-
-
 
 }); // startpad.base
