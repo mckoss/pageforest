@@ -80,6 +80,24 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             ut.assertEq(base.keys(map), ['a', 'b']);
         });
 
+        ts.addTest("forEach", function(ut) {
+            var a = [];
+            a[1] = 1;
+            a[3] = 2;
+
+            base.forEach(a, function(elt, index) {
+                ut.assert(index == 1 || index == 3, "no undefined");
+                ut.assertEq(elt, index == 1 ? 1 : 2);
+            });
+
+            var obj = {'a': 1, 'b': 2};
+            Object.prototype.c = 3;
+            base.forEach(obj, function(elt, prop) {
+                ut.assert(prop == 'a' || prop == 'b');
+                ut.assertEq(elt, prop == 'a' ? 1 : 2);
+            });
+        });
+
     }; // addTests
 
 }); // org.startpad.base.test
