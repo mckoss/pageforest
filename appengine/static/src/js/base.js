@@ -165,11 +165,17 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
     // Calls fn(element, index) for each (defined) element.
     // Works for Arrays and Objects
+    // Force an early exit from the loop by returning false;
     function forEach(a, fn) {
+        var ret;
+
         if (a instanceof Array) {
             for (var i = 0; i < a.length; i++) {
                 if (a[i] != undefined) {
-                    fn(a[i], i);
+                    ret = fn(a[i], i);
+                    if (ret === false) {
+                        return;
+                    }
                 }
             }
             return;
@@ -177,7 +183,10 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
         for (var prop in a) {
             if (a.hasOwnProperty(prop)) {
-                fn(a[prop], prop);
+                ret = fn(a[prop], prop);
+                if (ret === false) {
+                    return;
+                }
             }
         }
     }
