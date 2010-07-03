@@ -69,38 +69,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    // Check if user is already logged in.
-    function onReady(username, appId) {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('form#sign-in').bind('submit', onSubmit);
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
-
-        ns.appId = appId;
-        ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
-
-        // Nothing to do until the user signs in - page will reload
-        // on form post.
-        if (!username) {
-            return;
-        }
-
-        // Check (once) if we're also currently logged in @ appId
-        // without having to sign-in again.
-        // REVIEW: Isn't this insecure?
-        var url = ns.appAuthURL + "username/";
-        getJSONP(url, function(username) {
-            // We're already logged in!
-            if (typeof(username) == 'string') {
-                closeForm();
-                return;
-            }
-        });
-    }
-
     function onSuccess(message, status, xhr) {
         if (message.sessionKey) {
             transferSession(message.sessionKey, function() {
@@ -146,6 +114,38 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             error: onError
         });
         return false;
+    }
+
+    // Check if user is already logged in.
+    function onReady(username, appId) {
+        // Hide message about missing JavaScript.
+        $('#enablejs').hide();
+        $('form#sign-in').bind('submit', onSubmit);
+        // Show message about missing HttpOnly support.
+        if (cookies.getCookie('httponly')) {
+            $('#httponly').show();
+        }
+
+        ns.appId = appId;
+        ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+
+        // Nothing to do until the user signs in - page will reload
+        // on form post.
+        if (!username) {
+            return;
+        }
+
+        // Check (once) if we're also currently logged in @ appId
+        // without having to sign-in again.
+        // REVIEW: Isn't this insecure?
+        var url = ns.appAuthURL + "username/";
+        getJSONP(url, function(username) {
+            // We're already logged in!
+            if (typeof(username) == 'string') {
+                closeForm();
+                return;
+            }
+        });
     }
 
     function signOut() {
