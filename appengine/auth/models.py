@@ -87,6 +87,8 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         if memcache.get(CHALLENGE_CACHE_PREFIX + random):
             raise SignatureError("Already used.")
         # Check that the user exists.
+        if not username:
+            raise SignatureError("Missing username.")
         user = cls.lookup(username)
         if user is None:
             raise SignatureError("Unknown user.")
