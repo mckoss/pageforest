@@ -12,7 +12,7 @@ SAFE_SETTINGS = [
     'SITE_NAME', 'SITE_OWNER', 'SITE_CONTACT_INFO', 'SITE_EMAIL_FROM',
     'DEV_APPSERVER', 'DEBUG', 'TEMPLATE_DEBUG',
     'ADMINS', 'MANAGERS',
-    'DEFAULT_DOMAIN', 'DOMAINS',
+    'DEFAULT_DOMAIN', 'WWW_DOMAIN', 'DOMAINS',
     'MEDIA_URL', 'MEDIA_VERSION', 'LIB_URL', 'LIB_VERSION',
     'COMBINE_FILES',
 ]
@@ -92,6 +92,11 @@ TAG_REGEX = r"([a-z0-9]{1,20}:)?" + DOC_ID_REGEX
 
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
+
+if DEV_APPSERVER:
+    WWW_DOMAIN = 'www.pageforest:8080'
+else:
+    WWW_DOMAIN = 'www.' + DEFAULT_DOMAIN
 
 # Separate subdomain for uploading app.json and app source (HTML, JS, CSS).
 # Example: admin.scratch.pageforest.com
