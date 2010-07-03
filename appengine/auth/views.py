@@ -275,7 +275,7 @@ def verify(request, signature):
     To protect against replay, we stored any SUCCESSFULLY used
     challenge in memcache until it's expiration time.
 
-    When memcache is not disabled, replays will be allowed
+    When memcache is unavailable, replays will be allowed
     (but authentic challenges will still be able to succeed).
 
     Signature is:
@@ -295,6 +295,8 @@ def verify(request, signature):
         request.app, subdomain=request.subdomain,
         seconds=settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
+    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
+                        max_age=settings.SESSION_COOKIE_AGE)
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
                         max_age=settings.REAUTH_COOKIE_AGE)
     return response
