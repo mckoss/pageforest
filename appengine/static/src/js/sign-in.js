@@ -66,12 +66,14 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
                 closeForm();
             }
         });
+        return false;
     }
 
     // Check if user is already logged in.
     function onReady(username, appId) {
         // Hide message about missing JavaScript.
         $('#enablejs').hide();
+        $('form#sign-in').bind('submit', onSubmit);
         // Show message about missing HttpOnly support.
         if (cookies.getCookie('httponly')) {
             $('#httponly').show();
@@ -109,25 +111,40 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         window.location.reload();
     }
 
-    function onValidate(message, status, xhr) {
-        forms.showValidatorResults(['username', 'password'], message);
-    }
-
     function onError(xhr, status, message) {
-        console.error(status + ': ' + message);
+        var text = xhr.responseText;
+        if (text.substr(0, 19) == 'Invalid signature: ') {
+            text = text.substr(19);
+        }
+        if (/(user|account)/i.test(text)) {
+            forms.showValidatorResults(
+                ['username', 'password'], {username: text, password: ' '});
+        } else {
+            forms.showValidatorResults(
+                ['username', 'password'], {password: text});
+        }
     }
 
-    function onSubmit() {
+    function onChallenge(challenge, status, xhr) {
         var username = $('#id_username').val();
         var lower = username.toLowerCase();
         var password = $('#id_password').val();
-        var data = {
-            username: username,
-            password: crypto.HMAC(crypto.SHA1, lower, password),
-            appauth: $('#id_appauth').attr('checked') ? 'checked' : ''
-        };
-        forms.postFormData(window.location.pathname, data,
-                           onSuccess, onValidate, onError);
+        var userpass = crypto.HMAC(crypto.SHA1, lower, password);
+        var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
+        var reply = lower + '|' + challenge + '|' + signature;
+        $.ajax({
+            url: '/auth/verify/' + reply,
+            success: onSuccess,
+            error: onError
+        });
+    }
+
+    function onSubmit() {
+        $.ajax({
+            url: '/auth/challenge',
+            success: onChallenge,
+            error: onError
+        });
         return false;
     }
 

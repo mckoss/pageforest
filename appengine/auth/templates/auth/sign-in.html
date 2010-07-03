@@ -43,7 +43,7 @@ $(document).ready(function() {
     <table>
     {% if user %}
         {% if cross_app %}
-            <input class="want_app" type="button" value="Allow Access" onclick="signIn.transferSession('{{ session_key }}');return false;" />
+            <input class="want_app" type="button" value="Allow Access" onclick="return signIn.transferSession('{{ session_key }}')" />
         {% endif %}
     {% else %}
         {% for field in form %}
