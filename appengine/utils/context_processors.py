@@ -6,12 +6,6 @@ def safe_settings(request):
     result = {}
     for name in settings.SAFE_SETTINGS:
         result[name] = getattr(settings, name)
-
-    # DOMAIN - either 'pageforest.com' or 'localhost'
-    parts = request.META.get('HTTP_HOST', 'testserver').split('.')
-    if len(parts) > 1:
-        parts[0] = 'www'
-    result['DOMAIN'] = '.'.join(parts)
     return result
 
 
