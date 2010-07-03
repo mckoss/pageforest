@@ -128,7 +128,9 @@ class AuthMiddleware(object):
 
         # Allow authentication attempts.
         if (request.path_info == '/app/admin/auth/challenge/'
-            or request.path_info.startswith('/app/admin/auth/verify/')):
+            or request.path_info.startswith('/app/admin/auth/verify/')
+            or request.path_info.startswith('/app/auth/set-session/')
+            or request.path_info.startswith('/app/auth/username/')):
             return
 
         # Let authenticated user create an app by uploading app.json.
