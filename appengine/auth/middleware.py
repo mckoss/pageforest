@@ -1,7 +1,8 @@
 from urlparse import urlparse
 
 from django.conf import settings
-from django.http import HttpResponseForbidden, HttpResponseNotAllowed
+from django.http import HttpResponseForbidden, HttpResponseNotAllowed, \
+    HttpResponseRedirect
 
 from auth import SignatureError
 from auth.models import User
@@ -158,6 +159,15 @@ class AuthMiddleware(object):
             else:
                 # Check permissions for current document or its blob store.
                 return check_permissions(request, request.doc)
+
+        # Redirect http://app_id.pageforest.com/ to sign-in if not public.
+        if (request.path_info == '/app/'
+            and 'public' not in request.app.readers
+            and request.user is None
+            and not hasattr(request, 'session_key_error')):
+            return HttpResponseRedirect(
+                'http://' + settings.WWW_DOMAIN +
+                '/sign-in/' + request.app.get_app_id())
 
         # Check permissions for the current app.
         return check_permissions(request, request.app)
