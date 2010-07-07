@@ -18,6 +18,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var util = namespace.util;
     var timer = namespace.lookup('org.startpad.timer');
     var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
     var loader = namespace.lookup('org.startpad.loader');
 
     // Run the selected tests in the browser
@@ -686,7 +687,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.divOut) {
                 this.divOut.appendChild(document.createElement("br"));
                 var txt = document.createElement("span");
-                txt.innerHTML = this.stOut;
+                txt.innerHTML = format.escapeHTML(this.stOut);
                 this.divOut.appendChild(txt);
             }
             // Detect Rhino - use print command
