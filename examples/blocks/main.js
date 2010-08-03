@@ -1,5 +1,9 @@
 namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
+    var dom = namespace.lookup('ord.startpad.DOM');
+    var vector = namespace.lookup('ord.startpad.vector');
+    var base = namespace.lookup('ord.startpad.base');
+    var util = namespace.util;
 
     // Initialize the document - create a client helper object
     function onReady() {
@@ -12,7 +16,6 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     }
 
     function Board() {
-        this.appVersion = 1;
         this.Init(20, 50);
     }
 
@@ -130,7 +133,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
         ResizeWindow: function(evt) {
             this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
-            this.__ptTable = PF.DOM.PtClient(this.__tbl);
+            this.__ptTable = dom.PtClient(this.__tbl);
         },
 
         Click: function(evt) {
@@ -145,7 +148,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 return;
             }
             var pt = this.RwColFromEvt(evt);
-            if (PF.Vector.Equal(pt, this.__ptLast)) {
+            if (vector.equal(pt, this.__ptLast)) {
                 return;
             }
             this.Click(evt);
@@ -156,8 +159,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         RwColFromEvt: function(evt) {
-            var pt = PF.Vector.Sub([evt.pageX, evt.pageY], this.__ptTable);
-            return PF.Vector.Floor(PF.Vector.Mult(pt, 1 / 21));
+            var pt = vector.sub([evt.pageX, evt.pageY], this.__ptTable);
+            return vector.floor(vector.mult(pt, 1 / 21));
         },
 
         Set: function(rw, col, iFace, iRot) {
@@ -168,7 +171,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             cell.iFace = iFace;
             cell.iRot = iRot;
             cell.style.backgroundPosition =
-                this.ImagePosition(iFace, iFace == 5 ? PF.RandomInt(4) : iRot);
+                this.ImagePosition(iFace,
+                                   iFace == 5 ? base.randomInt(4) : iRot);
         },
 
         Get: function(rw, col) {
@@ -209,7 +213,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         Randomize: function() {
             for (var rw = 0; rw < this.rwMax; rw++) {
                 for (var col = 0; col < this.colMax; col++) {
-                    this.Set(rw, col, PF.RandomInt(6), PF.RandomInt(4));
+                    this.Set(rw, col, base.randomInt(6), base.randomInt(4));
                 }
             }
         },
@@ -227,7 +231,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
         Shuffle: function(order) {
             for (var i = 0; i < order.length; i++) {
-                var j = PF.RandomInt(order.length - i);
+                var j = base.randomInt(order.length - i);
                 var temp = order[i];
                 order[i] = order[j];
                 order[j] = temp;
@@ -355,7 +359,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         LoadFromObject: function(obj) {
-            PF.Extend(this, obj);
+            util.extendObject(this, obj);
             // TODO: Optimize - only call when changes
             this.Init(this.rwMax, this.colMax);
             for (var rw = 0; rw < this.rwMax; rw++) {
@@ -413,6 +417,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     // Exported functions
     ns.extend({
         onReady: onReady,
+        Board: Board,
         getDoc: getDoc,
         setDoc: setDoc,
         onStateChange: onStateChange,

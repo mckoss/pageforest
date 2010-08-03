@@ -32,23 +32,23 @@ $(document).ready(blocks.onReady);
         <label for="rows">Rows:</label><input type="text" id="rows" value="20"/>
         <label for="columns">Cols:</label><input type="text" id="columns" value="50"/>
         </div>
-        <input type="submit" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="brd.Resize();"/>
+        <input type="submit" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
         </div>
     </div>
 
     <div class="coloredBox">
         <h2>Overall Design</h2>
         <div>
-        <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="brd.Fill();"/>
-        <input type="button" title="Randomizes all block faces" value="Randomize" onclick="brd.Randomize();"/>
+        <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="blocks.brd.Fill();"/>
+        <input type="button" title="Randomizes all block faces" value="Randomize" onclick="blocks.brd.Randomize();"/>
         </div>
     </div>
 
     <div class="coloredBox">
         <h2>Fun Tools</h2>
         <div>
-        <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="brd.Smooth();"/>
-        <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="brd.Change();"/>
+        <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="blocks.brd.Smooth();"/>
+        <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="blocks.brd.Change();"/>
         </div>
     </div>
 </div>
