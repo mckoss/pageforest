@@ -1,0 +1,87 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>Seattle Art Museum - Block Table</title>
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+var blocks = namespace.lookup("com.pageforest.blocks");
+$(document).ready(blocks.onReady);
+</script>
+</head>
+<body>
+<div class="page">
+
+<div id="divPageTitle">
+    <img src="images/1000_blocks_title.png" alt="1000 Blocks" />
+</div>
+
+<div id="divControls">
+    <div class="coloredBox">
+        <h2>Table Size</h2>
+        <div>
+        <div id="divResizeForm">
+        <label for="rows">Rows:</label><input type="text" id="rows" value="20"/>
+        <label for="columns">Cols:</label><input type="text" id="columns" value="50"/>
+        </div>
+        <input type="submit" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="brd.Resize();"/>
+        </div>
+    </div>
+
+    <div class="coloredBox">
+        <h2>Overall Design</h2>
+        <div>
+        <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="brd.Fill();"/>
+        <input type="button" title="Randomizes all block faces" value="Randomize" onclick="brd.Randomize();"/>
+        </div>
+    </div>
+
+    <div class="coloredBox">
+        <h2>Fun Tools</h2>
+        <div>
+        <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="brd.Smooth();"/>
+        <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="brd.Change();"/>
+        </div>
+    </div>
+</div>
+
+<div id="divInfo" class="coloredBox">
+    <h2 style="text-align:center">About</h2>
+    <p>This application is modelled after an exhibit by Curtis Steiner located in the Seattle Art Museum's permanent collection.</p>
+    <div class="left">
+        <ul>
+        <li><a href="http://www.curtissteiner.com/blocks/" target="_blank">Curtis Steiner</a></li>
+        <li><a href="http://www.seattleartmuseum.org/" target="_blank">SAM</a></li>
+        </ul>
+    </div>
+</div>
+
+<div id="divTools"></div>
+
+<div id="divBoard"></div>
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2072869-7']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+</div> <!-- page -->
+</body>
+</html>
