@@ -4,7 +4,7 @@
 // Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
 //--------------------------------------------------------------------------
 namespace.lookup('org.startpad.dom').define(function(ns) {
-    var vector = ns.lookup('org.startpad.vector');
+    var vector = namespace.lookup('org.startpad.vector');
     var ix = 0;
     var iy = 1;
     var ix2 = 2;

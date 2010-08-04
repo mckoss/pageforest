@@ -1,8 +1,8 @@
 namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
-    var dom = namespace.lookup('ord.startpad.DOM');
-    var vector = namespace.lookup('ord.startpad.vector');
-    var base = namespace.lookup('ord.startpad.base');
+    var dom = namespace.lookup('org.startpad.dom');
+    var vector = namespace.lookup('org.startpad.vector');
+    var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
 
     // Initialize the document - create a client helper object
