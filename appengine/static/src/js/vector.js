@@ -126,21 +126,24 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             return v1;
         },
 
-        // Do a (deep) comparison of two arrays
-        // BUG: This code does not look right - unit test and fix!
+        // Do a (deep) comparison of two arrays. Any embeded objects
+        // are assumed to also be arrays of scalars or other arrays.
         equal: function(v1, v2) {
-            if (typeof v1 != typeof v2) {
+            if (v1.length != v2.length) {
                 return false;
             }
-            if (typeof v1 == 'undefined') {
-                return true;
-            }
             for (var i = 0; i < v1.length; i++) {
-                if (v1[i] == v2[i]) {
-                    continue;
+                if (typeof v1[i] != typeof v2[i]) {
+                    return false;
                 }
-                if (ns.equal(v1[i], v2[i])) {
-                    continue;
+                if (typeof v1[i] == "object") {
+                    if (!ns.equal(v1[i], v2[i])) {
+                        return false;
+                    }
+                } else {
+                    if (v1[i] != v2[i]) {
+                        return false;
+                    }
                 }
             }
             return true;

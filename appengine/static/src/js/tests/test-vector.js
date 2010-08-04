@@ -11,6 +11,9 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             var c = vector.append(a, b, [7, 8, 9]);
             ut.assert(vector.equal(c, [1, 2, 3, 1, 2, 3, 7, 8, 9]));
             ut.assert(vector.equal(vector.subFrom([2, 2], [1, 1]), [1, 1]));
+            ut.assert(!vector.equal([48, 1], [43, 0]));
+            ut.assert(!vector.equal([1, [2, 3]], [1, [2, 2]]));
+            ut.assert(vector.equal([1, [2, 3]], [1, [2, 3]]));
         });
 
         ts.addTest("Vector functions", function(ut) {
