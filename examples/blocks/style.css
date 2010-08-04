@@ -147,7 +147,7 @@ background-color: yellow;
 div.faceTools {
 width: 100px;
 height: 100px;
-background-image: url(images/Steiner/FaceArray100.png);
+background-image: url(images/FaceArray100.png);
 background-position: 0px 0px;
 background-repeat: no-repeat;
 }
@@ -155,7 +155,7 @@ background-repeat: no-repeat;
 div.face {
 width: 20px;
 height: 20px;
-background-image: url(images/Steiner/FaceArray20.png);
+background-image: url(images/FaceArray20.png);
 background-position: 0px 0px;
 background-repeat: no-repeat;
 }
