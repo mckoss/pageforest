@@ -134,6 +134,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         ResizeWindow: function(evt) {
             this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
             this.__ptTable = dom.ptClient(this.__tbl);
+            console.log(this.__ptTable);
         },
 
         Click: function(evt) {
