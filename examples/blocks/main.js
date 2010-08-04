@@ -86,9 +86,9 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
 
             this.__divBoard.appendChild(this.__tbl);
-            this.__tbl.onmousedown = this.Click.FnMethod(this);
-            window.onmouseup = this.MouseUp.FnMethod(this);
-            this.__tbl.onmousemove = this.MouseMove.FnMethod(this);
+            this.__tbl.onmousedown = this.Click.fnMethod(this);
+            window.onmouseup = this.MouseUp.fnMethod(this);
+            this.__tbl.onmousemove = this.MouseMove.fnMethod(this);
 
             var divTools = document.getElementById("divTools");
             if (!this.__tdTools) {
@@ -105,7 +105,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                     divTool.style.backgroundPosition =
                         this.ImagePositionTools(iFace, 0);
                     divTool.onmousedown =
-                        this.ClickTool.FnMethod(this).FnArgs(iFace);
+                        this.ClickTool.fnMethod(this).fnArgs(iFace);
                     divTool.iRot = 0;
                     tdTool.appendChild(divTool);
                     trTool.appendChild(tdTool);
@@ -119,7 +119,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 for (iFace = 0; iFace < 6; iFace++) {
                     var tdRot = document.createElement("td");
                     tdRot.onmousedown =
-                        this.ClickRot.FnMethod(this).FnArgs(iFace);
+                        this.ClickRot.fnMethod(this).fnArgs(iFace);
                     trTool.appendChild(tdRot);
                 }
                 tblTools.appendChild(trTool);
@@ -127,13 +127,13 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 this.ClickTool(null, 5);
             }
 
-            window.onresize = this.ResizeWindow.FnMethod(this);
+            window.onresize = this.ResizeWindow.fnMethod(this);
             this.ResizeWindow();
         },
 
         ResizeWindow: function(evt) {
             this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
-            this.__ptTable = dom.PtClient(this.__tbl);
+            this.__ptTable = dom.ptClient(this.__tbl);
         },
 
         Click: function(evt) {
