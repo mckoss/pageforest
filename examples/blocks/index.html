@@ -26,19 +26,23 @@ $(document).ready(blocks.onReady);
     <img src="images/1000_blocks_title.png" alt="1000 Blocks" />
 </div>
 
+<div id="divTools"></div>
+
+<div id="divBoard"></div>
+
 <div id="divControls">
-    <div class="coloredBox">
+    <div class="toolBox">
         <h2>Table Size</h2>
         <div>
         <div id="divResizeForm">
         <label for="rows">Rows:</label><input type="text" id="rows" value="20"/>
         <label for="columns">Cols:</label><input type="text" id="columns" value="50"/>
         </div>
-        <input type="submit" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
+        <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
         </div>
     </div>
 
-    <div class="coloredBox">
+    <div class="toolBox">
         <h2>Overall Design</h2>
         <div>
         <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="blocks.brd.Fill();"/>
@@ -46,7 +50,7 @@ $(document).ready(blocks.onReady);
         </div>
     </div>
 
-    <div class="coloredBox">
+    <div class="toolBox">
         <h2>Fun Tools</h2>
         <div>
         <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="blocks.brd.Smooth();"/>
@@ -55,23 +59,14 @@ $(document).ready(blocks.onReady);
     </div>
 </div>
 
-<div id="divInfo" class="coloredBox">
-    <h2 style="text-align:center">About</h2>
-    <p>This application is modelled after an exhibit by Curtis Steiner located in the Seattle Art Museum's permanent collection.</p>
-    <div class="left">
-        <ul>
-        <li><a href="http://www.curtissteiner.com/blocks/" target="_blank">Curtis Steiner</a></li>
-        <li><a href="http://www.seattleartmuseum.org/" target="_blank">SAM</a></li>
-        </ul>
-    </div>
+<div id="divInfo">
+  1,000 Blocks is modelled after an exhibit by
+  <a href="http://www.curtissteiner.com/blocks/" target="_blank">Curtis Steiner</a> from the
+  <a href="http://www.seattleartmuseum.org/" target="_blank">Seattle Art Museum's</a>
+  permanent collection.
 </div>
 
-<div id="divTools"></div>
-
-<div id="divBoard"></div>
-
 <script type="text/javascript">
-
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-2072869-7']);
   _gaq.push(['_trackPageview']);
@@ -81,7 +76,6 @@ $(document).ready(blocks.onReady);
     ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
-
 </script>
 
 </div> <!-- page -->

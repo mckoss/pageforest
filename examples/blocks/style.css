@@ -34,7 +34,7 @@ margin: 0 0 5px 0;
 }
 
 div.page {
-width: 980px;
+width: 1051px;
 margin: auto;
 }
 
@@ -58,16 +58,16 @@ margin: auto;
 text-align: center;
 }
 
-div.coloredBox {
+div.toolBox {
 background-color: #B5825E;
 text-align: center;
 width: 160px;
-margin-bottom: 7px;
-padding-bottom: 2px;
+float: left;
+margin: 0 10px 0 0;
 border: 1px solid black;
 }
 
-div.coloredBox h2 {
+div.toolBox h2 {
 background-color: #936958;
 font-family: Verdana;
 font-size: 12pt;
@@ -75,25 +75,12 @@ margin: 0 0 5px;
 border-bottom: 1px solid black;
 }
 
-div.coloredBox div.left {
+div.toolBox div.left {
 width: 100%;
 text-align: left;
 }
 
 #divControls {
-float: left;
-width: 160px;
-}
-
-#divControls input {
-display: block;
-width: 95px;
-margin: auto;
-margin-bottom: 3px;
-}
-
-#divControls p {
-margin: 0;
 }
 
 #divResizeForm input {
@@ -102,8 +89,9 @@ width: 20px;
 }
 
 #divInfo {
-width: 160px;
-float: right;
+font-style: italic;
+margin-top: 15px;
+text-align: center;
 }
 
 #divInfo p {

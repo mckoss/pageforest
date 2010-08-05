@@ -84,7 +84,6 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 this.__tbl.appendChild(tr);
             }
 
-
             this.__divBoard.appendChild(this.__tbl);
             this.__tbl.onmousedown = this.Click.fnMethod(this);
             window.onmouseup = this.MouseUp.fnMethod(this);
@@ -134,7 +133,6 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         ResizeWindow: function(evt) {
             this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
             this.__ptTable = dom.ptClient(this.__tbl);
-            console.log(this.__ptTable);
         },
 
         Click: function(evt) {
