@@ -5,18 +5,18 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
 
+    function Board() {
+        this.Init(20, 50);
+    }
+
     // Initialize the document - create a client helper object
     function onReady() {
-        ns.brd = new ns.Board();
+        ns.brd = new Board();
         ns.client = new clientLib.Client(ns);
         ns.client.setLogging(true);
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
-    }
-
-    function Board() {
-        this.Init(20, 50);
     }
 
     Board.methods({
@@ -343,29 +343,27 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             return (-iRot * 20) + "px " + (-iFace * 20) + "px";
         },
 
-        GetSaveObject: function() {
-            this.cellsSave = [];
+        getCells: function() {
+            var cells = [];
             for (var rw = 0; rw < this.rwMax; rw++)
             {
-                this.cellsSave[rw] = [];
+                cells[rw] = [];
                 for (var col = 0; col < this.colMax; col++)
                 {
                     var cell = this.__cells[rw][col];
-                    this.cellsSave[rw][col] = [cell.iFace, cell.iRot];
+                    cells[rw][col] = [cell.iFace, cell.iRot];
                 }
             }
-            return this;
+            return cells;
         },
 
-        LoadFromObject: function(obj) {
-            util.extendObject(this, obj);
-            // TODO: Optimize - only call when changes
-            this.Init(this.rwMax, this.colMax);
-            for (var rw = 0; rw < this.rwMax; rw++) {
-                for (var col = 0; col < this.colMax; col++) {
+        setCells: function(cells) {
+            for (var rw = 0; rw < cells.length; rw++) {
+                var row = cells[rw];
+                for (var col = 0; col < row.length; col++) {
                     this.Set(rw, col,
-                             this.cellsSave[rw][col][0],
-                             this.cellsSave[rw][col][1]);
+                             cells[rw][col][0],
+                             cells[rw][col][1]);
                 }
             }
             return this;
@@ -375,12 +373,21 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
     // This function is called whenever your document should be reloaded.
     function setDoc(json) {
+        var blob = json.blob;
+        this.brd.Init(blob.rows, blob.cols);
+        this.brd.setCells(blob.cells);
     }
 
     // Convert your current state to JSON with title and blob properties,
     // these will then be saved to pageforest's storage.
     function getDoc() {
         return {
+            "title": "1,000 Blocks",
+            "blob": {
+                rows: ns.brd.rwMax,
+                cols: ns.brd.colMax,
+                cells: ns.brd.getCells()
+            },
             "readers": ["public"]
         };
     }
@@ -415,12 +422,12 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
     // Exported functions
     ns.extend({
-        onReady: onReady,
-        Board: Board,
-        getDoc: getDoc,
-        setDoc: setDoc,
-        onStateChange: onStateChange,
-        signInOut: signInOut
+        'onReady': onReady,
+        'getDoc': getDoc,
+        'setDoc': setDoc,
+        'onStateChange': onStateChange,
+        'signInOut': signInOut,
+        'onUserChange': onUserChange
     });
 
 });
