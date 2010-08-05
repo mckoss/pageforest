@@ -30,34 +30,29 @@ $(document).ready(blocks.onReady);
 
 <div id="divBoard"></div>
 
-<div id="divControls">
-    <div class="toolBox">
-        <h2>Table Size</h2>
-        <div>
-        <div id="divResizeForm">
-        <label for="rows">Rows:</label><input type="text" id="rows" value="20"/>
-        <label for="columns">Cols:</label><input type="text" id="columns" value="50"/>
-        </div>
-        <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
-        </div>
-    </div>
+<fieldset>
+  <legend>Tools</legend>
+  <div class="toolBox">
+    <label for="rows">Rows:</label>
+    <input type="text" id="rows" size="3" value="20"/>
+    <label style="margin-left:10px;" for="columns">Cols:</label>
+    <input type="text" id="columns" size="3" value="50"/>
+    <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
+  </div>
+  <hr/>
 
-    <div class="toolBox">
-        <h2>Overall Design</h2>
-        <div>
-        <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="blocks.brd.Fill();"/>
-        <input type="button" title="Randomizes all block faces" value="Randomize" onclick="blocks.brd.Randomize();"/>
-        </div>
-    </div>
-
-    <div class="toolBox">
-        <h2>Fun Tools</h2>
-        <div>
-        <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="blocks.brd.Smooth();"/>
-        <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="blocks.brd.Change();"/>
-        </div>
-    </div>
-</div>
+  <div class="toolBox">
+    <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="blocks.brd.Fill();"/>
+    <input type="button" title="Randomizes all block faces" value="Randomize" onclick="blocks.brd.Randomize();"/>
+    <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="blocks.brd.Smooth();"/>
+    <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="blocks.brd.Change();"/>
+  </div>
+  <hr/>
+  <div style="float:right;">
+    <input type="button" onclick="scratch.client.detach();" value="Make a Copy" />
+    <input id="save" type="button" onclick="scratch.client.save();" value="Save" />
+  </div>
+</fieldset>
 
 <div id="divInfo">
   1,000 Blocks is modelled after an exhibit by
