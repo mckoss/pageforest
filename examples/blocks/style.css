@@ -16,7 +16,7 @@ margin: 0 0 5px 0;
 }
 
 hr {
-border: 2px solid black;
+border: 1px solid grey;
 }
 
 img {
@@ -42,8 +42,26 @@ label {
 font-size: 24px;
 font-weight: bold;
 display: inline-block;
-width: 100px;
-vertical-align: top;
+}
+
+fieldset {
+margin-bottom: 15px;
+clear: both;
+}
+
+fieldset ol {
+margin: 0;
+padding: 0;
+}
+
+fieldset li {
+list-style: none;
+padding: 5px;
+margin: 0 0 5px 0;
+}
+
+input[type="text"] {
+font-size: 24px;
 }
 
 input[type="button"] {
@@ -55,37 +73,12 @@ margin: 5px;
 width: 1050px;
 height: 80px;
 margin: auto;
+padding-bottom: 10px;
 text-align: center;
 }
 
 div.toolBox {
-background-color: #B5825E;
 text-align: center;
-width: 160px;
-float: left;
-margin: 0 10px 0 0;
-border: 1px solid black;
-}
-
-div.toolBox h2 {
-background-color: #936958;
-font-family: Verdana;
-font-size: 12pt;
-margin: 0 0 5px;
-border-bottom: 1px solid black;
-}
-
-div.toolBox div.left {
-width: 100%;
-text-align: left;
-}
-
-#divControls {
-}
-
-#divResizeForm input {
-display: inline;
-width: 20px;
 }
 
 #divInfo {
