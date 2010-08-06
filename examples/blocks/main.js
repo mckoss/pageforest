@@ -6,7 +6,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     var util = namespace.util;
 
     function Board() {
-        this.Init(20, 50);
+        this.init(20, 50);
     }
 
     // Initialize the document - create a client helper object
@@ -30,28 +30,28 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 [/wwww/, [5, 0]]],
         dxdy: [[0, -1], [1, 0], [0, 1], [-1, 0]],
 
-        Init: function(rwMax, colMax) {
+        init: function(rwMax, colMax) {
             this.rwMax = rwMax;
             this.colMax = colMax;
-            this.BuildUI();
-            this.GenerateOrder();
+            this.buildUI();
+            this.generateOrder();
         },
 
-        Resize: function() {
+        resize: function() {
             var rows;
             var cols;
 
             try {
-                rows = this.CheckNum("rows", 1, 50);
-                cols = this.CheckNum("columns", 1, 50);
+                rows = this.checkNum("rows", 1, 50);
+                cols = this.checkNum("columns", 1, 50);
             } catch (e) {
                 alert(e.message);
                 return;
             }
-            this.Init(rows, cols);
+            this.init(rows, cols);
         },
 
-        CheckNum: function(id, min, max) {
+        checkNum: function(id, min, max) {
             var elt = document.getElementById(id);
             var num = parseInt(elt.value);
             if (isNaN(num) || num < min || num > max) {
@@ -63,7 +63,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             return num;
         },
 
-        BuildUI: function() {
+        buildUI: function() {
             this.__divBoard = document.getElementById("divBoard");
             if (this.__tbl) {
                 this.__divBoard.removeChild(this.__tbl);
@@ -77,7 +77,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                     var tdCell = document.createElement("td");
                     this.__cells[rw][col] = document.createElement("div");
                     this.__cells[rw][col].className = "face";
-                    this.Set(rw, col, 0, 0);
+                    this.set(rw, col, 0, 0);
                     tdCell.appendChild(this.__cells[rw][col]);
                     tr.appendChild(tdCell);
                 }
@@ -85,9 +85,9 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             }
 
             this.__divBoard.appendChild(this.__tbl);
-            this.__tbl.onmousedown = this.Click.fnMethod(this);
-            window.onmouseup = this.MouseUp.fnMethod(this);
-            this.__tbl.onmousemove = this.MouseMove.fnMethod(this);
+            this.__tbl.onmousedown = this.click.fnMethod(this);
+            window.onmouseup = this.mouseUp.fnMethod(this);
+            this.__tbl.onmousemove = this.mouseMove.fnMethod(this);
 
             var divTools = document.getElementById("divTools");
             if (!this.__tdTools) {
@@ -102,9 +102,9 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
                     divTool.className = "faceTools";
                     divTool.style.backgroundPosition =
-                        this.ImagePositionTools(iFace, 0);
+                        this.imagePositionTools(iFace, 0);
                     divTool.onmousedown =
-                        this.ClickTool.fnMethod(this).fnArgs(iFace);
+                        this.clickTool.fnMethod(this).fnArgs(iFace);
                     divTool.iRot = 0;
                     tdTool.appendChild(divTool);
                     trTool.appendChild(tdTool);
@@ -118,51 +118,51 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 for (iFace = 0; iFace < 6; iFace++) {
                     var tdRot = document.createElement("td");
                     tdRot.onmousedown =
-                        this.ClickRot.fnMethod(this).fnArgs(iFace);
+                        this.clickRot.fnMethod(this).fnArgs(iFace);
                     trTool.appendChild(tdRot);
                 }
                 tblTools.appendChild(trTool);
                 divTools.appendChild(tblTools);
-                this.ClickTool(null, 5);
+                this.clickTool(null, 5);
             }
 
-            window.onresize = this.ResizeWindow.fnMethod(this);
-            this.ResizeWindow();
+            window.onresize = this.resizeWindow.fnMethod(this);
+            this.resizeWindow();
         },
 
-        ResizeWindow: function(evt) {
+        resizeWindow: function(evt) {
             this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
             this.__ptTable = dom.ptClient(this.__tbl);
         },
 
-        Click: function(evt) {
-            var pt = this.RwColFromEvt(evt);
-            this.Set(pt[1], pt[0], this.__iTool, this.__iRot);
+        click: function(evt) {
+            var pt = this.rwColFromEvt(evt);
+            this.set(pt[1], pt[0], this.__iTool, this.__iRot);
             this.__ptLast = pt;
             return false;
         },
 
-        MouseMove: function(evt) {
+        mouseMove: function(evt) {
             if (this.__ptLast == undefined) {
                 return;
             }
-            var pt = this.RwColFromEvt(evt);
+            var pt = this.rwColFromEvt(evt);
             if (vector.equal(pt, this.__ptLast)) {
                 return;
             }
-            this.Click(evt);
+            this.click(evt);
         },
 
-        MouseUp: function(evt) {
+        mouseUp: function(evt) {
             this.__ptLast = undefined;
         },
 
-        RwColFromEvt: function(evt) {
+        rwColFromEvt: function(evt) {
             var pt = vector.sub([evt.pageX, evt.pageY], this.__ptTable);
             return vector.floor(vector.mult(pt, 1 / 21));
         },
 
-        Set: function(rw, col, iFace, iRot) {
+        set: function(rw, col, iFace, iRot) {
             if (rw < 0 || rw >= this.rwMax || col < 0 || col >= this.colMax) {
                 return;
             }
@@ -170,7 +170,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             cell.iFace = iFace;
             cell.iRot = iRot;
             cell.style.backgroundPosition =
-                this.ImagePosition(iFace,
+                this.imagePosition(iFace,
                                    iFace == 5 ? base.randomInt(4) : iRot);
         },
 
@@ -178,7 +178,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             return this.__cells[rw][col];
         },
 
-        ClickTool: function(evt, iFace) {
+        clickTool: function(evt, iFace) {
             if (iFace == this.__iTool) {
                 return;
             }
@@ -191,33 +191,33 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             this.__iRot = this.__divTools[iFace].iRot;
         },
 
-        ClickRot: function(evt, iFace) {
-            this.ClickTool(evt, iFace);
+        clickRot: function(evt, iFace) {
+            this.clickTool(evt, iFace);
             var divTool = this.__divTools[iFace];
             divTool.iRot = (divTool.iRot + 1) % 4;
             this.__iRot = divTool.iRot;
             divTool.style.backgroundPosition =
-                this.ImagePositionTools(iFace, divTool.iRot);
+                this.imagePositionTools(iFace, divTool.iRot);
         },
 
-        Fill: function() {
+        fill: function() {
             for (var i = 0; i < this.__order.length; i++) {
-                this.Set(this.__order[i][0],
+                this.set(this.__order[i][0],
                          this.__order[i][1],
                          this.__iTool,
                          this.__iRot);
             }
         },
 
-        Randomize: function() {
+        randomize: function() {
             for (var rw = 0; rw < this.rwMax; rw++) {
                 for (var col = 0; col < this.colMax; col++) {
-                    this.Set(rw, col, base.randomInt(6), base.randomInt(4));
+                    this.set(rw, col, base.randomInt(6), base.randomInt(4));
                 }
             }
         },
 
-        GenerateOrder: function() {
+        generateOrder: function() {
             this.__order = [];
             for (var rw = 0; rw < this.rwMax; rw++) {
                 for (var col = 0; col < this.colMax; col++) {
@@ -225,10 +225,10 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 }
             }
 
-            this.Shuffle(this.__order);
+            this.shuffle(this.__order);
         },
 
-        Shuffle: function(order) {
+        shuffle: function(order) {
             for (var i = 0; i < order.length; i++) {
                 var j = base.randomInt(order.length - i);
                 var temp = order[i];
@@ -237,7 +237,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             }
         },
 
-        Change: function() {
+        change: function() {
             for (var i = 0; i < this.__order.length; i++) {
                 var rw = this.__order[i][0];
                 var col = this.__order[i][1];
@@ -246,32 +246,32 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 if (Math.random() < 0.1 &&
                     this.__cells[rw][col].iFace == 2) {
                     temp = this.dxdy[this.__cells[rw][col].iRot];
-                    this.Set(rw - temp[0],
+                    this.set(rw - temp[0],
                              col + temp[1],
                              2,
                              this.__cells[rw][col].iRot);
-                    this.Set(rw, col,  5, 0);
+                    this.set(rw, col,  5, 0);
                 }
                 if (Math.random() < 0.1 && this.__cells[rw][col].iFace == 3) {
                     temp = this.dxdy[this.__cells[rw][col].iRot];
-                    this.Set(rw - temp[0],
+                    this.set(rw - temp[0],
                              col + temp[1],
                              3,
                              this.__cells[rw][col].iRot);
-                    this.Set(rw, col, 0, 0);
+                    this.set(rw, col, 0, 0);
                 }
             }
-            this.Smooth();
+            this.smooth();
         },
 
-        Smooth: function() {
-            this.GenerateOrder();
+        smooth: function() {
+            this.generateOrder();
 
             for (var i = 0; i < this.__order.length; i++) {
                 var rw = this.__order[i][0];
                 var col = this.__order[i][1];
 
-                var edge = this.CheckNeighbors(rw, col);
+                var edge = this.checkNeighbors(rw, col);
 
                 if (edge[0] == 6) {
                     if (this.__cells[rw][col].iFace < 3) {
@@ -290,13 +290,13 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                     edge[1] = (edge[1] + 2) % 4;
                 }
 
-                this.Set(rw, col, edge[0], edge[1]);
+                this.set(rw, col, edge[0], edge[1]);
             }
         },
 
-        CheckNeighbors: function(rw, col) {
+        checkNeighbors: function(rw, col) {
             var cell = this.Get(rw, col);
-            var edges = this.NeighborEdge(rw, col);
+            var edges = this.neighborEdge(rw, col);
 
             for (var i = 0; i < this.rules.length; i++) {
                 for (var j = 0; j < 4; j++) {
@@ -314,7 +314,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             return [5, 0];
         },
 
-        NeighborEdge: function(rw, col) {
+        neighborEdge: function(rw, col) {
             var edges = "";
 
             for (var i = 0; i < 4; i++) {
@@ -335,11 +335,11 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
         // Return Image Array postioning of tile give face index and
         // rotation (0-3)
-        ImagePositionTools: function(iFace, iRot) {
+        imagePositionTools: function(iFace, iRot) {
             return (-iRot * 100) + "px " + (-iFace * 100) + "px";
         },
 
-        ImagePosition: function(iFace, iRot) {
+        imagePosition: function(iFace, iRot) {
             return (-iRot * 20) + "px " + (-iFace * 20) + "px";
         },
 
@@ -361,7 +361,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             for (var rw = 0; rw < cells.length; rw++) {
                 var row = cells[rw];
                 for (var col = 0; col < row.length; col++) {
-                    this.Set(rw, col,
+                    this.set(rw, col,
                              cells[rw][col][0],
                              cells[rw][col][1]);
                 }
@@ -374,7 +374,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     // This function is called whenever your document should be reloaded.
     function setDoc(json) {
         var blob = json.blob;
-        this.brd.Init(blob.rows, blob.cols);
+        this.brd.init(blob.rows, blob.cols);
         this.brd.setCells(blob.cells);
     }
 
