@@ -21,7 +21,10 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
     Board.methods({
         constructor: Board,
+        // The color of the edges of each of the cube faces (in order
+        // of top, right, bottom, left.
         faceEdges: ["bbbb", "wwbb", "bwbb", "wbww", "bbww", "wwww"],
+
         rules: [[/bbbb/, [0, 0]],
                 [/bbbw/, [2, 2]],
                 [/bwbw/, [6, 0]],
@@ -64,36 +67,36 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         buildUI: function() {
-            this.__divBoard = document.getElementById("divBoard");
-            if (this.__tbl) {
-                this.__divBoard.removeChild(this.__tbl);
+            this.divBoard = document.getElementById("divBoard");
+            if (this.tbl) {
+                this.divBoard.removeChild(this.tbl);
             }
-            this.__tbl = document.createElement("table");
-            this.__cells = [];
+            this.tbl = document.createElement("table");
+            this.cells = [];
             for (var rw = 0; rw < this.rwMax; rw++) {
                 var tr = document.createElement("tr");
-                this.__cells[rw] = [];
+                this.cells[rw] = [];
                 for (var col = 0; col < this.colMax; col++) {
                     var tdCell = document.createElement("td");
-                    this.__cells[rw][col] = document.createElement("div");
-                    this.__cells[rw][col].className = "face";
+                    this.cells[rw][col] = document.createElement("div");
+                    this.cells[rw][col].className = "face";
                     this.set(rw, col, 0, 0);
-                    tdCell.appendChild(this.__cells[rw][col]);
+                    tdCell.appendChild(this.cells[rw][col]);
                     tr.appendChild(tdCell);
                 }
-                this.__tbl.appendChild(tr);
+                this.tbl.appendChild(tr);
             }
 
-            this.__divBoard.appendChild(this.__tbl);
-            this.__tbl.onmousedown = this.click.fnMethod(this);
+            this.divBoard.appendChild(this.tbl);
+            this.tbl.onmousedown = this.click.fnMethod(this);
             window.onmouseup = this.mouseUp.fnMethod(this);
-            this.__tbl.onmousemove = this.mouseMove.fnMethod(this);
+            this.tbl.onmousemove = this.mouseMove.fnMethod(this);
 
             var divTools = document.getElementById("divTools");
-            if (!this.__tdTools) {
+            if (!this.tdTools) {
                 var tblTools = document.createElement("table");
-                this.__divTools = [];
-                this.__tdTools = [];
+                this.divTools = [];
+                this.tdTools = [];
                 var trTool = document.createElement("tr");
                 trTool.className = "toolRow";
                 for (var iFace = 0; iFace < 6; iFace++) {
@@ -108,8 +111,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                     divTool.iRot = 0;
                     tdTool.appendChild(divTool);
                     trTool.appendChild(tdTool);
-                    this.__divTools[iFace] = divTool;
-                    this.__tdTools[iFace] = tdTool;
+                    this.divTools[iFace] = divTool;
+                    this.tdTools[iFace] = tdTool;
                 }
                 tblTools.appendChild(trTool);
 
@@ -131,34 +134,34 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         resizeWindow: function(evt) {
-            this.__divBoard.style.width = this.__tbl.offsetWidth + "px";
-            this.__ptTable = dom.ptClient(this.__tbl);
+            this.divBoard.style.width = this.tbl.offsetWidth + "px";
+            this.ptTable = dom.ptClient(this.tbl);
         },
 
         click: function(evt) {
             var pt = this.rwColFromEvt(evt);
-            this.set(pt[1], pt[0], this.__iTool, this.__iRot);
-            this.__ptLast = pt;
+            this.set(pt[1], pt[0], this.iTool, this.iRot);
+            this.ptLast = pt;
             return false;
         },
 
         mouseMove: function(evt) {
-            if (this.__ptLast == undefined) {
+            if (this.ptLast == undefined) {
                 return;
             }
             var pt = this.rwColFromEvt(evt);
-            if (vector.equal(pt, this.__ptLast)) {
+            if (vector.equal(pt, this.ptLast)) {
                 return;
             }
             this.click(evt);
         },
 
         mouseUp: function(evt) {
-            this.__ptLast = undefined;
+            this.ptLast = undefined;
         },
 
         rwColFromEvt: function(evt) {
-            var pt = vector.sub([evt.pageX, evt.pageY], this.__ptTable);
+            var pt = vector.sub([evt.pageX, evt.pageY], this.ptTable);
             return vector.floor(vector.mult(pt, 1 / 21));
         },
 
@@ -166,7 +169,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             if (rw < 0 || rw >= this.rwMax || col < 0 || col >= this.colMax) {
                 return;
             }
-            var cell = this.__cells[rw][col];
+            var cell = this.cells[rw][col];
             cell.iFace = iFace;
             cell.iRot = iRot;
             cell.style.backgroundPosition =
@@ -174,38 +177,38 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                                    iFace == 5 ? base.randomInt(4) : iRot);
         },
 
-        Get: function(rw, col) {
-            return this.__cells[rw][col];
+        get: function(rw, col) {
+            return this.cells[rw][col];
         },
 
         clickTool: function(evt, iFace) {
-            if (iFace == this.__iTool) {
+            if (iFace == this.iTool) {
                 return;
             }
 
-            if (this.__iTool != undefined) {
-                this.__tdTools[this.__iTool].className = "";
+            if (this.iTool != undefined) {
+                this.tdTools[this.iTool].className = "";
             }
-            this.__tdTools[iFace].className = "selected";
-            this.__iTool = iFace;
-            this.__iRot = this.__divTools[iFace].iRot;
+            this.tdTools[iFace].className = "selected";
+            this.iTool = iFace;
+            this.iRot = this.divTools[iFace].iRot;
         },
 
         clickRot: function(evt, iFace) {
             this.clickTool(evt, iFace);
-            var divTool = this.__divTools[iFace];
+            var divTool = this.divTools[iFace];
             divTool.iRot = (divTool.iRot + 1) % 4;
-            this.__iRot = divTool.iRot;
+            this.iRot = divTool.iRot;
             divTool.style.backgroundPosition =
                 this.imagePositionTools(iFace, divTool.iRot);
         },
 
         fill: function() {
-            for (var i = 0; i < this.__order.length; i++) {
-                this.set(this.__order[i][0],
-                         this.__order[i][1],
-                         this.__iTool,
-                         this.__iRot);
+            for (var i = 0; i < this.order.length; i++) {
+                this.set(this.order[i][0],
+                         this.order[i][1],
+                         this.iTool,
+                         this.iRot);
             }
         },
 
@@ -218,14 +221,14 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         generateOrder: function() {
-            this.__order = [];
+            this.order = [];
             for (var rw = 0; rw < this.rwMax; rw++) {
                 for (var col = 0; col < this.colMax; col++) {
-                    this.__order.push([rw, col]);
+                    this.order.push([rw, col]);
                 }
             }
 
-            this.shuffle(this.__order);
+            this.shuffle(this.order);
         },
 
         shuffle: function(order) {
@@ -237,44 +240,17 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             }
         },
 
-        change: function() {
-            for (var i = 0; i < this.__order.length; i++) {
-                var rw = this.__order[i][0];
-                var col = this.__order[i][1];
-                var temp;
-
-                if (Math.random() < 0.1 &&
-                    this.__cells[rw][col].iFace == 2) {
-                    temp = this.dxdy[this.__cells[rw][col].iRot];
-                    this.set(rw - temp[0],
-                             col + temp[1],
-                             2,
-                             this.__cells[rw][col].iRot);
-                    this.set(rw, col,  5, 0);
-                }
-                if (Math.random() < 0.1 && this.__cells[rw][col].iFace == 3) {
-                    temp = this.dxdy[this.__cells[rw][col].iRot];
-                    this.set(rw - temp[0],
-                             col + temp[1],
-                             3,
-                             this.__cells[rw][col].iRot);
-                    this.set(rw, col, 0, 0);
-                }
-            }
-            this.smooth();
-        },
-
         smooth: function() {
             this.generateOrder();
 
-            for (var i = 0; i < this.__order.length; i++) {
-                var rw = this.__order[i][0];
-                var col = this.__order[i][1];
+            for (var i = 0; i < this.order.length; i++) {
+                var rw = this.order[i][0];
+                var col = this.order[i][1];
 
                 var edge = this.checkNeighbors(rw, col);
 
                 if (edge[0] == 6) {
-                    if (this.__cells[rw][col].iFace < 3) {
+                    if (this.cells[rw][col].iFace < 3) {
                         edge[0] = 0;
                     }
                 } else {
@@ -282,7 +258,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 }
 
                 if (edge[0] == 7) {
-                    if (this.__cells[rw][col].iFace >= 3) {
+                    if (this.cells[rw][col].iFace >= 3) {
                         edge[0] = 4;
                     }
                 } else {
@@ -295,7 +271,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
         checkNeighbors: function(rw, col) {
-            var cell = this.Get(rw, col);
+            var cell = this.get(rw, col);
             var edges = this.neighborEdge(rw, col);
 
             for (var i = 0; i < this.rules.length; i++) {
@@ -314,6 +290,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             return [5, 0];
         },
 
+
         neighborEdge: function(rw, col) {
             var edges = "";
 
@@ -324,8 +301,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                    colT == -1 || colT == this.colMax) {
                     edges += "b";
                 } else {
-                    edges += this.faceEdges[(this.__cells[rwT][colT].iFace)].
-                        charAt((6 + i - this.__cells[rwT][colT].iRot) % 4);
+                    edges += this.faceEdges[(this.cells[rwT][colT].iFace)].
+                        charAt((6 + i - this.cells[rwT][colT].iRot) % 4);
                 }
             }
 
@@ -350,7 +327,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 cells[rw] = [];
                 for (var col = 0; col < this.colMax; col++)
                 {
-                    var cell = this.__cells[rw][col];
+                    var cell = this.cells[rw][col];
                     cells[rw][col] = [cell.iFace, cell.iRot];
                 }
             }
