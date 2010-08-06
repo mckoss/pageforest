@@ -37,15 +37,20 @@ $(document).ready(blocks.onReady);
     <input type="text" id="rows" size="3" value="20"/>
     <label style="margin-left:10px;" for="columns">Cols:</label>
     <input type="text" id="columns" size="3" value="50"/>
-    <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)" onclick="blocks.brd.Resize();"/>
+    <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)"
+           onclick="blocks.brd.resize();"/>
   </div>
   <hr/>
 
   <div class="toolBox">
-    <input type="button" title="Sets all block faces to current selection" value="Fill" onclick="blocks.brd.Fill();"/>
-    <input type="button" title="Randomizes all block faces" value="Randomize" onclick="blocks.brd.Randomize();"/>
-    <input type="button" title="Removes all flat edges from your current design" value="Smooth" onclick="blocks.brd.Smooth();"/>
-    <input type="button" title="Smooths and pseudo-randomizes" value="Change" onclick="blocks.brd.Change();"/>
+    <input type="button" title="Sets all block faces to current selection" value="Fill"
+           onclick="blocks.brd.fill();"/>
+    <input type="button" title="Randomizes all block faces" value="Randomize"
+           onclick="blocks.brd.randomize();"/>
+    <input type="button" title="Removes all flat edges from your current design" value="Smooth"
+           onclick="blocks.brd.smooth();"/>
+    <input type="button" title="Smooths and pseudo-randomizes" value="Change"
+           onclick="blocks.brd.change();"/>
   </div>
   <hr/>
   <div style="float:right;">
