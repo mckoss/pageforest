@@ -261,6 +261,7 @@ INSTALLED_APPS = (
     'apps',
     'docs',
     'blobs',
+    'chunks',
     'backups',
     'dashboard',
     'utils',
