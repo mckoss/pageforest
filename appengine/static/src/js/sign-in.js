@@ -120,7 +120,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     function onReady(username, appId) {
         // Hide message about missing JavaScript.
         $('#enablejs').hide();
-        $('form#sign-in').bind('submit', onSubmit);
+        $('input').removeAttr('disabled');
         // Show message about missing HttpOnly support.
         if (cookies.getCookie('httponly')) {
             $('#httponly').show();

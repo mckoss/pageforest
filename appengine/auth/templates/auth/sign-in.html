@@ -38,7 +38,7 @@ $(document).ready(function() {
     <p class="error">{{ form.non_field_errors.0 }}</p>
 {% endif %}
 
-<form id="sign-in" method="post">
+<form id="sign-in" method="post" onsubmit="return signIn.onSubmit()">
     {{ csrf_token }}
     <table>
     {% if user %}
@@ -56,8 +56,7 @@ $(document).ready(function() {
             </tr>
         {% endfor %}
         <tr><td></td>
-          <td><input class="want_app" type="submit" value="Sign In"
-                     onclick="return signIn.onSubmit()" /></td>
+          <td><input class="want_app" type="submit" value="Sign In" disabled="disabled" /></td>
           <td></td>
         </tr>
     {% endif %}
