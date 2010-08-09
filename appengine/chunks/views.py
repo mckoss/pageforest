@@ -1,10 +1,21 @@
 import time
 
+from django.http import HttpResponse
+
 from google.appengine.ext import db
-from utils.shortcuts import render_to_response
+
+from utils.shortcuts import render_to_response, lookup_or_404
 
 from chunks.models import Chunk
 from blobs.models import Blob, MAX_INTERNAL_SIZE
+
+
+def chunk_get(request, key_name):
+    """
+    Show a chunk as text/plain for debugging.
+    """
+    chunk = lookup_or_404(Chunk, key_name)
+    return HttpResponse(chunk.value, mimetype='text/plain')
 
 
 def vacuum(request, start):
