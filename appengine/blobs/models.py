@@ -101,8 +101,13 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         The URL includes the default domain name for this app.
         """
         app_id, key = self.key().name().split('/', 1)
-        return ''.join(('http://', app_id, '.', settings.DEFAULT_DOMAIN,
-                        '/docs/', key))
+        if app_id == 'apps':
+            app_id, key = key.split('/', 1)
+            key = '/' + key.rstrip('/')
+        else:
+            key = '/docs/' + key
+        domain = app_id + '.' + settings.DEFAULT_DOMAIN
+        return 'http://' + domain + key
 
     def get_etag(self):
         """Return ETag for use in the HTTP header."""
