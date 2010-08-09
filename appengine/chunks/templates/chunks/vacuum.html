@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Delete Unused Chunks{% endblock %}
+
+{% block content %}
+<h1>Delete Unused Chunks</h1>
+
+<table>
+<tr>
+<td style="text-align:right">Found {{ chunks|length }} chunks</td>
+<td>from {% with chunks|first as chunk %}{{ chunk.name }}{% endwith %}</td>
+<td>to {% with chunks|last as chunk %}{{ chunk.name }}{% endwith %}</td>
+</tr>
+<tr>
+<td style="text-align:right">and {{ blobs|length }} blobs</td>
+<td>from {% with blobs|first as blob %}{{ blob.sha1 }}{% endwith %}</td>
+<td>to {% with blobs|last as blob %}{{ blob.sha1 }}{% endwith %}.</td>
+</tr>
+</table>
+
+{% if chunks_without_blobs %}
+<h2>Chunks without blobs</h2>
+<ul>
+{% for chunk in chunks_without_blobs %}
+<li><a href="/chunks/{{ chunk.name }}">{{ chunk.name }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if blobs_without_chunks %}
+<h2>Blobs without chunks</h2>
+<ul>
+{% for blob in blobs_without_chunks %}
+<li><a href="{{ blob.get_absolute_url }}">{{ blob.sha1 }}</a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% endblock %}
