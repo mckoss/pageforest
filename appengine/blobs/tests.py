@@ -12,7 +12,8 @@ from apps.tests import AppTestCase
 
 from apps.models import App
 from docs.models import Doc
-from blobs.models import Blob, Chunk
+from blobs.models import Blob
+from chunks.models import Chunk
 
 
 class BlobTest(AppTestCase):

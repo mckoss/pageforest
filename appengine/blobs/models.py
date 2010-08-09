@@ -9,6 +9,8 @@ from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
 from utils.mime import guess_mimetype
 from utils.json import is_valid_json
 
+from chunks.models import Chunk
+
 # Don't attempt json.loads if we already know it's not valid.
 CERTAINLY_NOT_JSON = ['text/html', 'text/css', 'application/pdf']
 
@@ -17,13 +19,6 @@ CERTAINLY_NOT_JSON = ['text/html', 'text/css', 'application/pdf']
 # exceeding 1 MB for the datastore result, and because multiple copies
 # use redundant storage instead of pointing to the same Chunk.
 MAX_INTERNAL_SIZE = 600  # bytes
-
-
-class Chunk(Cacheable):
-    """
-    The key name is the SHA-1 hash of the content.
-    """
-    value = db.BlobProperty()
 
 
 class Blob(Timestamped, Migratable, Taggable, Cacheable):
