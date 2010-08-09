@@ -1238,12 +1238,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         errorReport: function(status, message) {
             if (this.app.onError) {
                 this.app.onError(status, message);
+                return;
             }
-            else {
-                var formatted = "client error: " + message +
-                    ' (' + status + ')';
-                console.log(formatted);
-            }
+            var formatted = "client error: " + message +
+                ' (' + status + ')';
+            this.log(formatted);
+            alert(message);
         },
 
         // Periodically poll for changes in the URL and state of user sign-in
