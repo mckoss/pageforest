@@ -13,12 +13,6 @@ handlers:
 
 - url: /shell/.*
   script: shell_main.py
-  secure: optional
-  login: admin
-
-- url: /.remote_api
-  script: $PYTHON_LIB/google/appengine/ext/remote_api/handler.py
-  secure: optional
   login: admin
 
 - url: /stats/.*
@@ -26,7 +20,10 @@ handlers:
 
 - url: /backups/.*
   script: main.py
-  secure: optional
+  login: admin
+
+- url: /chunks/.*
+  script: main.py
   login: admin
 
 - url: /.*
