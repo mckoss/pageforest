@@ -25,12 +25,17 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         // of top, right, bottom, left.
         faceEdges: ["bbbb", "wwbb", "bwbb", "wbww", "bbww", "wwww"],
 
+        // Smoothing rules - for each pattern of neighbor edges
+        // fine to most approriate tile to fill the neighbor pattern.
+        // [iFace, iRot] - what does 6 and 7 iFace mean?
         rules: [[/bbbb/, [0, 0]],
                 [/bbbw/, [2, 2]],
                 [/bwbw/, [6, 0]],
                 [/bbww/, [7, 0]],
                 [/wwwb/, [3, 2]],
                 [/wwww/, [5, 0]]],
+
+        // top, right, bottom, left (x,y) deltas
         dxdy: [[0, -1], [1, 0], [0, 1], [-1, 0]],
 
         init: function(rwMax, colMax) {
@@ -169,7 +174,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             if (rw < 0 || rw >= this.rwMax || col < 0 || col >= this.colMax) {
                 return;
             }
-            var cell = this.cells[rw][col];
+            var cell = this.get(rw, col);
             cell.iFace = iFace;
             cell.iRot = iRot;
             cell.style.backgroundPosition =
@@ -177,7 +182,13 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                                    iFace == 5 ? base.randomInt(4) : iRot);
         },
 
+        // Return the div for the cell at position (col, rw)
         get: function(rw, col) {
+            if (rw < 0 || rw >= this.rwMax ||
+                col < 0 || col >= this.colMax) {
+                return undefined;
+            }
+
             return this.cells[rw][col];
         },
 
@@ -246,24 +257,25 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             for (var i = 0; i < this.order.length; i++) {
                 var rw = this.order[i][0];
                 var col = this.order[i][1];
+                var cell = this.get(rw, col);
 
                 var edge = this.checkNeighbors(rw, col);
 
                 if (edge[0] == 6) {
-                    if (this.cells[rw][col].iFace < 3) {
+                    if (cell.iFace < 3) {
                         edge[0] = 0;
+                    } else {
+                        edge[0] = 5;
                     }
-                } else {
-                    edge[0] = 5;
                 }
 
                 if (edge[0] == 7) {
-                    if (this.cells[rw][col].iFace >= 3) {
+                    if (cell.iFace >= 3) {
                         edge[0] = 4;
+                    } else {
+                        edge[0] = 1;
+                        edge[1] = (edge[1] + 2) % 4;
                     }
-                } else {
-                    edge[0] = 1;
-                    edge[1] = (edge[1] + 2) % 4;
                 }
 
                 this.set(rw, col, edge[0], edge[1]);
@@ -291,18 +303,21 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         },
 
 
+        // Return a 4 character string of 'b' and 'w' depending on the
+        // edge-color of the top, right, bottom, left cells
         neighborEdge: function(rw, col) {
             var edges = "";
 
             for (var i = 0; i < 4; i++) {
                 var rwT = rw + this.dxdy[i][1];
                 var colT = col + this.dxdy[i][0];
+                var cellT = this.get(rwT, colT);
                 if (rwT == -1 || rwT == this.rwMax ||
                    colT == -1 || colT == this.colMax) {
                     edges += "b";
                 } else {
-                    edges += this.faceEdges[(this.cells[rwT][colT].iFace)].
-                        charAt((6 + i - this.cells[rwT][colT].iRot) % 4);
+                    edges += this.faceEdges[cellT.iFace].
+                        charAt((6 + i - cellT.iRot) % 4);
                 }
             }
 
@@ -327,7 +342,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 cells[rw] = [];
                 for (var col = 0; col < this.colMax; col++)
                 {
-                    var cell = this.cells[rw][col];
+                    var cell = this.get(rw, col);
                     cells[rw][col] = [cell.iFace, cell.iRot];
                 }
             }
