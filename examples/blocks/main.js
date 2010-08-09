@@ -25,16 +25,6 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         // of top, right, bottom, left.
         faceEdges: ["bbbb", "wwbb", "bwbb", "wbww", "bbww", "wwww"],
 
-        // Smoothing rules - for each pattern of neighbor edges
-        // fine to most approriate tile to fill the neighbor pattern.
-        // [iFace, iRot] - what does 6 and 7 iFace mean?
-        rules: [[/bbbb/, [0, 0]],
-                [/bbbw/, [2, 2]],
-                [/bwbw/, [6, 0]],
-                [/bbww/, [7, 0]],
-                [/wwwb/, [3, 2]],
-                [/wwww/, [5, 0]]],
-
         // top, right, bottom, left (x,y) deltas
         dxdy: [[0, -1], [1, 0], [0, 1], [-1, 0]],
 
@@ -259,49 +249,45 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 var col = this.order[i][1];
                 var cell = this.get(rw, col);
 
-                var edge = this.checkNeighbors(rw, col);
+                var cellT = this.checkNeighbors(rw, col);
 
-                if (edge[0] == 6) {
-                    if (cell.iFace < 3) {
-                        edge[0] = 0;
-                    } else {
-                        edge[0] = 5;
-                    }
-                }
-
-                if (edge[0] == 7) {
-                    if (cell.iFace >= 3) {
-                        edge[0] = 4;
-                    } else {
-                        edge[0] = 1;
-                        edge[1] = (edge[1] + 2) % 4;
-                    }
-                }
-
-                this.set(rw, col, edge[0], edge[1]);
+                this.set(rw, col, cellT[0], cellT[1]);
             }
         },
 
+        // Return the [iFace, iRot] that would best match the
+        // surrounding neighbors.  This function should be
+        // "stable" in that we don't modify the cell if there
+        // is no compelling reason to change it.
         checkNeighbors: function(rw, col) {
             var cell = this.get(rw, col);
             var edges = this.neighborEdge(rw, col);
 
-            for (var i = 0; i < this.rules.length; i++) {
-                for (var j = 0; j < 4; j++) {
-                    if (this.rules[i][0].test(edges)) {
-                        return [this.rules[i][1][0],
-                                ((4 + j - this.rules[i][1][1]) % 4)];
+            // Loop over 4 rotations of each edge pattern.
+            for (var j = 0; j < 4; j++) {
+                // Saddle point - all black or all white
+                if (/bwbw/.test(edges)) {
+                    if (cell.iFace < 3) {
+                        return [0, 0];
                     }
-                    var firstChar = edges.charAt(0);
-                    edges = edges.slice(1) + firstChar;
+                    return [5, 0];
                 }
+
+                // Corner - inside or outside curve depending
+                // on amount of black in cell.
+                if (/bbww/.test(edges)) {
+                    if (cell.iFace < 3) {
+                        return [1, (2 + j) % 4];
+                    }
+                    return [4, j];
+                }
+
+                // Rotate edge pattern
+                edges = edges.slice(1) + edges.charAt(0);
             }
-            console.log("failed! rw: " + rw +
-                        " col: " + col + " edges:" + edges);
 
-            return [5, 0];
+            return [cell.iFace, cell.iRot];
         },
-
 
         // Return a 4 character string of 'b' and 'w' depending on the
         // edge-color of the top, right, bottom, left cells
