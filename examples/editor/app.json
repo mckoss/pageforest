@@ -1,0 +1,20 @@
+{
+  "application": "editor",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "jcrocholl",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "meta",
+    "editor"
+  ],
+  "title": "Pageforest Application Editor",
+  "url": "http://editor.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
+}

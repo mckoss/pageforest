@@ -1,0 +1,99 @@
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Helvetica, sans-serif;
+  font-size: 16px;
+}
+
+img {
+  border: none;
+  vertical-align: middle;
+}
+
+input, select {
+  height: 23px;
+}
+
+h2 {
+  margin: 0 0 5px;
+  font-size: 18px;
+}
+
+div#left, div#center, div#right {
+  padding: 10px;
+}
+
+div#left {
+  float: left;
+  text-align: left;
+}
+
+div#center {
+  text-align: center;
+}
+
+div#right {
+  float: right;
+  text-align: right;
+}
+
+div#content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40px;
+}
+
+div.icon {
+  float: left;
+  width: 140px;
+  height: 100px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+div.icon img {
+  margin: 0 0 10px;
+}
+
+textarea {
+  font-family: "Monaco", "Andale Mono", "Courier New", Courier, monospace;
+  font-size: 14px;
+  color: black;
+  margin: 0;
+  padding: 0;
+  border: none;
+  width: 100%;
+}
+
+div.dialog {
+  position: absolute;
+  top: 33px;
+  z-index: 100;
+  margin: 10px;
+  padding: 10px;
+  background: rgba(240,240,240,0.9);
+}
+
+div#open {
+  left: 0;
+  width: 30%;
+}
+
+div#settings {
+  right: 0;
+  width: 30%;
+}
+
+div#apps {
+  float: left;
+  margin-right: 10px;
+}
+
+.quiet {
+  color: #ccc;
+}
+
+.error {
+  color: red;
+}
