@@ -221,6 +221,15 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             }
         },
 
+        invert: function() {
+            for (var rw = 0; rw < this.rwMax; rw++) {
+                for (var col = 0; col < this.colMax; col++) {
+		    var cell = this.get(rw, col);
+                    this.set(rw, col, 5 - cell.iFace, cell.iRot);
+                }
+            }
+        },
+
         generateOrder: function() {
             this.order = [];
             for (var rw = 0; rw < this.rwMax; rw++) {
