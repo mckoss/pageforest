@@ -1,0 +1,479 @@
+#!/usr/bin/env python
+
+import re
+import os
+import hmac
+import hashlib
+import urllib2
+from datetime import datetime
+from fnmatch import fnmatch
+from optparse import OptionParser
+
+try:
+    try:
+        import json  # Python 2.6
+    except ImportError:
+        from django.utils import simplejson as json  # Django
+except ImportError:
+    import simplejson as json  # Please easy_install simplejson
+
+SUBDOMAIN = 'admin'
+META_FILENAME = 'app.json'
+PASSWORD_FILENAME = '.passwd'
+IGNORE_FILENAMES = ['pf.py', '.*', '*~', '#*#', '*.bak', '*.rej', '*.orig']
+COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
+APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
+
+
+def as_datetime(dct):
+    """Decode datetime objects from JSON dictionary."""
+    if dct.get('__class__', '') == 'Date' and 'isoformat' in dct:
+        isoformat = dct['isoformat'][:19]
+        return datetime.strptime(isoformat, '%Y-%m-%dT%H:%M:%S')
+    return dct
+
+
+class AuthRequest(urllib2.Request):
+    """HTTP request with sessionkey cookie and referer."""
+
+    def __init__(self, url, *args, **kwargs):
+        urllib2.Request.__init__(self, url, *args, **kwargs)
+        self.add_header('Referer', 'http://%s.%s/' % (
+                options.application, options.server))
+        if (hasattr(options, 'session_key')):
+            self.add_header('Cookie', 'sessionkey=' + options.session_key)
+
+
+class PutRequest(AuthRequest):
+    """Request to upload a file with HTTP PUT."""
+
+    def get_method(self):
+        return 'PUT'
+
+
+class DeleteRequest(AuthRequest):
+    """Request to remove a file with HTTP DELETE."""
+
+    def get_method(self):
+        return 'DELETE'
+
+
+def hmac_sha1(key, message):
+    return hmac.new(key, message, hashlib.sha1).hexdigest()
+
+
+def sign_in():
+    url = options.root_url + 'auth/challenge'
+    if options.verbose:
+        print("Getting %s" % url)
+    challenge = urllib2.urlopen(AuthRequest(url)).read()
+    if options.verbose:
+        print("Challenge: %s" % challenge)
+    userpass = hmac_sha1(options.password, options.username.lower())
+    signature = hmac_sha1(userpass, challenge)
+    reply = '|'.join((options.username, challenge, signature))
+    url = options.root_url + 'auth/verify/' + reply
+    if options.verbose:
+        print("Response: %s" % url)
+    session_key = urllib2.urlopen(AuthRequest(url)).read()
+    if options.verbose:
+        print("Session key: %s" % session_key)
+    return session_key
+
+
+def load_application():
+    """
+    Load application from app.json, or ask the user for it.
+    """
+    if os.path.exists('app.json'):
+        parsed = json.loads(open(META_FILENAME, 'r').read())
+    else:
+        parsed = {}
+    if 'application' in parsed:
+        application = parsed['application']
+        print("Application: " + application)
+    else:
+        application = raw_input("Application: ")
+    return application
+
+
+def load_credentials():
+    """
+    Load username and password from base64-encoded .passwd file.
+    """
+    credentials = open(PASSWORD_FILENAME).readline().decode('base64')
+    parts = credentials.split(':')
+    if len(parts) == 2:
+        return parts
+
+
+def save_credentials():
+    """
+    Save username and password to base64-encoded .passwd file.
+    """
+    yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
+    yesno = yesno.strip().lower() or 'y'
+    if yesno.startswith('y'):
+        credentials = '%s:%s' % (options.username, options.password)
+        open(PASSWORD_FILENAME, 'w').write(credentials.encode('base64'))
+
+
+def config():
+    """
+    Get configuration from command line, app.json and user input.
+    """
+    usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
+    parser = OptionParser(usage=usage)
+    parser.add_option('-s', '--server', metavar='<hostname>',
+        help="deploy to this server (default: pageforest.com")
+    parser.add_option('-u', '--username')
+    parser.add_option('-p', '--password')
+    parser.add_option('-v', '--verbose', action='store_true')
+    parser.add_option('-q', '--quiet', action='store_true')
+    options, args = parser.parse_args()
+
+    if not args:
+        parser.error("No command specified.")
+    options.command = args.pop(0).lower().strip()
+    if not options.command:
+        parser.error("Empty command.")
+    # Prefix expansion.
+    for command in COMMANDS:
+        if command.startswith(options.command):
+            options.command = command
+    if options.command not in COMMANDS:
+        parser.error("Unsupported command: " + options.command)
+
+    if options.verbose:
+        print("Found simplejson in %s" % os.path.dirname(json.__file__))
+
+    if not options.server:
+        options.server = "pageforest.com"
+
+    if options.command == 'test':
+        options.application = 'pfpytest'
+    else:
+        options.application = load_application()
+
+    if os.path.exists(PASSWORD_FILENAME):
+        options.username, options.password = load_credentials()
+
+    options.save = False
+    if not options.username:
+        options.username = raw_input("Username: ")
+        options.save = True
+    if not options.password:
+        from getpass import getpass
+        options.password = getpass("Password: ")
+        options.save = True
+    return options, args
+
+
+def upload_file(filename, url=None):
+    """
+    Upload one file to the server.
+    """
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = options.root_url + urlpath
+    data = open(filename, 'rb').read()
+    keyname = filename.replace(os.path.sep, '/')
+    # Check if the remote file is already up-to-date.
+    if hasattr(options, 'listing') and keyname in options.listing:
+        sha1 = hashlib.sha1(data).hexdigest()
+        if options.listing[keyname]['sha1'] == sha1:
+            if options.verbose:
+                print("Already up-to-date: %s" % filename)
+            return
+    # Upload file to Pageforest backend.
+    if not options.quiet:
+        print("Uploading: %s (%d bytes)" % (url, len(data)))
+    response = urllib2.urlopen(PutRequest(url, data))
+    if options.verbose:
+        print(response.read())
+
+
+def delete_file(filename, url=None):
+    """
+    Upload one file to the server.
+    """
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = options.root_url + urlpath
+    if not options.quiet:
+        print("Deleting: %s" % url)
+    response = urllib2.urlopen(DeleteRequest(url))
+    if options.verbose:
+        print(response.read())
+
+
+def download_file(filename, url=None):
+    """
+    Download a file from the server.
+    """
+    if url is None:
+        urlpath = filename.replace('\\', '/')
+        if urlpath.startswith('./'):
+            urlpath = urlpath[2:]
+        url = options.root_url + urlpath
+    # Check if the local file is already up-to-date.
+    info = {}
+    if hasattr(options, 'listing') and filename in options.listing:
+        info = options.listing[filename]
+        if info['sha1'] == sha1_file(filename):
+            if options.verbose:
+                print("Already up-to-date: %s" % filename)
+            return
+    # Download file from Pageforest backend.
+    if not options.quiet:
+        if 'size' in info:
+            print("Downloading: %s (%d bytes)" % (url, info['size']))
+        else:
+            print("Downloading: %s" % url)
+    response = urllib2.urlopen(AuthRequest(url))
+    outfile = open(filename, 'wb')
+    outfile.write(response.read())
+    outfile.close()
+
+
+def prefix_match(args, filename):
+    """
+    Check if the filename starts with one of the prefixes.
+    """
+    for arg in args:
+        if filename.startswith(arg):
+            return True
+
+
+def pattern_match(patterns, filename):
+    """
+    Check if the filename matches any of the patterns.
+    """
+    for pattern in patterns:
+        if fnmatch(filename, pattern):
+            return True
+
+
+def upload_dir(path):
+    """
+    Upload a directory, including all files and subdirectories.
+    """
+    for dirpath, dirnames, filenames in os.walk(path):
+        for dirname in dirnames:
+            if dirname.startswith('.'):
+                dirnames.remove(dirname)
+        for filename in filenames:
+            if pattern_match(IGNORE_FILENAMES, filename):
+                continue
+            upload_file(os.path.join(dirpath, filename))
+
+
+def sha1_file(filename):
+    """
+    Hash the contents of a file with SHA-1.
+    Return the hexdigest, or None if file not found.
+    """
+    if not os.path.exists(filename):
+        return None
+    infile = open(filename, 'rb')
+    content = infile.read()
+    infile.close()
+    return hashlib.sha1(content).hexdigest()
+
+
+def list_remote_files():
+    """
+    Get the list of files on the remote server, with metadata.
+    """
+    url = options.root_url + '?method=list&depth=0'
+    if options.verbose:
+        print("Listing: %s" % url)
+    try:
+        response = urllib2.urlopen(AuthRequest(url))
+        options.listing = json.loads(response.read(), object_hook=as_datetime)
+    except urllib2.HTTPError, e:
+        options.listing = {}
+        if options.verbose:
+            print(unicode(e))
+
+
+def get_command(args):
+    """
+    Download all files for an app, except files that are already
+    up-to-date (same SHA-1 hash as remote).
+    """
+    list_remote_files()
+    download_file(META_FILENAME)
+    filenames = options.listing.keys()
+    filenames.sort()
+    for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
+        # Make directory if needed.
+        dirname = os.path.dirname(filename)
+        if dirname and not os.path.exists(dirname):
+            if options.verbose:
+                print("Making directory: %s" % dirname)
+            os.makedirs(dirname)
+        # Download file from Pageforest backend server.
+        download_file(filename)
+
+
+def put_command(args):
+    """
+    Upload all files for an app, except files that are already
+    up-to-date (same SHA-1 hash as remote).
+    """
+    list_remote_files()
+    if not args:
+        args = [name for name in os.listdir('.')
+                if not name.startswith('.')
+                and not pattern_match(IGNORE_FILENAMES, name)]
+    # REVIEW: The following doesn't work if you use "pf put <folder>"
+    # to upload some files including META_FILENAME inside <folder>.
+    # Should we require that "pf put" is always run in the same folder
+    # where META_FILENAME lives?
+    if META_FILENAME in args:
+        upload_file(META_FILENAME)
+        args.remove(META_FILENAME)
+    if not args:
+        return
+    for path in args:
+        if os.path.isdir(path):
+            upload_dir(path)
+        elif os.path.isfile(path):
+            upload_file(path)
+
+
+def list_file(filename, metadata):
+    print '%s  %s  %s\t(%d bytes)' % (
+        metadata['sha1'],
+        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
+        filename,
+        metadata['size'])
+
+
+def vacuum_command(args):
+    """
+    List remote files that no longer exist locally, then delete them
+    (after prompting the user).
+    """
+    list_remote_files()
+    filenames = options.listing.keys()
+    filenames.sort()
+    selected = []
+    for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
+        if os.path.isfile(filename):
+            continue
+        list_file(filename, options.listing[filename])
+        selected.append(filename)
+    if not selected:
+        return
+    answer = raw_input(
+        "Are you sure you want to DELETE %d remote files? " % len(selected))
+    if answer.lower().startswith('y'):
+        for filename in selected:
+            delete_file(filename)
+
+
+def list_command(args):
+    """
+    Show SHA-1 hash and filename for remote files. If args specified,
+    only show files that start with one of args.
+    """
+    list_remote_files()
+    filenames = options.listing.keys()
+    filenames.sort()
+    for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
+        list_file(filename, options.listing[filename])
+
+
+def sha1_command(args):
+    """
+    Print the SHA-1 hash of each argument.
+    """
+    if not args:
+        args = os.listdir('.')
+    for path in args:
+        if os.path.isdir(path):
+            sha1_command([os.path.join(path, filename)
+                          for filename in os.listdir(path)])
+        if os.path.isfile(path):
+            infile = open(path, 'rb')
+            data = infile.read()
+            infile.close()
+            print '%s  %s' % (hashlib.sha1(data).hexdigest(), path)
+
+
+def test_command(args):
+    """
+    Test all commands against a live server.
+    """
+    # Create temp folder.
+    dirname = options.application
+    if not os.path.exists(dirname):
+        os.mkdir(dirname)
+    os.chdir(dirname)
+    # Create app.json with metadata.
+    outfile = open(META_FILENAME, 'w')
+    outfile.write('{"application": "%s"}' % options.application)
+    outfile.close()
+    # Create test.txt with current timestamp as content.
+    write_data = datetime.now().isoformat()
+    filename = 'test.txt'
+    outfile = open(filename, 'w')
+    outfile.write(write_data)
+    outfile.close()
+    # Show local SHA-1 hashes.
+    sha1_command(['test.txt'])
+    # Upload everything, then delete local files.
+    put_command([])
+    os.unlink(META_FILENAME)
+    os.unlink(filename)
+    # Show remote SHA-1 hashes.
+    list_command([])
+    # Download everything, then verify file content.
+    get_command([])
+    infile = open(filename, 'r')
+    read_data = infile.read()
+    infile.close()
+    assert read_data == write_data
+    # Verify app.json content.
+    infile = open(META_FILENAME, 'r')
+    app_json = infile.read()
+    infile.close()
+    assert '"modified":' in app_json
+    assert '"tags": []' in app_json
+    # Clean up.
+    os.unlink(META_FILENAME)
+    os.unlink(filename)
+    os.chdir('..')
+    os.rmdir(dirname)
+
+
+def main():
+    global options
+    options, args = config()
+    options.root_url = 'http://%s.%s.%s/' % (
+        SUBDOMAIN, options.application, options.server)
+    options.session_key = sign_in()
+    globals()[options.command + '_command'](args)
+    if options.save:
+        save_credentials()
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except urllib2.HTTPError, e:
+        print("%s: %s" % (e, e.url))
+        for line in e.fp.readlines()[:140]:
+            print(line.rstrip())

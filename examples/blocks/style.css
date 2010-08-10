@@ -1,0 +1,162 @@
+body {
+margin: padding: 0;
+font-family: Helvetica, sans-serif;
+font-size: 24px;
+background: #ebebeb url("images/gradient.jpg") repeat-x left top;
+}
+
+h1 {
+margin: 5px 0 0 0;
+float: left;
+}
+
+h2 {
+text-align:center;
+margin: 0 0 5px 0;
+}
+
+hr {
+border: 1px solid grey;
+}
+
+img {
+border: 0;
+}
+
+div {
+padding:0;
+margin:0;
+}
+
+p {
+padding: 0;
+margin: 0 0 5px 0;
+}
+
+div.page {
+width: 1051px;
+margin: auto;
+position: relative;
+}
+
+label {
+font-size: 24px;
+font-weight: bold;
+display: inline-block;
+}
+
+fieldset {
+margin-bottom: 15px;
+clear: both;
+}
+
+fieldset ol {
+margin: 0;
+padding: 0;
+}
+
+fieldset li {
+list-style: none;
+padding: 5px;
+margin: 0 0 5px 0;
+}
+
+input[type="text"] {
+font-size: 24px;
+}
+
+input[type="button"] {
+font-size: 24px;
+margin: 5px;
+}
+
+#divPageTitle {
+width: 1050px;
+height: 80px;
+margin: auto;
+padding-bottom: 10px;
+text-align: center;
+}
+
+div.toolBox {
+text-align: center;
+}
+
+#divInfo {
+font-style: italic;
+margin-top: 15px;
+text-align: center;
+}
+
+#divInfo p {
+margin: 5px;
+font-size: 11pt;
+font-family: Verdana;
+}
+
+#divInfo ul {
+padding-left: 25px;
+}
+
+#divTools {
+margin: auto;
+width: 645px;
+}
+
+#divTools table {
+border-collapse: collapse;
+margin: auto;
+}
+
+tr.toolRow td {
+width: 100px;
+height: 100px;
+padding: 4px;
+cursor: pointer;
+}
+
+tr.rotRow td {
+background: url(images/Rot.png) no-repeat center scroll;
+width: 100px;
+height: 20px;
+padding: 4px;
+cursor: pointer;
+}
+
+#divTools table td.selected {
+background-color: yellow;
+}
+
+div.faceTools {
+width: 100px;
+height: 100px;
+background-image: url(images/FaceArray100.png);
+background-position: 0px 0px;
+background-repeat: no-repeat;
+}
+
+div.face {
+width: 20px;
+height: 20px;
+background-image: url(images/FaceArray20.png);
+background-position: 0px 0px;
+background-repeat: no-repeat;
+}
+
+#divBoard {
+margin: auto;
+padding: 1px;
+}
+
+#divBoard table {
+border-spacing: 0;
+border-collapse: collapse;
+margin-top: 10px;
+}
+
+#divBoard table td {
+width: 20px;
+height: 20px;
+padding: 0;
+border: 1px solid gray;
+}

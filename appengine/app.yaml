@@ -1,0 +1,45 @@
+application: pageforest
+version: dev
+runtime: python
+api_version: 1
+default_expiration: 10s
+
+derived_file_type:
+- python_precompiled
+
+handlers:
+- url: /static/
+  static_dir: static
+
+- url: /lib/
+  static_dir: lib
+
+- url: /shell/.*
+  script: shell_main.py
+  login: admin
+
+- url: /stats/.*
+  script: appstats_main.py
+
+- url: /backups/.*
+  script: main.py
+  login: admin
+
+- url: /chunks/.*
+  script: main.py
+  login: admin
+
+- url: /.*
+  script: main.py
+
+skip_files:
+- ^local/
+- ^app\.yaml$
+- ^index\.yaml$
+- ^.*\#$
+- ^.*~$
+- ^.*\.py[co]$
+- ^(.*/)?\.
+- ^.*\.bak$
+- ^.*\.orig$
+- ^.*/TAGS$

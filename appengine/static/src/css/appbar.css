@@ -1,0 +1,65 @@
+#pfAppBar {
+    width: 100%;
+    height: 35px;
+}
+
+div.pfAppBarBox {
+    font-family: Verdana, Arial, san-serif;
+    font-size: 14px;
+    float: right;
+    margin-right: 16px;
+    left: 600px;
+    top: 0px;
+    display: inline;
+    height: 35px;
+}
+
+div.pfLeft {
+    background: url(/static/images/appbar/green-left.png) no-repeat scroll;
+    float: left;
+    width: 5px;
+    height: 35px;
+    margin: 0px;
+}
+
+div.pfCenter {
+    background: url(/static/images/appbar/green-center.png) repeat-x scroll top;
+    float: left;
+    display: inline;
+    height: 35px;
+    margin: 0px;
+}
+
+div.pfRight {
+    background: url(/static/images/appbar/green-right.png) no-repeat top right scroll;
+    float: left;
+    width: 5px;
+    height: 35px;
+    margin: 0px;
+}
+
+#pfAppBar span.pfLink {
+    text-decoration: none;
+    color: #464646;
+    line-height: 35px;
+    padding: 4px;
+    cursor: pointer;
+}
+
+#pfAppBar span.pfLink:hover {
+    color: #000000;
+    background-color: #D2E6B3;
+}
+
+div.pfLogo {
+    background: url(/static/images/appbar/logo.png) no-repeat top right scroll;
+    border: 0;
+    float: right;
+    width: 124px;
+    height: 35px;
+}
+
+div.pfLogo:hover {
+    background: url(/static/images/appbar/logo-highlight.png) no-repeat top right scroll;
+    cursor: pointer;
+}
