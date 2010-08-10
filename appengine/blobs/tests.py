@@ -12,7 +12,7 @@ from apps.tests import AppTestCase
 
 from apps.models import App
 from docs.models import Doc
-from blobs.models import Blob
+from blobs.models import Blob, MAX_INTERNAL_SIZE
 from chunks.models import Chunk
 
 
@@ -423,6 +423,43 @@ class JsonArrayTest(AppTestCase):
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
         self.assertContent('/docs/mydoc/chat', '["hi", "howdy", "bye"]')
+
+    def test_push_chunk(self):
+        """Test that push creates a new chunk if over 600 bytes."""
+        big_string = 'x' * MAX_INTERNAL_SIZE
+        self.sign_in(self.peter)
+        response = self.app_client.post(
+            '/docs/mydoc/chat?method=PUSH',
+            data=big_string, content_type="text/plain")
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 4')
+        self.assertContent('/docs/mydoc/chat?method=SLICE&start=-2',
+                           '["howdy", "%s"]' % big_string)
+        chat = Blob.get_by_key_name('myapp/mydoc/chat/')
+        self.assertEqual(db.Model.__getattribute__(chat, 'value'), None)
+        self.assertEqual(chat.sha1, 'b8ffe72b2ebd15f3329e7f31ea89a1b2c7153838')
+        chunk = Chunk.get_by_key_name(chat.sha1)
+        self.assertEqual(chunk.value,
+                         '["hello", "hi", "howdy", "%s"]' % big_string)
+        # Push again to check that a new chunk is created.
+        response = self.app_client.post(
+            '/docs/mydoc/chat?method=PUSH',
+            data="hey", content_type="text/plain")
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 5')
+        self.assertContent('/docs/mydoc/chat?method=SLICE&start=-2',
+                           '["%s", "hey"]' % big_string)
+        # Push again to check that we can go back to internal storage.
+        response = self.app_client.post(
+            '/docs/mydoc/chat?method=PUSH&max=2',
+            data="ho", content_type="text/plain")
+        self.assertContains(response, '"statusText": "Pushed"')
+        self.assertContains(response, '"newLength": 2')
+        chat = Blob.get_by_key_name('myapp/mydoc/chat/')
+        self.assertEqual(chat.sha1, '55b06adde3decd5c6e3559c5d9602d9fc839d6aa')
+        self.assertEqual(db.Model.__getattribute__(chat, 'value'),
+                         '["hey", "ho"]')
+        self.assertFalse(Chunk.get_by_key_name(chat.sha1))
 
 
 class ListTest(AppTestCase):

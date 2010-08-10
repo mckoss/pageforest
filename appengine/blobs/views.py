@@ -18,10 +18,12 @@ from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
 from utils.shortcuts import get_int, get_bool, lookup_or_404
 
+from chunks.models import Chunk
 from blobs.models import Blob, MAX_INTERNAL_SIZE
 from apps.views import app_json_get
 
 ROOT_METHODS = ('GET', 'HEAD', 'LIST')
+MAX_PUSH_ATTEMPTS = 5
 
 
 @jsonp
@@ -261,20 +263,53 @@ def blob_delete(request):
                         mimetype=settings.JSON_MIMETYPE)
 
 
-@run_in_transaction
-def push_transaction(request, value, max_length):
+def json_push(old_value, value, max_length):
     """
-    Datastore transaction for appending to JSON array.
+    Parse a JSON array, append a new value to it, dump it back to JSON.
+    Then create a new Chunk if necessary.
+    Return the new length, JSON data, and SHA-1.
     """
-    blob = Blob.get_by_key_name(request.key_name)
-    if blob is None:
-        blob = Blob(key_name=request.key_name, value='[]')
-    array = json.loads(blob.value)
+    # Push to the JSON array.
+    array = json.loads(old_value)
     array.append(value)
     array = array[-max_length:]
-    blob.value = json.dumps(array)
+    new_length = len(array)
+    new_value = json.dumps(array)
+    new_sha1 = hashlib.sha1(new_value).hexdigest()
+    # Create a new chunk if necessary.
+    if len(new_value) > MAX_INTERNAL_SIZE:
+        chunk = Chunk(key_name=new_sha1, value=new_value)
+        chunk.put()
+    return new_length, new_value, new_sha1
+
+
+@run_in_transaction
+def atomic_update(key_name, old_sha1, new_sha1, new_value):
+    """
+    Datastore transaction for updating a blob to a new chunk, or new
+    internal value of 600 bytes or less. If a new chunk is used, it
+    must be created before calling this function.
+
+    This function returns a boolean success flag and the updated blob.
+    It fails if the blob was already updated by another process.
+    """
+    # Read the blob from memcache
+    blob = Blob.get_by_key_name(key_name)
+    if blob is None:
+        blob = Blob(key_name=key_name, valid_json=True)
+    elif blob.sha1 != old_sha1:
+        # The blob was updated by a different process after we read
+        # it. We have to cancel this transaction, create a new chunk
+        # from the updated data, then try again.
+        return False, blob
+    blob.sha1 = new_sha1
+    if len(new_value) <= MAX_INTERNAL_SIZE:
+        db.Model.__setattr__(blob, 'value', new_value)
+    else:
+        db.Model.__setattr__(blob, 'value', None)
     blob.put()
-    return len(array)
+    # Update was successful, no need to try again.
+    return True, blob
 
 
 def blob_push(request):
@@ -288,10 +323,33 @@ def blob_push(request):
     except ValueError:
         # Treat it as a simple string.
         value = request.raw_post_data
-    length = push_transaction(request, value, max_length)
-    return HttpResponse(
-        '{"status": 200, "statusText": "Pushed", "newLength": %d}' % length,
-        mimetype=settings.JSON_MIMETYPE)
+    # Read the old value of the blob.
+    blob = Blob.get_by_key_name(request.key_name)
+    # Try to update the blob atomically until it succeeds.
+    for attempt in range(MAX_PUSH_ATTEMPTS):
+        if blob is None:
+            old_value = '[]'
+            old_sha1 = None
+        else:
+            old_value = blob.value
+            old_sha1 = blob.sha1
+        # Parse JSON array and append to it, create new Chunk if necessary.
+        new_length, new_value, new_sha1 = json_push(
+            old_value, value, max_length)
+        # Update the blob value or point to the new Chunk.
+        success, blob = atomic_update(
+            request.key_name, old_sha1, new_sha1, new_value)
+        if success:
+            return HttpResponse(json.dumps({
+                        "status": 200,
+                        "statusText": "Pushed",
+                        "newLength": new_length,
+                        "newSha1": new_sha1,
+                        }), mimetype=settings.JSON_MIMETYPE)
+    else:
+        return HttpResponse(json.dumps({"status": 503, "statusText":
+            "Too many concurrent updates, giving up after %d push attempts." %
+            MAX_PUSH_ATTEMPTS}), mimetype=settings.JSON_MIMETYPE)
 
 
 def blob_slice(request):
