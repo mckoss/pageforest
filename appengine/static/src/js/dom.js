@@ -243,8 +243,18 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         }
     }
 
+    function insertStyle(url) {
+        var head = document.getElementsByTagName('head')[0];
+        var link = document.createElement('link');
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = url;
+        head.appendChild(link);
+    }
+
     ns.extend({
-        'ptClient': ptClient
+        'ptClient': ptClient,
+        'insertStyle': insertStyle
     });
 
 }); // startpad.dom

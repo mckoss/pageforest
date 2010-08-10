@@ -14,6 +14,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var cookies = namespace.lookup('org.startpad.cookies');
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
+    var dom = namespace.lookup('org.startpad.dom');
 
     ns.pollInterval = 1000;
 
@@ -550,17 +551,65 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 if (sessionUser != this.username) {
                     this.username = sessionUser;
                     this.log('signed in as ' + this.username);
-                    if (this.app.onUserChange) {
-                        this.app.onUserChange(this.username);
-                    }
+                    this.onUserChange(this.username);
                 }
             } else {
                 if (this.username || this.fFirstPoll) {
                     this.username = undefined;
-                    if (this.app.onUserChange) {
-                        this.app.onUserChange(this.username);
-                    }
+                    this.onUserChange(this.username);
                 }
+            }
+        },
+
+        onUserChange: function(username) {
+            if (this.app.onUserChange) {
+                this.app.onUserChange(username);
+            }
+            if (this.appBar) {
+                var isSignedIn = username != undefined;
+                $('#pfUsername').text(isSignedIn ? username : 'anonymous');
+                $('#pfSignIn').text(isSignedIn ? 'Sign Out' : 'Sign In');
+            }
+        },
+
+        // Add a standard user interface to the web page.
+        addAppBar: function() {
+            var htmlAppBar = '<div class="pfAppBarBox">' +
+                '<div class="pfLeft"></div>' +
+                '<div class="pfCenter">' +
+                '<span class="pfLink" id="pfUsername"></span>&nbsp;' +
+                '<span class="pfLink" id="pfSignIn">Sign In</span>&nbsp;' +
+                '<span class="pfLink" id="pfSave">Save</span>&nbsp;' +
+                '<div class="pfLogo"></div>' +
+                '</div><div class="pfRight"></div>' +
+                '</div>';
+
+            this.appBar = document.getElementById('pfAppBar');
+            if (!this.appBar) {
+                document.body.style.marginTop = "39px";
+                this.appBar = document.createElement('div');
+                this.appBar.setAttribute('id', 'pfAppBar');
+                this.appBar.style.position = 'absolute';
+                this.appBar.style.top = '0';
+                this.appBar.style.left = '0';
+                document.body.appendChild(this.appBar);
+
+                console.log($('#pfSignIn'));
+            }
+
+            this.appBar.innerHTML = htmlAppBar;
+            $('#pfSignIn').bind('click', this.signInOut.fnMethod(this));
+        },
+
+        // Sign in (or out) depending on current user state.
+        signInOut: function() {
+            console.log("sign in/out");
+            var isSignedIn = this.username != undefined;
+            if (isSignedIn) {
+                this.signOut();
+            }
+            else {
+                this.signIn();
             }
         },
 

@@ -36,6 +36,7 @@ margin: 0 0 5px 0;
 div.page {
 width: 1051px;
 margin: auto;
+position: relative;
 }
 
 label {
