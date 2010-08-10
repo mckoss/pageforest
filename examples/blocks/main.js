@@ -13,7 +13,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     function onReady() {
         ns.brd = new Board();
         ns.client = new clientLib.Client(ns);
-        ns.client.setLogging(true);
+        ns.client.addAppBar();
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
@@ -224,7 +224,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         invert: function() {
             for (var rw = 0; rw < this.rwMax; rw++) {
                 for (var col = 0; col < this.colMax; col++) {
-		    var cell = this.get(rw, col);
+                    var cell = this.get(rw, col);
                     this.set(rw, col, 5 - cell.iFace, cell.iRot);
                 }
             }
