@@ -19,7 +19,12 @@
 </table>
 
 {% if chunks_without_blobs %}
-<h2>Chunks without blobs</h2>
+<h2>{{ chunks_without_blobs|length}} Chunks without blobs</h2>
+
+<form method="post">
+<p><input type="submit" name="confirmed" value="Delete" /></p>
+</form>
+
 <ul>
 {% for chunk in chunks_without_blobs %}
 <li><a href="/chunks/{{ chunk.name }}">{{ chunk.name }}</a></li>
@@ -28,7 +33,7 @@
 {% endif %}
 
 {% if blobs_without_chunks %}
-<h2>Blobs without chunks</h2>
+<h2>{{ blobs_without_chunks|length}} Blobs without chunks</h2>
 <ul>
 {% for blob in blobs_without_chunks %}
 <li><a href="{{ blob.get_absolute_url }}">{{ blob.sha1 }}</a></li>

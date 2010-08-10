@@ -23,3 +23,7 @@ cron:
   description: incremental backup for Blob model
   schedule: every 63 minutes
   timezone: America/Los_Angeles
+
+- url: /chunks/cron/vacuum
+  description: delete unreferenced chunks
+  schedule: every 23 minutes
