@@ -1947,7 +1947,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             if (this.appBar) {
                 var isSignedIn = username != undefined;
-                $('#pfUsername').text(isSignedIn ? "Welcome, " + username : '');
+                $('#pfUsername').text(isSignedIn ? username : 'anonymous');
                 $('#pfSignIn').text(isSignedIn ? 'Sign Out' : 'Sign In');
             }
         },
