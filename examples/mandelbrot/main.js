@@ -176,7 +176,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
 
         initMap();
 
-        ns.client.setLogging(false);
         ns.client.poll();
     }
 
