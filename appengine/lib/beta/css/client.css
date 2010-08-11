@@ -39,20 +39,23 @@ div.pfRight {
     margin: 0px;
 }
 
-#pfAppBar span.pfLink {
-    text-decoration: none;
+#pfAppBar span {
     color: #464646;
     line-height: 35px;
     padding: 4px;
-    cursor: pointer;
 }
 
 #pfAppBar span.pfLink:hover {
     color: #000000;
     background-color: #D2E6B3;
+    cursor: pointer;
 }
 
-div.pfLogo {
+#pfAppBar span.pfLink.disabled {
+    color: #888F7D;
+}
+
+#pfLogo {
     background: url(/static/images/appbar/logo.png) no-repeat top right scroll;
     border: 0;
     float: right;
@@ -60,7 +63,7 @@ div.pfLogo {
     height: 35px;
 }
 
-div.pfLogo:hover {
+#pfLogo:hover {
     background: url(/static/images/appbar/logo-highlight.png) no-repeat top right scroll;
     cursor: pointer;
 }
