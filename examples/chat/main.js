@@ -15,9 +15,11 @@ namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
             success: function(history, status, xhr) {
                 $('#status').text(
                     xhr.status + ' ' + xhr.statusText + ' ' + status);
-                var textarea = $('#messages');
-                textarea.val(history.join('\n'));
-                textarea.attr('scrollTop', textarea.attr('scrollHeight'));
+                if (xhr.status == 200) {
+                    var textarea = $('#messages');
+                    textarea.val(history.join('\n'));
+                    textarea.attr('scrollTop', textarea.attr('scrollHeight'));
+                }
             },
             complete: function() {
                 ns.xhr = false;
