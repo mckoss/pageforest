@@ -7,6 +7,7 @@
 <link rel="icon" type="image/png" href="/images/icon.png" />
 <link rel="apple-touch-icon" href="/images/touch.png" />
 <link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
 <script type="text/javascript"
 src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
 <script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
@@ -20,10 +21,6 @@ $(document).ready(scratch.onReady);
 <body>
 <div class="page">
 <h1><script>document.write(document.title);</script></h1>
-<div style="text-align:right">
-  <input type="button" id="signin" onclick="scratch.signInOut()" value="Sign in" />
-  <p style="font-style:italic;font-size:20px;">Current username: <span id="username"></span></p>
-</div>
 <fieldset>
   <legend>Data Fields</legend>
   <ol>
@@ -36,16 +33,6 @@ $(document).ready(scratch.onReady);
       <textarea id="blob" name="blob">You can store a text blob in each document.</textarea>
     </li>
   </ol>
-  <div style="float:right;">
-    <input type="button" onclick="scratch.client.detach();" value="Make a Copy" />
-    <input id="save" type="button" onclick="scratch.client.save();" value="Save" />
-  </div>
-  <p><i>Document is <span id="doc-state">clean</span>.</i></p>
-</fieldset>
-
-<fieldset>
-  <legend>API Status</legend>
-  <div id="error"></div>
 </fieldset>
 
 <fieldset>
@@ -55,11 +42,17 @@ $(document).ready(scratch.onReady);
     below for more information.
   </p>
   <ol>
-    <li><a id="document" target="_blank">JSON data for this document</a> - Examine the (JSON) data format for documents saved on Pageforest.</li>
-    <li><a id="mydocs" target="_blank" href="http://www.pageforest.com/docs/">My Pageforest documents</a> - A directory of all your saved documents.</li>
-    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/scratch">Source code</a> - View the code for this application.</li>
-    <li><a id="app-details" target="_blank" href="http://www.pageforest.com/apps/scratch/">Application Details</a> - Clone this application to start your own Pageforest application.</li>
-    <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">Getting Started</a> - How to get started with the Pageforest API.</li>
+    <li><a id="document" target="_blank">JSON data for this document</a> - Examine the (JSON) data format for
+      documents saved on Pageforest.</li>
+    <li><a id="mydocs" target="_blank" href="http://www.pageforest.com/docs/">My Pageforest documents</a> -
+      A directory of all your saved documents.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/scratch">
+        Source code</a> - View the code for this application.</li>
+    <li><a id="app-details" target="_blank" href="http://www.pageforest.com/apps/scratch/">
+        Application Details</a> - Clone this application to start your own Pageforest
+      application.</li>
+    <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">
+        Getting Started</a> - How to get started with the Pageforest API.</li>
   </ol>
 </fieldset>
 

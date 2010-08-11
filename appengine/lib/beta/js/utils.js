@@ -1514,6 +1514,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         save: function (json, docid) {
+            if (this.isSaved()) {
+                return;
+            }
+
             // TODO: Call this.putDoc - and then handle the document
             // state in the callback function.
             if (this.username == undefined) {
@@ -1547,8 +1551,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // - Add some randomness to the docid
             // - Use PUT if_not_exists
             if (docid == undefined) {
-                docid = this.username + '-' + json.title + '-' +
-                    base.randomInt(10000);
+                docid = this.username + '-' + base.randomInt(10000);
                 docid = format.slugify(docid);
             }
 
@@ -1682,6 +1685,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             if (this.app.onStateChange) {
                 this.app.onStateChange(state, stateOld);
+            }
+
+            if (this.appBar) {
+                if (this.isSaved()) {
+                    $('#pfSave').addClass('disabled');
+                }
+                else {
+                    $('#pfSave').removeClass('disabled');
+                }
             }
         },
 
@@ -1947,7 +1959,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             if (this.appBar) {
                 var isSignedIn = username != undefined;
-                $('#pfUsername').text(isSignedIn ? "Welcome, " + username : '');
+                if (isSignedIn) {
+                    $('#pfWelcome').show();
+                    $('#pfUsername')
+                        .text(isSignedIn ? username : 'anonymous')
+                        .show();
+                } else {
+                    $('#pfWelcome').hide();
+                    $('#pfUsername').hide();
+                }
                 $('#pfSignIn').text(isSignedIn ? 'Sign Out' : 'Sign In');
             }
         },
@@ -1957,10 +1977,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var htmlAppBar = '<div class="pfAppBarBox">' +
                 '<div class="pfLeft"></div>' +
                 '<div class="pfCenter">' +
-                '<span class="pfLink" id="pfUsername"></span>&nbsp;' +
-                '<span class="pfLink" id="pfSignIn">Sign In</span>&nbsp;' +
-                '<span class="pfLink" id="pfSave">Save</span>&nbsp;' +
-                '<div class="pfLogo"></div>' +
+                '<span id="pfWelcome">Welcome,</span>' +
+                '<span class="pfLink" id="pfUsername"></span>' +
+                '<span class="pfLink" id="pfSignIn">Sign In</span>' +
+                '<span class="pfLink" id="pfSave">Save</span>' +
+                '<span class="pfLink" id="pfDetach">Copy</span>' +
+                '<div id="pfLogo"></div>' +
                 '</div><div class="pfRight"></div>' +
                 '</div>';
 
@@ -1978,7 +2000,23 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             this.appBar.innerHTML = htmlAppBar;
-            $('#pfSignIn').bind('click', this.signInOut.fnMethod(this));
+            var self = this;
+
+            $('#pfSignIn').bind('click', function () {
+                self.signInOut();
+            });
+
+            $('#pfSave').bind('click', function() {
+                self.save();
+            });
+
+            $('#pfDetach').bind('click', function() {
+                self.detach();
+            });
+
+            $('#pfLogo').bind('click', function() {
+                window.open('http://' + self.wwwHost);
+            });
         },
 
         // Sign in (or out) depending on current user state.
