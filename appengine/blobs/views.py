@@ -78,11 +78,12 @@ def wait_for_update(request, blob):
     original_sha1 = blob.sha1
     try:
         while time.time() < deadline:
-            # Sleep two seconds.
-            time.sleep(2)
+            # Sleep one or two seconds.
+            elapsed = time.time() - start
+            time.sleep(1 if elapsed < 7 else 2)
             # Try to read updated blob from memcache.
             logging.info("Checking memcache for blob update after %.1fs" %
-                         (time.time() - start))
+                         elapsed)
             blob = Blob.cache_get_by_key_name(request.key_name)
             # Detect changes.
             if blob is None or blob.sha1 != original_sha1:
