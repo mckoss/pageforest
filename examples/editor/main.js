@@ -250,7 +250,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         $.ajax({
             type: 'PUT',
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
-            data: $('textarea').val(),
+            data: ns.editor.getData(),
             dataType: 'text',
             success: function(message, status, xhr) {
                 showStatus(message);
