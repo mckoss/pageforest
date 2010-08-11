@@ -639,8 +639,12 @@ class CookieTest(AppTestCase):
         for url in self.resources:
             response = self.app_client.get(
                 url, HTTP_REFERER='http://myapp.pageforest.com/docs/')
-            self.assertContains(
-                response, 'Untrusted Referer path: /docs/', status_code=403)
+            if url == '/' or url.endswith('.html'):
+                self.assertContains(response, '<html>')
+            else:
+                self.assertContains(response,
+                                    'Untrusted Referer path: /docs/',
+                                    status_code=403)
 
 
 class EmailVerificationTest(AppTestCase):
