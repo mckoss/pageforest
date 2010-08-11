@@ -70,8 +70,19 @@ def check_permissions(request, resource, method_override=None):
     method = method_override or request.method
     if method in READ_METHODS:
         if 'public' not in resource.readers:
-            if not referer_is_trusted(request):
-                return AccessDenied(request)
+            # Skip referer check for initial HTML requests on
+            # non-public applications.
+            skip_referer_check = (
+                # Referer check may be skipped for HTML blobs ...
+                (request.path_info == '/app/' or
+                 request.path_info.endswith('.html/'))
+                # ... but only static app data, not inside documents ...
+                and not request.path_info.startswith('/app/docs/')
+                # ... and not for JSONP cross-site requests.
+                and 'callback' not in request.GET)
+            if not skip_referer_check:
+                if not referer_is_trusted(request):
+                    return AccessDenied(request)
         if not resource.is_readable(request.user):
             return AccessDenied(request, "Read permission denied.")
     else:
