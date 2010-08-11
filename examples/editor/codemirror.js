@@ -64,10 +64,16 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
         wrapping.css('height', scrollHeight + 'px');
     }
 
+    // Get the edited file content from the editor.
+    function getData() {
+        return ns.codemirror.getCode();
+    }
+
     ns.extend({
         isProbablySupported: isProbablySupported,
         createEditor: createEditor,
-        adjustHeight: adjustHeight
+        adjustHeight: adjustHeight,
+        getData: getData
     });
 
 });

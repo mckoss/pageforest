@@ -22,9 +22,15 @@ namespace.lookup('com.pageforest.editor.textarea').define(function (ns) {
         }
     }
 
+    // Get the edited file content from the textarea.
+    function getData() {
+        return $('textarea').val();
+    }
+
     ns.extend({
         createEditor: createEditor,
-        adjustHeight: adjustHeight
+        adjustHeight: adjustHeight,
+        getData: getData
     });
 
 });
