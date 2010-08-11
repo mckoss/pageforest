@@ -1415,8 +1415,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
     // app.getDoc() - Called to get the json data to be saved.
     // app.onSaveSuccess() - successfully saved.
-    // app.onError(errorMessage) - Called when we get an error reading or
-    //     writing a document (optional).
+    // app.onError(status, errorMessage) - Called when we get an error
+    //     reading or writing a document (optional).
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
@@ -1910,7 +1910,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var formatted = "client error: " + message +
                 ' (' + status + ')';
             this.log(formatted);
-            alert(message);
         },
 
         // Periodically poll for changes in the URL and state of user sign-in
@@ -2012,6 +2011,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             $('#pfDetach').bind('click', function() {
                 self.detach();
+            });
+
+            $('#pfUsername').bind('click', function() {
+                window.open('http://' + self.wwwHost + '/docs/');
             });
 
             $('#pfLogo').bind('click', function() {
