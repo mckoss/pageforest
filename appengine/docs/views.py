@@ -29,7 +29,7 @@ def index(request):
     query.order('-modified')
     return render_to_response(request, 'docs/index.html', {
             'title': title,
-            'docs_list': query.fetch(20)})
+            'docs_list': query.fetch(100)})
 
 
 @login_required
