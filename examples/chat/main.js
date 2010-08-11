@@ -11,7 +11,10 @@ namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
         ns.xhr = $.ajax({
             url: '/docs/' + ns.client.docid + '/messages?wait=' + wait,
             dataType: 'json',
+            ifModified: true,
             success: function(history, status, xhr) {
+                $('#status').text(
+                    xhr.status + ' ' + xhr.statusText + ' ' + status);
                 var textarea = $('#messages');
                 textarea.val(history.join('\n'));
                 textarea.attr('scrollTop', textarea.attr('scrollHeight'));
