@@ -9,8 +9,7 @@ namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
             return; // The previous poll is still in progress.
         }
         ns.xhr = $.ajax({
-            url: '/docs/' + ns.client.docid +
-                '/messages?wait=' + wait + '&slice=-50:',
+            url: '/docs/' + ns.client.docid + '/messages?wait=' + wait,
             dataType: 'json',
             success: function(history, status, xhr) {
                 var textarea = $('#messages');
@@ -24,7 +23,7 @@ namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
     }
 
     function comet() {
-        poll(20);
+        poll(5);
     }
 
     // Initialize the document - create a client helper object.
@@ -83,7 +82,7 @@ namespace.lookup('com.pageforest.chat').defineOnce(function (ns) {
     function submit() {
         $.ajax({
             type: 'POST',
-            url: '/docs/chat/messages?method=push',
+            url: '/docs/chat/messages?method=push&max=50',
             data: ns.client.username + ': ' + $('#message').val(),
             dataType: 'text',
             success: function(message, status, xhr) {
