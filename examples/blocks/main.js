@@ -379,42 +379,11 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         };
     }
 
-    // Called when the current user changes (signs in or out)
-    function onUserChange(username) {
-        var isSignedIn = username != undefined;
-        $('#username').text(isSignedIn ? username : 'anonymous');
-        $('#signin').val(isSignedIn ? 'Sign Out' : 'Sign In');
-    }
-
-    // Sign in (or out) depending on current user state.
-    function signInOut() {
-        var isSignedIn = ns.client.username != undefined;
-        if (isSignedIn) {
-            ns.client.signOut();
-        }
-        else {
-            ns.client.signIn();
-        }
-    }
-
-    function onStateChange(newState, oldState) {
-        // Allow save if doc is dirty OR not bound (yet) to a document.
-        if (ns.client.isSaved()) {
-            $('#save').attr('disabled', 'disabled');
-        }
-        else {
-            $('#save').removeAttr('disabled');
-        }
-    }
-
     // Exported functions
     ns.extend({
         'onReady': onReady,
         'getDoc': getDoc,
         'setDoc': setDoc,
-        'onStateChange': onStateChange,
-        'signInOut': signInOut,
-        'onUserChange': onUserChange
     });
 
 });
