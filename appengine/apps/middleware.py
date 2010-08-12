@@ -3,6 +3,8 @@ import logging
 from django.conf import settings
 from django.http import HttpResponseNotFound
 
+from utils.views import reserved_url
+
 from apps.models import App
 
 DEBUG_URL_REWRITE = False
@@ -37,6 +39,8 @@ class AppMiddleware(object):
         default = 'www.' + settings.DEFAULT_DOMAIN
         hostname = request.META.get('HTTP_HOST', default)
         # Extract special subdomains from hostname.
+        if request.path_info.startswith('/' + settings.ADMIN_SUBDOMAIN + '/'):
+            return reserved_url(request)
         request.subdomain = None
         parts = hostname.split('.')
         if parts[0] == settings.ADMIN_SUBDOMAIN:
