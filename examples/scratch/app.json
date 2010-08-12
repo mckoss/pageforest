@@ -1,6 +1,6 @@
 {
   "application": "scratch",
-  "cloneable": false,
+  "cloneable": true,
   "icon": "images/icon.png",
   "owner": "mckoss",
   "readers": [
