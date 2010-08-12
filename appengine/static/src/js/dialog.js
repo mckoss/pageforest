@@ -65,5 +65,3 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         'Dialog': Dialog
     });
 });
-
-
