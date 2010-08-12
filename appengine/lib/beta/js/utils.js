@@ -1395,6 +1395,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
+    var dialog = namespace.lookup('org.startpad.dialog');
 
     ns.pollInterval = 1000;
 
@@ -1479,6 +1480,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
            setCleanDoc - mark the document as 'clean' and update the
                browser address.
            checkDoc - polls to see if a document has changed.
+           addAppBar - add a standards user interface element
            */
 
         // Load a document as the default document for this running application.
@@ -1639,6 +1641,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Document looks clean - see if it's changed since we last
             // checked.
+            // TODO: Don't get the document if the app has it's own
+            // isDirty function.
             var json = JSON.stringify(this.app.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
@@ -1973,16 +1977,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Add a standard user interface to the web page.
         addAppBar: function() {
-            var htmlAppBar = '<div class="pfAppBarBox">' +
+            var htmlAppBar =
+                '<div class="pfAppBarBox">' +
                 '<div class="pfLeft"></div>' +
                 '<div class="pfCenter">' +
                 '<span id="pfWelcome">Welcome,</span>' +
                 '<span class="pfLink" id="pfUsername"></span>' +
                 '<span class="pfLink" id="pfSignIn">Sign In</span>' +
                 '<span class="pfLink" id="pfSave">Save</span>' +
-                '<span class="pfLink" id="pfDetach">Copy</span>' +
+                '<span class="pfLink" id="pfMore">V</span>' +
                 '<div id="pfLogo"></div>' +
-                '</div><div class="pfRight"></div>' +
+                '</div>' +
+                '<div class="pfRight"></div>' +
                 '</div>';
 
             this.appBar = document.getElementById('pfAppBar');
@@ -2009,8 +2015,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.save();
             });
 
-            $('#pfDetach').bind('click', function() {
-                self.detach();
+            $('#pfMore').bind('click', function() {
+                alert("NYI");
+                return;
+                /*
+                var values = base.project(this.app.getDoc(),
+                                          ['title']);
+                this.appPanel.innerHTML = this.appDialog.html(values);
+                */
             });
 
             $('#pfUsername').bind('click', function() {
@@ -2020,6 +2032,24 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $('#pfLogo').bind('click', function() {
                 window.open('http://' + self.wwwHost);
             });
+
+            /*
+            this.appPanel = document.createElement('div');
+            this.appPanel.setAttribute('id', 'pfAppPanel');
+            this.appDialog = new dialog.Dialog({
+                fields: [
+                    {name: 'title', required: true},
+                    {name: 'tags'},
+                    {name: 'public', type: 'checkbox'},
+                    {name: 'writers', label: "Authors"},
+                    {name: 'owner', type: 'message'},
+                    {name: 'saved', label: "Last Saved", type: 'message'},
+                    {name: 'copy', type: 'button'},
+                    {name: 'save', type: 'button'}
+                ]
+            });
+            document.body.appendChild(this.appPanel);
+            */
         },
 
         // Sign in (or out) depending on current user state.
