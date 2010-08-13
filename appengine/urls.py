@@ -22,6 +22,7 @@ urlpatterns = patterns(
 
     # Pageforest applications on subdomains.
     (r'^app/(admin/)?auth/', include('auth.appurls')),
+    (r'^app/(admin/)?post/$', 'blobs.views.upload_form'),
     (r'^app/docs/', include('docs.appurls')),
     (r'^app/mirror/$', 'mirror.views.mirror_list'),
 

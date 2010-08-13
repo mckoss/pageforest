@@ -157,6 +157,7 @@ class AuthMiddleware(object):
         if (request.subdomain is None and not request.app.is_www()
             and not request.path_info.startswith('/app/docs/')
             and not request.path_info.startswith('/app/mirror/')
+            and not request.path_info.startswith('/app/post/')
             and request.method not in app_id_methods):
             return HttpResponseNotAllowed(app_id_methods)
 

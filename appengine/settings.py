@@ -234,6 +234,7 @@ MIDDLEWARE_CLASSES = [
     'utils.middleware.SlashMiddleware',      # Add trailing slash if needed.
     'mirror.middleware.MirrorMiddleware',    # Cross-domain aliases.
     'apps.middleware.AppMiddleware',         # Get the app.
+    'blobs.middleware.PostMiddleware',       # Rewrite POST to PUT for blobs.
     'docs.middleware.DocMiddleware',         # Get the document.
     'auth.middleware.AuthMiddleware',        # Check access permissions.
     'utils.cookies.HttpOnlyMiddleware',      # Adjust cookies to HttpOnly.
