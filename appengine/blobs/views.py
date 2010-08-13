@@ -12,11 +12,12 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
-from utils.decorators import jsonp, run_in_transaction
+from utils.decorators import jsonp, run_in_transaction, method_required
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
-from utils.shortcuts import get_int, get_bool, lookup_or_404
+from utils.shortcuts import render_to_response, lookup_or_404, \
+    get_int, get_bool
 
 from chunks.models import Chunk
 from blobs.models import Blob, MAX_INTERNAL_SIZE
@@ -82,15 +83,15 @@ def wait_for_update(request, blob):
             elapsed = time.time() - start
             time.sleep(1 if elapsed < 7 else 2)
             # Try to read updated blob from memcache.
-            logging.info("Checking memcache for blob update after %.1fs" %
+            logging.info("Checking memcache for blob update after %.1fs",
                          elapsed)
             blob = Blob.cache_get_by_key_name(request.key_name)
             # Detect changes.
             if blob is None or blob.sha1 != original_sha1:
                 break
     except DeadlineExceededError:
-        logging.info("Caught DeadlineExceededError after %.1fs" %
-                     (time.time() - start))
+        logging.info("Caught DeadlineExceededError after %.1fs",
+                     time.time() - start)
     return blob
 
 
@@ -224,11 +225,33 @@ def blob_list(request):
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
+@method_required('GET')
+def upload_form(request, admin=False):
+    """
+    Show an HTML form for blob uploads from the browser.
+    """
+    return render_to_response(request, 'blobs/upload.html', {
+            'action': request.GET.get('action', ''),
+            'path': request.GET.get('path', '/'),
+            })
+
+
+def get_request_content(request):
+    """
+    Get the uploaded data for a PUT or PUSH request.
+    """
+    if 'value' in request.GET:
+        return request.GET['value']
+    if 'data' in request.FILES:
+        return request.FILES['data'].read()
+    return request.raw_post_data
+
+
 def blob_put(request):
     """
     HTTP PUT request handler.
     """
-    value = request.GET.get('value', request.raw_post_data)
+    value = get_request_content(request)
     if isinstance(value, unicode):
         # Convert from unicode to str for BlobProperty.
         value = value.encode('utf-8')
@@ -318,12 +341,12 @@ def blob_push(request):
     PUSH method request handler.
     """
     max_length = get_int(request.GET, 'max', 100, min=0, max=1000)
+    value = get_request_content(request)
+    # Attempt to decode JSON.
     try:
-        # Attempt to decode JSON.
-        value = json.loads(request.raw_post_data)
+        value = json.loads(value)
     except ValueError:
-        # Treat it as a simple string.
-        value = request.raw_post_data
+        pass
     # Read the old value of the blob.
     blob = Blob.get_by_key_name(request.key_name)
     # Try to update the blob atomically until it succeeds.
