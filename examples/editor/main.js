@@ -133,6 +133,11 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             html.push('<a href="#' + href + '">' + filename + '</a>');
             html.push('</div>');
         }
+        var iframe_src = '/mirror/' + ns.app_id + '/post?path=' + path;
+        html.push('<div style="width:100%; height:10em; clear:both">');
+        html.push('<iframe style="width:100%; height:100%; border:none"' +
+                  ' src="' + iframe_src + '"></iframe>');
+        html.push('</div>');
         $('#content').html(html.join('\n'));
         showStatus("Loaded directory: " + ns.app_id + '/' + path);
     }
