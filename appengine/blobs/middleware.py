@@ -13,7 +13,7 @@ class PostMiddleware(object):
 
     def error(self, message):
         return HttpResponse('{"status": 400, "statusText": "%s"}' % message,
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype='text/plain')
 
     def process_request(self, request):
         if request.method != 'POST':
@@ -52,3 +52,9 @@ class PostMiddleware(object):
         request.path_info = path
         request.META['PATH_INFO'] = request.path_info
         request.path = request.META['SCRIPT_NAME'] + request.path_info
+
+
+    def process_response(self, request, response):
+        if response['Content-Type'] == settings.JSON_MIMETYPE:
+            response['Content-Type'] = 'text/plain'
+        return response

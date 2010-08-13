@@ -135,8 +135,8 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         }
         var iframe_src = '/mirror/' + ns.app_id + '/post?path=' + path;
         html.push('<div style="width:100%; height:10em; clear:both">');
-        html.push('<iframe style="width:100%; height:100%; border:none"' +
-                  ' src="' + iframe_src + '"></iframe>');
+        html.push('<iframe class="upload" src="' + iframe_src + '"' +
+                  ' style="width:100%; height:100%; border:none"></iframe>');
         html.push('</div>');
         $('#content').html(html.join('\n'));
         showStatus("Loaded directory: " + ns.app_id + '/' + path);
@@ -201,6 +201,23 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         }
     }
 
+    // Parse and process the result from a POST request.
+    function checkIFrame() {
+        var iframe = $('iframe.upload')[0];
+        if (iframe) {
+            var data = iframe.contentWindow.document.body.innerHTML;
+            // Strip HTML tags like <pre> out of the data.
+            var stripped = data.replace(/<\/?[^>]+>\s*/gi, '');
+            if (stripped.substr(0, 1) == '{') {
+                var parsed = JSON.parse(stripped);
+                if (parsed.status == 200) {
+                    // Upload successful, reload app listing and folder view.
+                    loadApp(ns.app_id);
+                }
+            }
+        }
+    }
+
     function checkHash() {
         var hash = window.location.hash;
         if (hash == ns.hash) {
@@ -247,8 +264,9 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
         ns.editor = guessEditor();
         ns.app_id = '';
         ns.filename = '';
-        // Start polling for window.location.hash changes.
+        // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
+        setInterval(checkIFrame, 1000);
     }
 
     function onSave() {
