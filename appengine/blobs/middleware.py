@@ -55,6 +55,10 @@ class PostMiddleware(object):
 
 
     def process_response(self, request, response):
+        if request.method != 'POST':
+            return response
+        if request.path_info not in ['/app/post/', '/app/admin/post/']:
+            return response
         if response['Content-Type'] == settings.JSON_MIMETYPE:
             response['Content-Type'] = 'text/plain'
         return response
