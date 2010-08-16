@@ -14,8 +14,8 @@ PEP8_EXCLUDE = 'jsmin.py shell.py'.split()
 TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
 
 # Remove these when they pass strong jslint
-IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'dom', 'events', 'json2',
-                  'pfclient', 'save-dialog']
+IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'events', 'json2',
+                  'save-dialog']
 
 
 def show_summary(nick):

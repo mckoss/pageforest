@@ -292,10 +292,10 @@ LIB_FILES = {
     'js': {
         'json2': ['json2'],
         'utils': ['namespace', 'base', 'cookies', 'random',
-                  'format', 'vector', 'dom', 'client'],
+                  'format', 'vector', 'dom', 'dialog', 'client'],
         },
 
     'css': {
-        'client': ['appbar'],
+        'client': ['appbar', 'dialog'],
         },
     }

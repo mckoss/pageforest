@@ -67,3 +67,68 @@ div.pfRight {
     background: url(/static/images/appbar/logo-highlight.png) no-repeat top right scroll;
     cursor: pointer;
 }
+
+#pfAppPanel {
+    width: 350px;
+    position: absolute;
+    display: hidden;
+    top: 36px;
+}
+/* Begin file: dialog.css */
+div.SP_Dialog {
+    width: 350px;
+}
+
+div.SP_Dialog * {
+    font-size: 14px;
+}
+
+div.SP_Dialog label.left {
+    display: block;
+    float: left;
+    clear: left;
+    text-align: right;
+    width: 95px;
+    margin: 0 0 6px 0;
+    padding-right: 5px;
+}
+
+div.SP_Dialog label.checkbox, div.SP_Dialog input[type=checkbox] {
+    cursor: pointer;
+    margin-left: 0;
+}
+
+div.SP_Dialog label.checkbox {
+    display: block;
+    clear: left;
+    margin: 0 5px 0 100px;
+    padding: 0;
+}
+
+div.SP_Dialog input[type=text], div.SP_Dialog input[type=password] {
+    float: left;
+    width: 245px;
+    margin: 0;
+    padding: 0;
+}
+
+div.SP_Dialog textarea {
+    display: block;
+    margin: 0 4px 5px 10px;
+    padding: 0;
+    width: 250px;
+    line-height: 18px;
+}
+
+div.SP_Dialog {
+    background: url(/images/box/green-bottom.png) no-repeat top left scroll;
+    height: 141px;
+    position: relative;
+}
+
+div.SP_Dialog input[type=button] {
+    clear: left;
+    float: right;
+    margin: 3px;
+    cursor: pointer;
+}

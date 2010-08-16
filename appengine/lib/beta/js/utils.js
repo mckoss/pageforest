@@ -1242,8 +1242,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         var rcElt = rcClient(elt);
         var rcWin = rcWindow();
 
-        if (Vector.PtInRect(Vector.UL(rcElt), rcWin) ||
-            Vector.PtInRect(Vector.LR(rcElt), rcWin)) {
+        if (vector.PtInRect(vector.UL(rcElt), rcWin) ||
+            vector.PtInRect(vector.LR(rcElt), rcWin)) {
             elt.focus();
         }
     }
@@ -1277,8 +1277,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     function initValues(aNames, mpFields, mpValues) {
         for (var i = 0; i < aNames.length; i++) {
-            if (mpValues[aNames[i]] != undefined)
+            if (mpValues[aNames[i]] != undefined) {
                 mpFields[aNames[i]].value = mpValues[aNames[i]];
+            }
         }
     }
 
@@ -1305,9 +1306,10 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
        tag
     */
     function $(sSelector) {
-        var ch = sSelector.substr(0,1);
-        if (ch == '.' || ch == '#')
+        var ch = sSelector.substr(0, 1);
+        if (ch == '.' || ch == '#') {
             sSelector = sSelector.substr(1);
+        }
 
         if (ch == '#') {
             return document.getElementById(sSelector);
@@ -1323,7 +1325,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
             return document.getElementsByClassName(sClassName);
         }
 
-        return NS.GetElementsByTagClassName(document, "*", sClassName);
+        return ns.GetElementsByTagClassName(document, "*", sClassName);
     }
 
     /*
@@ -1334,14 +1336,15 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     */
 
     function getElementsByTagClassName(oElm, strTagName, strClassName) {
-        var arrElements = (strTagName == "*" && oElm.all)? oElm.all : oElm.getElementsByTagName(strTagName);
-        var arrReturnElements = new Array();
+        var arrElements = (strTagName == "*" && oElm.all) ? oElm.all :
+            oElm.getElementsByTagName(strTagName);
+        var arrReturnElements = [];
         strClassName = strClassName.replace(/\-/g, "\\-");
         var oRegExp = new RegExp("(^|\\s)" + strClassName + "(\\s|$)");
         var oElement;
-        for(var i = 0; i < arrElements.length; i++) {
+        for (var i = 0; i < arrElements.length; i++) {
             oElement = arrElements[i];
-            if(oRegExp.test(oElement.className)) {
+            if (oRegExp.test(oElement.className)) {
                 arrReturnElements.push(oElement);
             }
         }
@@ -1373,10 +1376,108 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     ns.extend({
         'ptClient': ptClient,
-        'insertStyle': insertStyle
+        'insertStyle': insertStyle,
+        'rcClient': rcClient,
+        'rcOffset': rcOffset,
+        'ptMouse': ptMouse,
+        'rcWindow': rcWindow,
+        'setAbsPosition': setAbsPosition,
+        'setSize': setSize,
+        'setRc': setRc,
+        'removeChildren': removeChildren,
+        'ancestors': ancestors,
+        'commonAncestorHeight': commonAncestorHeight,
+        'setFocusIfVisible': setFocusIfVisible,
+        'scrollToBottom': scrollToBottom,
+        'bindIDs': bindIDs,
+        'initValues': initValues,
+        'readValues': readValues,
+        '$': $,
+        'select': $,
+        'getElementsByClassName': getElementsByClassName,
+        'getElementsByTagClassName': getElementsByTagClassName,
+        'getText': getText,
+        'setText': setText
     });
 
 }); // startpad.dom
+/* Begin file: dialog.js */
+namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
+    var util = namespace.util;
+    var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
+
+    var patterns = {
+        title: '<h1>{title}</h1>',
+        text: '<label class="left">{label}:</label>' +
+            '<input id="{id}" type="text" value="{value}"/>',
+        password: '<label class="left">{label}:</label>' +
+            '<input id="{id}" type="password"/>',
+        checkbox: '<label class="checkbox" for="{id}">' +
+            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
+        note: '<label class="left">{label}:</label>' +
+            '<textarea id="{id}" rows="{rows}">{value}</textarea>',
+        message: '<span id="{id}">{value}</span>',
+        value: '<label class="left">{label}:</label>' +
+            '<span class="value" id="{id}">{value}</span>',
+        button: '<input id="{id}" type="button" value="{label}"/>',
+        invalid: '<span class="error">***missing field type: {type}***</span>'
+    };
+
+    var sDialog = '<div class="{prefix}Dialog">{content}</div>';
+
+    // Dialog options:
+    // focus: field name for initial focus
+    // enter: fiend name to press for enter key
+    // message: field to use to display messages
+    // fields: array of fields with props:
+    //     name/type/label/value/required/shortLabel/hidden
+    function Dialog(options) {
+        this.prefix = 'SP_';
+        this.values = {};
+        util.extendObject(this, options);
+    }
+
+    Dialog.methods({
+        html: function(values) {
+            var self = this;
+            var stb = new base.StBuf();
+            base.forEach(this.fields, function(field, i) {
+                field.id = self.prefix + i;
+                console.log(field.id);
+                if (field.type == undefined) {
+                    field.type = 'text';
+                }
+                if (patterns[field.type] == undefined) {
+                    field.type = 'invalid';
+                }
+                if (field.label == undefined) {
+                    field.label = field.name[0].toUpperCase() +
+                        field.name.slice(1);
+                }
+                if (values[field.name] != undefined) {
+                    field.value = values[field.name];
+                }
+                stb.append(format.replaceKeys(patterns[field.type], field));
+            });
+            this.content = stb.toString();
+            return format.replaceKeys(sDialog, this);
+        },
+
+        init: function() {
+            base.forEach(this.fields, function(field) {
+                if (field.hidden) {
+                    var elt = document.getElementById(field.id);
+                    elt.style.display = "none";
+                }
+            });
+        }
+    });
+
+    ns.extend({
+        'Dialog': Dialog
+    });
+});
 /* Begin file: client.js */
 /*
   client.js - Pageforest client api for sign in, save, load, and url
@@ -2016,13 +2117,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             $('#pfMore').bind('click', function() {
-                alert("NYI");
-                return;
-                /*
-                var values = base.project(this.app.getDoc(),
+                var values = base.project(self.app.getDoc(),
                                           ['title']);
-                this.appPanel.innerHTML = this.appDialog.html(values);
-                */
+                self.appPanel.innerHTML = self.appDialog.html(values);
+                self.appPanel.style.display = 'block';
+                dom.setAbsPosition(self.appPanel, dom.ptClient(self.appBar));
             });
 
             $('#pfUsername').bind('click', function() {
@@ -2033,7 +2132,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 window.open('http://' + self.wwwHost);
             });
 
-            /*
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
             this.appDialog = new dialog.Dialog({
@@ -2042,14 +2140,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'tags'},
                     {name: 'public', type: 'checkbox'},
                     {name: 'writers', label: "Authors"},
-                    {name: 'owner', type: 'message'},
-                    {name: 'saved', label: "Last Saved", type: 'message'},
-                    {name: 'copy', type: 'button'},
-                    {name: 'save', type: 'button'}
+                    {name: 'owner', type: 'value'},
+                    {name: 'saved', label: "Last Saved", type: 'value'},
+                    {name: 'save', type: 'button'},
+                    {name: 'copy', type: 'button'}
                 ]
             });
             document.body.appendChild(this.appPanel);
-            */
         },
 
         // Sign in (or out) depending on current user state.
