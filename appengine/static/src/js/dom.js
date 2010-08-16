@@ -123,8 +123,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         var rcElt = rcClient(elt);
         var rcWin = rcWindow();
 
-        if (Vector.PtInRect(Vector.UL(rcElt), rcWin) ||
-            Vector.PtInRect(Vector.LR(rcElt), rcWin)) {
+        if (vector.PtInRect(vector.UL(rcElt), rcWin) ||
+            vector.PtInRect(vector.LR(rcElt), rcWin)) {
             elt.focus();
         }
     }
@@ -158,8 +158,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     function initValues(aNames, mpFields, mpValues) {
         for (var i = 0; i < aNames.length; i++) {
-            if (mpValues[aNames[i]] != undefined)
+            if (mpValues[aNames[i]] != undefined) {
                 mpFields[aNames[i]].value = mpValues[aNames[i]];
+            }
         }
     }
 
@@ -186,9 +187,10 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
        tag
     */
     function $(sSelector) {
-        var ch = sSelector.substr(0,1);
-        if (ch == '.' || ch == '#')
+        var ch = sSelector.substr(0, 1);
+        if (ch == '.' || ch == '#') {
             sSelector = sSelector.substr(1);
+        }
 
         if (ch == '#') {
             return document.getElementById(sSelector);
@@ -204,7 +206,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
             return document.getElementsByClassName(sClassName);
         }
 
-        return NS.GetElementsByTagClassName(document, "*", sClassName);
+        return ns.GetElementsByTagClassName(document, "*", sClassName);
     }
 
     /*
@@ -215,14 +217,15 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     */
 
     function getElementsByTagClassName(oElm, strTagName, strClassName) {
-        var arrElements = (strTagName == "*" && oElm.all)? oElm.all : oElm.getElementsByTagName(strTagName);
-        var arrReturnElements = new Array();
+        var arrElements = (strTagName == "*" && oElm.all) ? oElm.all :
+            oElm.getElementsByTagName(strTagName);
+        var arrReturnElements = [];
         strClassName = strClassName.replace(/\-/g, "\\-");
         var oRegExp = new RegExp("(^|\\s)" + strClassName + "(\\s|$)");
         var oElement;
-        for(var i = 0; i < arrElements.length; i++) {
+        for (var i = 0; i < arrElements.length; i++) {
             oElement = arrElements[i];
-            if(oRegExp.test(oElement.className)) {
+            if (oRegExp.test(oElement.className)) {
                 arrReturnElements.push(oElement);
             }
         }
@@ -254,7 +257,28 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     ns.extend({
         'ptClient': ptClient,
-        'insertStyle': insertStyle
+        'insertStyle': insertStyle,
+        'rcClient': rcClient,
+        'rcOffset': rcOffset,
+        'ptMouse': ptMouse,
+        'rcWindow': rcWindow,
+        'setAbsPosition': setAbsPosition,
+        'setSize': setSize,
+        'setRc': setRc,
+        'removeChildren': removeChildren,
+        'ancestors': ancestors,
+        'commonAncestorHeight': commonAncestorHeight,
+        'setFocusIfVisible': setFocusIfVisible,
+        'scrollToBottom': scrollToBottom,
+        'bindIDs': bindIDs,
+        'initValues': initValues,
+        'readValues': readValues,
+        '$': $,
+        'select': $,
+        'getElementsByClassName': getElementsByClassName,
+        'getElementsByTagClassName': getElementsByTagClassName,
+        'getText': getText,
+        'setText': setText
     });
 
 }); // startpad.dom

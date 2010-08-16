@@ -636,13 +636,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             $('#pfMore').bind('click', function() {
-                alert("NYI");
-                return;
-                /*
-                var values = base.project(this.app.getDoc(),
+                var values = base.project(self.app.getDoc(),
                                           ['title']);
-                this.appPanel.innerHTML = this.appDialog.html(values);
-                */
+                self.appPanel.innerHTML = self.appDialog.html(values);
+                self.appPanel.style.display = 'block';
+                dom.setAbsPosition(self.appPanel, dom.ptClient(self.appBar));
             });
 
             $('#pfUsername').bind('click', function() {
@@ -653,7 +651,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 window.open('http://' + self.wwwHost);
             });
 
-            /*
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
             this.appDialog = new dialog.Dialog({
@@ -662,14 +659,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'tags'},
                     {name: 'public', type: 'checkbox'},
                     {name: 'writers', label: "Authors"},
-                    {name: 'owner', type: 'message'},
-                    {name: 'saved', label: "Last Saved", type: 'message'},
-                    {name: 'copy', type: 'button'},
-                    {name: 'save', type: 'button'}
+                    {name: 'owner', type: 'value'},
+                    {name: 'saved', label: "Last Saved", type: 'value'},
+                    {name: 'save', type: 'button'},
+                    {name: 'copy', type: 'button'}
                 ]
             });
             document.body.appendChild(this.appPanel);
-            */
         },
 
         // Sign in (or out) depending on current user state.
