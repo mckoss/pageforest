@@ -130,7 +130,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
 
         resizeWindow: function(evt) {
             this.divBoard.style.width = this.tbl.offsetWidth + "px";
-            this.ptTable = dom.ptClient(this.tbl);
+            this.ptTable = dom.getPos(this.tbl);
         },
 
         click: function(evt) {

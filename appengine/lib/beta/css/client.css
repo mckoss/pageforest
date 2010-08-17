@@ -74,6 +74,23 @@ div.pfRight {
     position: absolute;
     display: none;
     background-color: #C6DDA3;
+    border: 2px solid;
+    border-color: white #749B45 #749B45 white;
+}
+
+div.expander {
+    display: inline-block;
+    width: 13px;
+    height: 12px;
+    cursor: pointer;
+}
+
+div.expanded {
+    background: url(/static/images/appbar/up.png) scroll top;
+}
+
+div.collapsed {
+    background: url(/static/images/appbar/down.png) scroll top;
 }
 /* Begin file: dialog.css */
 div.SP_Dialog {
@@ -90,7 +107,7 @@ div.SP_Dialog label.left {
     clear: left;
     text-align: right;
     width: 95px;
-    margin: 0 0 6px 0;
+    margin: 1px 0 6px 0;
     padding-right: 5px;
 }
 
@@ -102,14 +119,14 @@ div.SP_Dialog label.checkbox, div.SP_Dialog input[type=checkbox] {
 div.SP_Dialog label.checkbox {
     display: block;
     clear: left;
-    margin: 0 5px 0 100px;
+    margin: 0 5px 6px 100px;
     padding: 0;
 }
 
 div.SP_Dialog input[type=text], div.SP_Dialog input[type=password] {
     float: left;
     width: 245px;
-    margin: 0;
+    margin: 0 0 6px 0;
     padding: 0;
 }
 
