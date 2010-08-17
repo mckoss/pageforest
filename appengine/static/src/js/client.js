@@ -598,7 +598,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Add a standard user interface to the web page.
         addAppBar: function() {
             var htmlAppBar =
-                '<div class="pfAppBarBox">' +
+                '<div id="pfAppBarBox">' +
                 '<div class="pfLeft"></div>' +
                 '<div class="pfCenter">' +
                 '<span id="pfWelcome">Welcome,</span>' +
@@ -620,8 +620,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.appBar.style.top = '0';
                 this.appBar.style.left = '0';
                 document.body.appendChild(this.appBar);
-
-                console.log($('#pfSignIn'));
             }
 
             this.appBar.innerHTML = htmlAppBar;
@@ -640,7 +638,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                                           ['title']);
                 self.appPanel.innerHTML = self.appDialog.html(values);
                 self.appPanel.style.display = 'block';
-                dom.setAbsPosition(self.appPanel, dom.ptClient(self.appBar));
+                var rcAppBox = dom.rcClient($('#pfAppBarBox')[0]);
+                dom.setAbsPosition(self.appPanel, dom.ptClient(
             });
 
             $('#pfUsername').bind('click', function() {

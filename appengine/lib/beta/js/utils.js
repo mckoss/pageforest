@@ -1444,7 +1444,6 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var stb = new base.StBuf();
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
-                console.log(field.id);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
@@ -2079,7 +2078,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Add a standard user interface to the web page.
         addAppBar: function() {
             var htmlAppBar =
-                '<div class="pfAppBarBox">' +
+                '<div id="pfAppBarBox">' +
                 '<div class="pfLeft"></div>' +
                 '<div class="pfCenter">' +
                 '<span id="pfWelcome">Welcome,</span>' +
@@ -2101,8 +2100,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.appBar.style.top = '0';
                 this.appBar.style.left = '0';
                 document.body.appendChild(this.appBar);
-
-                console.log($('#pfSignIn'));
             }
 
             this.appBar.innerHTML = htmlAppBar;
@@ -2121,7 +2118,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                                           ['title']);
                 self.appPanel.innerHTML = self.appDialog.html(values);
                 self.appPanel.style.display = 'block';
-                dom.setAbsPosition(self.appPanel, dom.ptClient(self.appBar));
+                dom.setAbsPosition(self.appPanel, dom.ptClient($('#pfAppBarBox')[0]));
             });
 
             $('#pfUsername').bind('click', function() {
