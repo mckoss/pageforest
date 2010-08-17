@@ -3,7 +3,7 @@
     height: 35px;
 }
 
-div.pfAppBarBox {
+#pfAppBarBox {
     font-family: Verdana, Arial, san-serif;
     font-size: 14px;
     float: right;
@@ -68,8 +68,9 @@ div.pfRight {
 }
 
 #pfAppPanel {
-    width: 350px;
+    width: 360px;
+    padding: 10px 5px 10px 5px;
     position: absolute;
-    display: hidden;
-    top: 36px;
+    display: none;
+    background-color: #C6DDA3;
 }

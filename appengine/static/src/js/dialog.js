@@ -40,7 +40,6 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var stb = new base.StBuf();
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
-                console.log(field.id);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
