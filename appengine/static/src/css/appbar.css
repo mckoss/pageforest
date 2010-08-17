@@ -73,4 +73,21 @@ div.pfRight {
     position: absolute;
     display: none;
     background-color: #C6DDA3;
+    border: 2px solid;
+    border-color: white #749B45 #749B45 white;
+}
+
+div.expander {
+    display: inline-block;
+    width: 13px;
+    height: 12px;
+    cursor: pointer;
+}
+
+div.expanded {
+    background: url(/static/images/appbar/up.png) scroll top;
+}
+
+div.collapsed {
+    background: url(/static/images/appbar/down.png) scroll top;
 }

@@ -1130,7 +1130,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     var iy2 = 3;
 
     // Get absolute position on the page for the upper left of the element.
-    function ptClient(elt) {
+    function getPos(elt) {
         var pt = [0, 0];
 
         while (elt.offsetParent !== null) {
@@ -1143,35 +1143,35 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     // Return size of a DOM element in a Point - includes borders, and
     // padding, but not margins.
-    function ptSize(elt) {
+    function getSize(elt) {
         return [elt.offsetWidth, elt.offsetHeight];
     }
 
     // Return absolute bounding rectangle for a DOM element:
     // [x, y, x + dx, y + dy]
-    function rcClient(elt) {
+    function getRect(elt) {
         // TODO: Should I use getClientRects or getBoundingClientRect?
-        var rc = ptClient(elt);
-        var ptSize = ptSize(elt);
+        var rc = getPos(elt);
+        var ptSize = getSize(elt);
         rc.push(rc[ix] + ptSize[ix], rc[iy] + ptSize[iy]);
         return rc;
     }
 
     // Relative rectangle within containing element
-    function rcOffset(elt) {
+    function getOffsetRect(elt) {
         var rc = [elt.offsetLeft, elt.offsetTop];
-        var ptSize = ptSize(elt);
+        var ptSize = getSize(elt);
         rc.push(rc[ix] + ptSize[ix], rc[iy] + ptSize[iy]);
         return rc;
     }
 
-    function ptMouse(evt) {
+    function getMouse(evt) {
         var x = document.documentElement.scrollLeft || document.body.scrollLeft;
         var y = document.documentElement.scrollTop || document.body.scrollTop;
         return [x + evt.clientX, y + evt.clientY];
     }
 
-    function rcWindow() {
+    function getWindowRect() {
         var x = document.documentElement.scrollLeft || document.body.scrollLeft;
         var y = document.documentElement.scrollTop || document.body.scrollTop;
         var dx = window.innerWidth ||
@@ -1183,7 +1183,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         return [x, y, x + dx, y + dy];
     }
 
-    function setAbsPosition(elt, pt) {
+    function setPos(elt, pt) {
         elt.style.top = pt[1] + 'px';
         elt.style.left = pt[0] + 'px';
     }
@@ -1194,8 +1194,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         elt.style.height = pt[1] + 'px';
     }
 
-    function setRc(elt, rc) {
-        setAbsPosition(elt, vector.ul(rc));
+    function setRect(elt, rc) {
+        setPos(elt, vector.ul(rc));
         setSize(elt, vector.size(rc));
     }
 
@@ -1239,8 +1239,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
             return;
         }
 
-        var rcElt = rcClient(elt);
-        var rcWin = rcWindow();
+        var rcElt = getRect(elt);
+        var rcWin = getWindowRect();
 
         if (vector.PtInRect(vector.UL(rcElt), rcWin) ||
             vector.PtInRect(vector.LR(rcElt), rcWin)) {
@@ -1375,15 +1375,16 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     }
 
     ns.extend({
-        'ptClient': ptClient,
+        'getPos': getPos,
+        'getSize': getSize,
         'insertStyle': insertStyle,
-        'rcClient': rcClient,
-        'rcOffset': rcOffset,
-        'ptMouse': ptMouse,
-        'rcWindow': rcWindow,
-        'setAbsPosition': setAbsPosition,
+        'getRect': getRect,
+        'getOffsetRect': getOffsetRect,
+        'getMouse': getMouse,
+        'getWindowRect': getWindowRect,
+        'setPos': setPos,
         'setSize': setSize,
-        'setRc': setRc,
+        'setRect': setRect,
         'removeChildren': removeChildren,
         'ancestors': ancestors,
         'commonAncestorHeight': commonAncestorHeight,
@@ -1496,6 +1497,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
     var dialog = namespace.lookup('org.startpad.dialog');
+    var vector = namespace.lookup('org.startpad.vector');
 
     ns.pollInterval = 1000;
 
@@ -2085,7 +2087,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 '<span class="pfLink" id="pfUsername"></span>' +
                 '<span class="pfLink" id="pfSignIn">Sign In</span>' +
                 '<span class="pfLink" id="pfSave">Save</span>' +
-                '<span class="pfLink" id="pfMore">V</span>' +
+                '<div class="expander collapsed" id="pfMore"></div>' +
                 '<div id="pfLogo"></div>' +
                 '</div>' +
                 '<div class="pfRight"></div>' +
@@ -2105,27 +2107,33 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.appBar.innerHTML = htmlAppBar;
             var self = this;
 
-            $('#pfSignIn').bind('click', function () {
+            $('#pfSignIn').click(function () {
                 self.signInOut();
             });
 
-            $('#pfSave').bind('click', function() {
+            $('#pfSave').click(function() {
                 self.save();
             });
 
-            $('#pfMore').bind('click', function() {
+            $('#pfMore').click(function() {
+                $('#pfMore').toggleClass("expanded collapsed");
+                if ($(self.appPanel).is(':visible')) {
+                    $(self.appPanel).hide();
+                    return;
+                }
+
                 var values = base.project(self.app.getDoc(),
                                           ['title']);
-                self.appPanel.innerHTML = self.appDialog.html(values);
-                self.appPanel.style.display = 'block';
-                dom.setAbsPosition(self.appPanel, dom.ptClient($('#pfAppBarBox')[0]));
+                $(self.appPanel).html(self.appDialog.html(values))
+                    .show();
+                self.positionAppPanel();
             });
 
-            $('#pfUsername').bind('click', function() {
+            $('#pfUsername').click(function() {
                 window.open('http://' + self.wwwHost + '/docs/');
             });
 
-            $('#pfLogo').bind('click', function() {
+            $('#pfLogo').click(function() {
                 window.open('http://' + self.wwwHost);
             });
 
@@ -2144,6 +2152,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 ]
             });
             document.body.appendChild(this.appPanel);
+
+            $(window).resize(function() {
+                self.positionAppPanel();
+            });
+        },
+
+        positionAppPanel: function() {
+            if (this.appPanel.style.display != 'block') {
+                return;
+            }
+            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
+            var ptPanel = dom.getSize(this.appPanel);
+            var ptPos = [rcAppBox[vector.x2] - ptPanel[vector.x],
+                         rcAppBox[vector.y2]];
+            dom.setPos(this.appPanel, ptPos);
         },
 
         // Sign in (or out) depending on current user state.

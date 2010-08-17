@@ -16,6 +16,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
     var dialog = namespace.lookup('org.startpad.dialog');
+    var vector = namespace.lookup('org.startpad.vector');
 
     ns.pollInterval = 1000;
 
@@ -605,7 +606,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 '<span class="pfLink" id="pfUsername"></span>' +
                 '<span class="pfLink" id="pfSignIn">Sign In</span>' +
                 '<span class="pfLink" id="pfSave">Save</span>' +
-                '<span class="pfLink" id="pfMore">V</span>' +
+                '<div class="expander collapsed" id="pfMore"></div>' +
                 '<div id="pfLogo"></div>' +
                 '</div>' +
                 '<div class="pfRight"></div>' +
@@ -625,28 +626,33 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.appBar.innerHTML = htmlAppBar;
             var self = this;
 
-            $('#pfSignIn').bind('click', function () {
+            $('#pfSignIn').click(function () {
                 self.signInOut();
             });
 
-            $('#pfSave').bind('click', function() {
+            $('#pfSave').click(function() {
                 self.save();
             });
 
-            $('#pfMore').bind('click', function() {
+            $('#pfMore').click(function() {
+                $('#pfMore').toggleClass("expanded collapsed");
+                if ($(self.appPanel).is(':visible')) {
+                    $(self.appPanel).hide();
+                    return;
+                }
+
                 var values = base.project(self.app.getDoc(),
                                           ['title']);
-                self.appPanel.innerHTML = self.appDialog.html(values);
-                self.appPanel.style.display = 'block';
-                var rcAppBox = dom.rcClient($('#pfAppBarBox')[0]);
-                dom.setAbsPosition(self.appPanel, dom.ptClient(
+                $(self.appPanel).html(self.appDialog.html(values))
+                    .show();
+                self.positionAppPanel();
             });
 
-            $('#pfUsername').bind('click', function() {
+            $('#pfUsername').click(function() {
                 window.open('http://' + self.wwwHost + '/docs/');
             });
 
-            $('#pfLogo').bind('click', function() {
+            $('#pfLogo').click(function() {
                 window.open('http://' + self.wwwHost);
             });
 
@@ -665,6 +671,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 ]
             });
             document.body.appendChild(this.appPanel);
+
+            $(window).resize(function() {
+                self.positionAppPanel();
+            });
+        },
+
+        positionAppPanel: function() {
+            if (this.appPanel.style.display != 'block') {
+                return;
+            }
+            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
+            var ptPanel = dom.getSize(this.appPanel);
+            var ptPos = [rcAppBox[vector.x2] - ptPanel[vector.x],
+                         rcAppBox[vector.y2]];
+            dom.setPos(this.appPanel, ptPos);
         },
 
         // Sign in (or out) depending on current user state.

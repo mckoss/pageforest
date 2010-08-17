@@ -12,7 +12,7 @@ div.SP_Dialog label.left {
     clear: left;
     text-align: right;
     width: 95px;
-    margin: 0 0 6px 0;
+    margin: 1px 0 6px 0;
     padding-right: 5px;
 }
 
@@ -24,14 +24,14 @@ div.SP_Dialog label.checkbox, div.SP_Dialog input[type=checkbox] {
 div.SP_Dialog label.checkbox {
     display: block;
     clear: left;
-    margin: 0 5px 0 100px;
+    margin: 0 5px 6px 100px;
     padding: 0;
 }
 
 div.SP_Dialog input[type=text], div.SP_Dialog input[type=password] {
     float: left;
     width: 245px;
-    margin: 0;
+    margin: 0 0 6px 0;
     padding: 0;
 }
 
