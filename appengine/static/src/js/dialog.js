@@ -5,17 +5,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
     var patterns = {
         title: '<h1>{title}</h1>',
-        text: '<label class="left">{label}:</label>' +
-            '<input id="{id}" type="text" value="{value}"/>',
-        password: '<label class="left">{label}:</label>' +
+        text: '<label class="left" for="{id}">{label}:</label>' +
+            '<input id="{id}" type="text"/>',
+        password: '<label class="left" for="{id}">{label}:</label>' +
             '<input id="{id}" type="password"/>',
         checkbox: '<label class="checkbox" for="{id}">' +
             '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
-        note: '<label class="left">{label}:</label>' +
-            '<textarea id="{id}" rows="{rows}">{value}</textarea>',
-        message: '<span id="{id}">{value}</span>',
+        note: '<label class="left" for="{id}">{label}:</label>' +
+            '<textarea id="{id}" rows="{rows}"></textarea>',
+        message: '<span id="{id}"></span>',
         value: '<label class="left">{label}:</label>' +
-            '<span class="value" id="{id}">{value}</span>',
+            '<span class="value" id="{id}"></span>',
         button: '<input id="{id}" type="button" value="{label}"/>',
         invalid: '<span class="error">***missing field type: {type}***</span>'
     };
@@ -30,12 +30,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     //     name/type/label/value/required/shortLabel/hidden
     function Dialog(options) {
         this.prefix = 'SP_';
-        this.values = {};
+        this.bound = false;
         util.extendObject(this, options);
     }
 
     Dialog.methods({
-        html: function(values) {
+        html: function() {
             var self = this;
             var stb = new base.StBuf();
             base.forEach(this.fields, function(field, i) {
@@ -50,22 +50,52 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     field.label = field.name[0].toUpperCase() +
                         field.name.slice(1);
                 }
-                if (values[field.name] != undefined) {
-                    field.value = values[field.name];
-                }
                 stb.append(format.replaceKeys(patterns[field.type], field));
             });
             this.content = stb.toString();
             return format.replaceKeys(sDialog, this);
         },
 
-        init: function() {
+        bindFields: function() {
+            if (this.bound) {
+                return;
+            }
             base.forEach(this.fields, function(field) {
-                if (field.hidden) {
-                    var elt = document.getElementById(field.id);
-                    elt.style.display = "none";
-                }
+                field.elt = document.getElementById(field.id);
             });
+            this.bound = true;
+        },
+
+        getField: function(name) {
+            for (var i = 0; i < this.fields.length; i++) {
+                if (this.fields[i].name == name) {
+                    return this.fields[i];
+                }
+            }
+            return undefined;
+        },
+
+        // Call just before displaying a dialog to set it's values.
+        setValues: function(values) {
+            this.bindFields();
+            for (var name in values) {
+                if (values.hasOwnProperty(name)) {
+                    var field = this.getField(name);
+                    if (field == undefined || field.elt == undefined) {
+                        return;
+                    }
+                    var value = values[name];
+                    switch (field.elt.tagName) {
+                    case 'INPUT':
+                    case 'TEXTAREA':
+                        $(field.elt).val(value);
+                        break;
+                    default:
+                        $(field.elt).text(value);
+                        break;
+                    }
+                }
+            }
         }
     });
 
