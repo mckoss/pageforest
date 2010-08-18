@@ -634,28 +634,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.save();
             });
 
-            $('#pfMore').click(function() {
-                $('#pfMore').toggleClass("expanded collapsed");
-                if ($(self.appPanel).is(':visible')) {
-                    $(self.appPanel).hide();
-                    return;
-                }
-
-                var values = base.project(self.app.getDoc(),
-                                          ['title']);
-                $(self.appPanel).html(self.appDialog.html(values))
-                    .show();
-                self.positionAppPanel();
-            });
-
-            $('#pfUsername').click(function() {
-                window.open('http://' + self.wwwHost + '/docs/');
-            });
-
-            $('#pfLogo').click(function() {
-                window.open('http://' + self.wwwHost);
-            });
-
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
             this.appDialog = new dialog.Dialog({
@@ -671,6 +649,31 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 ]
             });
             document.body.appendChild(this.appPanel);
+            $(self.appPanel).html(self.appDialog.html());
+
+            $('#pfMore').click(function() {
+                $('#pfMore').toggleClass("expanded collapsed");
+                if ($(self.appPanel).is(':visible')) {
+                    $(self.appPanel).hide();
+                    return;
+                }
+
+                var values = base.project(self.app.getDoc(),
+                                          ['title', 'tags',
+                                           'readers', 'writers',
+                                           'owner', 'modified']);
+                self.appDialog.setValues(values);
+                $(self.appPanel).show();
+                self.positionAppPanel();
+            });
+
+            $('#pfUsername').click(function() {
+                window.open('http://' + self.wwwHost + '/docs/');
+            });
+
+            $('#pfLogo').click(function() {
+                window.open('http://' + self.wwwHost);
+            });
 
             $(window).resize(function() {
                 self.positionAppPanel();
