@@ -82,6 +82,7 @@ div.expander {
     display: inline-block;
     width: 13px;
     height: 12px;
+    margin: 0 6px 0 3px;
     cursor: pointer;
 }
 

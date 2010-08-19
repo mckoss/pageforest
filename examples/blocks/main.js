@@ -14,8 +14,10 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
         ns.brd = new Board();
         ns.client = new clientLib.Client(ns);
         ns.client.addAppBar();
-        // Quick call to poll - don't wait a whole second to try loading
-        // the doc and logging in the user.
+
+        // App Bar can move elements on the screen
+        ns.brd.resizeWindow();
+
         ns.client.poll();
     }
 
@@ -369,7 +371,6 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
     // these will then be saved to pageforest's storage.
     function getDoc() {
         return {
-            "title": "1,000 Blocks",
             "blob": {
                 rows: ns.brd.rwMax,
                 cols: ns.brd.colMax,
