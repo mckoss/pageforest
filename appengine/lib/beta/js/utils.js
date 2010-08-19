@@ -373,11 +373,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     /* Return new object with just the listed properties "projected"
-       into the new object */
+       into the new object.  Ignore undefined properties. */
     function project(obj, asProps) {
         var objT = {};
         for (var i = 0; i < asProps.length; i++) {
-            objT[asProps[i]] = obj[asProps[i]];
+            var name = asProps[i];
+            if (obj && obj.hasOwnProperty(name)) {
+                objT[name] = obj[name];
+            }
         }
         return objT;
     }
@@ -1465,10 +1468,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             if (this.bound) {
                 return;
             }
+            var self = this;
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
+                if (field.onClick != undefined) {
+                    $(field.elt).click(
+                        self.onButton.fnMethod(self).fnArgs(field));
+                }
             });
             this.bound = true;
+        },
+
+        onButton: function(evt, field) {
+            field.onClick();
         },
 
         getField: function(name) {
@@ -1544,6 +1556,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         "children can be saved.";
     var docidMessage = "Document name is missing.";
 
+    var docProps = ['title', 'tags',
+                    'owner', 'readers', 'writers',
+                    'created', 'modified'];
+
     // The application calls Client, and implements the following methods:
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
     // app.getDoc() - Called to get the json data to be saved.
@@ -1554,6 +1570,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
         this.app = app;
+        this.meta = {};
 
         if (typeof $ != 'function' || $ != jQuery) {
             this.errorReport('jQuery_required', jQueryMessage);
@@ -1640,8 +1657,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 dataType: 'json',
                 url: this.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
-                success: function (document, textStatus, xmlhttp) {
-                    this.app.setDoc(document);
+                success: function (doc, textStatus, xmlhttp) {
+                    this.setDoc(doc);
                     this.setCleanDoc(docid);
                 }.fnMethod(this)
             });
@@ -1660,7 +1677,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (json == undefined) {
-                json = this.app.getDoc();
+                json = this.getDoc();
                 if (typeof json != 'object') {
                     this.errorReport('missing_object', objectMessage);
                     return;
@@ -1720,6 +1737,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.setDirty();
         },
 
+        // Get document properties from client and merge with last
+        // saved meta properties.
+        getDoc: function() {
+            var doc = this.app.getDoc();
+            base.extendIfMissing(doc, this.meta, {'title': document.title});
+            this.meta = base.project(doc, docProps);
+            return doc;
+        },
+
+        // Set document - retaining meta properties for later use.
+        setDoc: function(doc) {
+            this.meta = base.project(doc, docProps);
+            this.app.setDoc(doc);
+        },
+
         // Set the document to the clean state.
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
@@ -1727,7 +1759,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.docid = docid;
             this.changeState('clean');
             // Remember the clean state of the document
-            this.lastJSON = JSON.stringify(this.app.getDoc());
+            this.lastJSON = JSON.stringify(this.getDoc());
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -1775,7 +1807,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // checked.
             // TODO: Don't get the document if the app has it's own
             // isDirty function.
-            var json = JSON.stringify(this.app.getDoc());
+            var json = JSON.stringify(this.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
             }
@@ -2053,7 +2085,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         poll: function () {
             // Callbacks to app are deferred until poll is called.
             if (this.state == 'init') {
-                if (this.app.getDoc) {
+                if (this.getDoc) {
                     this.setCleanDoc(undefined, true);
                 }
             }
@@ -2141,9 +2173,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.signInOut();
             });
 
-            $('#pfSave').click(function() {
+            function onSave() {
                 self.save();
-            });
+            }
+
+            function onSaveClose() {
+                base.extend(this.meta, self.appDialog.getValues());
+                self.save();
+                self.toggleAppPanel();
+            }
+
+            $('#pfSave').click(onSave);
 
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
@@ -2155,7 +2195,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'writers', label: "Authors"},
                     {name: 'owner', type: 'value'},
                     {name: 'saved', label: "Last Saved", type: 'value'},
-                    {name: 'save', type: 'button'},
+                    {name: 'save', type: 'button', onClick: onSaveClose},
                     {name: 'copy', type: 'button'}
                 ]
             });
@@ -2163,19 +2203,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(self.appPanel).html(self.appDialog.html());
 
             $('#pfMore').click(function() {
-                $('#pfMore').toggleClass("expanded collapsed");
-                if ($(self.appPanel).is(':visible')) {
-                    $(self.appPanel).hide();
-                    return;
+                if (self.toggleAppPanel()) {
+                    var values = base.project(self.getDoc(), docProps);
+                    self.appDialog.setValues(values);
                 }
-
-                var values = base.project(self.app.getDoc(),
-                                          ['title', 'tags',
-                                           'readers', 'writers',
-                                           'owner', 'modified']);
-                self.appDialog.setValues(values);
-                $(self.appPanel).show();
-                self.positionAppPanel();
             });
 
             $('#pfUsername').click(function() {
@@ -2189,6 +2220,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(window).resize(function() {
                 self.positionAppPanel();
             });
+        },
+
+        toggleAppPanel: function() {
+            $('#pfMore').toggleClass("expanded collapsed");
+            if ($(this.appPanel).is(':visible')) {
+                $(this.appPanel).hide();
+                return false;
+            } else {
+                $(this.appPanel).show();
+                this.positionAppPanel();
+                return true;
+            }
         },
 
         positionAppPanel: function() {

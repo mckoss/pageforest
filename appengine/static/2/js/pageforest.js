@@ -373,11 +373,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     /* Return new object with just the listed properties "projected"
-       into the new object */
+       into the new object.  Ignore undefined properties. */
     function project(obj, asProps) {
         var objT = {};
         for (var i = 0; i < asProps.length; i++) {
-            objT[asProps[i]] = obj[asProps[i]];
+            var name = asProps[i];
+            if (obj && obj.hasOwnProperty(name)) {
+                objT[name] = obj[name];
+            }
         }
         return objT;
     }

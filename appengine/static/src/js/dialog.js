@@ -60,10 +60,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             if (this.bound) {
                 return;
             }
+            var self = this;
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
+                if (field.onClick != undefined) {
+                    $(field.elt).click(
+                        self.onButton.fnMethod(self).fnArgs(field));
+                }
             });
             this.bound = true;
+        },
+
+        onButton: function(evt, field) {
+            field.onClick();
         },
 
         getField: function(name) {
