@@ -824,17 +824,15 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
                 var func = this.ns[name];
                 this.orig[name] = func;
-                this.ns[name] = this.onCall.fnMethod(this).
-                    fnArgs(name).fnWrap(func);
+                this.ns[name] = this.wrapFunc(name, func);
 
                 // For functions that are constructors, wrap all the
                 // methods (function prototype functions).
                 for (var method in func.prototype) {
                     if (typeof func.prototype[method] == 'function') {
                         this.ns[name].prototype[method] =
-                            this.onCall.fnMethod(this).
-                            fnArgs(name + ':' + method).
-                            fnWrap(func.prototype[method]);
+                            this.wrapFunc(name + ':' + method,
+                                          func.prototype[method]);
                     }
                 }
             }
@@ -842,28 +840,57 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     }
 
     Coverage.methods({
-        onCall: function(self, fn, args, name) {
-            if (this.called[name] == undefined) {
-                this.called[name] = 0;
+        wrapFunc: function(name, func) {
+            if (this.called[name] != undefined) {
+                throw new Error("Function already wrapped: " + name);
             }
-            this.called[name]++;
+            console.log("Wrapping " + this.name + '.' + name);
+
+            this.called[name] = 0;
+
+            return this.onCall.fnMethod(this).fnArgs(name).fnWrap(func);
+        },
+
+        onCall: function(self, fn, args, name) {
+            this.cover(name);
             return fn.apply(self, args);
         },
 
+        // Mark names as "covered".
+        cover: function() {
+            for (var i = 0; i < arguments.length; i++) {
+                name = arguments[i];
+                if (this.called[name] == undefined) {
+                    throw new Error("Unwrapped function: " + name);
+                }
+                this.called[name]++;
+            }
+        },
+
         unwrap: function() {
-            for (var name in this.orig) {
-                if (this.orig.hasOwnProperty(name)) {
+            for (var name in this.called) {
+                if (this.called.hasOwnProperty(name)) {
                     this.ns[name] = this.orig[name];
                 }
             }
         },
 
         assertCovered: function(ut) {
-            for (var name in this.orig) {
-                if (this.orig.hasOwnProperty(name)) {
+            for (var name in this.called) {
+                if (this.called.hasOwnProperty(name)) {
                     ut.assert(this.called[name] > 0,
                               "Coverage - function not called: " +
                               this.name + '.' + name);
+                }
+            }
+        },
+
+        logCoverage: function() {
+            console.log("Function coverage for " + this.name + ":");
+            for (var name in this.called) {
+                if (this.called.hasOwnProperty(name)) {
+                    console.log(format.fixedDigits(this.called[name], 3) +
+                                ' calls to ' + name);
                 }
             }
         }

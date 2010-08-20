@@ -71,6 +71,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
         ts.addTest("Enum", function(ut) {
             var e = new base.Enum("a", "b", "c");
             ut.assertEq(e, {a: 0, b: 1, c: 2});
+            ut.assertEq(e.getName(1), 'b');
             e = new base.Enum(1, "a", "b", 5, "c");
             ut.assertEq(e, {a: 1, b: 2, c: 5});
             e = new base.Enum();
@@ -130,6 +131,7 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
         ts.addTest("Coverage", function(ut) {
             baseCoverage.assertCovered(ut);
             baseCoverage.unwrap();
+            baseCoverage.logCoverage();
         });
 
     }; // addTests

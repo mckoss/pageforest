@@ -2,6 +2,7 @@
 
 namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
     var timer = namespace.lookup('org.startpad.timer');
+    var unit = namespace.lookup('org.startpad.unit');
 
     function Sample()
     {
@@ -14,6 +15,8 @@ namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
     };
 
     ns.addTests = function(ts) {
+
+        var unitCoverage = new unit.Coverage('org.startpad.unit');
 
         ts.addTest("Single Failure", function(ut) {
             ut.assert(true, "true is true");
@@ -177,6 +180,13 @@ namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
                 ut.assert(i != 7, "Assert Fails on 7");
             }
         }).expect(1, 10);
+
+        ts.addTest("Coverage", function(ut) {
+            unitCoverage.cover('runTest', 'loadAndRunTest', 'TestSuite', 'UnitTest', 'Coverage');
+            unitCoverage.assertCovered(ut);
+            unitCoverage.unwrap();
+            unitCoverage.logCoverage();
+        });
 
     }; // addTests
 
