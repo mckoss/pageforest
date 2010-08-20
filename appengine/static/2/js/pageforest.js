@@ -184,6 +184,16 @@ var namespace = (function() {
                 var self = this;
                 return _fn.apply(self, args);
             };
+        },
+
+        // Closure to delegate calls to a function wrapper.
+        // Calling params for wrapper are: (this, fn, arguments).
+        fnWrap: function(fn) {
+            var _fn = this;
+            return function() {
+                var self = this;
+                return _fn(self, fn, arguments);
+            };
         }
     });
 
