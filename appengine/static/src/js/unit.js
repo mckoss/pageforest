@@ -569,7 +569,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         // Will auto-disable any unit test less than iutNext (see skipTo)
         addTest: function(stName, fn) {
-            var ut = new UnitTest(stName, fn);
+            var ut = new ns.UnitTest(stName, fn);
             this.rgut.push(ut);
             // Global setting - stop all unit tests on first failure.
             if (this.fStopFail) {
@@ -736,8 +736,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.outRef(ut.stName, ut.urlRef);
             this.out("] ");
             if (ut.state != UnitTest.states.created) {
-                this.out(ut.cErrors + " errors " +
-                         "out of " + ut.cAsserts + " tests");
+                this.out(ut.cErrors + " errors out of " +
+                         ut.cAsserts + " tests");
                 if (ut.cTestsExpected && ut.cTestsExpected != ut.cAsserts) {
                     this.out(" (" + ut.cTestsExpected + " expected)");
                 }
@@ -814,25 +814,37 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     function Coverage(namespaceName) {
         this.name = namespaceName;
         this.ns = namespace.lookup(namespaceName);
-        this.orig = {};
+        this.funcs = {};
         this.called = {};
+        this.methods = {};
 
         for (var name in this.ns) {
             if (this.ns.hasOwnProperty(name)) {
-                if (typeof this.ns[name] != 'function') {
+                if (typeof this.ns[name] != 'function' ||
+                    // Don't wrap ourselves!
+                    this.ns[name] === this.constructor) {
                     continue;
                 }
+
                 var func = this.ns[name];
-                this.orig[name] = func;
+                this.funcs[name] = func;
                 this.ns[name] = this.wrapFunc(name, func);
+
+                // In case func is a constructor, use it's prototype
+                // object so we inherit all it's properties when
+                // we create instances!
+                this.ns[name].prototype = func.prototype;
+                this.methods[name] = {};
 
                 // For functions that are constructors, wrap all the
                 // methods (function prototype functions).
                 for (var method in func.prototype) {
                     if (typeof func.prototype[method] == 'function') {
-                        this.ns[name].prototype[method] =
+                        var fnMethod = func.prototype[method];
+                        this.methods[name][method] = fnMethod;
+                        func.prototype[method] =
                             this.wrapFunc(name + ':' + method,
-                                          func.prototype[method]);
+                                          fnMethod);
                     }
                 }
             }
@@ -868,9 +880,16 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         unwrap: function() {
-            for (var name in this.called) {
-                if (this.called.hasOwnProperty(name)) {
-                    this.ns[name] = this.orig[name];
+            for (var name in this.funcs) {
+                if (this.funcs.hasOwnProperty(name)) {
+                    var func = this.funcs[name];
+                    this.ns[name] = func;
+                    var methods = this.methods[name];
+                    for (var method in methods) {
+                        if (methods.hasOwnProperty(method)) {
+                            func.prototype[method] = methods[method];
+                        }
+                    }
                 }
             }
         },

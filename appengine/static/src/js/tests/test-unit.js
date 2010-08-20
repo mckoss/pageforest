@@ -182,7 +182,7 @@ namespace.lookup('org.startpad.unit.test').defineOnce(function (ns) {
         }).expect(1, 10);
 
         ts.addTest("Coverage", function(ut) {
-            unitCoverage.cover('runTest', 'loadAndRunTest', 'TestSuite', 'UnitTest', 'Coverage');
+            unitCoverage.cover();
             unitCoverage.assertCovered(ut);
             unitCoverage.unwrap();
             unitCoverage.logCoverage();

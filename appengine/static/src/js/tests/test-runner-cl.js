@@ -5,6 +5,7 @@ load("modules.js");
 load("../base.js");
 load("../unit.js");
 load("../timer.js");
+load("../format.js");
 
 (function(a) {
     var unit = namespace.lookup('org.startpad.unit');
