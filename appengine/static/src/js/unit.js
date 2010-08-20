@@ -822,8 +822,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 if (typeof this.ns[name] != 'function') {
                     continue;
                 }
-                console.log("Wrapping " + this.name + '.' + name);
-
                 var func = this.ns[name];
                 this.orig[name] = func;
                 this.ns[name] = this.onCall.fnMethod(this).
@@ -833,8 +831,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 // methods (function prototype functions).
                 for (var method in func.prototype) {
                     if (typeof func.prototype[method] == 'function') {
-                        console.log("Wrapping " + this.name + '.' +
-                                    name + ':' + method);
                         this.ns[name].prototype[method] =
                             this.onCall.fnMethod(this).
                             fnArgs(name + ':' + method).
@@ -848,7 +844,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     Coverage.methods({
         onCall: function(self, fn, args, name) {
             if (this.called[name] == undefined) {
-                console.log("Calling " + this.name + '.' + name);
                 this.called[name] = 0;
             }
             this.called[name]++;

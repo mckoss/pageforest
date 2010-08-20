@@ -243,6 +243,8 @@ var namespace = (function() {
         // as necessary.  If a namespace is currently being defined,
         // add any looked up references to the namespace (if lookup is not
         // used, _referenced will not be complete.
+        _isDefined: true,
+
         lookup: function(path) {
             var fCreated = false;
             path = path.replace(/-/g, '_');
@@ -250,6 +252,10 @@ var namespace = (function() {
             var cur = namespaceT;
             for (var i = 0; i < parts.length; i++) {
                 var name = parts[i];
+                // Ignore empty path parts
+                if (name == '') {
+                    continue;
+                }
                 if (cur[name] === undefined) {
                     cur = new Namespace(cur, name);
                     fCreated = true;
