@@ -101,6 +101,32 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             });
         });
 
+        ts.addTest("misc", function(ut) {
+            ut.assertEq(base.extendObject({a: 1}, {b: 2}), {a: 1, b: 2});
+            ut.assertLT(base.randomInt(10), 10);
+            ut.assertEq(base.project({a: 1, b: 2}, ['a']), {a: 1});
+
+            var a = [1, 3, 2, 4, 3];
+
+            base.uniqueArray(a);
+            ut.assertEq(a, [1, 2, 3, 4]);
+
+            var aT = base.map(a, function(x) {
+                return x * 2 + 1;
+            });
+            ut.assertEq(aT, [3, 5, 7, 9]);
+
+            aT = base.filter(a, function(x) {
+                return x > 2;
+            });
+            ut.assertEq(aT, [3, 4]);
+
+            var s = base.reduce(a, function(x, y) {
+                return x * y;
+            });
+            ut.assertEq(s, 24);
+        });
+
         ts.addTest("Coverage", function(ut) {
             baseCoverage.assertCovered(ut);
             baseCoverage.unwrap();
