@@ -53,7 +53,6 @@ class PostMiddleware(object):
         request.META['PATH_INFO'] = request.path_info
         request.path = request.META['SCRIPT_NAME'] + request.path_info
 
-
     def process_response(self, request, response):
         if request.method != 'POST':
             return response
