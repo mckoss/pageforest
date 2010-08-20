@@ -178,6 +178,9 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
         }).require('document');
 
         ts.addTest("Coverage", function(ut) {
+            if (typeof document == 'undefined') {
+                formatCoverage.cover('canvasToPNG');
+            }
             formatCoverage.assertCovered(ut);
             formatCoverage.unwrap();
             formatCoverage.logCoverage();
