@@ -180,6 +180,7 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
         ts.addTest("Coverage", function(ut) {
             formatCoverage.assertCovered(ut);
             formatCoverage.unwrap();
+            formatCoverage.logCoverage();
         });
 
     }; // addTests
