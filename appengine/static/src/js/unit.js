@@ -809,12 +809,74 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         }
     }); // TestSuite
 
+    // Wrap all the exported functions in a namespace for the purpose
+    // of counting calls to each function.
+    function Coverage(namespaceName) {
+        this.name = namespaceName;
+        this.ns = namespace.lookup(namespaceName);
+        this.orig = {};
+        this.called = {};
+
+        for (var name in this.ns) {
+            if (this.ns.hasOwnProperty(name)) {
+                if (typeof this.ns[name] != 'function') {
+                    continue;
+                }
+                console.log("Wrapping " + this.name + '.' + name);
+                this.orig[name] = this.ns[name];
+                this.ns[name] = this.onCall.fnMethod(this).
+                    fnArgs(name).fnWrap(this.ns[name]);
+
+                // For functions that are constructors, need to copy
+                // over all the prototype methods!
+                for (var method in this.orig[name].prototype) {
+                    if (true) {
+                        console.log("Wrapping " + this.name + '.' +
+                                    name + '.' + method);
+                        this.ns[name].prototype[method] =
+                            this.orig[name].prototype[method];
+                    }
+                }
+            }
+        }
+    }
+
+    Coverage.methods({
+        onCall: function(self, fn, args, name) {
+            if (this.called[name] == undefined) {
+                console.log("Calling " + name);
+                this.called[name] = 0;
+            }
+            this.called[name]++;
+            return fn.apply(self, args);
+        },
+
+        unwrap: function() {
+            for (var name in this.orig) {
+                if (this.orig.hasOwnProperty(name)) {
+                    this.ns[name] = this.orig[name];
+                }
+            }
+        },
+
+        assertCovered: function(ut) {
+            for (var name in this.orig) {
+                if (this.orig.hasOwnProperty(name)) {
+                    ut.assert(this.called[name] > 0,
+                              "Coverage - function not called: " +
+                              this.name + '.' + name);
+                }
+            }
+        }
+    });
+
     ns.extend({
         'runTest': runTest,
         'loadAndRunTest': loadAndRunTest,
         'TestSuite': TestSuite,
         'UnitTest': UnitTest,
-        'TestResult': TestResult
+        'TestResult': TestResult,
+        'Coverage': Coverage
     });
 
 }); // startpad.unit
