@@ -823,18 +823,22 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                     continue;
                 }
                 console.log("Wrapping " + this.name + '.' + name);
-                this.orig[name] = this.ns[name];
-                this.ns[name] = this.onCall.fnMethod(this).
-                    fnArgs(name).fnWrap(this.ns[name]);
 
-                // For functions that are constructors, need to copy
-                // over all the prototype methods!
-                for (var method in this.orig[name].prototype) {
-                    if (true) {
+                var func = this.ns[name];
+                this.orig[name] = func;
+                this.ns[name] = this.onCall.fnMethod(this).
+                    fnArgs(name).fnWrap(func);
+
+                // For functions that are constructors, wrap all the
+                // methods (function prototype functions).
+                for (var method in func.prototype) {
+                    if (typeof func.prototype[method] == 'function') {
                         console.log("Wrapping " + this.name + '.' +
-                                    name + '.' + method);
+                                    name + ':' + method);
                         this.ns[name].prototype[method] =
-                            this.orig[name].prototype[method];
+                            this.onCall.fnMethod(this).
+                            fnArgs(name + ':' + method).
+                            fnWrap(func.prototype[method]);
                     }
                 }
             }
@@ -844,7 +848,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     Coverage.methods({
         onCall: function(self, fn, args, name) {
             if (this.called[name] == undefined) {
-                console.log("Calling " + name);
+                console.log("Calling " + this.name + '.' + name);
                 this.called[name] = 0;
             }
             this.called[name]++;

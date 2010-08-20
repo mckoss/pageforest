@@ -160,7 +160,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             return a[0];
         }
         var res = a[0];
-        for (var i = 1; i < a.length - 1; i++) {
+        for (var i = 1; i < a.length; i++) {
             res = fn(res, a[i]);
         }
         return res;
@@ -195,9 +195,9 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     ns.extend({
-        extendObject: util.extendObject,
-        Enum: Enum,
-        StBuf: StBuf,
+        'extendObject': util.extendObject,
+        'Enum': Enum,
+        'StBuf': StBuf,
 
         'extendIfMissing': extendIfMissing,
         'extendDeep': extendDeep,
