@@ -220,14 +220,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (stNote == undefined) {
                 stNote = "";
             }
-            if (this.stTrace) {
+            if (this.stTrace != undefined) {
                 stNote = (this.cAsserts + 1) + ". [" + this.stTrace + "] " +
                     stNote;
             }
             else {
                 stNote = (this.cAsserts + 1) + ". " + stNote;
             }
-            if (stNote2) {
+            if (stNote2 != undefined) {
                 stNote += " (" + stNote2 + ")";
             }
             // Allow the user to set a breakpoint when we hit a particular

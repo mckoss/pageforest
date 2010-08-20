@@ -1,9 +1,9 @@
 namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
+    var unit = namespace.lookup('org.startpad.unit');
 
     ns.addTests = function(ts) {
-        // REVIEW: Add exports contract test - should be a simple assert
-        // in unit test framework.
+        var formatCoverage = new unit.Coverage('org.startpad.format');
 
         ts.addTest("replaceKeys", function(ut)
         {
@@ -71,6 +71,22 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             }
         });
 
+        ts.addTest("replaceString", function(ut) {
+            var tests = [
+                ["Test string.", "string", "replace", "Test replace."],
+                ["Abcabcabc", "abc", "x", "Abcxx"],
+                ["No matches", "foo", "bar", "No matches"],
+                ["nonono", "no", "", ""]
+            ];
+
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+
+                ut.assertEq(format.replaceString(test[0], test[1], test[2]),
+                            test[3]);
+            }
+        });
+
         ts.addTest("ISO 8601 Formatting", function(ut)
         {
             var aTest = [
@@ -81,30 +97,30 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
 
             var dt = new Date();
             ut.assertEq(dt.getTime(), dt.valueOf(), "Javascript assumption");
-            var sISO = format.iso(dt);
+            var sISO = format.isoFromDate(dt);
             var sTZ = format.fixedDigits(-dt.getTimezoneOffset() / 60, 2);
             ut.assertEq(sISO.substring(sISO.length - 3), sTZ, "Timezone");
 
             // Fix dt as a UTC date/time
             dt.__tz = 0;
-            sISO = format.iso(dt);
+            sISO = format.isoFromDate(dt);
             ut.assertEq(sISO.substring(sISO.length - 1), "Z",
                         "Timezone - fixed at UTC: " + sISO);
             for (var i = 0; i < aTest.length; i++) {
-                ut.Trace(i);
+                ut.trace(i);
                 var aDate = aTest[i][0];
                 aDate[1]--;
                 var aTime = aTest[i][1];
                 sISO = aTest[i][2];
                 dt.setUTCFullYear.apply(dt, aDate);
                 dt.setUTCHours.apply(dt, aTime);
-                ut.assertEq(format.iso(dt), sISO);
+                ut.assertEq(format.isoFromDate(dt), sISO);
             }
 
             dt.setUTCFullYear(1995, 0, 15);
             dt.setUTCHours(0, 0, 0, 0);
-            ut.assertEq(format.iso(dt, true), "1995-01-15T00:00Z");
-        }).enable(false);
+            ut.assertEq(format.isoFromDate(dt, true), "1995-01-15T00:00Z");
+        });
 
         ts.addTest("ISO 8601 Parsing", function(ut)
         {
@@ -127,10 +143,10 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ];
 
             for (var i = 0; i < aTest.length; i++) {
-                ut.Trace(i);
+                ut.trace(i);
                 var aDate = aTest[i][1];
                 if (!aDate) {
-                    ut.assertEq(format.parseISO(aTest[i][0]), undefined);
+                    ut.assertEq(format.dateFromISO(aTest[i][0]), undefined);
                     continue;
                 }
                 aDate[1]--;
@@ -138,9 +154,9 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 dt.setUTCFullYear.apply(dt, aDate);
                 dt.setUTCHours.apply(dt, aTime);
                 dt.__tz = aTest[i][3];
-                ut.assertEq(format.parseISO(aTest[i][0]), dt);
+                ut.assertEq(format.dateFromISO(aTest[i][0]), dt);
             }
-        }).enable(false);
+        });
 
         ts.addTest("base64ToString", function(ut) {
             ut.assertEq(format.base64ToString("aGVsbG8="), "hello");
@@ -160,6 +176,11 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 ut.assertEq(png.charCodeAt(i), header[i]);
             }
         }).require('document');
+
+        ts.addTest("Coverage", function(ut) {
+            formatCoverage.assertCovered(ut);
+            formatCoverage.unwrap();
+        });
 
     }; // addTests
 
