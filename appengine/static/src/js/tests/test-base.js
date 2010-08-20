@@ -1,8 +1,11 @@
 namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
+    var unit = namespace.lookup('org.startpad.unit');
 
     ns.addTests = function (ts) {
+
+        var baseCoverage = new unit.Coverage('org.startpad.base');
 
         ts.addTest("String Buffer", function(ut) {
             var stb1 = new base.StBuf();
@@ -96,6 +99,11 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 ut.assert(prop == 'a' || prop == 'b');
                 ut.assertEq(elt, prop == 'a' ? 1 : 2);
             });
+        });
+
+        ts.addTest("Coverage", function(ut) {
+            baseCoverage.assertCovered(ut);
+            baseCoverage.unwrap();
         });
 
     }; // addTests
