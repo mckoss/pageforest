@@ -5,7 +5,6 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
     var unit = namespace.lookup('org.startpad.unit');
 
     ns.addTests = function(ts) {
-        var namespaceCoverage = new unit.Coverage('');
 
         ts.addTest("copyArray", function(ut) {
             var x = [1, 2, 3];
@@ -150,10 +149,6 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             fn8(1);
         });
 
-        ts.addTest("Coverage", function(ut) {
-            namespaceCoverage.assertCovered(ut);
-            namespaceCoverage.unwrap();
-        });
     }; // addTests
 
 }); // org.startpad.base.test
