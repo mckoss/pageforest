@@ -5,8 +5,6 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
 
     ns.addTests = function (ts) {
 
-        var baseCoverage = new unit.Coverage('org.startpad.base');
-
         ts.addTest("String Buffer", function(ut) {
             var stb1 = new base.StBuf();
             ut.assertEq(stb1.toString(), "");
@@ -126,12 +124,6 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 return x * y;
             });
             ut.assertEq(s, 24);
-        });
-
-        ts.addTest("Coverage", function(ut) {
-            baseCoverage.assertCovered(ut);
-            baseCoverage.unwrap();
-            baseCoverage.logCoverage();
         });
 
     }; // addTests

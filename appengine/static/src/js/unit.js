@@ -21,34 +21,52 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var loader = namespace.lookup('org.startpad.loader');
 
-    // Run the selected tests in the browser
-    function runTest(testModule, fnCallback) {
-        if (!testModule.addTests) {
-            alert("Module " + testModule._path +
-                  " has no addTests() function.");
-            return;
-        }
-
-        var ts = new ns.TestSuite(testModule._path);
-        testModule.addTests(ts);
-        ts.run(fnCallback);
-    }
-
-    function loadAndRunTest(path, locations, fnCallback) {
-        loader.loadNamespace(path + '.test', locations, function () {
-            var testModule = namespace.lookup(path + '.test');
-            if (!testModule._isDefined) {
-                alert("Module " + path + " is not loaded.");
-                return;
-            }
-            runTest(testModule, fnCallback);
-        });
-    }
-
     function UnitTest(stName, fn) {
         this.stName = stName;
         this.fn = fn;
         this.rgres = [];
+    }
+
+    // Wrap all the exported functions in a namespace for the purpose
+    // of counting calls to each function.
+    function Coverage(namespaceName) {
+        this.name = namespaceName;
+        this.ns = namespace.lookup(namespaceName);
+        this.funcs = {};
+        this.called = {};
+        this.methods = {};
+
+        for (var name in this.ns) {
+            if (this.ns.hasOwnProperty(name)) {
+                if (typeof this.ns[name] != 'function' ||
+                    // Don't wrap ourselves!
+                    this.ns[name] === this.constructor) {
+                    continue;
+                }
+
+                var func = this.ns[name];
+                this.funcs[name] = func;
+                this.ns[name] = this.wrapFunc(name, func);
+
+                // In case func is a constructor, use it's prototype
+                // object so we inherit all it's properties when
+                // we create instances!
+                this.ns[name].prototype = func.prototype;
+                this.methods[name] = {};
+
+                // For functions that are constructors, wrap all the
+                // methods (function prototype functions).
+                for (var method in func.prototype) {
+                    if (typeof func.prototype[method] == 'function') {
+                        var fnMethod = func.prototype[method];
+                        this.methods[name][method] = fnMethod;
+                        func.prototype[method] =
+                            this.wrapFunc(name + ':' + method,
+                                          fnMethod);
+                    }
+                }
+            }
+        }
     }
 
     util.extendObject(UnitTest, {
@@ -220,7 +238,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (stNote == undefined) {
                 stNote = "";
             }
-            if (this.stTrace != undefined) {
+            if (this.stTrace != '') {
                 stNote = (this.cAsserts + 1) + ". [" + this.stTrace + "] " +
                     stNote;
             }
@@ -578,6 +596,16 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             return ut;
         },
 
+        addCoverage: function(moduleName) {
+            var coverage = new Coverage(moduleName);
+
+            this.addTest("Function Coverage", function(ut) {
+                coverage.assertCovered(ut);
+                coverage.unwrap();
+                coverage.logCoverage();
+            });
+        },
+
         stopFail: function(f) {
             this.fStopFail = f;
             return this;
@@ -809,48 +837,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         }
     }); // TestSuite
 
-    // Wrap all the exported functions in a namespace for the purpose
-    // of counting calls to each function.
-    function Coverage(namespaceName) {
-        this.name = namespaceName;
-        this.ns = namespace.lookup(namespaceName);
-        this.funcs = {};
-        this.called = {};
-        this.methods = {};
-
-        for (var name in this.ns) {
-            if (this.ns.hasOwnProperty(name)) {
-                if (typeof this.ns[name] != 'function' ||
-                    // Don't wrap ourselves!
-                    this.ns[name] === this.constructor) {
-                    continue;
-                }
-
-                var func = this.ns[name];
-                this.funcs[name] = func;
-                this.ns[name] = this.wrapFunc(name, func);
-
-                // In case func is a constructor, use it's prototype
-                // object so we inherit all it's properties when
-                // we create instances!
-                this.ns[name].prototype = func.prototype;
-                this.methods[name] = {};
-
-                // For functions that are constructors, wrap all the
-                // methods (function prototype functions).
-                for (var method in func.prototype) {
-                    if (typeof func.prototype[method] == 'function') {
-                        var fnMethod = func.prototype[method];
-                        this.methods[name][method] = fnMethod;
-                        func.prototype[method] =
-                            this.wrapFunc(name + ':' + method,
-                                          fnMethod);
-                    }
-                }
-            }
-        }
-    }
-
     Coverage.methods({
         wrapFunc: function(name, func) {
             if (this.called[name] != undefined) {
@@ -914,6 +900,33 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
         }
     });
+
+    // Run the selected tests in the browser
+    function runTest(testModule, fnCallback) {
+        if (!testModule.addTests) {
+            alert("Module " + testModule._path +
+                  " has no addTests() function.");
+            return;
+        }
+
+        var ts = new ns.TestSuite(testModule._path);
+
+        testModule.addTests(ts);
+        ts.addCoverage(testModule._parent._path);
+
+        ts.run(fnCallback);
+    }
+
+    function loadAndRunTest(path, locations, fnCallback) {
+        loader.loadNamespace(path + '.test', locations, function () {
+            var testModule = namespace.lookup(path + '.test');
+            if (!testModule._isDefined) {
+                alert("Module " + path + " is not loaded.");
+                return;
+            }
+            runTest(testModule, fnCallback);
+        });
+    }
 
     ns.extend({
         'runTest': runTest,

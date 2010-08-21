@@ -3,7 +3,6 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
     var unit = namespace.lookup('org.startpad.unit');
 
     ns.addTests = function(ts) {
-        var formatCoverage = new unit.Coverage('org.startpad.format');
 
         ts.addTest("replaceKeys", function(ut)
         {
@@ -176,15 +175,6 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 ut.assertEq(png.charCodeAt(i), header[i]);
             }
         }).require('document');
-
-        ts.addTest("Coverage", function(ut) {
-            if (typeof document == 'undefined') {
-                formatCoverage.cover('canvasToPNG');
-            }
-            formatCoverage.assertCovered(ut);
-            formatCoverage.unwrap();
-            formatCoverage.logCoverage();
-        });
 
     }; // addTests
 

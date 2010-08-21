@@ -82,6 +82,8 @@ load("../format.js");
         ts.fQuiet = fQuiet;
 
         testModule.addTests(ts);
+        ts.addCoverage(targetNamespace);
+
         ts.run();
         cTests += ts.rgut.length;
         cFailures += ts.cFailures;
