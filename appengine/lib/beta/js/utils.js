@@ -761,8 +761,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // (microseconds maximum)
     // -------------------------------------------------------------------
     function dateFromISO(sISO) {
-        var e = new base.Enum([1, "YYYY", "MM", "DD", 5, "hh", "mm",
-                               8, "ss", 10, "sss", "tz"]);
+        var e = new base.Enum(1, "YYYY", "MM", "DD", 5, "hh", "mm",
+                               8, "ss", 10, "sss", "tz");
         var aParts = sISO.match(regISO);
         if (!aParts) {
             return undefined;
