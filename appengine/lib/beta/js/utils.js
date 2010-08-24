@@ -412,6 +412,15 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return list;
     }
 
+    function valueInArray(value, a) {
+        for (var i = 0; i < a.length; i++) {
+            if (value == a[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
         if (!a) {
@@ -493,6 +502,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'strip': strip,
         'project': project,
         'uniqueArray': uniqueArray,
+        'valueInArray': valueInArray,
         'map': map,
         'filter': filter,
         'reduce': reduce,
@@ -808,6 +818,55 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return dt;
     }
 
+    // Decode objects of the form:
+    // {'__class__': XXX, ...}
+    function decodeClass(obj) {
+        if (obj == undefined || obj.__class__ == undefined) {
+            return undefined;
+        }
+
+        if (obj.__class__ == 'Date') {
+            return dateFromISO(obj.isoformat);
+        }
+        return undefined;
+    }
+
+    // A short date format, that will also parse with Date.parse().
+    // Namely, m/d/yyyy h:mm am/pm
+    // (time is optional if 12:00 am exactly)
+    function shortDate(d) {
+        if (!(d instanceof Date)) {
+            return undefined;
+        }
+        var s = (d.getMonth() + 1) + '/' +
+            (d.getDate()) + '/' +
+            (d.getFullYear());
+        var hr = d.getHours();
+        var ampm = ' am';
+        if (hr >= 12) {
+            ampm = ' pm';
+        }
+        hr = hr % 12;
+        if (hr == 0) {
+            hr = 12;
+        }
+        var sT = hr + ':' + fixedDigits(d.getMinutes(), 2) + ampm;
+        if (sT != '12:00 am') {
+            s += ' ' + sT;
+        }
+        return s;
+    }
+
+    // Turn an array of strings into a word list
+    function wordList(a) {
+        return a.join(', ');
+    }
+
+    function arrayFromWordList(s) {
+        s = base.strip(s);
+        return s.split(/[ ,]+/);
+    }
+
     var base64map =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -859,7 +918,11 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
-        'isoFromDate': isoFromDate
+        'isoFromDate': isoFromDate,
+        'decodeClass': decodeClass,
+        'shortDate': shortDate,
+        'wordList': wordList,
+        'arrayFromWordList': arrayFromWordList
     });
 }); // org.startpad.format
 /* Begin file: vector.js */
@@ -1557,9 +1620,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
         note: '<label class="left" for="{id}">{label}:</label>' +
             '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<span id="{id}"></span>',
+        message: '<div id="{id}"></div>',
         value: '<label class="left">{label}:</label>' +
-            '<span class="value" id="{id}"></span>',
+            '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',
         invalid: '<span class="error">***missing field type: {type}***</span>'
     };
@@ -1635,11 +1698,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (values.hasOwnProperty(name)) {
                     var field = this.getField(name);
                     if (field == undefined || field.elt == undefined) {
-                        return;
+                        continue;
                     }
                     var value = values[name];
                     switch (field.elt.tagName) {
                     case 'INPUT':
+                        if (field.elt.type == 'checkbox') {
+                            field.elt.checked = value;
+                        } else {
+                            $(field.elt).val(value);
+                        }
+                        break;
                     case 'TEXTAREA':
                         $(field.elt).val(value);
                         break;
@@ -2327,10 +2396,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 fields: [
                     {name: 'title', required: true},
                     {name: 'tags'},
-                    {name: 'public', type: 'checkbox'},
+                    {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'writers', label: "Authors"},
                     {name: 'owner', type: 'value'},
-                    {name: 'saved', label: "Last Saved", type: 'value'},
+                    {name: 'modified', label: "Last Saved", type: 'value'},
                     {name: 'save', type: 'button', onClick: onSaveClose},
                     {name: 'copy', type: 'button'}
                 ]
@@ -2341,6 +2410,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
                     var values = base.project(self.getDoc(), docProps);
+                    // Turn the last-save date to a string.
+                    values.modified = format.shortDate(
+                        format.decodeClass(values.modified));
+                    values.tags = format.wordList(values.tags);
+                    values.writers = format.wordList(values.writers);
+                    values.publicReader = base.valueInArray('public',
+                                                            values.readers);
                     self.appDialog.setValues(values);
                 }
             });

@@ -13,9 +13,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
         note: '<label class="left" for="{id}">{label}:</label>' +
             '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<span id="{id}"></span>',
+        message: '<div id="{id}"></div>',
         value: '<label class="left">{label}:</label>' +
-            '<span class="value" id="{id}"></span>',
+            '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',
         invalid: '<span class="error">***missing field type: {type}***</span>'
     };
@@ -91,11 +91,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (values.hasOwnProperty(name)) {
                     var field = this.getField(name);
                     if (field == undefined || field.elt == undefined) {
-                        return;
+                        continue;
                     }
                     var value = values[name];
                     switch (field.elt.tagName) {
                     case 'INPUT':
+                        if (field.elt.type == 'checkbox') {
+                            field.elt.checked = value;
+                        } else {
+                            $(field.elt).val(value);
+                        }
+                        break;
                     case 'TEXTAREA':
                         $(field.elt).val(value);
                         break;

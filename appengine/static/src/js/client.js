@@ -668,10 +668,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 fields: [
                     {name: 'title', required: true},
                     {name: 'tags'},
-                    {name: 'public', type: 'checkbox'},
+                    {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'writers', label: "Authors"},
                     {name: 'owner', type: 'value'},
-                    {name: 'saved', label: "Last Saved", type: 'value'},
+                    {name: 'modified', label: "Last Saved", type: 'value'},
                     {name: 'save', type: 'button', onClick: onSaveClose},
                     {name: 'copy', type: 'button'}
                 ]
@@ -682,6 +682,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
                     var values = base.project(self.getDoc(), docProps);
+                    // Turn the last-save date to a string.
+                    values.modified = format.shortDate(
+                        format.decodeClass(values.modified));
+                    values.tags = format.wordList(values.tags);
+                    values.writers = format.wordList(values.writers);
+                    values.publicReader = base.valueInArray('public',
+                                                            values.readers);
                     self.appDialog.setValues(values);
                 }
             });

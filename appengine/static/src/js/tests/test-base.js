@@ -124,6 +124,9 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 return x * y;
             });
             ut.assertEq(s, 24);
+
+            ut.assert(base.valueInArray('a', ['b', 'a', 'c']));
+            ut.assert(!base.valueInArray(1, ['b', 'a', 'c']));
         });
 
     }; // addTests
