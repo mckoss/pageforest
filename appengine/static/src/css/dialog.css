@@ -28,7 +28,8 @@ div.SP_Dialog label.checkbox {
     padding: 0;
 }
 
-div.SP_Dialog input[type=text], div.SP_Dialog input[type=password] {
+div.SP_Dialog input[type=text], div.SP_Dialog input[type=password], div.SP_Dialog .value
+{
     float: left;
     width: 245px;
     margin: 0 0 6px 0;

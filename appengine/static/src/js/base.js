@@ -124,6 +124,15 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return list;
     }
 
+    function valueInArray(value, a) {
+        for (var i = 0; i < a.length; i++) {
+            if (value == a[i]) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
         if (!a) {
@@ -205,6 +214,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'strip': strip,
         'project': project,
         'uniqueArray': uniqueArray,
+        'valueInArray': valueInArray,
         'map': map,
         'filter': filter,
         'reduce': reduce,

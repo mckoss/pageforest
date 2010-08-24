@@ -222,6 +222,55 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return dt;
     }
 
+    // Decode objects of the form:
+    // {'__class__': XXX, ...}
+    function decodeClass(obj) {
+        if (obj == undefined || obj.__class__ == undefined) {
+            return undefined;
+        }
+
+        if (obj.__class__ == 'Date') {
+            return dateFromISO(obj.isoformat);
+        }
+        return undefined;
+    }
+
+    // A short date format, that will also parse with Date.parse().
+    // Namely, m/d/yyyy h:mm am/pm
+    // (time is optional if 12:00 am exactly)
+    function shortDate(d) {
+        if (!(d instanceof Date)) {
+            return undefined;
+        }
+        var s = (d.getMonth() + 1) + '/' +
+            (d.getDate()) + '/' +
+            (d.getFullYear());
+        var hr = d.getHours();
+        var ampm = ' am';
+        if (hr >= 12) {
+            ampm = ' pm';
+        }
+        hr = hr % 12;
+        if (hr == 0) {
+            hr = 12;
+        }
+        var sT = hr + ':' + fixedDigits(d.getMinutes(), 2) + ampm;
+        if (sT != '12:00 am') {
+            s += ' ' + sT;
+        }
+        return s;
+    }
+
+    // Turn an array of strings into a word list
+    function wordList(a) {
+        return a.join(', ');
+    }
+
+    function arrayFromWordList(s) {
+        s = base.strip(s);
+        return s.split(/[ ,]+/);
+    }
+
     var base64map =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -273,6 +322,10 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
-        'isoFromDate': isoFromDate
+        'isoFromDate': isoFromDate,
+        'decodeClass': decodeClass,
+        'shortDate': shortDate,
+        'wordList': wordList,
+        'arrayFromWordList': arrayFromWordList
     });
 }); // org.startpad.format
