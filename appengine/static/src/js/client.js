@@ -155,14 +155,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             if (json == undefined) {
                 json = this.getDoc();
-                if (typeof json != 'object') {
-                    this.errorReport('missing_object', objectMessage);
-                    return;
-                }
-                if (json.title == undefined) {
-                    this.errorReport('missing_title', titleMessage);
-                    return;
-                }
                 if (json.blob == undefined) {
                     this.errorReport('missing_blob', blobMessage);
                     return;
@@ -218,6 +210,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // saved meta properties.
         getDoc: function() {
             var doc = this.app.getDoc();
+            if (typeof doc != 'object') {
+                doc = {};
+            }
             base.extendIfMissing(doc, this.meta, {'title': document.title});
             this.meta = base.project(doc, docProps);
             return doc;
@@ -651,12 +646,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             function onSave() {
+                self.getAppPanelValues();
                 self.save();
             }
 
             function onSaveClose() {
-                base.extend(this.meta, self.appDialog.getValues());
-                self.save();
+                onSave();
                 self.toggleAppPanel();
             }
 
@@ -681,15 +676,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
-                    var values = base.project(self.getDoc(), docProps);
-                    // Turn the last-save date to a string.
-                    values.modified = format.shortDate(
-                        format.decodeClass(values.modified));
-                    values.tags = format.wordList(values.tags);
-                    values.writers = format.wordList(values.writers);
-                    values.publicReader = base.valueInArray('public',
-                                                            values.readers);
-                    self.appDialog.setValues(values);
+                    self.updateAppPanel();
                 }
             });
 
@@ -729,9 +716,31 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             dom.setPos(this.appPanel, ptPos);
         },
 
+        updateAppPanel: function() {
+            var values = {};
+            var doc = this.getDoc();
+            // Turn the last-save date to a string.
+            values.title = doc.title;
+            values.modified = format.shortDate(
+                format.decodeClass(doc.modified));
+            values.tags = format.wordList(doc.tags);
+            values.writers = format.wordList(doc.writers);
+            values.publicReader = base.valueInArray('public',
+                                                    doc.readers);
+            this.appDialog.setValues(values);
+        },
+
+        getAppPanelValues: function() {
+            // TODO: Should this only do so when visible?
+            var values = this.appDialog.getValues();
+            this.meta.title = values.title;
+            this.meta.tags = format.arrayFromWordList(values.tags);
+            this.meta.writers = format.arrayFromWordList(values.writers);
+            this.meta.readers = values.publicReader ? ['public'] : [];
+        },
+
         // Sign in (or out) depending on current user state.
         signInOut: function() {
-            console.log("sign in/out");
             var isSignedIn = this.username != undefined;
             if (isSignedIn) {
                 this.signOut();

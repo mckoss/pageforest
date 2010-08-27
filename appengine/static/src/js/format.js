@@ -268,7 +268,11 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
 
     function arrayFromWordList(s) {
         s = base.strip(s);
-        return s.split(/[ ,]+/);
+        var a = s.split(/[ ,]+/);
+        a = base.filter(a, function(s) {
+            return s != '';
+        });
+        return a;
     }
 
     var base64map =
