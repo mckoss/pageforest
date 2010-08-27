@@ -96,21 +96,63 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     var value = values[name];
                     switch (field.elt.tagName) {
                     case 'INPUT':
-                        if (field.elt.type == 'checkbox') {
+                        switch (field.elt.type) {
+                        case 'checkbox':
                             field.elt.checked = value;
-                        } else {
+                            break;
+                        case 'text':
                             $(field.elt).val(value);
+                            break;
+                        default:
+                            break;
                         }
                         break;
+
                     case 'TEXTAREA':
                         $(field.elt).val(value);
                         break;
+
                     default:
                         $(field.elt).text(value);
                         break;
                     }
                 }
             }
+        },
+
+        getValues: function() {
+            var values = {};
+
+            this.bindFields();
+            for (var i = 0; i < this.fields.length; i++) {
+                var field = this.fields[i];
+                if (field.elt == undefined) {
+                    continue;
+                }
+                switch (field.elt.tagName) {
+                case 'INPUT':
+                    switch (field.elt.type) {
+                    case 'checkbox':
+                        values[field.name] = field.elt.checked;
+                        break;
+                    case 'text':
+                        values[field.name] = $(field.elt).val();
+                        break;
+                    default:
+                        break;
+                    }
+                    break;
+
+                case 'TEXTAREA':
+                    values[field.name] = $(field.elt).val();
+                    break;
+
+                default:
+                    break;
+                }
+            }
+
+            return values;
         }
     });
 

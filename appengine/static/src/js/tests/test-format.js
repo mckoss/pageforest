@@ -178,7 +178,13 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             var tests = [
                 ["a b c", ["a", "b", "c"], "a, b, c"],
                 ["a, b, c", ["a", "b", "c"], "a, b, c"],
-                ["   hello world  ", ["hello", "world"], "hello, world"]
+                ["   hello world  ", ["hello", "world"], "hello, world"],
+                ["", [], ""],
+                ["  ", [], ""],
+                ["a, b, ", ['a', 'b'], "a, b"],
+                ["a,,b", ['a', 'b'], "a, b"],
+                ["  ,  ,  a   , b  c d,    e,,,  ",
+                 ['a', 'b', 'c', 'd', 'e'], "a, b, c, d, e"]
             ];
 
             for (var i = 0; i < tests.length; i++) {
