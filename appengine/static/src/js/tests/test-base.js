@@ -181,6 +181,78 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             x(1, 2, 3);
         });
 
+        ts.addTest("isEqual", function(ut) {
+            var i;
+
+            function args() {
+                return arguments;
+            }
+
+            var equalTests = [
+                [undefined, undefined],
+                [null, null],
+                [1, 1],
+                [true, true],
+                [false, false],
+                [new Date(2010, 7, 28, 11, 2), new Date(2010, 7, 28, 11, 2)],
+                [[], []],
+                [{}, {}],
+                [[0], [0]],
+                [[0, undefined], [0]],
+                [{a: 1}, {a: 1}],
+                [{a: 1, b: 2}, {b: 2, a: 1}],
+                [args(1, 2, 3), [1, 2, 3]],
+                [args, args],
+                [{a: undefined}, {}],
+                [[1, [2, 3], 4], [1, [2, 3], 4]],
+                [{a: [1, 2, {c: 3}], b: [4, 5]},
+                 {b: [4, 5], a: [1, 2, {c: 3, d: undefined}]}]
+            ];
+
+            var unequalTests = [
+                [undefined, false],
+                [0, false],
+                [1, true],
+                [1, "1"],
+                ["a", "a "],
+                ["a", "A"],
+                [new Date(2010, 7, 28, 11, 2), new Date(2010, 7, 28, 11, 3)],
+                [null, {}],
+                [null, undefined],
+                [[1], [1, 2]],
+                [[1, 2, 3], [1, "2", 3]],
+                [{}, {a: 1}],
+                [{a: 1, b: 2}, {a: 1, b: undefined}],
+                [[1, [2, 3], 4], [1, [2, 5], 4]],
+                [{a: [1, 2, {c: 3}], b: [4, 5]},
+                 {b: [4, 5], a: [1, 2, {c: 6}]}]
+            ];
+
+            for (i = 0; i < equalTests.length; i++) {
+                ut.trace("equal #" + i);
+                var test = equalTests[i];
+                ut.assert(base.isEqual(test[0], test[1]), JSON.stringify(test[0]));
+            }
+
+            for (i = 0; i < unequalTests.length; i++) {
+                ut.trace("unequal #" + i);
+                var test = unequalTests[i];
+                ut.assert(!base.isEqual(test[0], test[1]), JSON.stringify(test[0]));
+            }
+
+            function A(a, b) {
+                this.a = a;
+                this.b = b;
+            }
+
+            function B(c, d) {
+                this.a = c;
+                this.b = d;
+            }
+
+            ut.assert(base.isEqual(new A(1, 2), new B(1, 2)), "same object - different prototypes");
+        });
+
     }; // addTests
 
 }); // org.startpad.base.test
