@@ -165,6 +165,20 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     }
 
+    function generalType(o) {
+        var t = typeof(o);
+        if (t != 'object') {
+            return t;
+        }
+        if (o instanceof String) {
+            return 'string';
+        }
+        if (o instanceof Number) {
+            return 'number';
+        }
+        return t;
+    }
+
     // Perform a deep comparison to check if two objects are equal.
     // Inspired by Underscore.js 1.1.0 - some semantics modifed.
     // Undefined properties are treated the same as un-set properties
@@ -175,12 +189,18 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         if (a === b) {
             return true;
         }
-        if (typeof a != typeof b) {
+
+        aType = typeof a;
+        btype = typeof b;
+
+        if (generalType(a) != generalType(b)) {
             return false;
         }
+
         if (a == b) {
             return true;
         }
+
         if (typeof a != 'object') {
             return false;
         }
@@ -190,8 +210,11 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             return false;
         }
 
-        if (a instanceof Date && a.getTime() != b.getTime()) {
-            return false;
+        if (a instanceof Date || b instanceof Date) {
+            if (a instanceof Date != b instanceof Date ||
+                a.getTime() != b.getTime()) {
+                return false;
+            }
         }
 
         var allKeys = [].concat(keys(a), keys(b));
