@@ -193,6 +193,8 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 ut.assertEq(test[1], a);
                 ut.assertEq(test[2], format.wordList(a));
             }
+
+            ut.assertEq(format.wordList(undefined), "");
         });
 
         ts.addTest("base64ToString", function(ut) {

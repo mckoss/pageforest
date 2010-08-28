@@ -47,7 +47,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
         this.app = app;
+
         this.meta = {};
+        this.metaDoc = {};
+        this.metaDialog = {};
 
         if (typeof $ != 'function' || $ != jQuery) {
             this.errorReport('jQuery_required', jQueryMessage);
@@ -213,14 +216,34 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (typeof doc != 'object') {
                 doc = {};
             }
-            base.extendIfMissing(doc, this.meta, {'title': document.title});
-            this.meta = base.project(doc, docProps);
+            base.extendIfMissing(doc, {'title': document.title});
+
+            // Synchronize any changes made in the dialog or
+            // the document.
+            var f = false;
+            f |= base.extendIfChanged(this.meta, this.metaDoc,
+                                 base.project(doc, docProps));
+            if (f) {
+                console.log("doc changed", this.metaDoc);
+            }
+            f |= base.extendIfChanged(this.meta, this.metaDialog,
+                                 this.getAppPanelValues());
+            if (f) {
+                console.log("doc or dialog changed", this.metaDialog);
+            }
+            base.extendObject(doc, this.meta);
+
+            if (f) {
+                this.setAppPanelValues(this.meta);
+            }
+
             return doc;
         },
 
         // Set document - retaining meta properties for later use.
         setDoc: function(doc) {
             this.meta = base.project(doc, docProps);
+            this.setAppPanelValues(this.meta);
             this.app.setDoc(doc);
         },
 
@@ -251,7 +274,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // See if the document data has changed - assume this is not
-        // expensive as we execute this every second.
+        // expensive as we execute this on a timer.
         checkDoc: function() {
             // No auto-saving - do nothing
             if (this.saveInterval == 0) {
@@ -646,7 +669,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             function onSave() {
-                self.getAppPanelValues();
                 self.save();
             }
 
@@ -676,7 +698,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
-                    self.updateAppPanel();
+                    self.setAppPanel();
                 }
             });
 
@@ -716,11 +738,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             dom.setPos(this.appPanel, ptPos);
         },
 
-        updateAppPanel: function() {
+        setAppPanelValues: function(doc) {
+            if (this.appPanel == undefined) {
+                return;
+            }
             var values = {};
-            var doc = this.getDoc();
             // Turn the last-save date to a string.
             values.title = doc.title;
+            values.owner = doc.owner;
             values.modified = format.shortDate(
                 format.decodeClass(doc.modified));
             values.tags = format.wordList(doc.tags);
@@ -731,12 +756,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         getAppPanelValues: function() {
-            // TODO: Should this only do so when visible?
-            var values = this.appDialog.getValues();
-            this.meta.title = values.title;
-            this.meta.tags = format.arrayFromWordList(values.tags);
-            this.meta.writers = format.arrayFromWordList(values.writers);
-            this.meta.readers = values.publicReader ? ['public'] : [];
+            if (this.appPanel == undefined ||
+                !$(this.appPanel).is(':visible')) {
+                return {};
+            }
+
+            var values = {};
+            var dlg = this.appDialog.getValues();
+
+            values.title = dlg.title;
+            values.owner = dlg.owner;
+            values.tags = format.arrayFromWordList(dlg.tags);
+            values.writers = format.arrayFromWordList(dlg.writers);
+            values.readers = dlg.publicReader ? ['public'] : [];
+
+            return values;
         },
 
         // Sign in (or out) depending on current user state.

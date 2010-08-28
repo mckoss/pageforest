@@ -358,6 +358,28 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return oDest;
     }
 
+    // Copy any values that have changed from newest to last,
+    // into dest (and update last as well).  This function will
+    // never set a value in dest to 'undefined'.
+    // Returns true iff dest was modified.
+    function extendIfChanged(dest, last, latest) {
+        var f = false;
+        for (var prop in latest) {
+            if (latest.hasOwnProperty(prop)) {
+                var value = latest[prop];
+                if (value == undefined) {
+                    continue;
+                }
+                if (last[prop] != value) {
+                    last[prop] = value;
+                    dest[prop] = value;
+                    f = true;
+                }
+            }
+        }
+        return f;
+    }
+
     // Deep copy properties in turn into dest object
     function extendDeep(dest) {
         for (var i = 1; i < arguments.length; i++) {
@@ -412,7 +434,21 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return list;
     }
 
+    function ensureArray(a) {
+        if (a == undefined) {
+            a = [];
+        } else if (a.length != undefined) {
+            // Treat 'arguments' as an array
+            a = util.copyArray(a);
+        } else if (!(a instanceof Array)) {
+            a = [a];
+        }
+
+        return a;
+    }
+
     function valueInArray(value, a) {
+        a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
             if (value == a[i]) {
                 return true;
@@ -423,7 +459,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
-        if (!a) {
+        if (!(a instanceof Array)) {
             return;
         }
         a.sort();
@@ -435,6 +471,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function map(a, fn) {
+        a = ensureArray(a);
         var aRes = [];
         for (var i = 0; i < a.length; i++) {
             aRes.push(fn(a[i]));
@@ -443,6 +480,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function filter(a, fn) {
+        a = ensureArray(a);
         var aRes = [];
         for (var i = 0; i < a.length; i++) {
             if (fn(a[i])) {
@@ -453,6 +491,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function reduce(a, fn) {
+        a = ensureArray(a);
         if (a.length < 2) {
             return a[0];
         }
@@ -469,7 +508,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     function forEach(a, fn) {
         var ret;
 
-        if (a instanceof Array) {
+        if (a instanceof Array || a.length != undefined) {
             for (var i = 0; i < a.length; i++) {
                 if (a[i] != undefined) {
                     ret = fn(a[i], i);
@@ -497,6 +536,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'StBuf': StBuf,
 
         'extendIfMissing': extendIfMissing,
+        'extendIfChanged': extendIfChanged,
         'extendDeep': extendDeep,
         'randomInt': randomInt,
         'strip': strip,
@@ -507,7 +547,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'filter': filter,
         'reduce': reduce,
         'keys': keys,
-        'forEach': forEach
+        'forEach': forEach,
+        'ensureArray': ensureArray
     });
 
 }); // startpad.base

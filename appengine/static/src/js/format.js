@@ -263,6 +263,10 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
 
     // Turn an array of strings into a word list
     function wordList(a) {
+        a = base.map(a, base.strip);
+        a = base.filter(a, function(s) {
+            return s != '';
+        });
         return a.join(', ');
     }
 
