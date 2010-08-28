@@ -206,8 +206,15 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 [{a: undefined}, {}],
                 [[1, [2, 3], 4], [1, [2, 3], 4]],
                 [{a: [1, 2, {c: 3}], b: [4, 5]},
-                 {b: [4, 5], a: [1, 2, {c: 3, d: undefined}]}]
+                 {b: [4, 5], a: [1, 2, {c: 3, d: undefined}]}],
+                ["abc", new String("abc")],
+                [1.23, new Number(1.23)]
             ];
+
+            var d1 = new Date(2010, 7, 28);
+            var d2 = new Date(2010, 7, 28);
+            d1.a = 1;
+            d2.a = 2;
 
             var unequalTests = [
                 [undefined, false],
@@ -217,6 +224,9 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 ["a", "a "],
                 ["a", "A"],
                 [new Date(2010, 7, 28, 11, 2), new Date(2010, 7, 28, 11, 3)],
+                [new Date(), {}],
+                [d1, d2],
+                [{}, new Date()],
                 [null, {}],
                 [null, undefined],
                 [[1], [1, 2]],
