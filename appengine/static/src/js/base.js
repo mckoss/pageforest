@@ -70,6 +70,28 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return oDest;
     }
 
+    // Copy any values that have changed from newest to last,
+    // into dest (and update last as well).  This function will
+    // never set a value in dest to 'undefined'.
+    // Returns true iff dest was modified.
+    function extendIfChanged(dest, last, latest) {
+        var f = false;
+        for (var prop in latest) {
+            if (latest.hasOwnProperty(prop)) {
+                var value = latest[prop];
+                if (value == undefined) {
+                    continue;
+                }
+                if (last[prop] != value) {
+                    last[prop] = value;
+                    dest[prop] = value;
+                    f = true;
+                }
+            }
+        }
+        return f;
+    }
+
     // Deep copy properties in turn into dest object
     function extendDeep(dest) {
         for (var i = 1; i < arguments.length; i++) {
@@ -124,7 +146,100 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return list;
     }
 
+    function isArguments(a) {
+        return typeof a == 'object' &&
+            a.length != undefined &&
+            a.callee != undefined;
+    }
+
+    // Perform a deep comparison to check if two objects are equal.
+    // Inspired by Underscore.js 1.1.0 - but improved.
+    function isEqual(a, b) {
+        if (a === b) {
+            return true;
+        }
+        if (typeof a != typeof b) {
+            return false;
+        }
+        if (a == b) {
+            return true;
+        }
+        if (typeof a != 'object') {
+            return false;
+        }
+
+        // TODO: Should a.constructor == b.constructor to be equal?
+        // How about a.prototype === b.prototype?
+
+        if (a instanceof Date) {
+            return a.getTime() == b.getTime();
+        }
+
+        var i;
+
+        // Compare two arrays.  Note that we treat as equal
+        // a[i] == undefined - no matter if the element
+        // would show up in for-in loop.  Note that
+        // two arrays can be equal even if they are NOT
+        // the same length (only differ by trailing undefineds).
+        // Note we treat arguments as if they were arrays.
+        if (a instanceof Array || isArguments(a)) {
+            if (!(b instanceof Array || isArguments(b))) {
+                return false;
+            }
+
+            var len = a.length;
+            if (b.length != len) {
+                // If the last element of the longer array is
+                // not undefined, then the array's can't be equal.
+                len = Math.max(len, b.length);
+                if (a[len] != undefined && b[len] != undefined) {
+                    return false;
+                }
+            }
+
+            // Do a full array scan
+            for (i = 0; i < len; i++) {
+                if (!isEqual(a[i], b[i])) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        var aKeys = keys(a);
+        var bKeys = keys(b);
+        if (aKeys.length != bKeys.length) {
+            return false;
+        }
+
+        // Note that the keys may be in different order.  But if
+        // we confirm that all of A's keys are equal it B's, we
+        // don't have to check the converse.
+        for (i = 0; i < aKeys.length; i++) {
+            var prop = aKeys[i];
+            if (!b.hasOwnProperty(prop) ||
+                !isEqual(a[prop], b[prop])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function ensureArray(a) {
+        if (a == undefined) {
+            a = [];
+        } else if (isArguments(a)) {
+            a = util.copyArray(a);
+        } else if (!(a instanceof Array)) {
+            a = [a];
+        }
+
+        return a;
+    }
+
     function valueInArray(value, a) {
+        a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
             if (value == a[i]) {
                 return true;
@@ -135,7 +250,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
     /* Sort elements and remove duplicates from array (modified in place) */
     function uniqueArray(a) {
-        if (!a) {
+        if (!(a instanceof Array)) {
             return;
         }
         a.sort();
@@ -147,6 +262,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function map(a, fn) {
+        a = ensureArray(a);
         var aRes = [];
         for (var i = 0; i < a.length; i++) {
             aRes.push(fn(a[i]));
@@ -155,6 +271,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function filter(a, fn) {
+        a = ensureArray(a);
         var aRes = [];
         for (var i = 0; i < a.length; i++) {
             if (fn(a[i])) {
@@ -165,6 +282,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     function reduce(a, fn) {
+        a = ensureArray(a);
         if (a.length < 2) {
             return a[0];
         }
@@ -181,7 +299,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     function forEach(a, fn) {
         var ret;
 
-        if (a instanceof Array) {
+        if (a instanceof Array || a.length != undefined) {
             for (var i = 0; i < a.length; i++) {
                 if (a[i] != undefined) {
                     ret = fn(a[i], i);
@@ -203,12 +321,18 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     }
 
+    // TODO: Use native implementations where available
+    // in Array.prototype: map, reduce, filter, every, some,
+    // indexOf, lastIndexOf.
+    // and in Object.prototype: keys
+    // see ECMA5 spec.
     ns.extend({
         'extendObject': util.extendObject,
         'Enum': Enum,
         'StBuf': StBuf,
 
         'extendIfMissing': extendIfMissing,
+        'extendIfChanged': extendIfChanged,
         'extendDeep': extendDeep,
         'randomInt': randomInt,
         'strip': strip,
@@ -219,7 +343,9 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'filter': filter,
         'reduce': reduce,
         'keys': keys,
-        'forEach': forEach
+        'forEach': forEach,
+        'ensureArray': ensureArray,
+        'isEqual': isEqual
     });
 
 }); // startpad.base

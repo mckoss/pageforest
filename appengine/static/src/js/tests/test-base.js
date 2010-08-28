@@ -57,6 +57,38 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             ut.assertEq(o2, {a: 1, b: {c: 2}});
         });
 
+        ts.addTest("extendIfChanged", function(ut) {
+            var tests = [
+                [{}, {}, {}, {}, false],
+                [{}, {}, {a: 1}, {a: 1}, true],
+                [{a: 1}, {a: 1}, {a: 2}, {a: 2}, true],
+                [{a: 1}, {a: 2}, {a: 2}, {a: 1}, false],
+                [{}, {b: 2}, {a: 1}, {a: 1}, true],
+                [{a: 1, b: 2}, {a: 3, b: 3}, {a: 4, b: 3}, {a: 4, b: 2}, true],
+                [{a: 1}, {a: 2}, {a: undefined}, {a: 1}, false],
+                [{a: 1}, {}, {a: 2}, {a: 2}, true]
+            ];
+
+            for (var i = 0; i < tests.length; i++) {
+                ut.trace("i = " + i);
+                var test = tests[i];
+                var dest = test[0];
+                ut.assertEq(base.extendIfChanged(dest, test[1],
+                                                 test[2]), test[4]);
+                ut.assertEq(dest, test[3]);
+
+                // Make sure the "last" cache is updated when changed.
+                for (var prop in test[2]) {
+                    if (test[2].hasOwnProperty(prop)) {
+                        if (test[2][prop] != undefined) {
+                            ut.assertEq(test[1][prop], test[2][prop],
+                                        "Prop: " + prop);
+                        }
+                    }
+                }
+            }
+        });
+
         ts.addTest("strip", function(ut) {
             ut.assertEq(base.strip(" hello, mom "), "hello, mom");
             ut.assertEq(base.strip(" leading"), "leading");
@@ -127,6 +159,26 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
 
             ut.assert(base.valueInArray('a', ['b', 'a', 'c']));
             ut.assert(!base.valueInArray(1, ['b', 'a', 'c']));
+        });
+
+        ts.addTest("ensureArray", function(ut) {
+            var tests = [
+                [undefined, []],
+                [[1], [1]],
+                [1, [1]]
+            ];
+
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(base.ensureArray(test[0]), test[1]);
+                ut.assert(test[1] instanceof Array);
+            }
+
+            function x(a, b, c) {
+                ut.assertEq(base.ensureArray(arguments), [1, 2, 3]);
+            }
+
+            x(1, 2, 3);
         });
 
     }; // addTests
