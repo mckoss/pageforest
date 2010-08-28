@@ -152,8 +152,25 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             a.callee != undefined;
     }
 
+    /* Sort elements and remove duplicates from array (modified in place) */
+    function uniqueArray(a) {
+        if (!(a instanceof Array)) {
+            return;
+        }
+        a.sort();
+        for (var i = 1; i < a.length; i++) {
+            if (a[i - 1] == a[i]) {
+                a.splice(i, 1);
+            }
+        }
+    }
+
     // Perform a deep comparison to check if two objects are equal.
-    // Inspired by Underscore.js 1.1.0 - but improved.
+    // Inspired by Underscore.js 1.1.0 - some semantics modifed.
+    // Undefined properties are treated the same as un-set properties
+    // in both Arrays and Objects.
+    // Note that two objects with the same OWN properties can be equal
+    // if if they have different prototype chains (and inherited values).
     function isEqual(a, b) {
         if (a === b) {
             return true;
@@ -168,58 +185,21 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             return false;
         }
 
-        // TODO: Should a.constructor == b.constructor to be equal?
-        // How about a.prototype === b.prototype?
-
-        if (a instanceof Date) {
-            return a.getTime() == b.getTime();
-        }
-
-        var i;
-
-        // Compare two arrays.  Note that we treat as equal
-        // a[i] == undefined - no matter if the element
-        // would show up in for-in loop.  Note that
-        // two arrays can be equal even if they are NOT
-        // the same length (only differ by trailing undefineds).
-        // Note we treat arguments as if they were arrays.
-        if (a instanceof Array || isArguments(a)) {
-            if (!(b instanceof Array || isArguments(b))) {
-                return false;
-            }
-
-            var len = a.length;
-            if (b.length != len) {
-                // If the last element of the longer array is
-                // not undefined, then the array's can't be equal.
-                len = Math.max(len, b.length);
-                if (a[len] != undefined && b[len] != undefined) {
-                    return false;
-                }
-            }
-
-            // Do a full array scan
-            for (i = 0; i < len; i++) {
-                if (!isEqual(a[i], b[i])) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        var aKeys = keys(a);
-        var bKeys = keys(b);
-        if (aKeys.length != bKeys.length) {
+        // null != {}
+        if (a instanceof Object != b instanceof Object) {
             return false;
         }
 
-        // Note that the keys may be in different order.  But if
-        // we confirm that all of A's keys are equal it B's, we
-        // don't have to check the converse.
-        for (i = 0; i < aKeys.length; i++) {
-            var prop = aKeys[i];
-            if (!b.hasOwnProperty(prop) ||
-                !isEqual(a[prop], b[prop])) {
+        if (a instanceof Date && a.getTime() != b.getTime()) {
+            return false;
+        }
+
+        var allKeys = [].concat(keys(a), keys(b));
+        uniqueArray(allKeys);
+
+        for (var i = 0; i < allKeys.length; i++) {
+            var prop = allKeys[i];
+            if (!isEqual(a[prop], b[prop])) {
                 return false;
             }
         }
@@ -246,19 +226,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             }
         }
         return false;
-    }
-
-    /* Sort elements and remove duplicates from array (modified in place) */
-    function uniqueArray(a) {
-        if (!(a instanceof Array)) {
-            return;
-        }
-        a.sort();
-        for (var i = 1; i < a.length; i++) {
-            if (a[i - 1] == a[i]) {
-                a.splice(i, 1);
-            }
-        }
     }
 
     function map(a, fn) {
