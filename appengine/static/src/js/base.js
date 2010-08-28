@@ -190,9 +190,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             return true;
         }
 
-        aType = typeof a;
-        btype = typeof b;
-
         if (generalType(a) != generalType(b)) {
             return false;
         }
