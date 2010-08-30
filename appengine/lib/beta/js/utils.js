@@ -2111,20 +2111,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Synchronize any changes made in the dialog or
             // the document.
-            var f = false;
-            f |= base.extendIfChanged(this.meta, this.metaDoc,
-                                 base.project(doc, docProps));
-            if (f) {
-                console.log("doc changed", this.metaDoc);
-            }
-            f |= base.extendIfChanged(this.meta, this.metaDialog,
+            var fDoc = base.extendIfChanged(this.meta, this.metaDoc,
+                                            base.project(doc, docProps));
+            base.extendIfChanged(this.meta, this.metaDialog,
                                  this.getAppPanelValues());
-            if (f) {
-                console.log("doc or dialog changed", this.metaDialog);
-            }
             base.extendObject(doc, this.meta);
 
-            if (f) {
+            // Update the dialog if the changes come from the document.
+            if (fDoc) {
                 this.setAppPanelValues(this.meta);
             }
 
@@ -2589,7 +2583,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
-                    self.setAppPanel();
+                    self.setAppPanelValues(self.meta);
                 }
             });
 
