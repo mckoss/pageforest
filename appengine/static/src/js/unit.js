@@ -599,11 +599,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         addCoverage: function(moduleName) {
             var coverage = new Coverage(moduleName);
 
-            this.addTest("Function Coverage", function(ut) {
-                coverage.assertCovered(ut);
-                coverage.unwrap();
-                coverage.logCoverage();
-            });
+            this.addTest("Function Coverage for '" + moduleName + "'",
+                         function(ut) {
+                             coverage.assertCovered(ut);
+                             coverage.unwrap();
+                             coverage.logCoverage();
+                         });
         },
 
         stopFail: function(f) {
@@ -842,7 +843,6 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.called[name] != undefined) {
                 throw new Error("Function already wrapped: " + name);
             }
-            console.log("Wrapping " + this.name + '.' + name);
 
             this.called[name] = 0;
 
@@ -912,7 +912,13 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         var ts = new ns.TestSuite(testModule._path);
 
         testModule.addTests(ts);
-        ts.addCoverage(testModule._parent._path);
+        if (testModule.coverageTargets != undefined) {
+            for (var i = 0; i < testModule.coverageTargets.length; i++) {
+                ts.addCoverage(testModule.coverageTargets[i]._path);
+            }
+        } else {
+            ts.addCoverage(testModule._parent._path);
+        }
 
         ts.run(fnCallback);
     }
