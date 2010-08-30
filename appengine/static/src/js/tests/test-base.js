@@ -66,7 +66,8 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                 [{}, {b: 2}, {a: 1}, {a: 1}, true],
                 [{a: 1, b: 2}, {a: 3, b: 3}, {a: 4, b: 3}, {a: 4, b: 2}, true],
                 [{a: 1}, {a: 2}, {a: undefined}, {a: 1}, false],
-                [{a: 1}, {}, {a: 2}, {a: 2}, true]
+                [{a: 1}, {}, {a: 2}, {a: 2}, true],
+                [{}, {a: {b: 1}}, {a: {b: 1}}, {}, false]
             ];
 
             for (var i = 0; i < tests.length; i++) {

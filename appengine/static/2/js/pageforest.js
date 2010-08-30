@@ -358,28 +358,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return oDest;
     }
 
-    // Copy any values that have changed from newest to last,
-    // into dest (and update last as well).  This function will
-    // never set a value in dest to 'undefined'.
-    // Returns true iff dest was modified.
-    function extendIfChanged(dest, last, latest) {
-        var f = false;
-        for (var prop in latest) {
-            if (latest.hasOwnProperty(prop)) {
-                var value = latest[prop];
-                if (value == undefined) {
-                    continue;
-                }
-                if (last[prop] != value) {
-                    last[prop] = value;
-                    dest[prop] = value;
-                    f = true;
-                }
-            }
-        }
-        return f;
-    }
-
     // Deep copy properties in turn into dest object
     function extendDeep(dest) {
         for (var i = 1; i < arguments.length; i++) {
@@ -434,11 +412,112 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return list;
     }
 
+    function isArguments(a) {
+        return typeof a == 'object' &&
+            a.length != undefined &&
+            a.callee != undefined;
+    }
+
+    /* Sort elements and remove duplicates from array (modified in place) */
+    function uniqueArray(a) {
+        if (!(a instanceof Array)) {
+            return;
+        }
+        a.sort();
+        for (var i = 1; i < a.length; i++) {
+            if (a[i - 1] == a[i]) {
+                a.splice(i, 1);
+            }
+        }
+    }
+
+    function generalType(o) {
+        var t = typeof(o);
+        if (t != 'object') {
+            return t;
+        }
+        if (o instanceof String) {
+            return 'string';
+        }
+        if (o instanceof Number) {
+            return 'number';
+        }
+        return t;
+    }
+
+    // Perform a deep comparison to check if two objects are equal.
+    // Inspired by Underscore.js 1.1.0 - some semantics modifed.
+    // Undefined properties are treated the same as un-set properties
+    // in both Arrays and Objects.
+    // Note that two objects with the same OWN properties can be equal
+    // if if they have different prototype chains (and inherited values).
+    function isEqual(a, b) {
+        if (a === b) {
+            return true;
+        }
+
+        if (generalType(a) != generalType(b)) {
+            return false;
+        }
+
+        if (a == b) {
+            return true;
+        }
+
+        if (typeof a != 'object') {
+            return false;
+        }
+
+        // null != {}
+        if (a instanceof Object != b instanceof Object) {
+            return false;
+        }
+
+        if (a instanceof Date || b instanceof Date) {
+            if (a instanceof Date != b instanceof Date ||
+                a.getTime() != b.getTime()) {
+                return false;
+            }
+        }
+
+        var allKeys = [].concat(keys(a), keys(b));
+        uniqueArray(allKeys);
+
+        for (var i = 0; i < allKeys.length; i++) {
+            var prop = allKeys[i];
+            if (!isEqual(a[prop], b[prop])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Copy any values that have changed from newest to last,
+    // into dest (and update last as well).  This function will
+    // never set a value in dest to 'undefined'.
+    // Returns true iff dest was modified.
+    function extendIfChanged(dest, last, latest) {
+        var f = false;
+        for (var prop in latest) {
+            if (latest.hasOwnProperty(prop)) {
+                var value = latest[prop];
+                if (value == undefined) {
+                    continue;
+                }
+                if (!isEqual(last[prop], value)) {
+                    last[prop] = value;
+                    dest[prop] = value;
+                    f = true;
+                }
+            }
+        }
+        return f;
+    }
+
     function ensureArray(a) {
         if (a == undefined) {
             a = [];
-        } else if (a.length != undefined) {
-            // Treat 'arguments' as an array
+        } else if (isArguments(a)) {
             a = util.copyArray(a);
         } else if (!(a instanceof Array)) {
             a = [a];
@@ -455,19 +534,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             }
         }
         return false;
-    }
-
-    /* Sort elements and remove duplicates from array (modified in place) */
-    function uniqueArray(a) {
-        if (!(a instanceof Array)) {
-            return;
-        }
-        a.sort();
-        for (var i = 1; i < a.length; i++) {
-            if (a[i - 1] == a[i]) {
-                a.splice(i, 1);
-            }
-        }
     }
 
     function map(a, fn) {
@@ -530,6 +596,11 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     }
 
+    // TODO: Use native implementations where available
+    // in Array.prototype: map, reduce, filter, every, some,
+    // indexOf, lastIndexOf.
+    // and in Object.prototype: keys
+    // see ECMA5 spec.
     ns.extend({
         'extendObject': util.extendObject,
         'Enum': Enum,
@@ -548,7 +619,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'reduce': reduce,
         'keys': keys,
         'forEach': forEach,
-        'ensureArray': ensureArray
+        'ensureArray': ensureArray,
+        'isEqual': isEqual
     });
 
 }); // startpad.base
