@@ -151,4 +151,8 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
 
     }; // addTests
 
+    ns.extend({
+        coverageTargets: [namespace, util]
+    });
+
 }); // org.startpad.base.test
