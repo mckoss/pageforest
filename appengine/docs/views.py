@@ -16,6 +16,8 @@ from docs.models import Doc
 from blobs.models import Blob
 from blobs.views import blob_list
 
+from utils.json import ModelEncoder
+
 
 @login_required
 @method_required('GET')
@@ -129,8 +131,14 @@ def doc_put(request, doc_id):
         key_name = request.doc.key().name() + '/'
         value = json.dumps(parsed['blob'], sort_keys=True)
         Blob(key_name=key_name, value=value).put()
-    return HttpResponse('{"status": 200, "statusText": "Saved"}',
-                        mimetype=settings.JSON_MIMETYPE)
+
+    json_result = json.dumps({
+            'status': 200,
+            'statusText': "Saved",
+            'modified': request.doc.modified,
+            }, cls=ModelEncoder)
+
+    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE)
 
 
 def doc_list(request, doc_id):
