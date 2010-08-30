@@ -70,28 +70,6 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return oDest;
     }
 
-    // Copy any values that have changed from newest to last,
-    // into dest (and update last as well).  This function will
-    // never set a value in dest to 'undefined'.
-    // Returns true iff dest was modified.
-    function extendIfChanged(dest, last, latest) {
-        var f = false;
-        for (var prop in latest) {
-            if (latest.hasOwnProperty(prop)) {
-                var value = latest[prop];
-                if (value == undefined) {
-                    continue;
-                }
-                if (last[prop] != value) {
-                    last[prop] = value;
-                    dest[prop] = value;
-                    f = true;
-                }
-            }
-        }
-        return f;
-    }
-
     // Deep copy properties in turn into dest object
     function extendDeep(dest) {
         for (var i = 1; i < arguments.length; i++) {
@@ -224,6 +202,28 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
             }
         }
         return true;
+    }
+
+    // Copy any values that have changed from newest to last,
+    // into dest (and update last as well).  This function will
+    // never set a value in dest to 'undefined'.
+    // Returns true iff dest was modified.
+    function extendIfChanged(dest, last, latest) {
+        var f = false;
+        for (var prop in latest) {
+            if (latest.hasOwnProperty(prop)) {
+                var value = latest[prop];
+                if (value == undefined) {
+                    continue;
+                }
+                if (!isEqual(last[prop], value)) {
+                    last[prop] = value;
+                    dest[prop] = value;
+                    f = true;
+                }
+            }
+        }
+        return f;
     }
 
     function ensureArray(a) {
