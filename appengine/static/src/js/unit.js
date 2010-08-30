@@ -599,12 +599,14 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         addCoverage: function(moduleName) {
             var coverage = new Coverage(moduleName);
 
+            function temp(ut) {
+                coverage.assertCovered(ut);
+                coverage.unwrap();
+                coverage.logCoverage();
+            }
+
             this.addTest("Function Coverage for '" + moduleName + "'",
-                         function(ut) {
-                             coverage.assertCovered(ut);
-                             coverage.unwrap();
-                             coverage.logCoverage();
-                         });
+                         temp);
         },
 
         stopFail: function(f) {
