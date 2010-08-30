@@ -2084,14 +2084,25 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 url: this.getDocURL(docid),
                 data: data,
                 error: this.errorHandler.fnMethod(this),
-                success: function() {
-                    this.setCleanDoc(docid);
-                    this.log('saved');
-                    if (this.app.onSaveSuccess) {
-                        this.app.onSaveSuccess();
-                    }
+                success: function(result, textStatus, xmlhttp) {
+                    // TODO: The server can return the docid for cases where
+                    // the server assigns the id instead of the client.
+                    result.docid = docid;
+                    this.onSaveSuccess(result);
                 }.fnMethod(this)
             });
+        },
+
+        onSaveSuccess: function(result) {
+            this.meta.modified = result.modified;
+            this.setCleanDoc(result.docid);
+
+            this.setAppPanelValues(this.meta);
+
+            this.log('saved');
+            if (this.app.onSaveSuccess) {
+                this.app.onSaveSuccess(result);
+            }
         },
 
         // Detach the current document from it's storage.
@@ -2562,6 +2573,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.toggleAppPanel();
             }
 
+            function onCopy() {
+                self.detach();
+            }
+
             $('#pfSave').click(onSave);
 
             this.appPanel = document.createElement('div');
@@ -2575,7 +2590,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'owner', type: 'value'},
                     {name: 'modified', label: "Last Saved", type: 'value'},
                     {name: 'save', type: 'button', onClick: onSaveClose},
-                    {name: 'copy', type: 'button'}
+                    {name: 'copy', type: 'button', onClick: onCopy}
                 ]
             });
             document.body.appendChild(this.appPanel);
