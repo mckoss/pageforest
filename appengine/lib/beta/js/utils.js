@@ -1822,6 +1822,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         continue;
                     }
                     var value = values[name];
+                    if (value == undefined) {
+                        value = '';
+                    }
                     switch (field.elt.tagName) {
                     case 'INPUT':
                         switch (field.elt.type) {
@@ -1931,7 +1934,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // The application calls Client, and implements the following methods:
     // app.setDoc(jsonDocument) - Called when a new document is loaded.
     // app.getDoc() - Called to get the json data to be saved.
-    // app.onSaveSuccess() - successfully saved.
+    // app.onSaveSuccess(status) - successfully saved.
     // app.onError(status, errorMessage) - Called when we get an error
     //     reading or writing a document (optional).
     // app.onUserChange(username) - Called when the user signs in or signs out
@@ -2088,13 +2091,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     // TODO: The server can return the docid for cases where
                     // the server assigns the id instead of the client.
                     result.docid = docid;
+                    // If we had no owner before - set it to document's
+                    // creator (the current user).
+                    result.owner = json.owner || this.username;
                     this.onSaveSuccess(result);
                 }.fnMethod(this)
             });
         },
 
         onSaveSuccess: function(result) {
-            this.meta.modified = result.modified;
+            base.extendIfChanged(this.meta, this.metaDoc,
+                                 base.project(result, ['modified', 'owner']));
             this.setCleanDoc(result.docid);
 
             this.setAppPanelValues(this.meta);
@@ -2107,6 +2114,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Detach the current document from it's storage.
         detach: function() {
+            this.meta.owner = this.metaDoc.owner = undefined;
+            this.meta.modified = this.metaDoc.modified = undefined;
+            this.setAppPanelValues(this.meta);
+
             this.setCleanDoc();
             this.setDirty();
         },
@@ -2569,12 +2580,22 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.toggleAppPanel(false);
             }
 
+            function onSave() {
+                // If this is a first-save, pop open the dialog
+                // so the user can set the doc title, etc.
+                if (self.docid == undefined) {
+                    self.toggleAppPanel(true);
+                    return;
+                }
+                onSaveClose();
+            }
+
             function onCopy() {
                 self.detach();
                 self.toggleAppPanel();
             }
 
-            $('#pfSave').click(onSaveClose);
+            $('#pfSave').click(onSave);
 
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
@@ -2583,8 +2604,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'title', required: true},
                     {name: 'tags'},
                     {name: 'publicReader', label: "Public", type: 'checkbox'},
-                    {name: 'writers', label: "Authors"},
                     {name: 'owner', type: 'value'},
+                    {name: 'writers', label: "Co-authors"},
                     {name: 'modified', label: "Last Saved", type: 'value'},
                     {name: 'save', type: 'button', onClick: onSaveClose},
                     {name: 'copy', type: 'button', onClick: onCopy}

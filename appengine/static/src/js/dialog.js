@@ -94,6 +94,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         continue;
                     }
                     var value = values[name];
+                    if (value == undefined) {
+                        value = '';
+                    }
                     switch (field.elt.tagName) {
                     case 'INPUT':
                         switch (field.elt.type) {
