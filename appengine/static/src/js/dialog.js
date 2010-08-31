@@ -156,6 +156,22 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
 
             return values;
+        },
+
+        enableField: function(name, enabled) {
+            if (enabled == undefined) {
+                enabled = true;
+            }
+            var field = this.getField(name);
+            switch (field.elt.tagName) {
+            case 'INPUT':
+            case 'TEXTAREA':
+                $(field.elt).attr('disabled', !enabled);
+                break;
+
+            default:
+                throw new Error("Field " + name + " is not a form field.");
+            }
         }
     });
 
