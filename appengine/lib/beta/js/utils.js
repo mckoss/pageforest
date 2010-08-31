@@ -1884,6 +1884,22 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
 
             return values;
+        },
+
+        enableField: function(name, enabled) {
+            if (enabled == undefined) {
+                enabled = true;
+            }
+            var field = this.getField(name);
+            switch (field.elt.tagName) {
+            case 'INPUT':
+            case 'TEXTAREA':
+                $(field.elt).attr('disabled', !enabled);
+                break;
+
+            default:
+                throw new Error("Field " + name + " is not a form field.");
+            }
         }
     });
 
@@ -2116,10 +2132,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         detach: function() {
             this.meta.owner = this.metaDoc.owner = undefined;
             this.meta.modified = this.metaDoc.modified = undefined;
-            this.setAppPanelValues(this.meta);
-
             this.setCleanDoc();
             this.setDirty();
+            this.setAppPanelValues(this.meta);
         },
 
         // Get document properties from client and merge with last
@@ -2634,7 +2649,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         toggleAppPanel: function(fOpen) {
-            if (fOpen != undefined &&
+             if (fOpen != undefined &&
                 fOpen == $(this.appPanel).is(':visible')) {
                 return;
             }
@@ -2697,6 +2712,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             values.publicReader = base.valueInArray('public',
                                                     doc.readers);
             this.appDialog.setValues(values);
+            this.appDialog.enableField('copy', this.docid != undefined);
         },
 
         getAppPanelValues: function() {
