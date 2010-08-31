@@ -2564,20 +2564,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.signInOut();
             });
 
-            function onSave() {
-                self.save();
-            }
-
             function onSaveClose() {
-                onSave();
-                self.toggleAppPanel();
+                self.save();
+                self.toggleAppPanel(false);
             }
 
             function onCopy() {
                 self.detach();
+                self.toggleAppPanel();
             }
 
-            $('#pfSave').click(onSave);
+            $('#pfSave').click(onSaveClose);
 
             this.appPanel = document.createElement('div');
             this.appPanel.setAttribute('id', 'pfAppPanel');
@@ -2615,7 +2612,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         },
 
-        toggleAppPanel: function() {
+        toggleAppPanel: function(fOpen) {
+            if (fOpen != undefined &&
+                fOpen == $(this.appPanel).is(':visible')) {
+                return;
+            }
             $('#pfMore').toggleClass("expanded collapsed");
             if ($(this.appPanel).is(':visible')) {
                 $(this.appPanel).hide();
