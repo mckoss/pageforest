@@ -8,10 +8,10 @@
     font-size: 14px;
     float: right;
     margin-right: 16px;
-    left: 600px;
-    top: 0px;
     display: inline;
     height: 35px;
+    position: relative;
+    z-index: 999;
 }
 
 div.pfLeft {
