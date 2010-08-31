@@ -2619,24 +2619,46 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             $('#pfMore').toggleClass("expanded collapsed");
             if ($(this.appPanel).is(':visible')) {
-                $(this.appPanel).hide();
+                this.positionAppPanel('hide');
                 return false;
             } else {
                 $(this.appPanel).show();
-                this.positionAppPanel();
+                this.positionAppPanel('show');
                 return true;
             }
         },
 
-        positionAppPanel: function() {
+        positionAppPanel: function(animation) {
             if (this.appPanel.style.display != 'block') {
                 return;
             }
+
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
             var ptPanel = dom.getSize(this.appPanel);
-            var ptPos = [rcAppBox[vector.x2] - ptPanel[vector.x],
+            var ptPos = [rcAppBox[vector.x2] - ptPanel[0],
                          rcAppBox[vector.y2]];
-            dom.setPos(this.appPanel, ptPos);
+
+            if (animation == undefined) {
+                dom.setPos(this.appPanel, ptPos);
+                return;
+            }
+
+            if (animation == 'show') {
+                ptPos[1] -= ptPanel[1];
+                dom.setPos(this.appPanel, ptPos);
+                $(this.appPanel).animate({
+                    top: '+=' + ptPanel[1]
+                });
+                return;
+            }
+
+            if (animation == 'hide') {
+                $(this.appPanel).animate({
+                    top: '-=' + ptPanel[1]
+                }, function() {
+                    $(this).hide();
+                });
+            }
         },
 
         setAppPanelValues: function(doc) {
