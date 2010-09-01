@@ -1,3 +1,5 @@
+/*globals jQuery */
+
 //--------------------------------------------------------------------------
 // DOM Functions
 // Points (pt) are [x,y]
@@ -65,8 +67,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     }
 
     function setPos(elt, pt) {
-        elt.style.top = pt[1] + 'px';
         elt.style.left = pt[0] + 'px';
+        elt.style.top = pt[1] + 'px';
     }
 
     function setSize(elt, pt) {
@@ -133,6 +135,38 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         elt.scrollTop = elt.scrollHeight;
     }
 
+    // Position a slide-out div with optional animation.
+    function slide(div, pt, animation) {
+        if (div.style.display != 'block') {
+            div.style.display = 'block';
+        }
+
+        var rcPanel = getRect(div);
+        var panelSize = getSize(div);
+        var reg = animation == 'show' ? 'lr' : 'ur';
+        rcPanel = vector.alignRect(rcPanel, reg, pt);
+
+        // Starting position
+        setPos(div, rcPanel);
+
+        // Slide down or up based on animation
+
+        if (animation == 'show') {
+            jQuery(div).animate({
+                top: '+=' + panelSize[1]
+            });
+            return;
+        }
+
+        if (animation == 'hide') {
+            jQuery(div).animate({
+                top: '-=' + panelSize[1]
+            }, function() {
+                jQuery(this).hide();
+            });
+        }
+    }
+
     function bindIDs(aIDs) {
         var mParts = {};
         var i;
@@ -180,7 +214,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     /* Poor-man's JQuery compatible selector.
 
-       Excepts simple (single) selectors in one of three formats:
+       Accepts simple (single) selectors in one of three formats:
 
        #id
        .class
@@ -279,7 +313,8 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         'getElementsByClassName': getElementsByClassName,
         'getElementsByTagClassName': getElementsByTagClassName,
         'getText': getText,
-        'setText': setText
+        'setText': setText,
+        'slide': slide
     });
 
 }); // startpad.dom

@@ -93,6 +93,18 @@ div.expanded {
 div.collapsed {
     background: url(/static/images/appbar/down.png) scroll top;
 }
+
+#pfErrorPanel {
+    width: 360px;
+    padding: 10px 5px 10px 5px;
+    position: absolute;
+    display: none;
+    color: #701818;
+    background-color: #DDA8A3;
+    border: 2px solid;
+    border-color: #F2D5D3 #A06560 #A06560 #F2D5D3;
+    z-index: 10;
+}
 /* Begin file: dialog.css */
 div.SP_Dialog {
     width: 350px;

@@ -91,5 +91,51 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
                         [0, 0, 4, 4]);
         });
 
+        ts.addTest("ptRegistration", function(ut) {
+            var rc = [10, 20, 300, 400];
+            var tests = [
+                ['ul', [10, 20]],
+                ['top', [155, 20]],
+                ['ur', [300, 20]],
+                ['left', [10, 210]],
+                ['center', [155, 210]],
+                ['right', [300, 210]],
+                ['ll', [10, 400]],
+                ['bottom', [155, 400]],
+                ['lr', [300, 400]]
+            ];
+
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.trace(test[1]);
+                ut.assertEq(vector.ptRegistration(rc, i), test[1]);
+                ut.assertEq(vector.ptRegistration(rc, test[0]), test[1]);
+            }
+        });
+
+        ts.addTest("alignRect", function(ut) {
+            // A 2x2 rectangle
+            var rc = [11, 12, 13, 14];
+            var ptTo = [1, 1];
+            var tests = [
+                ['ul', [1, 1, 3, 3]],
+                ['top', [0, 1, 2, 3]],
+                ['ur', [-1, 1, 1, 3]],
+                ['left', [1, 0, 3, 2]],
+                ['center', [0, 0, 2, 2]],
+                ['right', [-1, 0, 1, 2]],
+                ['ll', [1, -1, 3, 1]],
+                ['bottom', [0, -1, 2, 1]],
+                ['lr', [-1, -1, 1, 1]]
+            ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.trace(test[0]);
+                var rcT = vector.alignRect(rc, test[0], ptTo);
+                ut.assertEq(rcT, test[1]);
+                ut.assertEq(vector.ptRegistration(rcT, test[0]), [1, 1]);
+            }
+        });
+
     }; // addTests
 });

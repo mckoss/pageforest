@@ -53,7 +53,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.metaDialog = {};
 
         if (typeof $ != 'function' || $ != jQuery) {
-            this.errorReport('jQuery_required', jQueryMessage);
+            this.onError('jQuery_required', jQueryMessage);
             return;
         }
 
@@ -152,14 +152,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // TODO: Call this.putDoc - and then handle the document
             // state in the callback function.
             if (this.username == undefined) {
-                this.errorReport('no_username', signInMessage);
+                this.onError('no_username', signInMessage);
                 return;
             }
 
             if (json == undefined) {
                 json = this.getDoc();
                 if (json.blob == undefined) {
-                    this.errorReport('missing_blob', blobMessage);
+                    this.onError('missing_blob', blobMessage);
                     return;
                 }
             }
@@ -407,7 +407,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 if (validations.hasOwnProperty(code)) {
                     var validation = validations[code];
                     if (!validation[0]) {
-                        this.errorReport(code, validation[1]);
+                        this.onError(code, validation[1]);
                         fn(false);
                         return;
                     }
@@ -441,7 +441,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             options = options || {};
 
             if (docid == undefined) {
-                this.errorReport('unsaved_document', docUnsavedMessage);
+                this.onError('unsaved_document', docUnsavedMessage);
                 fn(false);
                 return;
             }
@@ -474,7 +474,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     var message = xmlhttp.statusText;
                     this.log(message + ' (' + code + ') ' + url,
                              {'obj': xmlhttp});
-                    this.errorReport(code, message);
+                    this.onError(code, message);
                     fn(false);
                 }.fnMethod(this),
                 success: function() {
@@ -492,7 +492,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var type = 'GET';
 
             if (docid == undefined) {
-                this.errorReport('unsaved_document', docUnsavedMessage);
+                this.onError('unsaved_document', docUnsavedMessage);
                 fn(false);
                 return;
             }
@@ -522,7 +522,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     var code = 'ajax_error/' + xmlhttp.status;
                     var message = xmlhttp.statusText;
                     this.log(message + ' (' + code + ')', {'obj': xmlhttp});
-                    this.errorReport(code, message);
+                    this.onError(code, message);
                     fn(false);
                 }.fnMethod(this),
                 'success': function(data) {
@@ -574,17 +574,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
             this.log(message + ' (' + code + ')', {'obj': xmlhttp});
-            this.errorReport(code, message);
+            this.onError(code, message);
         },
 
-        errorReport: function(status, message) {
-            if (this.app.onError) {
-                this.app.onError(status, message);
-                return;
-            }
+        onError: function(status, message) {
             var formatted = "client error: " + message +
                 ' (' + status + ')';
             this.log(formatted);
+
+            this.showError(message);
+
+            if (this.app.onError) {
+                this.app.onError(status, message);
+            }
         },
 
         // Periodically poll for changes in the URL and state of user sign-in
@@ -674,6 +676,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             this.appBar.innerHTML = htmlAppBar;
+            // For use in closures, below.
             var self = this;
 
             $('#pfSignIn').click(function () {
@@ -702,9 +705,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             $('#pfSave').click(onSave);
 
-            this.appPanel = document.createElement('div');
-            this.appPanel.setAttribute('id', 'pfAppPanel');
-            this.appDialog = new dialog.Dialog({
+            self.appPanel = document.createElement('div');
+            self.appPanel.setAttribute('id', 'pfAppPanel');
+            self.appDialog = new dialog.Dialog({
                 fields: [
                     {name: 'title', required: true},
                     {name: 'tags'},
@@ -716,8 +719,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     {name: 'copy', type: 'button', onClick: onCopy}
                 ]
             });
-            document.body.appendChild(this.appPanel);
+            document.body.appendChild(self.appPanel);
             $(self.appPanel).html(self.appDialog.html());
+
+            // TODO: Make this available to apps not using the appPanel?
+            self.errorPanel = document.createElement('div');
+            self.errorPanel.setAttribute('id', 'pfErrorPanel');
+            self.errorDialog = new dialog.Dialog({
+                fields: [
+                    {name: 'error', type: 'message'}
+                ]
+            });
+            document.body.appendChild(self.errorPanel);
+            $(self.errorPanel).html(self.errorDialog.html());
 
             $('#pfMore').click(function() {
                 if (self.toggleAppPanel()) {
@@ -739,7 +753,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         toggleAppPanel: function(fOpen) {
-             if (fOpen != undefined &&
+            if (fOpen != undefined &&
                 fOpen == $(this.appPanel).is(':visible')) {
                 return;
             }
@@ -748,43 +762,29 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.positionAppPanel('hide');
                 return false;
             } else {
-                $(this.appPanel).show();
                 this.positionAppPanel('show');
                 return true;
             }
         },
 
         positionAppPanel: function(animation) {
-            if (this.appPanel.style.display != 'block') {
-                return;
-            }
-
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            var ptPanel = dom.getSize(this.appPanel);
-            var ptPos = [rcAppBox[vector.x2] - ptPanel[0],
-                         rcAppBox[vector.y2]];
+            dom.slide(this.appPanel, vector.lr(rcAppBox), animation);
+        },
 
-            if (animation == undefined) {
-                dom.setPos(this.appPanel, ptPos);
+        showError: function(message) {
+            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
+
+            if (this.errorPanel == undefined) {
+                return;
+            }
+            if (message == undefined) {
+                dom.slide(this.errorPanel, vector.lr(rcAppBox), 'hide');
                 return;
             }
 
-            if (animation == 'show') {
-                ptPos[1] -= ptPanel[1];
-                dom.setPos(this.appPanel, ptPos);
-                $(this.appPanel).animate({
-                    top: '+=' + ptPanel[1]
-                });
-                return;
-            }
-
-            if (animation == 'hide') {
-                $(this.appPanel).animate({
-                    top: '-=' + ptPanel[1]
-                }, function() {
-                    $(this).hide();
-                });
-            }
+            this.errorDialog.setValues({'error': message});
+            dom.slide(this.errorPanel, vector.lr(rcAppBox), 'show');
         },
 
         setAppPanelValues: function(doc) {

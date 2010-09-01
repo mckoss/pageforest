@@ -4,11 +4,25 @@
 namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
     var util = namespace.util;
 
+    // TODO: refactor as location functions, and export
+    // with ns.extend.
+
     ns.extend({
         x: 0,
         y: 1,
         x2: 2,
         y2: 3,
+        regNums: {
+            'ul': 0,
+            'top': 1,
+            'ur': 2,
+            'left': 3,
+            'center': 4,
+            'right': 5,
+            'll': 6,
+            'bottom': 7,
+            'lr': 8
+        },
 
         subFrom: function(v1, v2) {
             for (var i = 0; i < v1.length; i++) {
@@ -236,9 +250,12 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         // 0 1 2
         // 3 4 5
         // 6 7 8
-        ptRegistration: function(rc, iReg) {
-            var xScale = (iReg % 3) * 0.5;
-            var yScale = Math.floor(iReg / 3) * 0.5;
+        ptRegistration: function(rc, reg) {
+            if (typeof reg == 'string') {
+                reg = ns.regNums[reg];
+            }
+            var xScale = (reg % 3) * 0.5;
+            var yScale = Math.floor(reg / 3) * 0.5;
             return ns.ptCenter(rc, [xScale, yScale]);
         },
 
@@ -248,6 +265,14 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 aPoints.push(ns.ptRegistration(rc, i));
             }
             return ns.IPtClosest(pt, aPoints)[0];
+        },
+
+
+        // Move a rectangle so that one of it's registration
+        // points is located at a given point.
+        alignRect: function(rc, reg, ptTo) {
+            var ptFrom = ns.ptRegistration(rc, reg);
+            return ns.add(rc, ns.sub(ptTo, ptFrom));
         },
 
         // rectDeltaReg - Move or resize the rectangle based on the registration
