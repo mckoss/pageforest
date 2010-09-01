@@ -130,6 +130,8 @@ var namespace = (function() {
     }
 
     var namespaceT = new Namespace(null);
+    // 1 - info, 2 - warn, 3 - error
+    namespaceT.logLevel = 2;
 
     // Extend an object's properties from one (or more) additional
     // objects.
@@ -202,7 +204,9 @@ var namespace = (function() {
         // a closure for the namespace definition.
         define: function(callback) {
             this._isDefined = true;
-            console.info("Namespace '" + this._path + "' defined.");
+            if (namespaceT.logLevel <= 1) {
+                console.info("Namespace '" + this._path + "' defined.");
+            }
             if (callback) {
                 Namespace.defining = this;
                 callback(this);
@@ -216,7 +220,10 @@ var namespace = (function() {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("Namespace '" + this._path + "' redefinition.");
+                if (namespaceT.logLevel <= 2) {
+                    console.warn("Namespace '" + this._path +
+                                 "' redefinition.");
+                }
                 return this;
             }
             return this.define(callback);
@@ -267,9 +274,11 @@ var namespace = (function() {
             if (Namespace.defining) {
                 Namespace.defining._referenced.push(cur);
                 if (fCreated) {
-                    console.warn("Forward reference from " +
-                                 Namespace.defining._path + " to " +
-                                 path + ".");
+                    if (namespaceT.logLevel <= 2) {
+                        console.warn("Forward reference from " +
+                                     Namespace.defining._path + " to " +
+                                     path + ".");
+                    }
                 }
             }
             return cur;
