@@ -1,7 +1,7 @@
 namespace.lookup('com.pageforest.modules').defineOnce(function (ns) {
     var modules = {
         'org.startpad': ['namespace', 'base', 'unit', 'timer', 'vector',
-                         'format', 'cookies'],
+                         'format', 'cookies', 'dialog', 'dom'],
         'com.pageforest': ['client'],
         'com.pageforest.auth': ['sign-up', 'sign-in']
     };

@@ -38,6 +38,8 @@ Use '!==' to compare with 'undefined'
 Use '===' to compare with 'undefined'
 Use '===' to compare with '0'
 Use '!==' to compare with '0'
+Use '===' to compare with 'null'
+Use '!==' to compare with 'null'
 Do not use 'new' for side effects
 Missing radix parameter
 Read only.

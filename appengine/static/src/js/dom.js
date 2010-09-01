@@ -6,7 +6,9 @@
 // Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
 //--------------------------------------------------------------------------
 namespace.lookup('org.startpad.dom').define(function(ns) {
+    var util = namespace.util;
     var vector = namespace.lookup('org.startpad.vector');
+    var base = namespace.lookup('org.startpad.base');
     var ix = 0;
     var iy = 1;
     var ix2 = 2;
@@ -268,8 +270,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     function getText(elt) {
         // Try FF then IE standard way of getting element text
-        var sText = elt.textContent || elt.innerText || "";
-        return sText.Trim();
+        return base.strip(elt.textContent || elt.innerText);
     }
 
     function setText(elt, st) {
@@ -280,19 +281,95 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         }
     }
 
-    function insertStyle(url) {
-        var head = document.getElementsByTagName('head')[0];
-        var link = document.createElement('link');
-        link.rel = "stylesheet";
-        link.type = "text/css";
-        link.href = url;
-        head.appendChild(link);
+    /* Modify original event object to enable the DOM Level 2 Standard
+       Event model (make IE look like a Standards based event)
+    */
+    function wrapEvent(evt)
+    {
+        evt = evt || window.evt || {};
+
+        if (!evt.preventDefault) {
+            evt.preventDefault = function() {
+                this.returnValue = false;
+            };
+        }
+
+        if (!evt.stopPropagation) {
+            evt.stopPropagation = function() {
+                this.cancelBubble = true;
+            };
+        }
+
+        if (!evt.target) {
+            evt.target = evt.srcElement || document;
+        }
+
+        if (evt.pageX == null && evt.clientX != null) {
+            var doc = document.documentElement;
+            var body = document.body;
+            evt.pageX = evt.clientX +
+                (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                (doc.clientLeft || 0);
+            evt.pageY = evt.clientY +
+                (doc && doc.scrollTop || body && body.scrollTop || 0) -
+                (doc.clientTop || 0);
+        }
+        return evt;
+    }
+
+    var handlers = [];
+
+    function bind(elt, event, fnCallback, capture) {
+        if (!capture) {
+            capture = false;
+        }
+
+        var fnWrap = function() {
+            var args = util.copyArray(arguments);
+            args[0] = wrapEvent(args[0]);
+            return fnCallback.apply(elt, arguments);
+        };
+
+        if (elt.addEventListener) {
+            elt.addEventListener(event, fnWrap, capture);
+        } else if (elt.attachEvent) {
+            elt.attachEvent('on' + event, fnWrap);
+        } else {
+            elt['on' + event] = fnWrap;
+        }
+
+        handlers.push({
+            'elt': elt,
+            'event': event,
+            'capture': capture,
+            'fn': fnWrap
+        });
+
+        return handlers.length - 1;
+    }
+
+    function unbind(i) {
+        var handler = handlers[i];
+        if (handler == undefined) {
+            return;
+        }
+        handlers[i] = undefined;
+
+        var elt = handler.elt;
+        if (elt.removeEventListener) {
+            elt.removeEventListener(handler.event, handler.fn, handler.capture);
+        }
+        else if (elt.attachEvent) {
+            elt.detachEvent('on' + handler.event, handler.fn);
+        }
+        else {
+            elt['on' + handler.event] = undefined;
+        }
     }
 
     ns.extend({
         'getPos': getPos,
         'getSize': getSize,
-        'insertStyle': insertStyle,
         'getRect': getRect,
         'getOffsetRect': getOffsetRect,
         'getMouse': getMouse,
@@ -314,7 +391,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         'getElementsByTagClassName': getElementsByTagClassName,
         'getText': getText,
         'setText': setText,
-        'slide': slide
+        'slide': slide,
+        'bind': bind,
+        'unbind': unbind
     });
 
 }); // startpad.dom

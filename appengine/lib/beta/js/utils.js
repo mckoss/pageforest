@@ -131,6 +131,8 @@ var namespace = (function() {
     }
 
     var namespaceT = new Namespace(null);
+    // 1 - info, 2 - warn, 3 - error
+    namespaceT.logLevel = 2;
 
     // Extend an object's properties from one (or more) additional
     // objects.
@@ -203,7 +205,9 @@ var namespace = (function() {
         // a closure for the namespace definition.
         define: function(callback) {
             this._isDefined = true;
-            console.info("Namespace '" + this._path + "' defined.");
+            if (namespaceT.logLevel <= 1) {
+                console.info("Namespace '" + this._path + "' defined.");
+            }
             if (callback) {
                 Namespace.defining = this;
                 callback(this);
@@ -217,7 +221,10 @@ var namespace = (function() {
             // In case a namespace is multiply loaded, we ignore the
             // definition function for all but the first call.
             if (this._isDefined) {
-                console.warn("Namespace '" + this._path + "' redefinition.");
+                if (namespaceT.logLevel <= 2) {
+                    console.warn("Namespace '" + this._path +
+                                 "' redefinition.");
+                }
                 return this;
             }
             return this.define(callback);
@@ -268,9 +275,11 @@ var namespace = (function() {
             if (Namespace.defining) {
                 Namespace.defining._referenced.push(cur);
                 if (fCreated) {
-                    console.warn("Forward reference from " +
-                                 Namespace.defining._path + " to " +
-                                 path + ".");
+                    if (namespaceT.logLevel <= 2) {
+                        console.warn("Forward reference from " +
+                                     Namespace.defining._path + " to " +
+                                     path + ".");
+                    }
                 }
             }
             return cur;
@@ -1473,7 +1482,9 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
 // Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
 //--------------------------------------------------------------------------
 namespace.lookup('org.startpad.dom').define(function(ns) {
+    var util = namespace.util;
     var vector = namespace.lookup('org.startpad.vector');
+    var base = namespace.lookup('org.startpad.base');
     var ix = 0;
     var iy = 1;
     var ix2 = 2;
@@ -1735,8 +1746,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
 
     function getText(elt) {
         // Try FF then IE standard way of getting element text
-        var sText = elt.textContent || elt.innerText || "";
-        return sText.Trim();
+        return base.strip(elt.textContent || elt.innerText);
     }
 
     function setText(elt, st) {
@@ -1747,19 +1757,95 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         }
     }
 
-    function insertStyle(url) {
-        var head = document.getElementsByTagName('head')[0];
-        var link = document.createElement('link');
-        link.rel = "stylesheet";
-        link.type = "text/css";
-        link.href = url;
-        head.appendChild(link);
+    /* Modify original event object to enable the DOM Level 2 Standard
+       Event model (make IE look like a Standards based event)
+    */
+    function wrapEvent(evt)
+    {
+        evt = evt || window.evt || {};
+
+        if (!evt.preventDefault) {
+            evt.preventDefault = function() {
+                this.returnValue = false;
+            };
+        }
+
+        if (!evt.stopPropagation) {
+            evt.stopPropagation = function() {
+                this.cancelBubble = true;
+            };
+        }
+
+        if (!evt.target) {
+            evt.target = evt.srcElement || document;
+        }
+
+        if (evt.pageX == null && evt.clientX != null) {
+            var doc = document.documentElement;
+            var body = document.body;
+            evt.pageX = evt.clientX +
+                (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                (doc.clientLeft || 0);
+            evt.pageY = evt.clientY +
+                (doc && doc.scrollTop || body && body.scrollTop || 0) -
+                (doc.clientTop || 0);
+        }
+        return evt;
+    }
+
+    var handlers = [];
+
+    function bind(elt, event, fnCallback, capture) {
+        if (!capture) {
+            capture = false;
+        }
+
+        var fnWrap = function() {
+            var args = util.copyArray(arguments);
+            args[0] = wrapEvent(args[0]);
+            return fnCallback.apply(elt, arguments);
+        };
+
+        if (elt.addEventListener) {
+            elt.addEventListener(event, fnWrap, capture);
+        } else if (elt.attachEvent) {
+            elt.attachEvent('on' + event, fnWrap);
+        } else {
+            elt['on' + event] = fnWrap;
+        }
+
+        handlers.push({
+            'elt': elt,
+            'event': event,
+            'capture': capture,
+            'fn': fnWrap
+        });
+
+        return handlers.length - 1;
+    }
+
+    function unbind(i) {
+        var handler = handlers[i];
+        if (handler == undefined) {
+            return;
+        }
+        handlers[i] = undefined;
+
+        var elt = handler.elt;
+        if (elt.removeEventListener) {
+            elt.removeEventListener(handler.event, handler.fn, handler.capture);
+        }
+        else if (elt.attachEvent) {
+            elt.detachEvent('on' + handler.event, handler.fn);
+        }
+        else {
+            elt['on' + handler.event] = undefined;
+        }
     }
 
     ns.extend({
         'getPos': getPos,
         'getSize': getSize,
-        'insertStyle': insertStyle,
         'getRect': getRect,
         'getOffsetRect': getOffsetRect,
         'getMouse': getMouse,
@@ -1781,7 +1867,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         'getElementsByTagClassName': getElementsByTagClassName,
         'getText': getText,
         'setText': setText,
-        'slide': slide
+        'slide': slide,
+        'bind': bind,
+        'unbind': unbind
     });
 
 }); // startpad.dom
@@ -1790,6 +1878,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
+    var dom = namespace.lookup('org.startpad.dom');
 
     var patterns = {
         title: '<h1>{title}</h1>',
@@ -1805,10 +1894,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         value: '<label class="left">{label}:</label>' +
             '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',
-        invalid: '<span class="error">***missing field type: {type}***</span>'
+        invalid: '<span class="error">***missing field type: {type}***</span>',
+        end: '<div style="clear: both;"></div>'
     };
 
-    var sDialog = '<div class="{prefix}Dialog">{content}</div>';
+    var defaults = {
+        note: {rows: 5}
+    };
+
+    var sDialog = '<div class="{dialogClass}">{content}</div>';
+
+    var cDialogs = 0;
 
     // Dialog options:
     // focus: field name for initial focus
@@ -1817,7 +1913,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     // fields: array of fields with props:
     //     name/type/label/value/required/shortLabel/hidden
     function Dialog(options) {
-        this.prefix = 'SP_';
+        cDialogs++;
+        this.dialogClass = 'SP_Dialog';
+        this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
         util.extendObject(this, options);
     }
@@ -1828,6 +1926,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var stb = new base.StBuf();
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
+                base.extendIfMissing(field, defaults[field.type]);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
@@ -1840,6 +1939,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 }
                 stb.append(format.replaceKeys(patterns[field.type], field));
             });
+            stb.append(patterns['end']);
             this.content = stb.toString();
             return format.replaceKeys(sDialog, this);
         },
@@ -1851,16 +1951,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var self = this;
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
+
+                function onClick() {
+                    field.onClick();
+                }
+
                 if (field.onClick != undefined) {
-                    $(field.elt).click(
-                        self.onButton.fnMethod(self).fnArgs(field));
+                    dom.bind(field.elt, 'click', onClick);
                 }
             });
             this.bound = true;
-        },
-
-        onButton: function(evt, field) {
-            field.onClick();
         },
 
         getField: function(name) {
@@ -1892,7 +1992,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                             field.elt.checked = value;
                             break;
                         case 'text':
-                            $(field.elt).val(value);
+                        case 'password':
+                            field.elt.value = value;
                             break;
                         default:
                             break;
@@ -1900,11 +2001,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
 
                     case 'TEXTAREA':
-                        $(field.elt).val(value);
+                        field.elt.value = value;
                         break;
 
                     default:
-                        $(field.elt).text(value);
+                        dom.setText(field.elt, value);
                         break;
                     }
                 }
@@ -1920,14 +2021,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (field.elt == undefined) {
                     continue;
                 }
+                var name = field.name;
                 switch (field.elt.tagName) {
                 case 'INPUT':
                     switch (field.elt.type) {
                     case 'checkbox':
-                        values[field.name] = field.elt.checked;
+                        values[name] = field.elt.checked;
                         break;
                     case 'text':
-                        values[field.name] = $(field.elt).val();
+                    case 'password':
+                        values[name] = field.elt.value;
                         break;
                     default:
                         break;
@@ -1935,10 +2038,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     break;
 
                 case 'TEXTAREA':
-                    values[field.name] = $(field.elt).val();
+                    values[name] = field.elt.value;
                     break;
 
                 default:
+                    values[name] = dom.getText(field.elt);
                     break;
                 }
             }
@@ -1954,7 +2058,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             switch (field.elt.tagName) {
             case 'INPUT':
             case 'TEXTAREA':
-                $(field.elt).attr('disabled', !enabled);
+                field.elt.disabled = !enabled;
                 break;
 
             default:

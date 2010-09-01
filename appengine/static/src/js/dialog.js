@@ -2,6 +2,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
+    var dom = namespace.lookup('org.startpad.dom');
 
     var patterns = {
         title: '<h1>{title}</h1>',
@@ -17,10 +18,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         value: '<label class="left">{label}:</label>' +
             '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',
-        invalid: '<span class="error">***missing field type: {type}***</span>'
+        invalid: '<span class="error">***missing field type: {type}***</span>',
+        end: '<div style="clear: both;"></div>'
     };
 
-    var sDialog = '<div class="{prefix}Dialog">{content}</div>';
+    var defaults = {
+        note: {rows: 5}
+    };
+
+    var sDialog = '<div class="{dialogClass}">{content}</div>';
+
+    var cDialogs = 0;
 
     // Dialog options:
     // focus: field name for initial focus
@@ -29,7 +37,9 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     // fields: array of fields with props:
     //     name/type/label/value/required/shortLabel/hidden
     function Dialog(options) {
-        this.prefix = 'SP_';
+        cDialogs++;
+        this.dialogClass = 'SP_Dialog';
+        this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
         util.extendObject(this, options);
     }
@@ -40,6 +50,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var stb = new base.StBuf();
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
+                base.extendIfMissing(field, defaults[field.type]);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
@@ -52,6 +63,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 }
                 stb.append(format.replaceKeys(patterns[field.type], field));
             });
+            stb.append(patterns['end']);
             this.content = stb.toString();
             return format.replaceKeys(sDialog, this);
         },
@@ -63,16 +75,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var self = this;
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
+
+                function onClick() {
+                    field.onClick();
+                }
+
                 if (field.onClick != undefined) {
-                    $(field.elt).click(
-                        self.onButton.fnMethod(self).fnArgs(field));
+                    dom.bind(field.elt, 'click', onClick);
                 }
             });
             this.bound = true;
-        },
-
-        onButton: function(evt, field) {
-            field.onClick();
         },
 
         getField: function(name) {
@@ -104,7 +116,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                             field.elt.checked = value;
                             break;
                         case 'text':
-                            $(field.elt).val(value);
+                        case 'password':
+                            field.elt.value = value;
                             break;
                         default:
                             break;
@@ -112,11 +125,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
 
                     case 'TEXTAREA':
-                        $(field.elt).val(value);
+                        field.elt.value = value;
                         break;
 
                     default:
-                        $(field.elt).text(value);
+                        dom.setText(field.elt, value);
                         break;
                     }
                 }
@@ -132,14 +145,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (field.elt == undefined) {
                     continue;
                 }
+                var name = field.name;
                 switch (field.elt.tagName) {
                 case 'INPUT':
                     switch (field.elt.type) {
                     case 'checkbox':
-                        values[field.name] = field.elt.checked;
+                        values[name] = field.elt.checked;
                         break;
                     case 'text':
-                        values[field.name] = $(field.elt).val();
+                    case 'password':
+                        values[name] = field.elt.value;
                         break;
                     default:
                         break;
@@ -147,10 +162,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     break;
 
                 case 'TEXTAREA':
-                    values[field.name] = $(field.elt).val();
+                    values[name] = field.elt.value;
                     break;
 
                 default:
+                    values[name] = dom.getText(field.elt);
                     break;
                 }
             }
@@ -166,7 +182,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             switch (field.elt.tagName) {
             case 'INPUT':
             case 'TEXTAREA':
-                $(field.elt).attr('disabled', !enabled);
+                field.elt.disabled = !enabled;
                 break;
 
             default:

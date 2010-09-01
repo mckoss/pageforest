@@ -598,6 +598,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         addCoverage: function(moduleName) {
             var coverage = new Coverage(moduleName);
+            this.coverage = coverage;
 
             function temp(ut) {
                 coverage.assertCovered(ut);
