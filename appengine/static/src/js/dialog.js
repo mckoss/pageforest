@@ -14,7 +14,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
         note: '<label class="left" for="{id}">{label}:</label>' +
             '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<div id="{id}"></div>',
+        message: '<div class="message" id="{id}"></div>',
         value: '<label class="left">{label}:</label>' +
             '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',

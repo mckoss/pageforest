@@ -1890,7 +1890,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
         note: '<label class="left" for="{id}">{label}:</label>' +
             '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<div id="{id}"></div>',
+        message: '<div class="message" id="{id}"></div>',
         value: '<label class="left">{label}:</label>' +
             '<div class="value" id="{id}"></div>',
         button: '<input id="{id}" type="button" value="{label}"/>',
@@ -2842,6 +2842,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         positionAppPanel: function(animation) {
+            if (animation == undefined && !$(this.appPanel).is(':visible')) {
+                return;
+            }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
             dom.slide(this.appPanel, vector.lr(rcAppBox), animation);
         },
@@ -2859,6 +2862,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             this.errorDialog.setValues({'error': message});
             dom.slide(this.errorPanel, vector.lr(rcAppBox), 'show');
+
+            var self = this;
+            function retract() {
+                self.showError();
+            }
+            setTimeout(retract, 3000);
         },
 
         setAppPanelValues: function(doc) {
