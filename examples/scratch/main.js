@@ -1,34 +1,36 @@
 namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
 
-    // Initialize the document - create a client helper object
+    // Initialize the document
     function onReady() {
-        $('#title').focus();
+        $('#blob').focus();
+
+        // Client library for Pageforest
         ns.client = new clientLib.Client(ns);
+
+        // Use the standard Pageforest UI widget.
         ns.client.addAppBar();
+
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
     }
 
-    // This function is called whenever your document should be reloaded.
+    // This function is called whenever your document is be reloaded.
     function setDoc(json) {
-        $('#title').val(json.title);
         $('#blob').val(json.blob);
     }
 
-    // Convert your current state to JSON with title and blob properties,
-    // these will then be saved to pageforest's storage.
+    // Convert your current state to JSON with blob properties.
+    // These will then be saved to pageforest's storage.
     function getDoc() {
         return {
-            "title": $('#title').val(),
-            "blob": $('#blob').val(),
-            "readers": ["public"]
+            "blob": $('#blob').val()
         };
     }
 
     function onStateChange(newState, oldState) {
-        // Refresh links on the page, too
+        // Refresh links on the page
         var url = ns.client.getDocURL();
         var link = $('#document');
         if (url) {

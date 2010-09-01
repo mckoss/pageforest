@@ -3,7 +3,7 @@ div.SP_Dialog {
 }
 
 div.SP_Dialog * {
-    font-size: 14px;
+    font-size: inherit;
 }
 
 div.SP_Dialog label.left {
@@ -39,6 +39,11 @@ div.SP_Dialog textarea
 
 div.SP_Dialog {
     position: relative;
+}
+
+div.SP_Dialog .message {
+    text-align: center;
+    font-style: italic;
 }
 
 div.SP_Dialog input[type=button] {

@@ -36,6 +36,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
         ts.addTest("Dialog fields", function(ut) {
             var dlg = new dialog.Dialog({
                 fields: [
+                    {name: 'message', type: 'message'},
                     {name: 'default'},
                     {name: 'text', type: 'text'},
                     {name: 'check', type: 'checkbox'},
@@ -56,6 +57,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
 
             var values = {
                 'default': 'default string',
+                'message': "Hello, World!",
                 'text': 'text string',
                 'check': true,
                 'value': 'value string',
@@ -71,10 +73,11 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             for (var i = 0; i < dlg.fields.length; i++) {
                 var field = dlg.fields[i];
                 var name = field.name;
-                var elt = field.elt;
-                var rcField = dom.getRect(elt);
 
                 ut.trace(name);
+
+                var elt = field.elt;
+                var rcField = dom.getRect(elt);
 
                 ut.assertEq(values[name], v2[name]);
 
