@@ -300,6 +300,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
                 var now = new Date().getTime();
                 if (now - this.dirtyTime > this.saveInterval * 1000) {
+                    // Don't try again for another saveInterval in case
+                    // the save fails.
+                    this.dirtyTime = now;
                     this.save();
                 }
                 return;
@@ -350,6 +353,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return this.state == 'clean' && this.docid != undefined;
         },
 
+        canSave: function() {
+            return this.username != undefined &&
+                (this.docid == undefined ||
+                 (this.username == this.meta.owner ||
+                  base.valueInArray(this.username,
+                                    this.meta.writers.split(' '))));
+        },
+
         changeState: function(state) {
             if (state == this.state) {
                 return;
@@ -363,7 +374,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (this.appBar) {
-                if (this.isSaved()) {
+                // Only disable the save button if the doc is already saved
+                // by the current user.
+                if (this.isSaved() && this.canSave()) {
                     $('#pfSave').addClass('disabled');
                 }
                 else {
@@ -425,8 +438,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
-                error: function () {
-                    this.errorHandler.fnMethod(this);
+                error: function (xmlhttp, textStatus, errorThrown) {
+                    this.errorHandler(xmlhttp, textStatus, errorThrown);
                     fn(false);
                 },
                 success: function () {
@@ -573,6 +586,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
+            if (message == "FORBIDDEN") {
+                message = "You don't have permission to save to this " +
+                    "document.  You may want to make a copy, instead.";
+            }
             this.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.onError(code, message);
         },
@@ -757,22 +774,27 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 fOpen == $(this.appPanel).is(':visible')) {
                 return;
             }
+            var self = this;
+
             $('#pfMore').toggleClass("expanded collapsed");
             if ($(this.appPanel).is(':visible')) {
                 this.positionAppPanel('hide');
                 return false;
             } else {
-                this.positionAppPanel('show');
+                this.positionAppPanel('show', function() {
+                    self.appDialog.setFocus();
+                });
                 return true;
             }
         },
 
-        positionAppPanel: function(animation) {
+        positionAppPanel: function(animation, fnCallback) {
             if (animation == undefined && !$(this.appPanel).is(':visible')) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            dom.slide(this.appPanel, vector.lr(rcAppBox), animation);
+            dom.slide(this.appPanel, vector.lr(rcAppBox), animation,
+                      fnCallback);
         },
 
         showError: function(message) {

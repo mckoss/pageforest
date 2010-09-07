@@ -1614,7 +1614,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     }
 
     // Position a slide-out div with optional animation.
-    function slide(div, pt, animation) {
+    function slide(div, pt, animation, fnCallback) {
         if (div.style.display != 'block') {
             div.style.display = 'block';
         }
@@ -1632,7 +1632,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         if (animation == 'show') {
             jQuery(div).animate({
                 top: '+=' + panelSize[1]
-            });
+            }, fnCallback);
             return;
         }
 
@@ -1641,6 +1641,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
                 top: '-=' + panelSize[1]
             }, function() {
                 jQuery(this).hide();
+                if (fnCallback) {
+                    fnCallback();
+                }
             });
         }
     }
@@ -1907,7 +1910,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var cDialogs = 0;
 
     // Dialog options:
-    // focus: field name for initial focus
+    // focus: field name for initial focus (if different from first)
     // enter: fiend name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
@@ -1959,6 +1962,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', onClick);
                 }
+
+                if (self.focus == undefined &&
+                    (field.elt.tagName == 'INPUT' ||
+                     field.elt.tagName == 'TEXTAREA')) {
+                    self.focus = field.name;
+                }
             });
             this.bound = true;
         },
@@ -1974,10 +1983,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
         // Call just before displaying a dialog to set it's values.
         setValues: function(values) {
+            var field;
+
             this.bindFields();
             for (var name in values) {
                 if (values.hasOwnProperty(name)) {
-                    var field = this.getField(name);
+                    field = this.getField(name);
                     if (field == undefined || field.elt == undefined) {
                         continue;
                     }
@@ -2008,6 +2019,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         dom.setText(field.elt, value);
                         break;
                     }
+                }
+            }
+        },
+
+        setFocus: function() {
+            var field;
+            if (this.focus) {
+                field = this.getField(this.focus);
+                if (field) {
+                    field.elt.focus();
+                    field.elt.select();
                 }
             }
         },
@@ -2374,6 +2396,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
                 var now = new Date().getTime();
                 if (now - this.dirtyTime > this.saveInterval * 1000) {
+                    // Don't try again for another saveInterval in case
+                    // the save fails.
+                    this.dirtyTime = now;
                     this.save();
                 }
                 return;
@@ -2424,6 +2449,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return this.state == 'clean' && this.docid != undefined;
         },
 
+        canSave: function() {
+            return this.username != undefined &&
+                (this.docid == undefined ||
+                 (this.username == this.meta.owner ||
+                  base.valueInArray(this.username,
+                                    this.meta.writers.split(' '))));
+        },
+
         changeState: function(state) {
             if (state == this.state) {
                 return;
@@ -2437,7 +2470,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (this.appBar) {
-                if (this.isSaved()) {
+                // Only disable the save button if the doc is already saved
+                // by the current user.
+                if (this.isSaved() && this.canSave()) {
                     $('#pfSave').addClass('disabled');
                 }
                 else {
@@ -2499,8 +2534,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
-                error: function () {
-                    this.errorHandler.fnMethod(this);
+                error: function (xmlhttp, textStatus, errorThrown) {
+                    this.errorHandler(xmlhttp, textStatus, errorThrown);
                     fn(false);
                 },
                 success: function () {
@@ -2647,6 +2682,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
+            if (message == "FORBIDDEN") {
+                message = "You don't have permission to save to this " +
+                    "document.  You may want to make a copy, instead.";
+            }
             this.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.onError(code, message);
         },
@@ -2831,22 +2870,27 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 fOpen == $(this.appPanel).is(':visible')) {
                 return;
             }
+            var self = this;
+
             $('#pfMore').toggleClass("expanded collapsed");
             if ($(this.appPanel).is(':visible')) {
                 this.positionAppPanel('hide');
                 return false;
             } else {
-                this.positionAppPanel('show');
+                this.positionAppPanel('show', function() {
+                    self.appDialog.setFocus();
+                });
                 return true;
             }
         },
 
-        positionAppPanel: function(animation) {
+        positionAppPanel: function(animation, fnCallback) {
             if (animation == undefined && !$(this.appPanel).is(':visible')) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            dom.slide(this.appPanel, vector.lr(rcAppBox), animation);
+            dom.slide(this.appPanel, vector.lr(rcAppBox), animation,
+                      fnCallback);
         },
 
         showError: function(message) {

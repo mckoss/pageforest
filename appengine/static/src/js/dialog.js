@@ -31,7 +31,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var cDialogs = 0;
 
     // Dialog options:
-    // focus: field name for initial focus
+    // focus: field name for initial focus (if different from first)
     // enter: fiend name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
@@ -83,6 +83,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', onClick);
                 }
+
+                if (self.focus == undefined &&
+                    (field.elt.tagName == 'INPUT' ||
+                     field.elt.tagName == 'TEXTAREA')) {
+                    self.focus = field.name;
+                }
             });
             this.bound = true;
         },
@@ -98,10 +104,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
         // Call just before displaying a dialog to set it's values.
         setValues: function(values) {
+            var field;
+
             this.bindFields();
             for (var name in values) {
                 if (values.hasOwnProperty(name)) {
-                    var field = this.getField(name);
+                    field = this.getField(name);
                     if (field == undefined || field.elt == undefined) {
                         continue;
                     }
@@ -132,6 +140,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         dom.setText(field.elt, value);
                         break;
                     }
+                }
+            }
+        },
+
+        setFocus: function() {
+            var field;
+            if (this.focus) {
+                field = this.getField(this.focus);
+                if (field) {
+                    field.elt.focus();
+                    field.elt.select();
                 }
             }
         },
