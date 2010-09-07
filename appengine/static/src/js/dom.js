@@ -138,7 +138,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     }
 
     // Position a slide-out div with optional animation.
-    function slide(div, pt, animation) {
+    function slide(div, pt, animation, fnCallback) {
         if (div.style.display != 'block') {
             div.style.display = 'block';
         }
@@ -156,7 +156,7 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         if (animation == 'show') {
             jQuery(div).animate({
                 top: '+=' + panelSize[1]
-            });
+            }, fnCallback);
             return;
         }
 
@@ -165,6 +165,9 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
                 top: '-=' + panelSize[1]
             }, function() {
                 jQuery(this).hide();
+                if (fnCallback) {
+                    fnCallback();
+                }
             });
         }
     }

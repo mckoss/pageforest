@@ -66,6 +66,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             };
 
             dlg.setValues(values);
+            ut.assertEq(dlg.focus, 'default');
             var v2 = dlg.getValues();
 
             var rcDialog = dom.getRect(divDialog);
