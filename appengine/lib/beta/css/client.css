@@ -155,6 +155,7 @@ div.SP_Dialog {
 div.SP_Dialog .message {
     text-align: center;
     font-style: italic;
+    margin: 0 5px 6px 5px;
 }
 
 div.SP_Dialog input[type=button] {

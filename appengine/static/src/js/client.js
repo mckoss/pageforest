@@ -726,14 +726,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             self.appPanel.setAttribute('id', 'pfAppPanel');
             self.appDialog = new dialog.Dialog({
                 fields: [
+                    {name: 'message', type: 'message'},
                     {name: 'title', required: true},
                     {name: 'tags'},
                     {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'owner', type: 'value'},
                     {name: 'writers', label: "Co-authors"},
                     {name: 'modified', label: "Last Saved", type: 'value'},
-                    {name: 'save', type: 'button', onClick: onSaveClose},
-                    {name: 'copy', type: 'button', onClick: onCopy}
+                    {name: 'save', label: "Save Now", type: 'button',
+                     onClick: onSaveClose},
+                    {name: 'copy', label: "Make a Copy", type: 'button',
+                     onClick: onCopy}
                 ]
             });
             document.body.appendChild(self.appPanel);
@@ -832,6 +835,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             values.writers = format.wordList(doc.writers);
             values.publicReader = base.valueInArray('public',
                                                     doc.readers);
+            if (this.docid == undefined) {
+                this.appDialog.enableField('message', true);
+                values.message = "Before saving, you can choose a new " +
+                    "title for your document.";
+            } else {
+                this.appDialog.enableField('message', false);
+            }
             this.appDialog.setValues(values);
             this.appDialog.enableField('copy', this.docid != undefined);
         },
