@@ -5,9 +5,21 @@ import sys
 
 import pftool
 
+
+def find_in_path(file_name):
+    path = os.environ['PATH']
+    for d in path.split(os.pathsep):
+        file_path = os.path.abspath(os.path.join(d, file_name))
+        if os.path.exists(file_path):
+            return file_path
+    return file_name
+
 if __name__ == '__main__':
-    command = ('dev_appserver.py -a pageforest ' + \
-        '--show_mail_body %s') % ' '.join(sys.argv[1:])
+    command = ['python2.5',
+               find_in_path('dev_appserver.py'),
+               '-a pageforest --show_mail_body']
+    command.extend(sys.argv[1:])
+    command = ' '.join(command)
     if 'HOME' in os.environ:
         store_dir = os.path.join(os.environ['HOME'], 'dev_appserver.datastore')
         command += ' --datastore_path %s' % store_dir
