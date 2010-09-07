@@ -1905,7 +1905,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         note: {rows: 5}
     };
 
-    var sDialog = '<div class="{dialogClass}">{content}</div>';
+    var sDialog = '<div class="{dialogClass}" id="{id}">{content}</div>';
 
     var cDialogs = 0;
 
@@ -1927,6 +1927,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         html: function() {
             var self = this;
             var stb = new base.StBuf();
+            this.id = this.prefix + 'dialog';
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
                 base.extendIfMissing(field, defaults[field.type]);
@@ -1951,25 +1952,43 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             if (this.bound) {
                 return;
             }
+            this.bound = true;
+
             var self = this;
+
+            self.dlg = document.getElementById(self.id);
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
 
-                function onClick() {
-                    field.onClick();
-                }
-
                 if (field.onClick != undefined) {
-                    dom.bind(field.elt, 'click', onClick);
+                    dom.bind(field.elt, 'click', function() {
+                        field.onClick();
+                    });
                 }
 
+                // Default focus is on the first text-entry field.
                 if (self.focus == undefined &&
                     (field.elt.tagName == 'INPUT' ||
                      field.elt.tagName == 'TEXTAREA')) {
                     self.focus = field.name;
                 }
+
+                // First button defined gets the enter key
+                if (self.enter == undefined && field.type == 'button') {
+                    self.enter = field.name;
+                }
             });
-            this.bound = true;
+
+            if (self.enter) {
+                dom.bind(self.dlg, 'keydown', function(evt) {
+                    if (evt.keyCode == 13) {
+                        var field = self.getField(self.enter);
+                        if (field.onClick) {
+                            field.onClick();
+                        }
+                    }
+                });
+            }
         },
 
         getField: function(name) {
@@ -2025,6 +2044,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
         setFocus: function() {
             var field;
+            this.bindFields();
             if (this.focus) {
                 field = this.getField(this.focus);
                 if (field) {
@@ -2076,11 +2096,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             if (enabled == undefined) {
                 enabled = true;
             }
+            this.bindFields();
             var field = this.getField(name);
             switch (field.elt.tagName) {
             case 'INPUT':
             case 'TEXTAREA':
                 field.elt.disabled = !enabled;
+                break;
+
+            case 'DIV':
+                field.elt.style.display = enabled ? 'block' : 'none';
                 break;
 
             default:
@@ -2822,14 +2847,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             self.appPanel.setAttribute('id', 'pfAppPanel');
             self.appDialog = new dialog.Dialog({
                 fields: [
+                    {name: 'message', type: 'message'},
                     {name: 'title', required: true},
                     {name: 'tags'},
                     {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'owner', type: 'value'},
                     {name: 'writers', label: "Co-authors"},
                     {name: 'modified', label: "Last Saved", type: 'value'},
-                    {name: 'save', type: 'button', onClick: onSaveClose},
-                    {name: 'copy', type: 'button', onClick: onCopy}
+                    {name: 'save', label: "Save Now", type: 'button', onClick: onSaveClose},
+                    {name: 'copy', label: "Make a Copy", type: 'button', onClick: onCopy}
                 ]
             });
             document.body.appendChild(self.appPanel);
@@ -2928,6 +2954,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             values.writers = format.wordList(doc.writers);
             values.publicReader = base.valueInArray('public',
                                                     doc.readers);
+            if (this.docid == undefined) {
+                this.appDialog.enableField('message', true);
+                values.message = "Before saving, you can choose a new " +
+                    "title for your document.";
+            } else {
+                this.appDialog.enableField('message', false);
+            }
             this.appDialog.setValues(values);
             this.appDialog.enableField('copy', this.docid != undefined);
         },
