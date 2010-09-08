@@ -357,8 +357,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return this.username != undefined &&
                 (this.docid == undefined ||
                  (this.username == this.meta.owner ||
-                  base.valueInArray(this.username,
-                                    this.meta.writers.split(' '))));
+                  base.valueInArray(this.username, this.meta.writers)));
         },
 
         changeState: function(state) {
@@ -586,7 +585,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState(this.stateSave);
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
-            if (message == "FORBIDDEN") {
+            if (message.toLowerCase() == "forbidden") {
                 message = "You don't have permission to save to this " +
                     "document.  You may want to make a copy, instead.";
             }
