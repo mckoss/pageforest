@@ -214,7 +214,9 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             for (var i = 0; i < header.length; i++) {
                 ut.assertEq(png.charCodeAt(i), header[i]);
             }
-        }).require('document');
+        }).require('document').require('canvas').fallback(function (ut) {
+            ts.coverage.cover('canvasToPNG');
+        });
 
     }; // addTests
 
