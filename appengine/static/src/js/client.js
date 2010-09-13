@@ -95,7 +95,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
 
         // Catch window unload if the user tries to close an unsaved window
-        $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
+        $(window).unload(this.beforeUnload.fnMethod(this));
     }
 
     Client.methods({

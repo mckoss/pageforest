@@ -93,7 +93,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
         run: function(ts) {
             var fCaught = false;
-            if (!this.fEnable) {
+            if (this.isComplete()) {
                 return;
             }
             if (this.cAsync) {
@@ -107,7 +107,11 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
             this.state = UnitTest.states.running;
             try {
-                this.fn(this);
+                if (this.fnFallback) {
+                    this.fnFallback(this);
+                } else {
+                    this.fn(this);
+                }
             }
             catch (e) {
                 fCaught = true;
@@ -126,7 +130,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         isComplete: function() {
-            return !this.fEnable || this.state == UnitTest.states.completed;
+            return (!this.fEnable && this.fnFallback == undefined) ||
+                this.state == UnitTest.states.completed;
         },
 
         assertThrown: function() {
@@ -144,6 +149,12 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (type == 'undefined') {
                 this.enable(false);
             }
+            return this;
+        },
+
+        fallback: function(fn) {
+            this.fnFallback = fn;
+            return this;
         },
 
         stopFail: function(f) {
@@ -645,7 +656,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             while (this.iCur < this.rgut.length) {
                 var ut = this.rgut[this.iCur];
                 var state = ut.state;
-                if (!ut.fEnable ||
+                if (ut.isComplete() ||
                     this.fTerminateAll ||
                     this.iCur < this.iutNext) {
                     state = UnitTest.states.completed;

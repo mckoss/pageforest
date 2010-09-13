@@ -1957,8 +1957,15 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             var self = this;
 
             self.dlg = document.getElementById(self.id);
+            if (self.dlg == undefined) {
+                throw new Error("Dialog not available.");
+            }
+
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
+                if (!field.elt) {
+                    return;
+                }
 
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function() {
@@ -2216,7 +2223,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
 
         // Catch window unload if the user tries to close an unsaved window
-        $(window).bind('beforeunload', this.beforeUnload.fnMethod(this));
+        $(window).unload(this.beforeUnload.fnMethod(this));
     }
 
     Client.methods({
