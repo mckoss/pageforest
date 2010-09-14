@@ -66,7 +66,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             });
             stb.append(patterns['end']);
             this.content = stb.toString();
-            return format.replaceKeys(sDialog, this);
+            var s = format.replaceKeys(sDialog, this);
+            return s;
         },
 
         bindFields: function() {

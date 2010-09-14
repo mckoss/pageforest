@@ -27,6 +27,24 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             var y = {c: 3, d: 4};
             var z = util.extendObject(x, y);
             ut.assertEq(z, {a: 1, b: 2, c: 3, d: 4});
+
+            // These fail on IE8 - with dontEnumBug
+            // http://stackoverflow.com/questions/3705383/
+            var internalNames = ['toString', 'toLocaleString', 'valueOf',
+                                 'constructor', 'isPrototypeOf'];
+
+            var obj = {};
+            var name;
+            var i;
+            for (i = 0; i < internalNames.length; i++) {
+                name = internalNames[i];
+                obj[name] = i;
+            }
+            var objCopy = util.extendObject({}, obj);
+            for (i = 0; i < internalNames.length; i++) {
+                name = internalNames[i];
+                ut.assertEq(obj[name], objCopy[name], name);
+            }
         });
 
         ts.addTest("methods", function (ut) {
