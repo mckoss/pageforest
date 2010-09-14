@@ -85,6 +85,9 @@
 // This is here because this will often be the first javascript file loaded.
 // We refrain from using the window object as we may be in a web worker where
 // the global scope is NOT window.
+
+// Note: IE8 will NOT have console defined until the page loads under
+// the debugger.  I haven't been able to get the IE8 console working EVER.
 if (typeof console == 'undefined') {
     var console = (function() {
         if (console != undefined) {
@@ -136,13 +139,30 @@ var namespace = (function() {
 
     // Extend an object's properties from one (or more) additional
     // objects.
+
+    var enumBug = !{toString: true}.propertyIsEnumerable('toString');
+    var internalNames = ['toString', 'toLocaleString', 'valueOf',
+                         'constructor', 'isPrototypeOf'];
     function extendObject(dest, args) {
+        var i, j;
+        var source;
+        var prop;
+
         if (dest === undefined) {
             dest = {};
         }
-        for (var i = 1; i < arguments.length; i++) {
-            var source = arguments[i];
-            for (var prop in source) {
+        for (i = 1; i < arguments.length; i++) {
+            source = arguments[i];
+            for (prop in source) {
+                if (source.hasOwnProperty(prop)) {
+                    dest[prop] = source[prop];
+                }
+            }
+            if (!enumBug) {
+                continue;
+            }
+            for (j = 0; j < internalNames.length; j++) {
+                prop = internalNames[j];
                 if (source.hasOwnProperty(prop)) {
                     dest[prop] = source[prop];
                 }
@@ -330,7 +350,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
     // Fast string concatenation buffer
     function StBuf() {
-        this.rgst = [];
+        this.clear();
         this.append.apply(this, arguments);
     }
 
@@ -1945,7 +1965,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             });
             stb.append(patterns['end']);
             this.content = stb.toString();
-            return format.replaceKeys(sDialog, this);
+            var s = format.replaceKeys(sDialog, this);
+            return s;
         },
 
         bindFields: function() {
