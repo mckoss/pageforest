@@ -33,7 +33,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
 
     // Fast string concatenation buffer
     function StBuf() {
-        this.rgst = [];
+        this.clear();
         this.append.apply(this, arguments);
     }
 
