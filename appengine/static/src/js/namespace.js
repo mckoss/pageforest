@@ -1,6 +1,6 @@
 /* Namespace.js
 
-   Version 2.0, May 11, 2010
+   Version 2.1, Sept. 14, 2010
    by Mike Koss - released into the public domain.
 
    Support for building modular namespaces in javascript.
@@ -12,7 +12,7 @@
 
    namespace.lookup(path) - Return the namespace object with the given
    path. Creates the namespace if it does not already exist. The path
-   has the form ('unique.module.sub_module').
+   has the form (unique.module.sub_module, e.g., 'com.pageforest.sample').
 
    Utility functions:
 
@@ -28,8 +28,8 @@
    Extensions to the Function object:
 
    Class.methods({
-   f1: function () {...},
-   f2: function () {...}
+       f1: function () {...},
+       f2: function () {...}
    ));
 
    f1.fnMethod(obj, args) - closure to call obj.f1(args);
