@@ -85,9 +85,9 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
             }
 
             this.divBoard.appendChild(this.tbl);
-            this.tbl.onmousedown = this.click.fnMethod(this);
-            window.onmouseup = this.mouseUp.fnMethod(this);
-            this.tbl.onmousemove = this.mouseMove.fnMethod(this);
+            dom.bind(this.tbl, 'mousedown', this.click.fnMethod(this));
+            dom.bind(window, 'mouseup', this.mouseUp.fnMethod(this));
+            dom.bind(this.tbl, 'mousemove', this.mouseMove.fnMethod(this));
 
             var divTools = document.getElementById("divTools");
             if (!this.tdTools) {
@@ -103,8 +103,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                     divTool.className = "faceTools";
                     divTool.style.backgroundPosition =
                         this.imagePositionTools(iFace, 0);
-                    divTool.onmousedown =
-                        this.clickTool.fnMethod(this).fnArgs(iFace);
+                    dom.bind(divTool, 'mousedown',
+                             this.clickTool.fnMethod(this).fnArgs(iFace));
                     divTool.iRot = 0;
                     tdTool.appendChild(divTool);
                     trTool.appendChild(tdTool);
@@ -117,8 +117,8 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 trTool.className = "rotRow";
                 for (iFace = 0; iFace < 6; iFace++) {
                     var tdRot = document.createElement("td");
-                    tdRot.onmousedown =
-                        this.clickRot.fnMethod(this).fnArgs(iFace);
+                    dom.bind(tdRot, 'mousedown',
+                             this.clickRot.fnMethod(this).fnArgs(iFace));
                     trTool.appendChild(tdRot);
                 }
                 tblTools.appendChild(trTool);
@@ -126,7 +126,7 @@ namespace.lookup('com.pageforest.blocks').defineOnce(function (ns) {
                 this.clickTool(null, 5);
             }
 
-            window.onresize = this.resizeWindow.fnMethod(this);
+            dom.bind(window, 'resize', this.resizeWindow.fnMethod(this));
             this.resizeWindow();
         },
 
