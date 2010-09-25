@@ -13,7 +13,7 @@
     height: 35px;
     position: relative;
     z-index: 999;
-    white-space: nowrap;
+    x-white-space: nowrap;
 }
 
 div.pfLeft {
@@ -122,7 +122,7 @@ div.SP_Dialog label.left {
     float: left;
     clear: left;
     text-align: right;
-    width: 95px;
+    width: 94px;
     margin: 1px 0 6px 0;
     padding-right: 5px;
 }
