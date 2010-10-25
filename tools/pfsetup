@@ -1,0 +1,87 @@
+#!/bin/bash
+
+sudo apt-get install sqlite
+sudo apt-get install libsqlite3-dev
+
+# Install OpenSSL
+read -p "Install Open SSL (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    wget http://www.openssl.org/source/openssl-0.9.8g.tar.gz
+
+    cs $HOME/src
+    tar -xzvf $HOME/Downloads/openssl-0.9.8g.tar.gz
+
+    cd openssl-0.9.8g.tar.gz
+    ./config
+    make
+    sudo make install
+fi
+
+# Get Python 2.5.2
+read -p "Install Python 2.5.2 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    if [ ! -f Python-2.5.2.tgz ]; then
+        wget http://www.python.org/ftp/python/2.5.2/Python-2.5.2.tgz
+        cd $HOME/src
+        tar -xzvf $HOME/Downloads/Python-2.5.2.tgz
+    fi
+
+    cd $HOME/src/Python-2.5.2
+    ./configure
+    make clean
+    make
+    sudo make altinstall
+fi
+
+# Get SSL Library not supported in native 2.5.2
+read -p "Install Python ssl Library (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    if [! -f ssl-1.15.tar.gz ]; then
+        wget http://pypi.python.org/packages/source/s/ssl/ssl-1.15.tar.gz
+        cd $HOME/src
+        tar -xzvf $HOME/Downloads/ssl-1.15.tar.gz
+    fi
+
+    cd $HOME/src/ssl-1.15
+    sudo python2.5 setup.py install
+fi
+
+# Get Django 1.1
+read -p "Install Django 1.1 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    if [! -f Django-1.1.2.tar.gz ]; then
+        wget  http://media.djangoproject.com/releases/1.1/Django-1.1.2.tar.gz
+        cd $HOME/src
+        tar -xzvf $HOME/Downloads/Django-1.1.2.tar.gz
+    fi
+
+    cd $HOME/src/Django-1.1.2
+    sudo python2.5 setup.py install
+fi
+
+# Get AppEngine
+read -p "Install App Engine (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    if [ ! -f google_appengine_1.3.8.zip ]; then
+        wget http://googleappengine.googlecode.com/files/google_appengine_1.3.8.zip
+        cd /usr/local
+        sudo unzip $HOME/Downloads/google_appengine_1.3.8.zip
+        # Google does not have all the files readable or executable by non-owners!
+        sudo chmod -R o+rx google_appengine
+    fi
+fi
+
+read -p "Install App Engine Helper (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME/Downloads
+    if [ ! -f appengine_helper_for_django-r105.zip ]; then
+        wget  http://google-app-engine-django.googlecode.com/files/appengine_helper_for_django-r105.zip
+        cd /usr/local
+        sudo unzip $HOME/Downloads/appengine_helper_for_django-r105.zip
+    fi
+fi
