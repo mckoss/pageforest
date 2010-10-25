@@ -77,9 +77,6 @@ if [ "$REPLY" = "y" ]; then
     sudo unzip $HOME/Downloads/google_appengine_1.3.8.zip
     sudo chmod -R o+rx google_appengine
 
-    # Is this copy really needed?  Just using for lint.py not to warn.
-    # sudo cp -r google_appengine/google /usr/local/lib/python2.5/site-packages/
-
     cd /usr/local/bin
 
     # Put dev_appserver.py and appcfg.py directly into PATH
@@ -101,8 +98,4 @@ if [ "$REPLY" = "y" ]; then
     # Remove slow or mis-behaving tests
     cd appengine_helper_for_django/appengine_django/tests
     rm commands_test.py integration_test.py serialization_test.py
-
-    # Do we need a copy in site packages?
-    # cd /usr/local/lib/python2.5/site-packages
-    # sudo cp -r /usr/local/appengine_helper_for_django/appengine_django .
 fi
