@@ -2,6 +2,8 @@
 
 sudo apt-get install sqlite
 sudo apt-get install libsqlite3-dev
+sudo easy_install pep8
+sudo easy_install mock
 
 # Install OpenSSL
 read -p "Install Open SSL (y/n): "
@@ -63,17 +65,26 @@ if [ "$REPLY" = "y" ]; then
     sudo python2.5 setup.py install
 fi
 
-# Get AppEngine
+# Get AppEngine - needs to be in /usr/local for django helper to find properly?
 read -p "Install App Engine (y/n): "
 if [ "$REPLY" = "y" ]; then
     cd $HOME/Downloads
     if [ ! -f google_appengine_1.3.8.zip ]; then
         wget http://googleappengine.googlecode.com/files/google_appengine_1.3.8.zip
-        cd /usr/local
-        sudo unzip $HOME/Downloads/google_appengine_1.3.8.zip
-        # Google does not have all the files readable or executable by non-owners!
-        sudo chmod -R o+rx google_appengine
     fi
+
+    cd /usr/local
+    sudo unzip $HOME/Downloads/google_appengine_1.3.8.zip
+    sudo chmod -R o+rx google_appengine
+
+    # Is this copy really needed?  Just using for lint.py not to warn.
+    # sudo cp -r google_appengine/google /usr/local/lib/python2.5/site-packages/
+
+    cd /usr/local/bin
+
+    # Put dev_appserver.py and appcfg.py directly into PATH
+    sudo ln -f -s /usr/local/google_appengine/dev_appserver.py
+    sudo ln -f -s /usr/local/google_appengine/appcfg.py
 fi
 
 read -p "Install App Engine Helper (y/n): "
@@ -81,7 +92,17 @@ if [ "$REPLY" = "y" ]; then
     cd $HOME/Downloads
     if [ ! -f appengine_helper_for_django-r105.zip ]; then
         wget  http://google-app-engine-django.googlecode.com/files/appengine_helper_for_django-r105.zip
-        cd /usr/local
-        sudo unzip $HOME/Downloads/appengine_helper_for_django-r105.zip
     fi
+
+    cd /usr/local
+    sudo unzip $HOME/Downloads/appengine_helper_for_django-r105.zip
+    sudo chmod -R o+rwx appengine_helper_for_django
+
+    # Remove slow or mis-behaving tests
+    cd appengine_helper_for_django/appengine_django/tests
+    rm commands_test.py integration_test.py serialization_test.py
+
+    # Do we need a copy in site packages?
+    # cd /usr/local/lib/python2.5/site-packages
+    # sudo cp -r /usr/local/appengine_helper_for_django/appengine_django .
 fi
