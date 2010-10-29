@@ -4,6 +4,7 @@ sudo apt-get install sqlite
 sudo apt-get install libsqlite3-dev
 sudo easy_install pep8
 
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 DOWN_DIR="$HOME/Downloads"
 
 # TODO: Conditional download function
@@ -112,7 +113,11 @@ if [ "$REPLY" = "y" ]; then
     sudo unzip $HOME/Downloads/appengine_helper_for_django-r105.zip
     sudo chmod -R o+rwx appengine_helper_for_django
 
+    cd appengine_helper_for_django
+    patch -p1 -i $SCRIPT_DIR/aeh.patch
+
     # Remove slow or mis-behaving tests
-    cd appengine_helper_for_django/appengine_django/tests
+    cd appengine_django/tests
     rm commands_test.py integration_test.py serialization_test.py
+
 fi
