@@ -3,9 +3,11 @@
 sudo apt-get install sqlite
 sudo apt-get install libsqlite3-dev
 sudo easy_install pep8
-sudo easy_install mock
 
 DOWN_DIR="$HOME/Downloads"
+
+# TODO: Conditional download function
+# TODO: Put all file version string at top of this file
 
 # Install OpenSSL
 read -p "Install Open SSL (y/n): "
@@ -38,6 +40,13 @@ if [ "$REPLY" = "y" ]; then
     make
     sudo make altinstall
 fi
+
+# TODO: Install setup tools
+# http://pypi.python.org/packages/2.5/s/setuptools/setuptools-0.6c11-py2.5.egg#md5=64c94f3bf7a72a13ec83e0b24f2749b2
+# sh setuptools-0.6c11-py2.5
+
+sudo easy_install-2.5 mock
+sudo easy_install-2.5 PIL
 
 # Get SSL Library not supported in native 2.5.2
 read -p "Install Python ssl Library (y/n): "
