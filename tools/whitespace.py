@@ -12,6 +12,7 @@ IGNORE_FILES = """
 jquery-*.js
 *.xml *.zip
 *.gif *.png *.jpg
+*.patch
 """.split()
 
 
