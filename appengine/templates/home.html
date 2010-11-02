@@ -3,42 +3,59 @@
 {% block left-column %}
 <div id="home">
   <h1>
-    Pageforest Cloud Services Streamline the Development of your JavaScript Apps
+    A Pure JavaScript Web Application Platform
   </h1>
 
-  <h2>Develop Faster</h2>
-  <ul>
-    <li>Simply add a few lines of code to your app to empower your users to save and manage their data.
-    <li>Write your app inside your browser: no downloads, installation, or setup needed.
-  </ul>
+  <p>
+    Pageforest helps you build complete web applications without having to write any
+    server-side code.  You can build your application using web standard technologies
+    (HTML, HTML5, CSS, and JavaScript).  The Pageforest server then provides application
+    hosting, user authentication, and data-storage.
+  </p>
 
-  <h2>More Fun</h2>
-  <ul>
-    <li>Build rich JavaScript-based apps without having to manage or maintain your own web server.
-    <li>You write the front end of your app and leave the server side to us.
-  </ul>
+  <h2>What is a Pageforest App?</h2>
+  <p>
+    A Pageforest App is a web application that is written completely in client-side JavaScript.
+    Your application can use any JavaScript libraries you want (e.g.,
+    <a href="http://jquery.org">jQuery</a>, or <a href="http://jquerymobile.com/">jQuery mobile</a>,
+    <a href="http://www.prototypejs.org/">prototype</a>, or
+    <a href="http://mootools.net/">MooTools</a>).
+  </p>
+  <p>
+    Because it is uses web standards, your App can target desktop browsers, mobile browsers (e.g., iPhone and
+    Android), and tablet devices (e.g., the iPad).
+  </p>
+  <p>
+    Yet, web standards lack a method of providing your users Cloud-based storage so they can always
+    get to the data that your App stores on their behalf.  Pageforest provides a unified document storage
+    service, so your App has a simple way to save it's own state to the Cloud.
+  </p>
 
-  <h2>Worry Free</h2>
+  <h2>What Services does Pageforest Provide?</h2>
   <ul>
-    <li>Our hosted service stores your users' data.
-    <li>With a Pageforest account, users can log into and access their saved data from all of your apps.
-    <li>We focus on keeping your data secure so you can spend your coding time focused on creating.
-  </ul>
-
-  <h2>More Power</h2>
-  <ul>
-    <li>Multiple users can interact on the same page collaboratively- or when playing games, competitively.
-    <li>Each app gets its own custom pageforest.com sub-domain.
-    <li>Each user gets a generous free-quota for data storage.
-  </ul>
-
-  <h2>Pageforest Features</h2>
-  <ul>
-    <li><b>Document and Blob Storage</b> - Store documents of up to 1 Megabyte in size.  Each document
-      can contain an unlimited number of additional "blobs" - containing any type of internet data (JSON,
-      images, pdfs, etc.).
-    <li><b>User Accounts</b> - Grant access to applications and documents on a per-user basis.
-    <li><b>Application Hosting</b> - We host your static HTML and JavaScript on a custom sub-domain.
+    <li><b>Application Hosting</b> - All the assets for your App (HTML pages, javascript libraries, CSS files,
+      and images), are hosted on your own sub-domain of Pageforest.com.</li>
+    <li><b>User Accounts</b> - Each Pageforest user is authenticated by the Pageforest server.  Your application
+      does not need to implement user-accounts.</li>
+    <li><b>Cloud-based Document Storage</b> - When a user authorizes your application to access
+      their account information, your App is authorized to save documents on their
+      behalf to their online document storage.</li>
+    <li><b>Rich Permissions Model</b> - User documents can be public, private, or shared with a specific
+      group of other users; all under user-control.</li>
+    <li><b>Easy-to-Use JavaScript Libraries</b> - The Pageforest JavaScript api makes it easy to implement both a
+      standard user interface for user sign-in, as well as simple data storage and retreival apis.  Pageforest is
+      designed to be simple to implement, so you can focus on the details of your application, and not have
+      to spend too much time on Pageforest-integration.</li>
+    <li><b>Standard REST Interfaces</b> - Pageforest data is accessed through standard HTML requests (GET,
+      PUT, and POST), enabling use from other web services, widgets, and mobile applications.</li>
+    <li><b>Real-time App Support</b> - Write multi-user games, and chat-like Apps using Pageforest's
+      real-time notification API's.</li>
+    <li><b>Reliability</b> - Pageforest is backed by Google's Cloud-based service, giving a high level
+      of scalability and reliablity to the Pageforest service.</li>
+    <li><b>Pageforest is FREE!</b> - Pageforest is free for developers.  Our long-term goal is to help developers
+      monetize their web Apps through an online App Directory and Store.  You may also keep your Apps
+      free and use ads to monetize your App.  Pageforest users are given a generous free quota for
+      storage and usage (we will offer premium subscription plans in the future).</li>
   </ul>
 
   <h2>Open source, open development.</h2>
@@ -66,6 +83,6 @@
 
 {% block right-column %}
 <div class="CallToAction" onclick="location='http://scratch.pageforest.com';return false;">
-  <p>Build an App in 5 minutes</p>
+  <p>Create Your App Now!</p>
 </div>
 {% endblock %}
