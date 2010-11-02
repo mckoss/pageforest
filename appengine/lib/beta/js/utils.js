@@ -2181,7 +2181,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
     var docidMessage = "Document name is missing.";
-    var invalidJSON = "Cannot save object property {key} " +
+    var invalidJSON = "WARNING: Save object property {key} " +
         "with constructor: {ctor}.";
 
     var docProps = ['title', 'tags',
