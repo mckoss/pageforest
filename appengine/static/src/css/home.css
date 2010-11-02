@@ -1,12 +1,22 @@
 # Styles used only on the home page
 #home {
     color: #8C6239;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 #home p {
-    line-height: 19px;
+    font-size: 16px;
+    line-height: 22px;
     margin: 5px 0 5px 0;
+}
+
+#home ul {
+    font-size: 16px;
+    line-height: 22px;
+}
+
+#home li {
+    padding-bottom: 5px;
 }
 
 #home h1 {
