@@ -32,6 +32,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
     var docidMessage = "Document name is missing.";
+    var invalidJSON = "WARNING: Save object property {key} " +
+        "with constructor: {ctor}.";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -186,7 +188,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 json.readers = ['public'];
             }
 
-            var data = JSON.stringify(json);
+            var data = this.jsonToString(json);
             this.log('saving: ' + this.getDocURL(docid), json);
             $.ajax({
                 type: 'PUT',
@@ -266,7 +268,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.docid = docid;
             this.changeState('clean');
             // Remember the clean state of the document
-            this.lastJSON = JSON.stringify(this.getDoc());
+            this.lastJSON = this.jsonToString(this.getDoc());
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -317,7 +319,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // checked.
             // TODO: Don't get the document if the app has it's own
             // isDirty function.
-            var json = JSON.stringify(this.getDoc());
+            var json = this.jsonToString(this.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
             }
@@ -431,7 +433,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 json.readers = ['public'];
             }
 
-            var data = JSON.stringify(json);
+            var data = this.jsonToString(json);
             this.log('saving document: ' + this.getDocURL(docid), json);
             $.ajax({
                 type: 'PUT',
@@ -445,6 +447,38 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                     fn(true);
                 }
             });
+        },
+
+        jsonToString: function(json) {
+            var s;
+            var badProperty;
+
+            function mapper(key, value) {
+                if (badProperty) {
+                    return value;
+                }
+                // Warn about non-generic JavaScript Objects
+                if (typeof value == 'object' && value.constructor != Object &&
+                   value.constructor != Array) {
+                    console.warn(
+                        format.replaceKeys(invalidJSON,
+                                           {key: key,
+                                            ctor:
+                                            value.constructor.toString()}));
+                    badProperty = key;
+                }
+                return value;
+            }
+
+            try {
+                s = JSON.stringify(json, mapper);
+            } catch (e) {
+                // Error probably indicates a circular reference
+                console.error(e.message);
+                return JSON.stringify({error: e.message});
+            }
+
+            return s;
         },
 
         // Save a child blob in the namespace of a document
@@ -472,7 +506,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             if (typeof data != "string") {
-                data = JSON.stringify(data);
+                data = this.jsonToString(data);
             }
             this.log('saving blob: ' + url + ' (' + data.length + ')');
             $.ajax({
