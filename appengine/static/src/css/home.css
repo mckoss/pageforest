@@ -10,6 +10,11 @@
     margin: 5px 0 5px 0;
 }
 
+#home img.right {
+    float:right;
+    margin: 10px 0 10px 12px;
+}
+
 #home ul {
     font-size: 16px;
     line-height: 22px;
@@ -17,6 +22,12 @@
 
 #home li {
     padding-bottom: 5px;
+}
+
+#home li img {
+    display:block;
+    margin: 10px auto 10px auto;
+    border: 2px solid #8C6239;
 }
 
 #home h1 {
@@ -34,6 +45,7 @@
     font-weight: bold;
     color: #4D2500;
     margin: 0;
+    clear: both;
 }
 
 #home div.homeCopy {
