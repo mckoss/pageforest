@@ -84,11 +84,9 @@ class FileWalker(object):
         pass_file.close()
 
     def get_file_dict(self, file_path):
-        file_path = file_path.lower()
         return self.pass_dict.get(file_path, None)
 
     def set_file_dict(self, file_path, file_dict):
-        file_path = file_path.lower()
         self.pass_dict[file_path] = file_dict
 
     def set_passing(self, pass_key=None, file_path=None):
@@ -175,7 +173,7 @@ class FileWalker(object):
 
         for arg in args:
             if os.path.isfile(arg):
-                arg = os.path.abspath(arg).lower()
+                arg = os.path.abspath(arg)
                 self.file_path = arg
                 yield arg
                 continue
@@ -189,7 +187,7 @@ class FileWalker(object):
                     if self.ignore_dir(dir_name):
                         dir_names.remove(dir_name)
                 for file_name in file_names:
-                    file_path = os.path.join(dir_path, file_name).lower()
+                    file_path = os.path.join(dir_path, file_name)
                     if self.ignore_file(file_name, file_path):
                         continue
                     self.file_path = file_path
@@ -228,7 +226,7 @@ if __name__ == '__main__':
     print
 
     # Dump the current .pass file for the passed argument (or cwd)
-    cur_path = os.getcwd().lower()
+    cur_path = os.getcwd()
     walker = FileWalker(matches=sys.argv[1:])
     for file_path in walker.walk_files():
         file_dict = walker.pass_dict.get(file_path, None)
