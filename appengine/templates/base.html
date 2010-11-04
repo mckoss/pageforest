@@ -4,6 +4,8 @@
 <head>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>{% block full-title %}{% block title %}{% endblock %} - {{ SITE_NAME }}{% endblock %}</title>
+<link rel="icon" type="image/png" href="/static/images/icon.png" />
+<link rel="apple-touch-icon" type="image/png" href="/static/images/touch.png" />
 {% block css %}
         {% for file_name in css_files.default %}
             <link rel="stylesheet" type="text/css" href="{{ file_name }}" />
