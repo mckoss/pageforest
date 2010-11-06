@@ -2983,11 +2983,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         showError: function(message) {
-            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-
             if (this.errorPanel == undefined) {
+                console.log("Error: " + message);
                 return;
             }
+
+            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
+
             if (message == undefined) {
                 dom.slide(this.errorPanel, vector.lr(rcAppBox), 'hide');
                 return;
