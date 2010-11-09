@@ -3,45 +3,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var base = namespace.lookup('org.startpad.base');
 
-    var nsSymbols = ['Tiles',
-                     '_isDefined', '_referenced', '_parent', '_path', 'test'];
-
-    var tilesSymbols = ['tileName', 'rectFromTileName', 'getImage',
-                        'checkAndRender', 'checkTileExists', 'createTileDoc',
-                        'findParent', 'relativeRect', 'buildTile',
-                        'copyTileAttrs', 'cachePNG', 'setTileSize',
-                        'setTileExists', 'pixelRect'];
-
     function addTests(ts) {
-        ts.addTest("Contract", function (ut) {
-            var Tiles = tiles.Tiles;
-            ut.assertEq(typeof(Tiles), 'function');
-
-            for (var i = 0; i < tilesSymbols.length; i++) {
-                var symbol = tilesSymbols[i];
-                ut.assert(Tiles.prototype[symbol] != undefined,
-                          "Missing api: Tiles." + symbol);
-                ut.assertEq(typeof Tiles.prototype[symbol], 'function',
-                            symbol);
-            }
-        });
-
-        ts.addTest("Undocumented Exports", function (ut) {
-            var Tiles = tiles.Tiles;
-            for (var prop in tiles) {
-                if (tiles.hasOwnProperty(prop)) {
-                    ut.assert(nsSymbols.indexOf(prop) != -1,
-                                "Undocumented symbol: " + prop);
-                }
-            }
-
-            for (prop in Tiles.prototype) {
-                if (Tiles.prototype.hasOwnProperty(prop)) {
-                    ut.assert(tilesSymbols.indexOf(prop) != -1,
-                              "Undocument method: Tiles." + prop);
-                }
-            }
-        });
 
         ts.addTest("tileName", function (ut) {
             var t = new tiles.Tiles();
@@ -108,9 +70,8 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
 
             var tile = t.buildTile();
             ut.assertEq(tile.div.tagName, 'DIV');
-            ut.assertEq(tile.div.childNodes.length, 2);
-            ut.assertIdent(tile.div.firstChild, tile.img);
-            ut.assertIdent(tile.div.childNodes[1], tile.imgProxy);
+            ut.assertEq(tile.div.childNodes.length, 1);
+            ut.assertIdent(tile.div.firstChild.firstChild, tile.img);
         });
 
         ts.addTest("getImage", function(ut) {
@@ -130,13 +91,8 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             document.body.appendChild(div);
             ut.assertEq(div.offsetWidth, 256, 'div width');
             ut.assertEq(div.offsetHeight, 256, 'div height');
-            var img = div.firstChild;
+            var img = div.firstChild.firstChild;
             ut.assertEq(img.tagName, 'IMG');
-            ut.assertEq(img.style.display, 'none');
-            img = img.nextSibling;
-            ut.assertEq(img.tagName, 'IMG');
-            ut.assertEq(img.offsetWidth, 256, 'img width');
-            ut.assertEq(img.offsetHeight, 256, 'img height');
 
             div = t.getImage("01.png");
             ut.assertEq(div.tagName, 'DIV');
@@ -144,7 +100,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
             document.body.appendChild(div);
             ut.assertEq(div.offsetWidth, 256, 'div width');
             ut.assertEq(div.offsetHeight, 256, 'div height');
-            img = div.childNodes[1];
+            img = div.firstChild.firstChild;
             ut.assertEq(img.tagName, 'IMG');
             ut.assertEq(img.offsetWidth, 512, 'img width');
             ut.assertEq(img.offsetHeight, 512, 'img height');
@@ -159,8 +115,7 @@ namespace.lookup('com.pageforest.tiles.test').defineOnce(function (ns) {
 
             ut.assertEq(t.findParent('01.png'), '0.png');
             ut.assertEq(t.findParent('013.png'), '0.png');
-            t.getImage('01.png');
-            t.setTileExists('01.png');
+            t.ensureTile('01.png').exists = true;
             ut.assertEq(t.findParent('013.png'), '01.png');
         });
     }

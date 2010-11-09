@@ -2,43 +2,7 @@ namespace.lookup('com.pageforest.mandelbrot.test').defineOnce(function (ns) {
     var mandelbrot = namespace.lookup('com.pageforest.mandelbrot');
     var base = namespace.lookup('org.startpad.base');
 
-    var nsSymbols = ['Mandelbrot', 'initWorkers',
-                     '_isDefined', '_referenced', '_parent', '_path', 'test'];
-
-    var mandelbrotSymbols = ['iterations', 'colorFromLevel', 'levelFromColor',
-                             'render', 'renderData', 'renderKey',
-                             'rgbaFromColor', 'onData', 'initWorkers'];
-
     function addTests(ts) {
-        ts.addTest("Contract", function (ut) {
-            var Mandelbrot = mandelbrot.Mandelbrot;
-            ut.assertEq(typeof(Mandelbrot), 'function');
-
-            for (var i = 0; i < mandelbrotSymbols.length; i++) {
-                var symbol = mandelbrotSymbols[i];
-                ut.assert(Mandelbrot.prototype[symbol] != undefined,
-                          "Missing api: Mandelbrot." + symbol);
-                ut.assertEq(typeof Mandelbrot.prototype[symbol], 'function',
-                            symbol);
-            }
-        });
-
-        ts.addTest("Undocumented Exports", function (ut) {
-            var Mandelbrot = mandelbrot.Mandelbrot;
-            for (var prop in mandelbrot) {
-                if (mandelbrot.hasOwnProperty(prop)) {
-                    ut.assert(nsSymbols.indexOf(prop) != -1,
-                                "Undocumented symbol: " + prop);
-                }
-            }
-
-            for (prop in Mandelbrot.prototype) {
-                if (Mandelbrot.prototype.hasOwnProperty(prop)) {
-                    ut.assert(mandelbrotSymbols.indexOf(prop) != -1,
-                              "Undocument method: Mandelbrot." + prop);
-                }
-            }
-        });
 
         ts.addTest("Iter Samples", function (ut) {
             var m = new mandelbrot.Mandelbrot();
