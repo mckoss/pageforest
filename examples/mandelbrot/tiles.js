@@ -163,7 +163,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return this.tiles[blobid];
             }
 
-            var tile = this.buildTile();
+            var tile = this.buildTile(blobid);
             this.tiles[blobid] = tile;
 
             // Only display an image we are sure is already rendered.
@@ -183,7 +183,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // The reason for the nested div's is that Google maps
         // modifies styles on the outer element - which can conflict
         // with css properties we have defined for it.
-        buildTile: function(className) {
+        buildTile: function(blobid, className) {
             var divOuter = document.createElement('div');
             this.setTileSize(divOuter);
 
@@ -198,9 +198,23 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var img = document.createElement('img');
             div.appendChild(img);
 
-            return {'div': divOuter,
-                    'img': img,
-                    'exists': false};
+            var divStatus = document.createElement('div');
+            divStatus.className = 'status';
+            this.setTileSize(divStatus);
+            divOuter.appendChild(divStatus);
+
+            var tile = {'div': divOuter,
+                        'img': img,
+                        'exists': false,
+                        'divStatus': divStatus,
+                        'blobid': blobid};
+
+            this.setTileStatus(tile, 'new');
+            return tile;
+        },
+
+        setTileStatus: function(tile, className) {
+            tile.divStatus.innerHTML = tile.blobid + " - " + className;
         },
 
         // Copy the tile's image src url and style attributes from one
@@ -247,6 +261,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     $(imgT).bind('load', function() {
                         tile.img.src = imgT.src;
                         self.setTileSize(tile.img);
+                        self.setTileStatus(tile, 'loaded');
                         self.fnUpdated(blobid, tile.div);
                     });
                     imgT.src = self.client.getDocURL(self.docid, blobid);
@@ -257,22 +272,25 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 canvas.width = self.dxTile;
                 canvas.height = self.dyTile;
 
+                self.setTileStatus(tile, 'rendering');
                 self.fnRender(blobid, canvas, function () {
                     // Update the visible tile with the rendered pixels.
                     tile.img.src = canvas.toDataURL();
                     self.setTileSize(tile.img);
                     tile.exists = true;
+                    self.setTileStatus(tile, 'rendered');
                     self.fnUpdated(blobid, tile.div);
                     function deferred() {
-                        self.cachePNG(blobid, canvas);
+                        self.cachePNG(tile, canvas);
                     }
                     setTimeout(deferred, 10);
                 });
             });
         },
 
-        cachePNG: function(blobid, canvas) {
+        cachePNG: function(tile, canvas) {
             var tags = [];
+            var blobid = tile.blobid;
             var tagString = blobid.substr(0, blobid.indexOf('.'));
             for (var level = 1; level <= this.listDepth; level++) {
                 tagString = tagString.slice(0, -1);
@@ -281,9 +299,14 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 }
                 tags.push('p' + level + ':' + tagString);
             }
+            var self = this;
             this.client.putBlob(this.docid, blobid,
                                 format.canvasToPNG(canvas),
-                                {'encoding': 'base64', 'tags': tags});
+                                {'encoding': 'base64', 'tags': tags},
+                                function (status) {
+                                    self.setTileStatus(tile,
+                                                       'saved: ' + status);
+                                });
         },
 
         checkTileExists: function(blobid, fn) {
@@ -301,6 +324,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                                                          headOnly: true},
                                     function(status) {
                                         if (status) {
+                                            self.setTileStatus(tile,
+                                                               'available');
                                             tile.exists = true;
                                         }
                                         fn(status);
