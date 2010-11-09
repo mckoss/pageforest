@@ -29,7 +29,9 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     Mandelbrot.methods({
         initWorkers: function() {
             if (typeof Worker != "undefined") {
+                this.work = [];
                 this.worker = new Worker('mandelbrot-worker.js');
+                this.worker.isBusy = false;
                 this.worker.onmessage = this.onData.fnMethod(this);
                 this.requests = {};
                 this.idNext = 0;
@@ -165,6 +167,18 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             }
         },
 
+        getBusy: function() {
+            if (this.worker.isBusy) {
+                return;
+            }
+            this.worker.isBusy = true;
+            if (this.work.length >= 1) {
+                var data = this.work.pop();
+                console.log("Render start <-- " + data.id);
+                this.worker.postMessage(data);
+            }
+        },
+
         renderData: function(data, rc, cx, cy, fn) {
             // TODO: Enable more than 1 worker
             if (this.worker && fn) {
@@ -174,7 +188,9 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     fn: fn,
                     cb: cx * cy * 4
                 };
-                this.worker.postMessage({id: id, rc: rc, cx: cx, cy: cy});
+                this.work.push({id: id, rc: rc, cx: cx, cy: cy});
+                console.log("Render request --> " + id);
+                this.getBusy();
                 return;
             }
 
@@ -221,6 +237,8 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             }
             req.fn();
             delete this.requests[id];
+            this.worker.isBusy = false;
+            this.getBusy();
         }
     });
 

@@ -204,7 +204,6 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         for (var i = 0; i < stats.length; i++) {
             var stat = stats[i];
             $('#' + stat).text(ns[stat]);
-            console.log(stat + ": " + ns[stat]);
         }
     }
 
