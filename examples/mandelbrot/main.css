@@ -123,3 +123,10 @@ display: none;
     transform: scaleY(-1);
     filter: flipv; /*IE*/
 }
+
+div.status {
+    font-size: 12px;
+    color: white;
+    z-order: 1;
+    padding-top: 128px;
+}
