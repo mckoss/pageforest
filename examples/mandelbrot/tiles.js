@@ -168,7 +168,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
             // Only display an image we are sure is already rendered.
             var parentBlobid = this.findParent(blobid);
-            parentBlobid = blobid;
             var rcParent = this.relativeRect(blobid, parentBlobid);
             tile.img.src = this.client.getDocURL(this.docid, parentBlobid);
             this.setTileSize(tile.img, rcParent);
@@ -179,8 +178,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return tile;
         },
 
-        // The struction of a displayed tile is
-        // <div><div><img/></div><div>
+        // The structure of a displayed tile is:
+        //     <div><div><img/></div><div>
         // The reason for the nested div's is that Google maps
         // modifies styles on the outer element - which can conflict
         // with css properties we have defined for it.
@@ -244,9 +243,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
-                    tile.img.src = self.client.getDocURL(self.docid, blobid);
-                    self.setTileSize(tile.img);
-                    self.fnUpdated(blobid, tile.div);
+                    var imgT = new Image();
+                    $(imgT).bind('load', function() {
+                        tile.img.src = imgT.src;
+                        self.setTileSize(tile.img);
+                        self.fnUpdated(blobid, tile.div);
+                    });
+                    imgT.src = self.client.getDocURL(self.docid, blobid);
                     return;
                 }
 
@@ -260,7 +263,10 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     self.setTileSize(tile.img);
                     tile.exists = true;
                     self.fnUpdated(blobid, tile.div);
-                    self.cachePNG(blobid, canvas);
+                    function deferred() {
+                        self.cachePNG(blobid, canvas);
+                    }
+                    setTimeout(deferred, 10);
                 });
             });
         },
@@ -275,7 +281,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 }
                 tags.push('p' + level + ':' + tagString);
             }
-            console.log("Saving blob: " + blobid);
             this.client.putBlob(this.docid, blobid,
                                 format.canvasToPNG(canvas),
                                 {'encoding': 'base64', 'tags': tags});
@@ -291,15 +296,21 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 return;
             }
 
-            this.client.getBlob(this.docid, blobid, {dataType: "image/png",
-                                                     headOnly: true},
-                                function(status) {
-                                    console.log(blobid + " loaded " + status);
-                                    if (status) {
-                                        tile.exists = true;
-                                    }
-                                    fn(status);
-                                });
+            function deferredCheck() {
+                self.client.getBlob(self.docid, blobid, {dataType: "image/png",
+                                                         headOnly: true},
+                                    function(status) {
+                                        if (status) {
+                                            tile.exists = true;
+                                        }
+                                        fn(status);
+                                    });
+            }
+
+            // Defer for a while to allow some idle time processing
+            // of the google maps control
+            console.log("Asking for " + blobid);
+            setTimeout(deferredCheck, 10);
         }
     });
 
