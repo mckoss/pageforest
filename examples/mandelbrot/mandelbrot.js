@@ -3,8 +3,6 @@
 namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
     // http://en.wikipedia.org/wiki/Mandelbrot_set
 
-    // TODO: Don't build tiles for the negative space - just flip for display!
-
     function Mandelbrot() {
         this.maxIterations = 1000;
         this.rcTop = [-2, -2, 2, 2];

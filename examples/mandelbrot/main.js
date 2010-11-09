@@ -12,15 +12,15 @@
 
    TODO:
 
-   * Don't render positive tile space (just flip tiles to display). Note
+   X Don't render positive tile space (just flip tiles to display). Note
      should change to render from center of each pixel, rather than
-   * Show low-resolution images in the map until the high res tile
+   X Show low-resolution images in the map until the high res tile
      is available (use clipped/enlarged sections from parent tiles.
      the corner to not introduce distortion around the origin.
    * Render priority to visible/central tiles (not FIFO order as is done now).
-   * Pick better starting location.  Make outer regions be transparent
+   X Pick better starting location.  Make outer regions be transparent
      rather than black.
-   * Full-screen mode.
+   X Full-screen mode.
    * Support bookmarking of interesting areas of the set - thumbnails
      in the document.  Animated tours of the space.
    * Let users build large mosaic images of selected reagions and store them
@@ -28,12 +28,12 @@
      merchandise).
    * Graph CPU and Network usage (both raw pixels per second and total
      pixels per second to show effect of multiple CPU cores).
-   * Don't roundtrip for cached URL tile after a PUT - just use the computed
+   X Don't roundtrip for cached URL tile after a PUT - just use the computed
      data: url from canvas to display directly.
    * Allow anonymous users to render offline (only - mode for speed test).
    * Use concurrent viewers as bot-net for parrallel computation of requested
      tiles.
-   - Allow the wuser to select the number of concurrent workers (0-16).
+   - Use 4 workers.
    - Allow selection of different level colorings.
    - Hot-spot overlay - show where (recent) users are viewing the set.
      Possible just show time-decay viewing and/or rendering.
@@ -45,6 +45,16 @@
      viewers and renderers.  Allow users to join teams and have team
      leaderboard. See http://setiathome.berkeley.edu/top_teams.php and
      http://boinc.berkeley.edu/.
+   - Tribute to Benoit Mandelbrot (died 2010).
+   X Tiles should be div(div((img-img)) instead of div(img-img).  Allows for
+     setting transform styles on the div that google maps will NOT modify
+     (overriding our Transform with a bogus TransformZ of their own).
+   X Get rid of proxy image when we convert to LIST calls.
+
+   BUGS:
+
+   - "Mandelbrot" is clipped
+
  */
 
 /*globals google */
@@ -56,6 +66,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var tileLib = namespace.lookup('com.pageforest.tiles');
 
+    // All tiles are stored in one global (public) document.
     var tilesDocId = "v7";
 
     function MandelbrotMapType() {
@@ -88,6 +99,8 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             }
 
             var tileName = this.tiles.tileName({x: coord.x, y: y}, zoom);
+
+            // If we're off the boundary - just make an empty div tile
             if (tileName == undefined) {
                 div = document.createElement('div');
                 div.style.width = this.tileSize.width + 'px';
@@ -100,14 +113,20 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
             }
 
             var tile = this.tiles.getImage(tileName);
-            if (flip) {
-                var tileFlip = this.tiles.buildTile().div;
-                this.tiles.copyTileAttrs(tileFlip, tile);
-                $(tileFlip).addClass('flip');
-                this.flipTiles[tileName] = tileFlip;
+            if (!flip) {
+                return tile;
+            }
+
+            var tileFlip = this.flipTiles[tileName];
+            if (tileFlip) {
                 return tileFlip;
             }
-            return tile;
+
+            tileFlip = this.tiles.buildTile('flip').div;
+            this.tiles.copyTileAttrs(tileFlip, tile);
+            this.flipTiles[tileName] = tileFlip;
+
+            return tileFlip;
         },
 
         renderTile: function(tileName, canvas, fn) {
@@ -185,6 +204,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
         for (var i = 0; i < stats.length; i++) {
             var stat = stats[i];
             $('#' + stat).text(ns[stat]);
+            console.log(stat + ": " + ns[stat]);
         }
     }
 

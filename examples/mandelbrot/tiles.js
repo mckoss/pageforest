@@ -1,9 +1,32 @@
+/* Tiles - Hierarchical image caching library.
+
+   The tiles library manages the creation and display
+   of multi-resolution image tiles.  These can be
+   displayed using a custom Google map control.
+
+   All tile images are stored as named blob's underneath a
+   global document in Pageforest.  Blob's are stored using
+   a quadtree naming convention.  The "top" tile is 0.png
+   and the 4 "children" tiles are 00.png, 01.png, 02.png,
+   and 03.png (see tileName method, below).
+
+   The client should override these functions:
+
+   tiles.fnRender(blobid, canvas, fnCallback)
+       Called to render a specific tile into the given canvas
+       object.  Should call fnCallback when complete.
+
+   tiles.fnUpdated(blobid, element)
+       Called when the client is ready to display the given tile.
+
+   Tiles will attempt to display the best available resolution tile
+   that has already been rendered, while the tile is being rendered.
+ */
+
 namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
     var format = namespace.lookup('org.startpad.format');
     var base = namespace.lookup('org.startpad.base');
 
-    /* Tiles - Hierarchical image caching library.
-     */
     function Tiles(client, docid, dx, dy, rect) {
         this.client = client;
         this.docid = docid;
@@ -12,9 +35,8 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         this.rect = rect;
         this.listDepth = 4;
         this.tiles = {};
-        this.fnRender = function (blobid, fn) {
-            var canvas;
-            fn(canvas);
+        this.fnRender = function (blobid, canvas, fnCallback) {
+            fnCallback(canvas);
         };
         this.fnUpdated = function(blobid, obj) {
         };
@@ -124,61 +146,76 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return this.pixelRect(tileName, this.rectFromTileName(tileOther));
         },
 
+        // Return a displayable tile, loaded with the best resolution
+        // image that we have loaded to date.  Will kick off a render
+        // function if we don't yet have the best-resolution tile
+        // rendered.
         getImage: function(blobid) {
+            var tile = this.ensureTile(blobid);
+            return tile.div;
+        },
+
+        ensureTile: function(blobid) {
             // REVIEW: Should we be caching images?  Could hamper google
             // maps' ability to free space in the browser by dereferencing
             // img objects.
             if (this.tiles[blobid]) {
-                return this.tiles[blobid].div;
+                return this.tiles[blobid];
             }
 
-            this.tiles[blobid] = this.buildTile();
-            var img = this.tiles[blobid].img;
-            var imgProxy = this.tiles[blobid].imgProxy;
+            var tile = this.buildTile();
+            this.tiles[blobid] = tile;
+
+            // Only display an image we are sure is already rendered.
             var parentBlobid = this.findParent(blobid);
+            parentBlobid = blobid;
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            this.setTileSize(imgProxy, rcParent);
-            imgProxy.src = this.client.getDocURL(this.docid, parentBlobid);
+            tile.img.src = this.client.getDocURL(this.docid, parentBlobid);
+            this.setTileSize(tile.img, rcParent);
+
+            // Then render the full resolution tile in the background.
             this.checkAndRender(blobid);
-            return this.tiles[blobid].div;
+
+            return tile;
         },
 
-        buildTile: function() {
+        // The struction of a displayed tile is
+        // <div><div><img/></div><div>
+        // The reason for the nested div's is that Google maps
+        // modifies styles on the outer element - which can conflict
+        // with css properties we have defined for it.
+        buildTile: function(className) {
+            var divOuter = document.createElement('div');
+            this.setTileSize(divOuter);
+
             var div = document.createElement('div');
             this.setTileSize(div);
+            if (className) {
+                div.className = className;
+            }
             div.style.overflow = 'hidden';
+            divOuter.appendChild(div);
 
             var img = document.createElement('img');
-            this.setTileSize(img);
-            img.style.display = 'none';
-            img.style.zIndex = 2;
             div.appendChild(img);
 
-            var imgProxy = document.createElement('img');
-            this.setTileSize(imgProxy);
-            imgProxy.style.zIndex = 1;
-            div.appendChild(imgProxy);
-
-            $(img).bind('load', function() {
-                img.style.display = 'block';
-                //imgProxy.style.display = 'none';
-            });
-
-            return {'div': div, 'img': img, 'imgProxy': imgProxy};
+            return {'div': divOuter,
+                    'img': img,
+                    'exists': false};
         },
 
+        // Copy the tile's image src url and style attributes from one
+        // tile to another.
         copyTileAttrs: function(destDiv, srcDiv) {
             var styles = ['top', 'left', 'width', 'height',
                           'position', 'display'];
 
-            for (var j = 0; j < srcDiv.childNodes.length; j++) {
-                var destImg = destDiv.childNodes[j];
-                var srcImg = srcDiv.childNodes[j];
+            var destImg = destDiv.firstChild.firstChild;
+            var srcImg = srcDiv.firstChild.firstChild;
 
-                destImg.src = srcImg.src;
-                for (var i = 0; i < styles.length; i++) {
-                    destImg.style[styles[i]] = srcImg.style[styles[i]];
-                }
+            destImg.src = srcImg.src;
+            for (var i = 0; i < styles.length; i++) {
+                destImg.style[styles[i]] = srcImg.style[styles[i]];
             }
         },
 
@@ -186,7 +223,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             if (rc == undefined) {
                 rc = [0, 0, this.dxTile, this.dyTile];
             }
-            // Note that the parent div is aboslute positioned (by
+            // Note that the parent div is absolute positioned (by
             // Google Maps), and the child image is absolute
             // positioned within the parent div.
             elt.style.position = 'absolute';
@@ -200,17 +237,16 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // and put it in the cache (and update the DOM image that
         // is displaying it when it is loaded).
         checkAndRender: function(blobid) {
-            // Save this in closure for use in callbacks, below.
             var self = this;
 
             self.checkTileExists(blobid, function (exists) {
-                var img = self.tiles[blobid].img;
+                var tile = self.ensureTile(blobid);
 
                 // Set the native URL
                 if (exists) {
-                    img.src = self.client.getDocURL(self.docid, blobid);
-                    img.style.display = 'block';
-                    self.fnUpdated(blobid, self.tiles[blobid].div);
+                    tile.img.src = self.client.getDocURL(self.docid, blobid);
+                    self.setTileSize(tile.img);
+                    self.fnUpdated(blobid, tile.div);
                     return;
                 }
 
@@ -220,9 +256,10 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 self.fnRender(blobid, canvas, function () {
                     // Update the visible tile with the rendered pixels.
-                    self.setTileSize(img);
-                    img.src = canvas.toDataURL();
-                    self.fnUpdated(blobid, self.tiles[blobid].div);
+                    tile.img.src = canvas.toDataURL();
+                    self.setTileSize(tile.img);
+                    tile.exists = true;
+                    self.fnUpdated(blobid, tile.div);
                     self.cachePNG(blobid, canvas);
                 });
             });
@@ -238,21 +275,18 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 }
                 tags.push('p' + level + ':' + tagString);
             }
+            console.log("Saving blob: " + blobid);
             this.client.putBlob(this.docid, blobid,
                                 format.canvasToPNG(canvas),
                                 {'encoding': 'base64', 'tags': tags});
-        },
-
-        setTileExists: function(blobid) {
-            this.tiles[blobid].exists = true;
         },
 
         checkTileExists: function(blobid, fn) {
             // TODO: Load the current tile states using the LIST
             // command using clustered tags.
             var self = this;
-            var tile = this.tiles[blobid];
-            if (tile && tile.exists) {
+            var tile = this.ensureTile(blobid);
+            if (tile.exists) {
                 fn(true);
                 return;
             }
@@ -260,8 +294,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             this.client.getBlob(this.docid, blobid, {dataType: "image/png",
                                                      headOnly: true},
                                 function(status) {
+                                    console.log(blobid + " loaded " + status);
                                     if (status) {
-                                        self.setTileExists(blobid);
+                                        tile.exists = true;
                                     }
                                     fn(status);
                                 });
