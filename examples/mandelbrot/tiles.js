@@ -255,6 +255,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var destImg = destDiv.firstChild.firstChild;
             var srcImg = srcDiv.firstChild.firstChild;
 
+            // Don't copy for un-initialized tiles
+            if (srcImg.src == "") {
+                return;
+            }
+
             destImg.src = srcImg.src;
             for (var i = 0; i < styles.length; i++) {
                 destImg.style[styles[i]] = srcImg.style[styles[i]];
@@ -300,9 +305,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                     // Update the visible tile with the rendered pixels.
                     tile.img.src = canvas.toDataURL();
                     self.setTileSize(tile.img);
-                    tile.exists = true;
                     self.setTileStatus(tile, 'rendered');
                     self.fnUpdated(blobid, tile.div);
+                    tile.exists = true;
                     function deferred() {
                         self.cachePNG(tile, canvas);
                     }
