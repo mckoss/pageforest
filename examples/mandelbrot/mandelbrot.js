@@ -10,6 +10,9 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
         this.xMax = 2;
         this.yMin = -2;
         this.yMax = 2;
+        this.onRender = function(info, status) {
+            console.log("Rendering " + info + ": " + status);
+        };
 
         // level, R, G, B, A - interpolated
         this.levelColors = [
@@ -235,10 +238,10 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             for (var i = 0; i < cb; i++) {
                 dataOut[i] = dataIn[i];
             }
-            req.fn();
             delete this.requests[id];
             this.worker.isBusy = false;
             this.getBusy();
+            req.fn();
         }
     });
 

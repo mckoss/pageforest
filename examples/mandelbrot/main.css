@@ -130,3 +130,7 @@ div.status {
     z-order: 1;
     padding-top: 128px;
 }
+
+div.status a {
+    color: white;
+}

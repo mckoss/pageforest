@@ -169,8 +169,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Only display an image we are sure is already rendered.
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            tile.img.src = this.client.getDocURL(this.docid, parentBlobid);
-            this.setTileSize(tile.img, rcParent);
+            this.setTileImage(tile, this.client.getDocURL(this.docid,
+                                                          parentBlobid),
+                              rcParent);
 
             // Then render the full resolution tile in the background.
             this.checkAndRender(blobid);
@@ -207,14 +208,36 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                         'img': img,
                         'exists': false,
                         'divStatus': divStatus,
-                        'blobid': blobid};
+                        'blobid': blobid,
+                        'status': 'new'};
 
-            this.setTileStatus(tile, 'new');
+            this.setTileStatus(tile, className || 'new');
             return tile;
         },
 
-        setTileStatus: function(tile, className) {
-            tile.divStatus.innerHTML = tile.blobid + " - " + className;
+        setTileStatus: function(tile, status) {
+            var url = this.client.getDocURL(this.docid, tile.blobid);
+            tile.status = status;
+            tile.divStatus.innerHTML = '<a target="_blank" href="' +
+                url + '">' + tile.blobid + "</a> - " + status;
+        },
+
+        // Set the image for a tile - but defer changing the display image
+        // src until we confirm the image is loaded in memory.
+        setTileImage: function(tile, url, rc, fn) {
+            var self = this;
+            var img = new Image();
+            console.log("loading image " + url);
+            $(img).bind('load', function() {
+                console.log("loaded " + url);
+                tile.img.src = img.src;
+                self.setTileSize(tile.img, rc);
+                self.setTileStatus(tile, 'loaded');
+                if (fn) {
+                    fn();
+                }
+            });
+            img.src = url;
         },
 
         // Copy the tile's image src url and style attributes from one
@@ -257,14 +280,11 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
                 // Set the native URL
                 if (exists) {
-                    var imgT = new Image();
-                    $(imgT).bind('load', function() {
-                        tile.img.src = imgT.src;
-                        self.setTileSize(tile.img);
-                        self.setTileStatus(tile, 'loaded');
-                        self.fnUpdated(blobid, tile.div);
-                    });
-                    imgT.src = self.client.getDocURL(self.docid, blobid);
+                    self.setTileImage(tile,
+                                      self.client.getDocURL(self.docid, blobid),
+                                      undefined, function () {
+                                            self.fnUpdated(blobid, tile.div);
+                                        });
                     return;
                 }
 
@@ -272,7 +292,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 canvas.width = self.dxTile;
                 canvas.height = self.dyTile;
 
-                self.setTileStatus(tile, 'rendering');
+                self.setTileStatus(tile, 'queued');
                 self.fnRender(blobid, canvas, function () {
                     // Update the visible tile with the rendered pixels.
                     tile.img.src = canvas.toDataURL();
