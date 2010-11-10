@@ -172,13 +172,14 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
 
         getBusy: function() {
             if (this.worker.isBusy) {
+                this.onRender(this.work.length, 'queue length');
                 return;
             }
-            this.worker.isBusy = true;
             if (this.work.length >= 1) {
                 var data = this.work.pop();
-                console.log("Render start <-- " + data.id);
+                this.onRender(data.id, 'start');
                 this.worker.postMessage(data);
+                this.worker.isBusy = true;
             }
         },
 
@@ -192,7 +193,6 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                     cb: cx * cy * 4
                 };
                 this.work.push({id: id, rc: rc, cx: cx, cy: cy});
-                console.log("Render request --> " + id);
                 this.getBusy();
                 return;
             }
@@ -227,6 +227,9 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
             var dataIn = evt.data.data;
             var req = this.requests[id];
 
+            this.worker.isBusy = false;
+
+            this.onRender(id, 'complete');
             if (req == undefined) {
                 console.error("Duplicate callback?", evt);
                 return;
@@ -239,7 +242,6 @@ namespace.lookup('com.pageforest.mandelbrot').defineOnce(function (ns) {
                 dataOut[i] = dataIn[i];
             }
             delete this.requests[id];
-            this.worker.isBusy = false;
             this.getBusy();
             req.fn();
         }

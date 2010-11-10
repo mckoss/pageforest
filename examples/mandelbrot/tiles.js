@@ -360,7 +360,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
 
             // Defer for a while to allow some idle time processing
             // of the google maps control
-            console.log("Asking for " + blobid);
             setTimeout(deferredCheck, 10);
         }
     });
