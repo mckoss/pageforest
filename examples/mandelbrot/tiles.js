@@ -155,7 +155,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             return tile.div;
         },
 
-        ensureTile: function(blobid) {
+        ensureTile: function(blobid, classname) {
             // REVIEW: Should we be caching images?  Could hamper google
             // maps' ability to free space in the browser by dereferencing
             // img objects.
@@ -169,9 +169,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             // Only display an image we are sure is already rendered.
             var parentBlobid = this.findParent(blobid);
             var rcParent = this.relativeRect(blobid, parentBlobid);
-            this.setTileImage(tile, this.client.getDocURL(this.docid,
-                                                          parentBlobid),
-                              rcParent);
+            this.setTileImage(tile, parentBlobid, rcParent);
 
             // Then render the full resolution tile in the background.
             this.checkAndRender(blobid);
@@ -219,23 +217,31 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             var url = this.client.getDocURL(this.docid, tile.blobid);
             tile.status = status;
             tile.divStatus.innerHTML = '<a target="_blank" href="' +
-                url + '">' + tile.blobid + "</a> - " + status;
+                url + '">' + tile.blobid + "</a><br/>" + status;
         },
 
         // Set the image for a tile - but defer changing the display image
         // src until we confirm the image is loaded in memory.
-        setTileImage: function(tile, url, rc, fn) {
+        setTileImage: function(tile, blobid, rc) {
             var self = this;
             var img = new Image();
-            console.log("loading image " + url);
+            var url = this.client.getDocURL(this.docid, blobid);
+
+            var status = 'loading';
+            if (blobid != tile.blobid) {
+                status += " " + blobid;
+            }
+            this.setTileStatus(tile, status);
+
             $(img).bind('load', function() {
-                console.log("loaded " + url);
                 tile.img.src = img.src;
                 self.setTileSize(tile.img, rc);
-                self.setTileStatus(tile, 'loaded');
-                if (fn) {
-                    fn();
+                var status = 'loaded';
+                if (blobid != tile.blobid) {
+                    status = "displaying " + blobid;
                 }
+                self.setTileStatus(tile, status);
+                self.fnUpdated(tile.blobid, tile.div);
             });
             img.src = url;
         },
@@ -275,16 +281,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         checkAndRender: function(blobid) {
             var self = this;
 
+            return;
+
             self.checkTileExists(blobid, function (exists) {
                 var tile = self.ensureTile(blobid);
 
-                // Set the native URL
                 if (exists) {
-                    self.setTileImage(tile,
-                                      self.client.getDocURL(self.docid, blobid),
-                                      undefined, function () {
-                                            self.fnUpdated(blobid, tile.div);
-                                        });
+                    self.setTileImage(tile, blobid);
                     return;
                 }
 
