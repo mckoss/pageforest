@@ -122,7 +122,7 @@ namespace.lookup('com.pageforest.mandelbrot.main').defineOnce(function (ns) {
                 return tileFlip;
             }
 
-            tileFlip = this.tiles.buildTile(tileName + '-flip', 'flip').div;
+            tileFlip = this.tiles.buildTile(tileName, 'flip').div;
             this.tiles.copyTileAttrs(tileFlip, tile);
             this.flipTiles[tileName] = tileFlip;
 
