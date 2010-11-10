@@ -286,8 +286,6 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         checkAndRender: function(blobid) {
             var self = this;
 
-            return;
-
             self.checkTileExists(blobid, function (exists) {
                 var tile = self.ensureTile(blobid);
 
