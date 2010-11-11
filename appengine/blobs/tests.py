@@ -323,10 +323,13 @@ class TaggableTest(AppTestCase):
         self.assertContains(
             self.app_client.put('/docs/mydoc/tagblob?tags=0,1%2C2,3-4'),
             '"statusText": "Saved"')
+        self.assertContains(
+            self.app_client.put('/docs/mydoc/tagblob2?tags=0,1%2C2'),
+            '"statusText": "Saved"')
         self.assertEquals(
             Blob.get_by_key_name('myapp/mydoc/tagblob/').tags,
             ['0', '1', '2', '3-4'])
-        response = self.app_client.get('/docs/mydoc/?method=LIST&tag=3-4')
+        response = self.app_client.get('/docs/mydoc/?method=list&tag=3-4')
         self.assertContains(response, """\
 {
   "tagblob": {
@@ -344,6 +347,19 @@ class TaggableTest(AppTestCase):
       "3-4"
     ]
   }
+}""")
+        response = self.app_client.get(
+            '/docs/mydoc/?method=list&tag=3-4&keysonly=true')
+        self.assertContains(response, """\
+{
+  "tagblob": {}
+}""")
+        response = self.app_client.get(
+            '/docs/mydoc/?method=list&tag=2&keysonly=true')
+        self.assertContains(response, """\
+{
+  "tagblob": {},
+  "tagblob2": {}
 }""")
 
     def test_max(self):
