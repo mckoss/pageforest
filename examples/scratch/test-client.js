@@ -14,7 +14,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
     TestApp.methods({
         getDoc: function() {
-            return {blob: testBlob};
+            return {'blob': "hello"};
         },
 
         setDoc: function(json) {
@@ -34,11 +34,13 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
         }
     });
 
+    var app = new TestApp();
+    var client = new clientLib.Client(app);
+
     function addTests(ts) {
 
         ts.addTest("save/load", function(ut) {
-            var app = new TestApp(ut);
-            var client = new clientLib.Client(app);
+            app.ut = ut;
             // Ignore any doc hashtag
             client.detach();
             client.setDirty(false);
@@ -60,7 +62,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
                 function (ut) {
                     app.expectedState = 'saving';
-                    client.save(testBlob, 'test-1');
+                    client.save({'blob': testBlob}, 'test-1');
                 },
 
                 function (ut) {
@@ -85,8 +87,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
         }).async(true);
 
         ts.addTest("Client UI", function(ut) {
-            var app = new TestApp();
-            var client = new clientLib.Client(app);
+            app.ut = ut;
 
             // Use the standard Pageforest UI widget.
             client.addAppBar();
