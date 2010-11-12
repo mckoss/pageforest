@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Mandelbrot Unit Tests</title>
+<title>Pageforest Client Unit Tests</title>
 <link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
 <script type="text/javascript"
         src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
@@ -8,16 +8,19 @@
 <script type="text/javascript" src="/static/src/js/timer.js"></script>
 <script type="text/javascript" src="/static/src/js/unit.js"></script>
 <script type="text/javascript" src="test-client.js"></script>
+<script type="text/javascript" src="test-scratch.js"></script>
 </head>
 
 <body onload="run();">
 <h1 id="title"><script>document.write(document.title);</script></h1>
 
 <script>
+var scratchTest = namespace.lookup('com.pageforest.scratch.test');
 var clientTest = namespace.lookup('com.pageforest.client.test');
 var unit = namespace.lookup('org.startpad.unit');
 
 function run() {
+    unit.runTest(scratchTest);
     unit.runTest(clientTest);
 }
 </script>
