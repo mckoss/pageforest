@@ -8,7 +8,8 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                     'testArray': [1, 2, 3]
                    };
 
-    function TestApp() {
+    function TestApp(ut) {
+        this.ut = ut;
     }
 
     TestApp.methods({
@@ -17,42 +18,67 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
         },
 
         setDoc: function(json) {
+            console.log("setDoc", json);
             this.restore = json;
+        },
+
+        onStateChange: function(newState, oldState) {
+            this.state = newState;
+            console.log(oldState + "->" + newState);
+
+            if (this.expectedState) {
+                this.ut.assertEq(newState, this.expectedState);
+                this.expectedState = undefined;
+                this.ut.nextFn();
+            }
         }
     });
 
     function addTests(ts) {
 
         ts.addTest("save/load", function(ut) {
-            var app = new TestApp();
+            var app = new TestApp(ut);
             var client = new clientLib.Client(app);
-
-            // Force a login check.
-            client.poll();
+            // Ignore any doc hashtag
+            client.detach();
+            client.setDirty(false);
 
             ut.asyncSequence([
+                // Make sure we're logged in
                 function (ut) {
-                    client.onUserChange = function(username) {
-                        client.onUserChange = undefined;
+                    // Force a login check.
+                    ut.assertEq(client.username, undefined,
+                                "not yet logged in");
+                    app.onUserChange = function(username) {
+                        app.onUserChange = undefined;
                         ut.assertType(username, 'string');
-                        client.save(testBlob, 'test-1');
+                        ut.assertEq(client.state, 'clean');
                         ut.nextFn();
                     };
+                    client.poll();
                 },
 
                 function (ut) {
-                    client.onStateChange = function(newState) {
-                        ut.assertEq(newState, 'clean');
-                        client.load('test-1');
-                        ut.nextFn();
-                    };
+                    app.expectedState = 'saving';
+                    client.save(testBlob, 'test-1');
                 },
 
                 function (ut) {
-                    client.onStateChange = function(newState) {
-                        ut.assertEq(newState, 'loaded');
-                        ut.nextFn();
-                    };
+                    app.expectedState = 'clean';
+                },
+
+                function (ut) {
+                    app.expectedState = 'loading';
+                    client.load('test-1');
+                },
+
+                function (ut) {
+                    app.expectedState = 'clean';
+                },
+
+                function (ut) {
+                    ut.assertEq(app.restore.blob, testBlob);
+                    ut.nextFn();
                 }
 
             ]);
