@@ -2812,19 +2812,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // on appid.pageforest.com.
         checkUsername: function () {
             var sessionUser = cookies.getCookie('sessionuser');
-            var usernameLast = this.username;
 
+            // User is signed in
             if (sessionUser != undefined) {
                 if (sessionUser != this.username) {
                     this.username = sessionUser;
                     this.log('signed in as ' + this.username);
                     this.onUserChange(this.username);
                 }
-            } else {
-                if (this.username || this.fFirstPoll) {
-                    this.username = undefined;
-                    this.onUserChange(this.username);
-                }
+                return;
+            }
+
+            // User is signed out
+            if (this.username || this.fFirstPoll) {
+                this.username = undefined;
+                this.onUserChange(this.username);
             }
         },
 

@@ -539,13 +539,21 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.async(false);
                 return;
             }
-            this.trace("AsyncSeq: " + (this.ifn + 1));
-            try {
-                this.rgfn[this.ifn++](this);
+
+            var self = this;
+            function callNext() {
+                self.trace("Async Function #" + (self.ifn + 1));
+                try {
+                    self.rgfn[self.ifn++](self);
+                }
+                catch (e) {
+                    self.assertException(e, "", false);
+                }
             }
-            catch (e) {
-                this.assertException(e, "", false);
-            }
+
+            // We don't want to deeply nest the functions so
+            // we queue the next function to be called on a timer.
+            setTimeout(callNext, 1);
         },
 
         // Wrap asynchronous function calls so we can catch are report
