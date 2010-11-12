@@ -2183,6 +2183,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var docidMessage = "Document name is missing.";
     var invalidJSON = "WARNING: Save object property {key} " +
         "with constructor: {ctor}.";
+    var noSetDoc = "This app does not have a setDoc method and so cannot be loaded.";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -2266,6 +2267,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document as the default document for this running application.
         load: function (docid) {
             if (this.app.setDoc == undefined) {
+                this.log(noSetDoc);
                 return;
             }
 
@@ -2309,10 +2311,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             if (json == undefined) {
                 json = this.getDoc();
-                if (json.blob == undefined) {
-                    this.onError('missing_blob', blobMessage);
-                    return;
-                }
+            }
+
+            if (json.blob == undefined) {
+                this.onError('missing_blob', blobMessage);
+                return;
             }
 
             docid = docid || this.docid;
