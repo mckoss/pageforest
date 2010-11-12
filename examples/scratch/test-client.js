@@ -40,6 +40,8 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
     function addTests(ts) {
 
         ts.addTest("save/load", function(ut) {
+            ts.coverage.cover('Client');
+
             app.ut = ut;
             // Ignore any doc hashtag
             client.detach();
@@ -91,6 +93,8 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
             // Use the standard Pageforest UI widget.
             client.addAppBar();
+
+            ut.assertEq($('#pfAppBar').length, 1);
         });
     }
 
