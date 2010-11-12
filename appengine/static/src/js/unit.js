@@ -3,7 +3,6 @@
 //
 // Usage:
 // ts = new TestSuite("Suite Name");
-// ts.DWOutputDiv();
 // ts.addTest("Test Name", function(ut) { ... ut.assert() ... });
 // ...
 // ts.run(nests);
