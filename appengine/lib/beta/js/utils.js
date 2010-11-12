@@ -2183,7 +2183,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var docidMessage = "Document name is missing.";
     var invalidJSON = "WARNING: Save object property {key} " +
         "with constructor: {ctor}.";
-    var noSetDoc = "This app does not have a setDoc method and so cannot be loaded.";
+    var noSetDoc = "This app does not have a setDoc method " +
+        "and so cannot be loaded.";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
