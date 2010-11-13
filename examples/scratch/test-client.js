@@ -64,7 +64,8 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
                 function (ut) {
                     app.expectedState = 'saving';
-                    client.save({'blob': testBlob}, 'test-1');
+                    client.save({'title': "A testing document.",
+                                 'blob': testBlob}, 'test-1');
                 },
 
                 function (ut) {
