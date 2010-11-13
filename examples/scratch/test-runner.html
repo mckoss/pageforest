@@ -8,6 +8,7 @@
 <script type="text/javascript" src="/static/src/js/timer.js"></script>
 <script type="text/javascript" src="/static/src/js/unit.js"></script>
 <script type="text/javascript" src="test-client.js"></script>
+<script type="text/javascript" src="test-storage.js"></script>
 <script type="text/javascript" src="test-scratch.js"></script>
 </head>
 
@@ -17,10 +18,12 @@
 <script>
 var scratchTest = namespace.lookup('com.pageforest.scratch.test');
 var clientTest = namespace.lookup('com.pageforest.client.test');
+var storageTest = namespace.lookup('com.pageforest.storage.test');
 var unit = namespace.lookup('org.startpad.unit');
 
 function run() {
     unit.runTest(scratchTest);
+    unit.runTest(storageTest);
     unit.runTest(clientTest);
 }
 </script>
