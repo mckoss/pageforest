@@ -2369,7 +2369,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         'jsonToString': jsonToString
     });
 });
-
 /* Begin file: client.js */
 /*
   client.js - Pageforest client api for sign in, save, load, and url
