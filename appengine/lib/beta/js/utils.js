@@ -2146,6 +2146,230 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         'Dialog': Dialog
     });
 });
+/* Begin file: storage.js */
+/* Low-level storage primitives for saving and loading documents
+   and blobs.
+*/
+/*global jQuery $ */
+namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
+    var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
+
+    var client;
+
+    // Error strings
+    var signInMessage = "You must sign in to save a document.";
+    var docidMessage = "Document name is missing.";
+    var objectMessage = "Document data is missing.";
+    var titleMessage = "Document is missing a title.";
+    var blobMessage = "Document is missing a blob property.";
+    var invalidJSON = "WARNING: Save object property {key} " +
+        "with constructor: {ctor}.";
+    var docUnsavedMessage = "Document must be saved before " +
+        "children can be saved.";
+
+    function setClient(clientT) {
+        client = clientT;
+    }
+
+    // Return the URL for a document or blob.
+    function getDocURL(docid, blobid) {
+        if (docid == undefined) {
+            return undefined;
+        }
+        if (blobid == undefined) {
+            blobid = '';
+        }
+        return 'http://' + client.appHost + '/docs/' + docid + '/' + blobid;
+    }
+
+    function jsonToString(json) {
+        var s;
+        var badProperty;
+
+        function mapper(key, value) {
+            if (badProperty) {
+                return value;
+            }
+            // Warn about non-generic JavaScript Objects
+            if (typeof value == 'object' && value.constructor != Object &&
+                value.constructor != Array) {
+                console.warn(
+                    format.replaceKeys(invalidJSON,
+                                       {key: key,
+                                        ctor:
+                                        value.constructor.toString()}));
+                badProperty = key;
+            }
+            return value;
+        }
+
+        try {
+            s = JSON.stringify(json, mapper);
+        } catch (e) {
+            // Error probably indicates a circular reference
+            console.error(e.message);
+            return JSON.stringify({error: e.message});
+        }
+
+        return s;
+    }
+
+    function errorHandler(xmlhttp, textStatus, errorThrown) {
+        var code = 'ajax_error/' + xmlhttp.status;
+        var message = xmlhttp.statusText;
+        client.log(message + ' (' + code + ')', {'obj': xmlhttp});
+        client.onError(code, message);
+    }
+
+    // Save a document to the Pageforest store
+    function putDoc(docid, json, fnSuccess) {
+        fnSuccess = fnSuccess || function () {};
+
+        var validations = {
+            'no_username': [client.username, signInMessage],
+            'missing_document_name': [docid, docidMessage],
+            'missing_object': [json, objectMessage],
+            'missing_title': [json && json.title, titleMessage],
+            'missing_blob': [json && json.blob, blobMessage]
+        };
+
+        for (var code in validations) {
+            if (validations.hasOwnProperty(code)) {
+                var validation = validations[code];
+                if (!validation[0]) {
+                    client.onError(code, validation[1]);
+                    return;
+                }
+            }
+        }
+
+        // Default permissions to be public readable.
+        if (!json.readers) {
+            json.readers = ['public'];
+        }
+
+        var data = jsonToString(json);
+        client.log('saving document: ' + getDocURL(docid), json);
+        $.ajax({
+            type: 'PUT',
+            url: getDocURL(docid),
+            data: data,
+            error: errorHandler,
+            success: function (result, textStatus, xmlhttp) {
+                fnSuccess(result, textStatus, xmlhttp);
+            }
+        });
+    }
+
+    // Save a child blob in the namespace of a document
+    function putBlob(docid, blobid, data, options, fnSuccess) {
+        fnSuccess = fnSuccess || function () {};
+        options = options || {};
+
+        if (docid == undefined) {
+            client.onError('unsaved_document', docUnsavedMessage);
+            return;
+        }
+
+        var url = getDocURL(docid) + blobid;
+        var query_string = [];
+
+        function pushParam(param, value) {
+            query_string.push(param + '=' + encodeURIComponent(value));
+        }
+
+        if (options.encoding) {
+            pushParam('transfer-encoding', options.encoding);
+        }
+        if (options.tags) {
+            pushParam('tags', options.tags.join(','));
+        }
+
+        query_string = query_string.join('&');
+        if (query_string) {
+            url += '?' + query_string;
+        }
+
+        if (typeof data != "string") {
+            data = jsonToString(data);
+        }
+        client.log('saving blob: ' + url + ' (' + data.length + ')');
+        $.ajax({
+            type: 'PUT',
+            url: url,
+            data: data,
+            dataType: 'json',
+            processData: false,
+            error: errorHandler,
+            success: function() {
+                client.log('saved blob: ' + url);
+                fnSuccess(true);
+            }.fnMethod(this)
+        });
+    }
+
+    // Read a child blob in the namespace of a document
+    // TODO: refactor to share code with putBlob
+    function getBlob(docid, blobid, options, fn) {
+        fn = fn || function () {};
+        options = options || {};
+        var type = 'GET';
+
+        if (docid == undefined) {
+            client.onError('unsaved_document', docUnsavedMessage);
+            fn(false);
+            return;
+        }
+
+        var url = getDocURL(docid) + blobid;
+        if (options.encoding || options.tags) {
+            url += '?';
+        }
+        if (options.encoding) {
+            url += 'transfer-encoding=' + options.encoding;
+        }
+        if (options.tags) {
+            var encodedTags = base.map(options.tags, encodeURIComponent);
+            url += 'tags=' + encodedTags.join(',');
+        }
+        if (options.headOnly) {
+            type = 'HEAD';
+        }
+        client.log('reading blob: ' + docid + '/' + blobid);
+        $.ajax({
+            'type': type,
+            'url': url,
+            // REVIEW: Is this the right default - note that 200 return
+            // codes can return error because the data is NOT json!
+            'dataType': options.dataType || 'json',
+            'error': function (xmlhttp, textStatus, errorThrown) {
+                var code = 'ajax_error/' + xmlhttp.status;
+                var message = xmlhttp.statusText;
+                client.log(message + ' (' + code + ')', {'obj': xmlhttp});
+                client.onError(code, message);
+                fn(false);
+            }.fnMethod(this),
+            'success': function(data) {
+                client.log('read blob: ' + url);
+                fn(true, data);
+            }.fnMethod(this)
+        });
+    }
+
+    ns.extend({
+        'setClient': setClient,
+        'putDoc': putDoc,
+        'getDoc': function () {
+            console.log("NYI");
+        },
+        'putBlob': putBlob,
+        'getBlob': getBlob,
+        'getDocURL': getDocURL,
+        'jsonToString': jsonToString
+    });
+});
+
 /* Begin file: client.js */
 /*
   client.js - Pageforest client api for sign in, save, load, and url
@@ -2160,6 +2384,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
 /*global jQuery $ */
 namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
+    var storage = namespace.lookup('com.pageforest.storage');
+
     var cookies = namespace.lookup('org.startpad.cookies');
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
@@ -2172,17 +2398,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // Error messages
     var discardMessage = "You will lose your document changes if you continue.";
     var jQueryMessage = "jQuery must be installed to use this library.";
-    var signInMessage = "You must sign in to save a document.";
     var unloadMessage = "You will lose your changes if you leave " +
         "the document without saving.";
-    var objectMessage = "Document data is missing.";
-    var titleMessage = "Document is missing a title.";
-    var blobMessage = "Document is missing a blob property.";
-    var docUnsavedMessage = "Document must be saved before " +
-        "children can be saved.";
-    var docidMessage = "Document name is missing.";
-    var invalidJSON = "WARNING: Save object property {key} " +
-        "with constructor: {ctor}.";
     var noSetDoc = "This app does not have a setDoc method " +
         "and so cannot be loaded.";
 
@@ -2199,6 +2416,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
+        storage.setClient(this);
+
         this.app = app;
 
         this.meta = {};
@@ -2289,7 +2508,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.log("loading: " + docid);
             $.ajax({
                 dataType: 'json',
-                url: this.getDocURL(docid),
+                url: storage.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (doc, textStatus, xmlhttp) {
                     this.setDoc(doc);
@@ -2303,20 +2522,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return;
             }
 
-            // TODO: Call this.putDoc - and then handle the document
-            // state in the callback function.
-            if (this.username == undefined) {
-                this.onError('no_username', signInMessage);
-                return;
-            }
-
             if (json == undefined) {
                 json = this.getDoc();
-            }
-
-            if (json.blob == undefined) {
-                this.onError('missing_blob', blobMessage);
-                return;
             }
 
             docid = docid || this.docid;
@@ -2336,27 +2543,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.stateSave = this.state;
             this.changeState('saving');
 
-            // Default permissions to be public readable.
-            if (!json.readers) {
-                json.readers = ['public'];
-            }
-
-            var data = this.jsonToString(json);
-            this.log('saving: ' + this.getDocURL(docid), json);
-            $.ajax({
-                type: 'PUT',
-                url: this.getDocURL(docid),
-                data: data,
-                error: this.errorHandler.fnMethod(this),
-                success: function(result, textStatus, xmlhttp) {
-                    // TODO: The server can return the docid for cases where
-                    // the server assigns the id instead of the client.
-                    result.docid = docid;
-                    // If we had no owner before - set it to document's
-                    // creator (the current user).
-                    result.owner = json.owner || this.username;
-                    this.onSaveSuccess(result);
-                }.fnMethod(this)
+            var self = this;
+            storage.putDoc(docid, json, function(result) {
+                // TODO: The server can return the docid for cases where
+                // the server assigns the id instead of the client.
+                result.docid = docid;
+                // If we had no owner before - set it to document's
+                // creator (the current user).
+                result.owner = json.owner || this.username;
+                self.onSaveSuccess(result);
             });
         },
 
@@ -2421,7 +2616,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.docid = docid;
             this.changeState('clean');
             // Remember the clean state of the document
-            this.lastJSON = this.jsonToString(this.getDoc());
+            this.lastJSON = storage.jsonToString(this.getDoc());
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -2472,7 +2667,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // checked.
             // TODO: Don't get the document if the app has it's own
             // isDirty function.
-            var json = this.jsonToString(this.getDoc());
+            var json = storage.jsonToString(this.getDoc());
             if (json != this.lastJSON) {
                 this.setDirty();
             }
@@ -2546,204 +2741,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 evt.returnValue = unloadMessage;
                 return evt.returnValue;
             }
-        },
-
-        /* Low-level storage primitives for saving and loading documents
-           and blobs.
-
-           TODO: Move putDoc, getDoc, putBlob, and setBlob into another
-           module, com.pageforest.storage, and refactor client.
-           */
-
-        // Save a document - does not have to be the "main" document
-        // that the user is currently viewing.
-        putDoc: function (docid, json, fn) {
-            if (!fn) {
-                fn = function () {};
-            }
-
-            var validations = {
-                'no_username': [this.username, signInMessage],
-                'missing_document_name': [docid, docidMessage],
-                'missing_object': [json, objectMessage],
-                'missing_title': [json && json.title, titleMessage],
-                'missing_blob': [json && json.blob, blobMessage]
-            };
-
-            for (var code in validations) {
-                if (validations.hasOwnProperty(code)) {
-                    var validation = validations[code];
-                    if (!validation[0]) {
-                        this.onError(code, validation[1]);
-                        fn(false);
-                        return;
-                    }
-                }
-            }
-
-            // Default permissions to be public readable.
-            if (!json.readers) {
-                json.readers = ['public'];
-            }
-
-            var data = this.jsonToString(json);
-            this.log('saving document: ' + this.getDocURL(docid), json);
-            $.ajax({
-                type: 'PUT',
-                url: this.getDocURL(docid),
-                data: data,
-                error: function (xmlhttp, textStatus, errorThrown) {
-                    this.errorHandler(xmlhttp, textStatus, errorThrown);
-                    fn(false);
-                },
-                success: function () {
-                    fn(true);
-                }
-            });
-        },
-
-        jsonToString: function(json) {
-            var s;
-            var badProperty;
-
-            function mapper(key, value) {
-                if (badProperty) {
-                    return value;
-                }
-                // Warn about non-generic JavaScript Objects
-                if (typeof value == 'object' && value.constructor != Object &&
-                   value.constructor != Array) {
-                    console.warn(
-                        format.replaceKeys(invalidJSON,
-                                           {key: key,
-                                            ctor:
-                                            value.constructor.toString()}));
-                    badProperty = key;
-                }
-                return value;
-            }
-
-            try {
-                s = JSON.stringify(json, mapper);
-            } catch (e) {
-                // Error probably indicates a circular reference
-                console.error(e.message);
-                return JSON.stringify({error: e.message});
-            }
-
-            return s;
-        },
-
-        // Save a child blob in the namespace of a document
-        putBlob: function(docid, blobid, data, options, fn) {
-            fn = fn || function () {};
-            options = options || {};
-
-            if (docid == undefined) {
-                this.onError('unsaved_document', docUnsavedMessage);
-                fn(false);
-                return;
-            }
-
-            var url = this.getDocURL(docid) + blobid;
-            var query_string = [];
-            if (options.encoding) {
-                query_string.push('transfer-encoding=' + options.encoding);
-            }
-            if (options.tags) {
-                query_string.push('tags=' + options.tags.join(','));
-            }
-            query_string = query_string.join('&');
-            if (query_string) {
-                url += '?' + query_string;
-            }
-
-            if (typeof data != "string") {
-                data = this.jsonToString(data);
-            }
-            this.log('saving blob: ' + url + ' (' + data.length + ')');
-            $.ajax({
-                type: 'PUT',
-                url: url,
-                data: data,
-                dataType: 'json',
-                processData: false,
-                error: function (xmlhttp, textStatus, errorThrown) {
-                    var code = 'ajax_error/' + xmlhttp.status;
-                    var message = xmlhttp.statusText;
-                    this.log(message + ' (' + code + ') ' + url,
-                             {'obj': xmlhttp});
-                    this.onError(code, message);
-                    fn(false);
-                }.fnMethod(this),
-                success: function() {
-                    this.log('saved blob: ' + url);
-                    fn(true);
-                }.fnMethod(this)
-            });
-        },
-
-        // Read a child blob in the namespace of a document
-        // TODO: refactor to share code with putBlob
-        getBlob: function(docid, blobid, options, fn) {
-            fn = fn || function () {};
-            options = options || {};
-            var type = 'GET';
-
-            if (docid == undefined) {
-                this.onError('unsaved_document', docUnsavedMessage);
-                fn(false);
-                return;
-            }
-
-            var url = this.getDocURL(docid) + blobid;
-            if (options.encoding || options.tags) {
-                url += '?';
-            }
-            if (options.encoding) {
-                url += 'transfer-encoding=' + options.encoding;
-            }
-            if (options.tags) {
-                var encodedTags = base.map(options.tags, encodeURIComponent);
-                url += 'tags=' + encodedTags.join(',');
-            }
-            if (options.headOnly) {
-                type = 'HEAD';
-            }
-            this.log('reading blob: ' + docid + '/' + blobid);
-            $.ajax({
-                'type': type,
-                'url': url,
-                // REVIEW: Is this the right default - note that 200 return
-                // codes can return error because the data is NOT json!
-                'dataType': options.dataType || 'json',
-                'error': function (xmlhttp, textStatus, errorThrown) {
-                    var code = 'ajax_error/' + xmlhttp.status;
-                    var message = xmlhttp.statusText;
-                    this.log(message + ' (' + code + ')', {'obj': xmlhttp});
-                    this.onError(code, message);
-                    fn(false);
-                }.fnMethod(this),
-                'success': function(data) {
-                    this.log('read blob: ' + url);
-                    fn(true, data);
-                }.fnMethod(this)
-            });
-        },
-
-
-        // Return the URL for a document or blob.
-        getDocURL: function(docid, blobid) {
-            if (docid == undefined) {
-                docid = this.docid;
-            }
-            if (docid == undefined) {
-                return undefined;
-            }
-            if (blobid == undefined) {
-                blobid = '';
-            }
-            return 'http://' + this.appHost + '/docs/' + docid + '/' + blobid;
         },
 
         setLogging: function(f) {
