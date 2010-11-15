@@ -27,8 +27,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var jQueryMessage = "jQuery must be installed to use this library.";
     var unloadMessage = "You will lose your changes if you leave " +
         "the document without saving.";
-    var noSetDoc = "This app does not have a setDoc method " +
+    var noSetDocMessage = "This app does not have a setDoc method " +
         "and so cannot be loaded.";
+    var noGetDocMessage = "This app does not have a getDoc method " +
+        "and so cannot be saved.";
+    var noAppMessage = "Warning: no app object provided - " +
+        "only direct storage api's can be used.";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -43,9 +47,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
-        storage.setClient(this);
+        // Make a dummy app if none given - but warn the developer.
+        if (app == undefined) {
+            this.log(noAppMessage, {level: 'warn'});
+            app = {};
+        }
 
         this.app = app;
+        this.storage = new storage.Storage(this);
+        this.getDocURL = this.storage.getDocURL.fnMethod(this.storage);
 
         this.meta = {};
         this.metaDoc = {};
@@ -64,27 +74,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.state = 'init';
         this.username = undefined;
         this.fLogging = true;
+        this.logged = {};
         this.fFirstPoll = true;
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
-
-        // Map deprecated function names.
-        var deprecated = {
-            "getData": "getDoc",
-            "setData": "setDoc"
-        };
-        for (var oldName in deprecated) {
-            if (deprecated.hasOwnProperty(oldName)) {
-                var newName = deprecated[oldName];
-                if (app[oldName] && !app[newName]) {
-                    this.log("deprecated function " + oldName +
-                             " should be renamed to " + newName,
-                             {'level': 'warn'});
-                    app[newName] = app[oldName];
-                }
-            }
-        }
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -114,7 +108,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document as the default document for this running application.
         load: function (docid) {
             if (this.app.setDoc == undefined) {
-                this.log(noSetDoc);
+                this.log(noSetDocMessage, {level: 'warn'});
                 return;
             }
 
@@ -133,9 +127,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState('loading');
 
             this.log("loading: " + docid);
+            // TODO: Should call this.storage.getDoc
             $.ajax({
                 dataType: 'json',
-                url: storage.getDocURL(docid),
+                url: this.storage.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (doc, textStatus, xmlhttp) {
                     this.setDoc(doc);
@@ -171,7 +166,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState('saving');
 
             var self = this;
-            storage.putDoc(docid, json, function(result) {
+            this.storage.putDoc(docid, json, function(result) {
                 // TODO: The server can return the docid for cases where
                 // the server assigns the id instead of the client.
                 result.docid = docid;
@@ -207,8 +202,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Get document properties from client and merge with last
         // saved meta properties.
         getDoc: function() {
-            var doc = this.app.getDoc();
+            var doc = typeof this.app.getDoc == 'function' && this.app.getDoc();
             if (typeof doc != 'object') {
+                this.log(noGetDocMessage, {level: 'warn', once: true});
                 doc = {};
             }
             base.extendIfMissing(doc, {'title': document.title});
@@ -385,6 +381,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (!options.hasOwnProperty('level')) {
                 options.level = 'log';
             }
+            if (options.once) {
+                if (this.logged[message]) {
+                    return;
+                }
+                this.logged[message] = true;
+            }
+
             if (options.hasOwnProperty('obj')) {
                 console[options.level](message, options.obj);
             } else {
@@ -458,16 +461,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
-        onUserChange: function(username) {
+        onUserChange: function() {
+            this.log("onUserChange: " + this.username);
+            this.updateAppBar();
             if (this.app.onUserChange) {
-                this.app.onUserChange(username);
+                this.app.onUserChange(this.username);
             }
+        },
+
+        updateAppBar: function () {
             if (this.appBar) {
-                var isSignedIn = username != undefined;
+                var isSignedIn = this.username != undefined;
                 if (isSignedIn) {
                     $('#pfWelcome').show();
                     $('#pfUsername')
-                        .text(isSignedIn ? username : 'anonymous')
+                        .text(isSignedIn ? this.username : 'anonymous')
                         .show();
                 } else {
                     $('#pfWelcome').hide();
@@ -582,6 +590,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(window).resize(function() {
                 self.positionAppPanel();
             });
+
+            this.updateAppBar();
         },
 
         toggleAppPanel: function(fOpen) {
@@ -713,7 +723,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         }
 
-    });
+    }); // Client.methods
 
     // Exports
     ns.extend({
