@@ -96,6 +96,8 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
             client.addAppBar();
 
             ut.assertEq($('#pfAppBar').length, 1);
+            ut.assertGT($('#pfUsername').text().length, 0,
+                        "Username should be displayed");
         });
     }
 
