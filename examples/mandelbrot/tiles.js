@@ -46,7 +46,7 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
         // Create the (shared) public document into which all tiles
         // will be stored.
         createTileDoc: function() {
-            this.client.putDoc(this.docid, {
+            this.client.storage.putDoc(this.docid, {
                 title: "Tile Document - " + this.docid,
                 writers: ["public"],
                 blob: {version: this.docid}
@@ -326,13 +326,13 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
                 tags.push('p' + level + ':' + tagString);
             }
             var self = this;
-            this.client.putBlob(this.docid, blobid,
-                                format.canvasToPNG(canvas),
-                                {'encoding': 'base64', 'tags': tags},
-                                function (status) {
-                                    self.setTileStatus(tile,
-                                                       'saved: ' + status);
-                                });
+            this.client.storage.putBlob(this.docid, blobid,
+                format.canvasToPNG(canvas),
+                {'encoding': 'base64', 'tags': tags},
+                function (status) {
+                    self.setTileStatus(tile,
+                                       'saved: ' + status);
+                });
         },
 
         checkTileExists: function(blobid, fn) {
@@ -346,8 +346,9 @@ namespace.lookup('com.pageforest.tiles').defineOnce(function (ns) {
             }
 
             function deferredCheck() {
-                self.client.getBlob(self.docid, blobid, {dataType: "image/png",
-                                                         headOnly: true},
+                self.client.storage.getBlob(self.docid, blobid,
+                                            {dataType: "image/png",
+                                             headOnly: true},
                                     function(status) {
                                         if (status) {
                                             self.setTileStatus(tile,
