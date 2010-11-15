@@ -2155,10 +2155,9 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 
-    var client;
-
     // Error strings
     var signInMessage = "You must sign in to save a document.";
+    var noClientMessage = "App error: no client object available.";
     var docidMessage = "Document name is missing.";
     var objectMessage = "Document data is missing.";
     var titleMessage = "Document is missing a title.";
@@ -2167,21 +2166,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         "with constructor: {ctor}.";
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
-
-    function setClient(clientT) {
-        client = clientT;
-    }
-
-    // Return the URL for a document or blob.
-    function getDocURL(docid, blobid) {
-        if (docid == undefined) {
-            return undefined;
-        }
-        if (blobid == undefined) {
-            blobid = '';
-        }
-        return 'http://' + client.appHost + '/docs/' + docid + '/' + blobid;
-    }
 
     function jsonToString(json) {
         var s;
@@ -2215,157 +2199,173 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         return s;
     }
 
-    function errorHandler(xmlhttp, textStatus, errorThrown) {
-        var code = 'ajax_error/' + xmlhttp.status;
-        var message = xmlhttp.statusText;
-        client.log(message + ' (' + code + ')', {'obj': xmlhttp});
-        client.onError(code, message);
+    function Storage(client) {
+        // We need the client context for Storage functions
+        this.client = client;
     }
 
-    // Save a document to the Pageforest store
-    function putDoc(docid, json, fnSuccess) {
-        fnSuccess = fnSuccess || function () {};
+    Storage.methods({
+        // Return the URL for a document or blob.
+        getDocURL: function(docid, blobid) {
+            if (docid == undefined) {
+                return undefined;
+            }
+            if (blobid == undefined) {
+                blobid = '';
+            }
+            return 'http://' + this.client.appHost + '/docs/' +
+                docid + '/' + blobid;
+        },
 
-        var validations = {
-            'no_username': [client.username, signInMessage],
-            'missing_document_name': [docid, docidMessage],
-            'missing_object': [json, objectMessage],
-            'missing_title': [json && json.title, titleMessage],
-            'missing_blob': [json && json.blob, blobMessage]
-        };
+        errorHandler: function(xmlhttp, textStatus, errorThrown) {
+            var code = 'ajax_error/' + xmlhttp.status;
+            var message = xmlhttp.statusText;
+            this.client.log(message + ' (' + code + ')', {'obj': xmlhttp});
+            this.client.onError(code, message);
+        },
 
-        for (var code in validations) {
-            if (validations.hasOwnProperty(code)) {
-                var validation = validations[code];
-                if (!validation[0]) {
-                    client.onError(code, validation[1]);
-                    return;
+        // Save a document to the Pageforest store
+        putDoc: function(docid, json, fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+
+            var validations = {
+                'no_username': [this.client.username, signInMessage],
+                'missing_document_name': [docid, docidMessage],
+                'missing_object': [json, objectMessage],
+                'missing_title': [json && json.title, titleMessage],
+                'missing_blob': [json && json.blob, blobMessage]
+            };
+
+            for (var code in validations) {
+                if (validations.hasOwnProperty(code)) {
+                    var validation = validations[code];
+                    if (!validation[0]) {
+                        this.client.onError(code, validation[1]);
+                        return;
+                    }
                 }
             }
-        }
 
-        // Default permissions to be public readable.
-        if (!json.readers) {
-            json.readers = ['public'];
-        }
-
-        var data = jsonToString(json);
-        client.log('saving document: ' + getDocURL(docid), json);
-        $.ajax({
-            type: 'PUT',
-            url: getDocURL(docid),
-            data: data,
-            error: errorHandler,
-            success: function (result, textStatus, xmlhttp) {
-                fnSuccess(result, textStatus, xmlhttp);
+            // Default permissions to be public readable.
+            if (!json.readers) {
+                json.readers = ['public'];
             }
-        });
-    }
 
-    // Save a child blob in the namespace of a document
-    function putBlob(docid, blobid, data, options, fnSuccess) {
-        fnSuccess = fnSuccess || function () {};
-        options = options || {};
+            var data = jsonToString(json);
+            this.client.log('saving document: ' + this.getDocURL(docid), json);
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL(docid),
+                data: data,
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        },
 
-        if (docid == undefined) {
-            client.onError('unsaved_document', docUnsavedMessage);
-            return;
-        }
+        // Save a child blob in the namespace of a document
+        putBlob: function(docid, blobid, data, options, fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+            options = options || {};
 
-        var url = getDocURL(docid) + blobid;
-        var query_string = [];
+            if (docid == undefined) {
+                this.client.onError('unsaved_document', docUnsavedMessage);
+                return;
+            }
 
-        function pushParam(param, value) {
-            query_string.push(param + '=' + encodeURIComponent(value));
-        }
+            var url = this.getDocURL(docid) + blobid;
+            var query_string = [];
 
-        if (options.encoding) {
-            pushParam('transfer-encoding', options.encoding);
-        }
-        if (options.tags) {
-            pushParam('tags', options.tags.join(','));
-        }
+            function pushParam(param, value) {
+                query_string.push(param + '=' + encodeURIComponent(value));
+            }
 
-        query_string = query_string.join('&');
-        if (query_string) {
-            url += '?' + query_string;
-        }
+            if (options.encoding) {
+                pushParam('transfer-encoding', options.encoding);
+            }
+            if (options.tags) {
+                pushParam('tags', options.tags.join(','));
+            }
 
-        if (typeof data != "string") {
-            data = jsonToString(data);
-        }
-        client.log('saving blob: ' + url + ' (' + data.length + ')');
-        $.ajax({
-            type: 'PUT',
-            url: url,
-            data: data,
-            dataType: 'json',
-            processData: false,
-            error: errorHandler,
-            success: function() {
-                client.log('saved blob: ' + url);
-                fnSuccess(true);
-            }.fnMethod(this)
-        });
-    }
+            query_string = query_string.join('&');
+            if (query_string) {
+                url += '?' + query_string;
+            }
 
-    // Read a child blob in the namespace of a document
-    // TODO: refactor to share code with putBlob
-    function getBlob(docid, blobid, options, fn) {
-        fn = fn || function () {};
-        options = options || {};
-        var type = 'GET';
+            if (typeof data != "string") {
+                data = jsonToString(data);
+            }
+            this.client.log('saving blob: ' + url + ' (' + data.length + ')');
+            var self = this;
+            $.ajax({
+                type: 'PUT',
+                url: url,
+                data: data,
+                dataType: 'json',
+                processData: false,
+                error: this.errorHandler.fnMethod(this),
+                success: function() {
+                    self.client.log('saved blob: ' + url);
+                    fnSuccess(true);
+                }.fnMethod(this)
+            });
+        },
 
-        if (docid == undefined) {
-            client.onError('unsaved_document', docUnsavedMessage);
-            fn(false);
-            return;
-        }
+        // Read a child blob in the namespace of a document
+        // TODO: refactor to share code with putBlob
+        getBlob: function(docid, blobid, options, fn) {
+            fn = fn || function () {};
+            options = options || {};
+            var type = 'GET';
 
-        var url = getDocURL(docid) + blobid;
-        if (options.encoding || options.tags) {
-            url += '?';
-        }
-        if (options.encoding) {
-            url += 'transfer-encoding=' + options.encoding;
-        }
-        if (options.tags) {
-            var encodedTags = base.map(options.tags, encodeURIComponent);
-            url += 'tags=' + encodedTags.join(',');
-        }
-        if (options.headOnly) {
-            type = 'HEAD';
-        }
-        client.log('reading blob: ' + docid + '/' + blobid);
-        $.ajax({
-            'type': type,
-            'url': url,
-            // REVIEW: Is this the right default - note that 200 return
-            // codes can return error because the data is NOT json!
-            'dataType': options.dataType || 'json',
-            'error': function (xmlhttp, textStatus, errorThrown) {
-                var code = 'ajax_error/' + xmlhttp.status;
-                var message = xmlhttp.statusText;
-                client.log(message + ' (' + code + ')', {'obj': xmlhttp});
-                client.onError(code, message);
+            if (docid == undefined) {
+                this.client.onError('unsaved_document', docUnsavedMessage);
                 fn(false);
-            }.fnMethod(this),
-            'success': function(data) {
-                client.log('read blob: ' + url);
-                fn(true, data);
-            }.fnMethod(this)
-        });
-    }
+                return;
+            }
+
+            var url = this.getDocURL(docid) + blobid;
+            if (options.encoding || options.tags) {
+                url += '?';
+            }
+            if (options.encoding) {
+                url += 'transfer-encoding=' + options.encoding;
+            }
+            if (options.tags) {
+                var encodedTags = base.map(options.tags, encodeURIComponent);
+                url += 'tags=' + encodedTags.join(',');
+            }
+            if (options.headOnly) {
+                type = 'HEAD';
+            }
+            this.client.log('reading blob: ' + docid + '/' + blobid);
+            var self = this;
+            $.ajax({
+                'type': type,
+                'url': url,
+                // REVIEW: Is this the right default - note that 200 return
+                // codes can return error because the data is NOT json!
+                'dataType': options.dataType || 'json',
+                'error': function (xmlhttp, textStatus, errorThrown) {
+                    var code = 'ajax_error/' + xmlhttp.status;
+                    var message = xmlhttp.statusText;
+                    self.client.log(message + ' (' + code + ')',
+                                    {'obj': xmlhttp});
+                    self.client.onError(code, message);
+                    fn(false);
+                }.fnMethod(this),
+                'success': function(data) {
+                    self.client.log('read blob: ' + url);
+                    fn(true, data);
+                }.fnMethod(this)
+            });
+        }
+
+    }); // Storage.methods
 
     ns.extend({
-        'setClient': setClient,
-        'putDoc': putDoc,
-        'getDoc': function () {
-            console.log("NYI");
-        },
-        'putBlob': putBlob,
-        'getBlob': getBlob,
-        'getDocURL': getDocURL,
+        'Storage': Storage,
         'jsonToString': jsonToString
     });
 });
@@ -2399,8 +2399,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var jQueryMessage = "jQuery must be installed to use this library.";
     var unloadMessage = "You will lose your changes if you leave " +
         "the document without saving.";
-    var noSetDoc = "This app does not have a setDoc method " +
+    var noSetDocMessage = "This app does not have a setDoc method " +
         "and so cannot be loaded.";
+    var noGetDocMessage = "This app does not have a getDoc method " +
+        "and so cannot be saved.";
+    var noAppMessage = "Warning: no app object provided - " +
+        "only direct storage api's can be used.";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -2415,9 +2419,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
     function Client(app) {
-        storage.setClient(this);
+        // Make a dummy app if none given - but warn the developer.
+        if (app == undefined) {
+            this.log(noAppMessage, {level: 'warn'});
+            app = {};
+        }
 
         this.app = app;
+        this.storage = new storage.Storage(this);
+        this.getDocURL = this.storage.getDocURL.fnMethod(this.storage);
 
         this.meta = {};
         this.metaDoc = {};
@@ -2436,27 +2446,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.state = 'init';
         this.username = undefined;
         this.fLogging = true;
+        this.logged = {};
         this.fFirstPoll = true;
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
-
-        // Map deprecated function names.
-        var deprecated = {
-            "getData": "getDoc",
-            "setData": "setDoc"
-        };
-        for (var oldName in deprecated) {
-            if (deprecated.hasOwnProperty(oldName)) {
-                var newName = deprecated[oldName];
-                if (app[oldName] && !app[newName]) {
-                    this.log("deprecated function " + oldName +
-                             " should be renamed to " + newName,
-                             {'level': 'warn'});
-                    app[newName] = app[oldName];
-                }
-            }
-        }
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -2486,7 +2480,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document as the default document for this running application.
         load: function (docid) {
             if (this.app.setDoc == undefined) {
-                this.log(noSetDoc);
+                this.log(noSetDocMessage, {level: 'warn'});
                 return;
             }
 
@@ -2505,9 +2499,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState('loading');
 
             this.log("loading: " + docid);
+            // TODO: Should call this.storage.getDoc
             $.ajax({
                 dataType: 'json',
-                url: storage.getDocURL(docid),
+                url: this.storage.getDocURL(docid),
                 error: this.errorHandler.fnMethod(this),
                 success: function (doc, textStatus, xmlhttp) {
                     this.setDoc(doc);
@@ -2543,7 +2538,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.changeState('saving');
 
             var self = this;
-            storage.putDoc(docid, json, function(result) {
+            this.storage.putDoc(docid, json, function(result) {
                 // TODO: The server can return the docid for cases where
                 // the server assigns the id instead of the client.
                 result.docid = docid;
@@ -2579,8 +2574,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Get document properties from client and merge with last
         // saved meta properties.
         getDoc: function() {
-            var doc = this.app.getDoc();
+            var doc = typeof this.app.getDoc == 'function' && this.app.getDoc();
             if (typeof doc != 'object') {
+                this.log(noGetDocMessage, {level: 'warn', once: true});
                 doc = {};
             }
             base.extendIfMissing(doc, {'title': document.title});
@@ -2757,6 +2753,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (!options.hasOwnProperty('level')) {
                 options.level = 'log';
             }
+            if (options.once) {
+                if (this.logged[message]) {
+                    return;
+                }
+                this.logged[message] = true;
+            }
+
             if (options.hasOwnProperty('obj')) {
                 console[options.level](message, options.obj);
             } else {
@@ -2830,16 +2833,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
-        onUserChange: function(username) {
+        onUserChange: function() {
+            this.log("onUserChange: " + this.username);
+            this.updateAppBar();
             if (this.app.onUserChange) {
-                this.app.onUserChange(username);
+                this.app.onUserChange(this.username);
             }
+        },
+
+        updateAppBar: function () {
             if (this.appBar) {
-                var isSignedIn = username != undefined;
+                var isSignedIn = this.username != undefined;
                 if (isSignedIn) {
                     $('#pfWelcome').show();
                     $('#pfUsername')
-                        .text(isSignedIn ? username : 'anonymous')
+                        .text(isSignedIn ? this.username : 'anonymous')
                         .show();
                 } else {
                     $('#pfWelcome').hide();
@@ -2954,6 +2962,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(window).resize(function() {
                 self.positionAppPanel();
             });
+
+            this.updateAppBar();
         },
 
         toggleAppPanel: function(fOpen) {
@@ -3085,7 +3095,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
         }
 
-    });
+    }); // Client.methods
 
     // Exports
     ns.extend({
