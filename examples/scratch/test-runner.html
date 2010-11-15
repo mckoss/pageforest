@@ -22,9 +22,7 @@ var storageTest = namespace.lookup('com.pageforest.storage.test');
 var unit = namespace.lookup('org.startpad.unit');
 
 function run() {
-    //unit.runTest(scratchTest);
-    //unit.runTest(storageTest);
-    unit.runTest(clientTest);
+    unit.runTests([scratchTest, storageTest, clientTest]);
 }
 </script>
 

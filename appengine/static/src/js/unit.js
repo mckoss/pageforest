@@ -945,6 +945,19 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         ts.run(fnCallback);
     }
 
+    function runTests(modules, fnCallback) {
+        var i = 0;
+
+        function testNext() {
+            if (i >= modules.length) {
+                return;
+            }
+            runTest(modules[i++], testNext);
+        }
+
+        testNext(fnCallback);
+    }
+
     function loadAndRunTest(path, locations, fnCallback) {
         loader.loadNamespace(path + '.test', locations, function () {
             var testModule = namespace.lookup(path + '.test');
@@ -958,6 +971,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
 
     ns.extend({
         'runTest': runTest,
+        'runTests': runTests,
         'loadAndRunTest': loadAndRunTest,
         'TestSuite': TestSuite,
         'UnitTest': UnitTest,
