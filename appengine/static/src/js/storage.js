@@ -6,10 +6,9 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var format = namespace.lookup('org.startpad.format');
 
-    var client;
-
     // Error strings
     var signInMessage = "You must sign in to save a document.";
+    var noClientMessage = "App error: no client object available.";
     var docidMessage = "Document name is missing.";
     var objectMessage = "Document data is missing.";
     var titleMessage = "Document is missing a title.";
@@ -18,21 +17,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         "with constructor: {ctor}.";
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
-
-    function setClient(clientT) {
-        client = clientT;
-    }
-
-    // Return the URL for a document or blob.
-    function getDocURL(docid, blobid) {
-        if (docid == undefined) {
-            return undefined;
-        }
-        if (blobid == undefined) {
-            blobid = '';
-        }
-        return 'http://' + client.appHost + '/docs/' + docid + '/' + blobid;
-    }
 
     function jsonToString(json) {
         var s;
@@ -66,157 +50,173 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         return s;
     }
 
-    function errorHandler(xmlhttp, textStatus, errorThrown) {
-        var code = 'ajax_error/' + xmlhttp.status;
-        var message = xmlhttp.statusText;
-        client.log(message + ' (' + code + ')', {'obj': xmlhttp});
-        client.onError(code, message);
+    function Storage(client) {
+        // We need the client context for Storage functions
+        this.client = client;
     }
 
-    // Save a document to the Pageforest store
-    function putDoc(docid, json, fnSuccess) {
-        fnSuccess = fnSuccess || function () {};
+    Storage.methods({
+        // Return the URL for a document or blob.
+        getDocURL: function(docid, blobid) {
+            if (docid == undefined) {
+                return undefined;
+            }
+            if (blobid == undefined) {
+                blobid = '';
+            }
+            return 'http://' + this.client.appHost + '/docs/' +
+                docid + '/' + blobid;
+        },
 
-        var validations = {
-            'no_username': [client.username, signInMessage],
-            'missing_document_name': [docid, docidMessage],
-            'missing_object': [json, objectMessage],
-            'missing_title': [json && json.title, titleMessage],
-            'missing_blob': [json && json.blob, blobMessage]
-        };
+        errorHandler: function(xmlhttp, textStatus, errorThrown) {
+            var code = 'ajax_error/' + xmlhttp.status;
+            var message = xmlhttp.statusText;
+            this.client.log(message + ' (' + code + ')', {'obj': xmlhttp});
+            this.client.onError(code, message);
+        },
 
-        for (var code in validations) {
-            if (validations.hasOwnProperty(code)) {
-                var validation = validations[code];
-                if (!validation[0]) {
-                    client.onError(code, validation[1]);
-                    return;
+        // Save a document to the Pageforest store
+        putDoc: function(docid, json, fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+
+            var validations = {
+                'no_username': [this.client.username, signInMessage],
+                'missing_document_name': [docid, docidMessage],
+                'missing_object': [json, objectMessage],
+                'missing_title': [json && json.title, titleMessage],
+                'missing_blob': [json && json.blob, blobMessage]
+            };
+
+            for (var code in validations) {
+                if (validations.hasOwnProperty(code)) {
+                    var validation = validations[code];
+                    if (!validation[0]) {
+                        this.client.onError(code, validation[1]);
+                        return;
+                    }
                 }
             }
-        }
 
-        // Default permissions to be public readable.
-        if (!json.readers) {
-            json.readers = ['public'];
-        }
-
-        var data = jsonToString(json);
-        client.log('saving document: ' + getDocURL(docid), json);
-        $.ajax({
-            type: 'PUT',
-            url: getDocURL(docid),
-            data: data,
-            error: errorHandler,
-            success: function (result, textStatus, xmlhttp) {
-                fnSuccess(result, textStatus, xmlhttp);
+            // Default permissions to be public readable.
+            if (!json.readers) {
+                json.readers = ['public'];
             }
-        });
-    }
 
-    // Save a child blob in the namespace of a document
-    function putBlob(docid, blobid, data, options, fnSuccess) {
-        fnSuccess = fnSuccess || function () {};
-        options = options || {};
+            var data = jsonToString(json);
+            this.client.log('saving document: ' + this.getDocURL(docid), json);
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL(docid),
+                data: data,
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        },
 
-        if (docid == undefined) {
-            client.onError('unsaved_document', docUnsavedMessage);
-            return;
-        }
+        // Save a child blob in the namespace of a document
+        putBlob: function(docid, blobid, data, options, fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+            options = options || {};
 
-        var url = getDocURL(docid) + blobid;
-        var query_string = [];
+            if (docid == undefined) {
+                this.client.onError('unsaved_document', docUnsavedMessage);
+                return;
+            }
 
-        function pushParam(param, value) {
-            query_string.push(param + '=' + encodeURIComponent(value));
-        }
+            var url = this.getDocURL(docid) + blobid;
+            var query_string = [];
 
-        if (options.encoding) {
-            pushParam('transfer-encoding', options.encoding);
-        }
-        if (options.tags) {
-            pushParam('tags', options.tags.join(','));
-        }
+            function pushParam(param, value) {
+                query_string.push(param + '=' + encodeURIComponent(value));
+            }
 
-        query_string = query_string.join('&');
-        if (query_string) {
-            url += '?' + query_string;
-        }
+            if (options.encoding) {
+                pushParam('transfer-encoding', options.encoding);
+            }
+            if (options.tags) {
+                pushParam('tags', options.tags.join(','));
+            }
 
-        if (typeof data != "string") {
-            data = jsonToString(data);
-        }
-        client.log('saving blob: ' + url + ' (' + data.length + ')');
-        $.ajax({
-            type: 'PUT',
-            url: url,
-            data: data,
-            dataType: 'json',
-            processData: false,
-            error: errorHandler,
-            success: function() {
-                client.log('saved blob: ' + url);
-                fnSuccess(true);
-            }.fnMethod(this)
-        });
-    }
+            query_string = query_string.join('&');
+            if (query_string) {
+                url += '?' + query_string;
+            }
 
-    // Read a child blob in the namespace of a document
-    // TODO: refactor to share code with putBlob
-    function getBlob(docid, blobid, options, fn) {
-        fn = fn || function () {};
-        options = options || {};
-        var type = 'GET';
+            if (typeof data != "string") {
+                data = jsonToString(data);
+            }
+            this.client.log('saving blob: ' + url + ' (' + data.length + ')');
+            var self = this;
+            $.ajax({
+                type: 'PUT',
+                url: url,
+                data: data,
+                dataType: 'json',
+                processData: false,
+                error: this.errorHandler.fnMethod(this),
+                success: function() {
+                    self.client.log('saved blob: ' + url);
+                    fnSuccess(true);
+                }.fnMethod(this)
+            });
+        },
 
-        if (docid == undefined) {
-            client.onError('unsaved_document', docUnsavedMessage);
-            fn(false);
-            return;
-        }
+        // Read a child blob in the namespace of a document
+        // TODO: refactor to share code with putBlob
+        getBlob: function(docid, blobid, options, fn) {
+            fn = fn || function () {};
+            options = options || {};
+            var type = 'GET';
 
-        var url = getDocURL(docid) + blobid;
-        if (options.encoding || options.tags) {
-            url += '?';
-        }
-        if (options.encoding) {
-            url += 'transfer-encoding=' + options.encoding;
-        }
-        if (options.tags) {
-            var encodedTags = base.map(options.tags, encodeURIComponent);
-            url += 'tags=' + encodedTags.join(',');
-        }
-        if (options.headOnly) {
-            type = 'HEAD';
-        }
-        client.log('reading blob: ' + docid + '/' + blobid);
-        $.ajax({
-            'type': type,
-            'url': url,
-            // REVIEW: Is this the right default - note that 200 return
-            // codes can return error because the data is NOT json!
-            'dataType': options.dataType || 'json',
-            'error': function (xmlhttp, textStatus, errorThrown) {
-                var code = 'ajax_error/' + xmlhttp.status;
-                var message = xmlhttp.statusText;
-                client.log(message + ' (' + code + ')', {'obj': xmlhttp});
-                client.onError(code, message);
+            if (docid == undefined) {
+                this.client.onError('unsaved_document', docUnsavedMessage);
                 fn(false);
-            }.fnMethod(this),
-            'success': function(data) {
-                client.log('read blob: ' + url);
-                fn(true, data);
-            }.fnMethod(this)
-        });
-    }
+                return;
+            }
+
+            var url = this.getDocURL(docid) + blobid;
+            if (options.encoding || options.tags) {
+                url += '?';
+            }
+            if (options.encoding) {
+                url += 'transfer-encoding=' + options.encoding;
+            }
+            if (options.tags) {
+                var encodedTags = base.map(options.tags, encodeURIComponent);
+                url += 'tags=' + encodedTags.join(',');
+            }
+            if (options.headOnly) {
+                type = 'HEAD';
+            }
+            this.client.log('reading blob: ' + docid + '/' + blobid);
+            var self = this;
+            $.ajax({
+                'type': type,
+                'url': url,
+                // REVIEW: Is this the right default - note that 200 return
+                // codes can return error because the data is NOT json!
+                'dataType': options.dataType || 'json',
+                'error': function (xmlhttp, textStatus, errorThrown) {
+                    var code = 'ajax_error/' + xmlhttp.status;
+                    var message = xmlhttp.statusText;
+                    self.client.log(message + ' (' + code + ')',
+                                    {'obj': xmlhttp});
+                    self.client.onError(code, message);
+                    fn(false);
+                }.fnMethod(this),
+                'success': function(data) {
+                    self.client.log('read blob: ' + url);
+                    fn(true, data);
+                }.fnMethod(this)
+            });
+        }
+
+    }); // Storage.methods
 
     ns.extend({
-        'setClient': setClient,
-        'putDoc': putDoc,
-        'getDoc': function () {
-            console.log("NYI");
-        },
-        'putBlob': putBlob,
-        'getBlob': getBlob,
-        'getDocURL': getDocURL,
+        'Storage': Storage,
         'jsonToString': jsonToString
     });
 });

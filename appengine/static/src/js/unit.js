@@ -452,31 +452,31 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             }
         },
 
-        assertIdent: function(v1, v2) {
-            this.assert(v1 === v2, v1 + " === " + v2);
+        assertIdent: function(v1, v2, sNote) {
+            this.assert(v1 === v2, v1 + " === " + v2, sNote);
         },
 
-        assertNEq: function(v1, v2) {
-            this.assert(v1 != v2, v1 + " != " + v2);
+        assertNEq: function(v1, v2, sNote) {
+            this.assert(v1 != v2, v1 + " != " + v2, sNote);
         },
 
-        assertGT: function(v1, v2) {
-            this.assert(v1 > v2, v1 + " > " + v2);
+        assertGT: function(v1, v2, sNote) {
+            this.assert(v1 > v2, v1 + " > " + v2, sNote);
         },
 
-        assertLT: function(v1, v2) {
-            this.assert(v1 < v2, v1 + " < " + v2);
+        assertLT: function(v1, v2, sNote) {
+            this.assert(v1 < v2, v1 + " < " + v2, sNote);
         },
 
-        assertFn: function(fn) {
+        assertFn: function(fn, sNote) {
             var stFn = fn.toString();
             stFn = stFn.substring(stFn.indexOf("{") + 1,
                                   stFn.lastIndexOf("}") - 1);
-            this.assert(fn(), stFn);
+            this.assert(fn(), stFn, sNote);
         },
 
         // Useage: ut.assertThrows(<type>, function(ut) {...});
-        assertThrows: function(stExpected, fn) {
+        assertThrows: function(stExpected, fn, sNote) {
             try {
                 fn(this);
             }
@@ -484,7 +484,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 this.assertException(e, stExpected);
                 return;
             }
-            this.assert(false, "Missing expected Exception: " + stExpected);
+            this.assert(false, "Missing expected Exception: " + stExpected,
+                        sNote);
         },
 
         // assert expected and caught exceptions
