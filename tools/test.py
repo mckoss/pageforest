@@ -17,7 +17,7 @@ def find_in_path(file_name):
 if __name__ == '__main__':
     command = ['python2.5',
                find_in_path('dev_appserver.py'),
-               '-a pageforest --show_mail_body']
+               '-a pageforest --show_mail_body --use_sqlite']
     command.extend(sys.argv[1:])
     command = ' '.join(command)
     if 'HOME' in os.environ:
