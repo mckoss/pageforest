@@ -8,7 +8,6 @@
 //     'com.pageforest.your_app_name'
 namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
-    var storage = namespace.lookup('com.pageforest.storage');
 
     // This function is called when the index.html home page
     // is loaded.  Use it to initialize your application and
@@ -53,7 +52,7 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     // You can safely delete it.
     function onStateChange(newState, oldState) {
         // Refresh links on the page
-        var url = storage.getDocURL();
+        var url = ns.client.getDocURL();
         var link = $('#document');
         if (url) {
             link.attr('href', url + '?callback=document').show();
