@@ -51,6 +51,11 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                 // Make sure we're logged in
                 function (ut) {
                     // Force a login check.
+                    if (client.username != undefined) {
+                        ut.nextFn();
+                        return;
+                    }
+
                     ut.assertEq(client.username, undefined,
                                 "not yet logged in");
                     app.onUserChange = function(username) {

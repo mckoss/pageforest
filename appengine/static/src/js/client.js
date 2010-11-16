@@ -126,16 +126,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.stateSave = this.state;
             this.changeState('loading');
 
-            this.log("loading: " + docid);
-            // TODO: Should call this.storage.getDoc
-            $.ajax({
-                dataType: 'json',
-                url: this.storage.getDocURL(docid),
-                error: this.errorHandler.fnMethod(this),
-                success: function (doc, textStatus, xmlhttp) {
-                    this.setDoc(doc);
-                    this.setCleanDoc(docid);
-                }.fnMethod(this)
+            var self = this;
+            this.storage.getDoc(docid, function (doc) {
+                self.setDoc(doc);
+                self.setCleanDoc(docid);
             });
         },
 

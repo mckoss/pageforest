@@ -2252,7 +2252,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             var data = jsonToString(json);
-            this.client.log('saving document: ' + this.getDocURL(docid), json);
+            this.client.log('putDoc: ' + docid);
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -2261,6 +2261,19 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
+            });
+        },
+
+        getDoc: function (docid, fnSuccess) {
+            this.client.log("getDoc: " + docid);
+            // TODO: Should call this.storage.getDoc
+            $.ajax({
+                dataType: 'json',
+                url: this.getDocURL(docid),
+                error: this.errorHandler.fnMethod(this),
+                success: function (doc, textStatus, xmlhttp) {
+                    fnSuccess(doc, textStatus, xmlhttp);
+                }.fnMethod(this)
             });
         },
 
@@ -2307,21 +2320,23 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 error: this.errorHandler.fnMethod(this),
                 success: function() {
                     self.client.log('saved blob: ' + url);
-                    fnSuccess(true);
+                    // TODO: Return server-generated header info for the doc
+                    // esp. timestamps and sha1.
+                    fnSuccess();
                 }.fnMethod(this)
             });
         },
 
         // Read a child blob in the namespace of a document
         // TODO: refactor to share code with putBlob
-        getBlob: function(docid, blobid, options, fn) {
-            fn = fn || function () {};
+        getBlob: function(docid, blobid, options, fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
             options = options || {};
             var type = 'GET';
 
             if (docid == undefined) {
                 this.client.onError('unsaved_document', docUnsavedMessage);
-                fn(false);
+                fnSuccess(false);
                 return;
             }
 
@@ -2353,11 +2368,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     self.client.log(message + ' (' + code + ')',
                                     {'obj': xmlhttp});
                     self.client.onError(code, message);
-                    fn(false);
+                    fnSuccess(false);
                 }.fnMethod(this),
                 'success': function(data) {
                     self.client.log('read blob: ' + url);
-                    fn(true, data);
+                    fnSuccess(true, data);
                 }.fnMethod(this)
             });
         }
@@ -2498,16 +2513,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.stateSave = this.state;
             this.changeState('loading');
 
-            this.log("loading: " + docid);
-            // TODO: Should call this.storage.getDoc
-            $.ajax({
-                dataType: 'json',
-                url: this.storage.getDocURL(docid),
-                error: this.errorHandler.fnMethod(this),
-                success: function (doc, textStatus, xmlhttp) {
-                    this.setDoc(doc);
-                    this.setCleanDoc(docid);
-                }.fnMethod(this)
+            var self = this;
+            this.storage.getDoc(docid, function (doc) {
+                self.setDoc(doc);
+                self.setCleanDoc(docid);
             });
         },
 
