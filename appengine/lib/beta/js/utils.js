@@ -2565,7 +2565,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             this.setAppPanelValues(this.meta);
 
-            this.log('saved');
             if (this.app.onSaveSuccess) {
                 this.app.onSaveSuccess(result);
             }
@@ -2631,6 +2630,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (docid == undefined) {
                 docid = '';
             }
+
+            this.log('clean doc: ' + docid);
 
             window.location.hash = docid;
             this.lastHash = window.location.hash;
@@ -2721,6 +2722,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             var stateOld = this.state;
             this.state = state;
+
+            this.log("state:" + stateOld + ' -> ' + state);
 
             if (this.app.onStateChange) {
                 this.app.onStateChange(state, stateOld);
@@ -2829,7 +2832,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (sessionUser != undefined) {
                 if (sessionUser != this.username) {
                     this.username = sessionUser;
-                    this.log('signed in as ' + this.username);
                     this.onUserChange(this.username);
                 }
                 return;
