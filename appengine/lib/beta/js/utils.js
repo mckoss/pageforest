@@ -2462,6 +2462,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.username = undefined;
         this.fLogging = true;
         this.logged = {};
+        this.lastHash = '';
         this.fFirstPoll = true;
 
         // Auto save every 60 seconds
@@ -2635,9 +2636,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             window.location.hash = docid;
             this.lastHash = window.location.hash;
-            // Chrome has a bug where the location bar is not updated unless
-            // the whole thing is set.
-            window.location.href = window.location.href;
         },
 
         // See if the document data has changed - assume this is not
