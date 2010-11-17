@@ -38,8 +38,11 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
     function addTests(ts) {
 
-        ts.addTest("save/load", function(ut) {
+        ts.addTest("Client", function(ut) {
             ts.coverage.cover('Client');
+        });
+
+        ts.addTest("save/load", function(ut) {
 
             app.ut = ut;
             // Ignore any doc hashtag
@@ -77,6 +80,10 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
+                    var url = client.getDocURL();
+                    ut.assertEq(url.indexOf('http://scratch.'), 0);
+                    ut.assertEq(url.indexOf('/test-1'), url.length - 8);
+
                     app.expectedState = 'loading';
                     client.load('test-1');
                 },

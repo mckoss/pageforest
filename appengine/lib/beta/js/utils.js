@@ -2469,7 +2469,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.app = app;
         this.storage = new storage.Storage(this);
-        this.getDocURL = this.storage.getDocURL.fnMethod(this.storage);
 
         this.meta = {};
         this.metaDoc = {};
@@ -2519,6 +2518,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
            checkDoc - polls to see if a document has changed.
            addAppBar - add a standards user interface element
            */
+
+        getDocURL: function(blobid) {
+            return this.storage.getDocURL(this.docid, blobid);
+        },
 
         // Load a document as the default document for this running application.
         load: function (docid) {
