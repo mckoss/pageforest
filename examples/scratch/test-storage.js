@@ -75,7 +75,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.app.onError = function(status, errorMessage) {
                         ut.assertEq(status, "ajax_error/404");
-                        ut.assertEq(errorMessage, "NOT FOUND");
+                        ut.assertEq(errorMessage.toLowerCase(), "not found");
                         ut.nextFn();
                     };
                     client.storage.getDoc('does-not-exist', function(doc) {

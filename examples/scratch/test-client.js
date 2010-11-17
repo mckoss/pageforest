@@ -24,7 +24,6 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
         onStateChange: function(newState, oldState) {
             this.state = newState;
-            console.log(oldState + "->" + newState);
 
             if (this.expectedState) {
                 this.ut.assertEq(newState, this.expectedState);
