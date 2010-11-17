@@ -4,6 +4,7 @@
 /*global jQuery $ */
 namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
+    var util = namespace.util;
     var format = namespace.lookup('org.startpad.format');
 
     // Error strings
@@ -17,6 +18,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         "with constructor: {ctor}.";
     var docUnsavedMessage = "Document must be saved before " +
         "children can be saved.";
+    var badAPIMessage = "API Call invalid";
 
     function jsonToString(json) {
         var s;
@@ -75,27 +77,56 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             this.client.onError(code, message);
         },
 
-        // Save a document to the Pageforest store
-        putDoc: function(docid, json, fnSuccess) {
-            fnSuccess = fnSuccess || function () {};
+        validateArgs: function(funcName, docid, blobid, json, options,
+                               fnSuccess) {
 
             var validations = {
                 'no_username': [this.client.username, signInMessage],
                 'missing_document_name': [docid, docidMessage],
-                'missing_object': [json, objectMessage],
-                'missing_title': [json && json.title, titleMessage],
-                'missing_blob': [json && json.blob, blobMessage]
+                'bad_options': [typeof options != 'function',
+                                badAPIMessage],
+                'bad_callback': [fnSuccess == undefined ||
+                                 typeof fnSuccess == 'function',
+                                 badAPIMessage]
             };
+
+            if (funcName == 'putDoc') {
+                util.extendObject(validations, {
+                    'missing_title': [typeof json == 'object' || json.title,
+                                      titleMessage],
+                    'missing_blob': [typeof json == 'object' || json.blob,
+                                     blobMessage]
+                });
+            }
+
+            if (funcName == 'putDoc' || funcName == 'putBlob') {
+                util.extendObject(validations, {
+                    'missing_object': [json != undefined, objectMessage]
+                });
+            }
 
             for (var code in validations) {
                 if (validations.hasOwnProperty(code)) {
                     var validation = validations[code];
                     if (!validation[0]) {
-                        this.client.onError(code, validation[1]);
-                        return;
+                        this.client.onError(code, funcName + ': ' +
+                                            validation[1]);
+                        return false;
                     }
                 }
             }
+
+            return true;
+        },
+
+        // Save a document to the Pageforest store
+        putDoc: function(docid, json, fnSuccess) {
+            if (!this.validateArgs('putDoc', docid, undefined, json,
+                                   undefined, fnSuccess)) {
+                return;
+            }
+
+            fnSuccess = fnSuccess || function () {};
 
             // Default permissions to be public readable.
             if (!json.readers) {
@@ -103,7 +134,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             var data = jsonToString(json);
-            this.client.log('putDoc: ' + docid);
+            this.client.log('putDoc: ' + docid +
+                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -124,12 +156,17 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 error: this.errorHandler.fnMethod(this),
                 success: function (doc, textStatus, xmlhttp) {
                     fnSuccess(doc, textStatus, xmlhttp);
-                }.fnMethod(this)
+                }
             });
         },
 
-        // Save a child blob in the namespace of a document
+        // Write a Blob to storage.
         putBlob: function(docid, blobid, data, options, fnSuccess) {
+            if (!this.validateArgs('putBlob', docid, blobid, data, options,
+                                   fnSuccess)) {
+                return;
+            }
+
             fnSuccess = fnSuccess || function () {};
             options = options || {};
 
@@ -160,29 +197,32 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             if (typeof data != "string") {
                 data = jsonToString(data);
             }
-            this.client.log('saving blob: ' + url + ' (' + data.length + ')');
-            var self = this;
+            this.client.log('putBlob: ' + docid + '/' + blobid +
+                            (query_string ? '?' + query_string : '') +
+                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: url,
                 data: data,
+                // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
                 processData: false,
                 error: this.errorHandler.fnMethod(this),
-                success: function() {
-                    self.client.log('saved blob: ' + url);
-                    // TODO: Return server-generated header info for the doc
-                    // esp. timestamps and sha1.
-                    fnSuccess();
-                }.fnMethod(this)
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
             });
         },
 
-        // Read a child blob in the namespace of a document
-        // TODO: refactor to share code with putBlob
+        // Read a blob from storage.
         getBlob: function(docid, blobid, options, fnSuccess) {
+            if (!this.validateArgs('getBlob', docid, blobid, undefined,
+                                   options, fnSuccess)) {
+                return;
+            }
             fnSuccess = fnSuccess || function () {};
             options = options || {};
+
             var type = 'GET';
 
             if (docid == undefined) {
@@ -192,41 +232,28 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             var url = this.getDocURL(docid) + blobid;
-            if (options.encoding || options.tags) {
-                url += '?';
-            }
             if (options.encoding) {
-                url += 'transfer-encoding=' + options.encoding;
-            }
-            if (options.tags) {
-                var encodedTags = base.map(options.tags, encodeURIComponent);
-                url += 'tags=' + encodedTags.join(',');
+                url += '?transfer-encoding=' + options.encoding;
             }
             if (options.headOnly) {
                 type = 'HEAD';
             }
-            this.client.log('reading blob: ' + docid + '/' + blobid);
-            var self = this;
+            this.client.log('getBlob: ' + docid + '/' + blobid);
             $.ajax({
-                'type': type,
-                'url': url,
+                type: type,
+                url: url,
                 // REVIEW: Is this the right default - note that 200 return
                 // codes can return error because the data is NOT json!
-                'dataType': options.dataType || 'json',
-                'error': function (xmlhttp, textStatus, errorThrown) {
-                    var code = 'ajax_error/' + xmlhttp.status;
-                    var message = xmlhttp.statusText;
-                    self.client.log(message + ' (' + code + ')',
-                                    {'obj': xmlhttp});
-                    self.client.onError(code, message);
-                    fnSuccess(false);
-                }.fnMethod(this),
-                'success': function(data) {
-                    self.client.log('read blob: ' + url);
-                    fnSuccess(true, data);
-                }.fnMethod(this)
+                dataType: options.dataType || 'json',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
             });
         }
+
+        // TODO: LIST command (Blobs and Docs)
+        // TODO: DELETE command (Blobs and Docs)
 
     }); // Storage.methods
 

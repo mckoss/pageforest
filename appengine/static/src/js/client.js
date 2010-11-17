@@ -618,7 +618,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         showError: function(message) {
             if (this.errorPanel == undefined) {
-                console.log("Error: " + message);
                 return;
             }
 
