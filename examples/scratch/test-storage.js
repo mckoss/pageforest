@@ -22,6 +22,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     function addTests(ts) {
 
         ts.addTest("getDocURL", function(ut) {
+            ts.coverage.cover('Storage');
             var appHost = client.appHost;
             ut.assertEq(appHost.indexOf('scratch.pageforest'), 0);
             var url = client.getDocURL('foo', 'bar');
@@ -69,10 +70,47 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         ut.assertEq(doc.blob, testBlob);
                         ut.nextFn();
                     });
+                },
 
+                function (ut) {
+                    client.app.onError = function(status, errorMessage) {
+                        ut.assertEq(status, "ajax_error/404");
+                        ut.assertEq(errorMessage, "NOT FOUND");
+                        ut.nextFn();
+                    };
+                    client.storage.getDoc('does-not-exist', function(doc) {
+                        ut.assert(false, "Should never call callback.");
+                        ut.nextFn();
+                    });
                 }
             ]);
+        }).async();
 
+        ts.addTest("putBlob/getBlob", function(ut) {
+            client.app.ut = ut;
+
+            function cont() {
+                ut.assert(true, "continue");
+                ut.nextFn();
+            }
+
+            function fnGet(blob) {
+                console.log("fnGet");
+                ut.assertEq(blob, testBlob);
+                ut.nextFn();
+            }
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-blob',
+                                           testBlob, undefined, cont);
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-blob',
+                                           undefined, fnGet);
+                }
+            ]);
         }).async();
     }
 
