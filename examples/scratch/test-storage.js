@@ -21,18 +21,22 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
     function addTests(ts) {
 
-        ts.addTest("getDocURL", function(ut) {
+        ts.addTest("Storage", function(ut) {
             ts.coverage.cover('Storage');
+        });
+
+        ts.addTest("getDocURL", function(ut) {
             var appHost = client.appHost;
             ut.assertEq(appHost.indexOf('scratch.pageforest'), 0);
-            var url = client.getDocURL('foo', 'bar');
+            var storage = client.storage;
+            var url = storage.getDocURL('foo', 'bar');
             ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/foo/bar'), url.length - 8);
 
-            var url2 = client.storage.getDocURL('foo', 'bar');
+            var url2 = storage.getDocURL('foo', 'bar');
             ut.assertEq(url, url2);
 
-            url2 = client.getDocURL('foo');
+            url2 = storage.getDocURL('foo');
             ut.assertEq(url2, url.substr(0, url.length - 3));
         });
 
