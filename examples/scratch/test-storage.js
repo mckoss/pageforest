@@ -95,7 +95,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             }
 
             function fnGet(blob) {
-                console.log("fnGet");
                 ut.assertEq(blob, testBlob);
                 ut.nextFn();
             }
