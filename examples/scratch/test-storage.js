@@ -31,16 +31,18 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             var storage = client.storage;
             var url = storage.getDocURL('foo', 'bar');
             ut.assertEq(url.indexOf('http://scratch.'), 0);
-            ut.assertEq(url.indexOf('/foo/bar'), url.length - 8);
+            ut.assertEq(url.indexOf('/docs/foo/bar'), url.length - 13);
 
-            var url2 = storage.getDocURL('foo', 'bar');
-            ut.assertEq(url, url2);
-
-            url2 = storage.getDocURL('foo');
+            var url2 = storage.getDocURL('foo');
             ut.assertEq(url2, url.substr(0, url.length - 3));
+
+            // Should get the document root url
+            url = storage.getDocURL();
+            ut.assertEq(url.indexOf('http://scratch.'), 0);
+            ut.assertEq(url.indexOf('/docs/'), url.length - 6);
         });
 
-        ts.addTest("putDoc/getDoc", function(ut) {
+        ts.addTest("Docs: put/get/delete", function(ut) {
             client.app.ut = ut;
 
             function cont() {
@@ -78,23 +80,36 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     client.app.onError = function(status, errorMessage) {
+                        client.app.onError = undefined;
                         ut.assertEq(status, "ajax_error/404");
-                        ut.assertEq(errorMessage.toLowerCase(), "not found");
                         ut.nextFn();
                     };
                     client.storage.getDoc('does-not-exist', function(doc) {
                         ut.assert(false, "Should never call callback.");
                         ut.nextFn();
                     });
+                },
+
+                function (ut) {
+                    // Document deletion not currently supported!
+                    client.app.onError = function(status, errorMessage) {
+                        client.app.onError = undefined;
+                        ut.assertEq(status, 'ajax_error/405');
+                        ut.nextFn();
+                    };
+                    client.storage.deleteDoc('test-storage', function (result) {
+                        ut.assertEq(result.status, 200);
+                        ut.nextFn();
+                    });
                 }
             ]);
         }).async();
 
-        ts.addTest("putBlob/getBlob", function(ut) {
+        ts.addTest("Blobs: put/get/delete", function(ut) {
             client.app.ut = ut;
 
-            function cont() {
-                ut.assert(true, "continue");
+            function cont(result) {
+                ut.assertEq(result.status, 200);
                 ut.nextFn();
             }
 
@@ -112,6 +127,53 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.getBlob('test-storage', 'test-blob',
                                            undefined, fnGet);
+                },
+
+                function (ut) {
+                    client.storage.deleteBlob('test-storage', 'test-blob',
+                        function (result) {
+                            ut.assertEq(result.status, 200);
+                            ut.nextFn();
+                        });
+                }
+            ]);
+        }).async();
+
+        ts.addTest("list", function(ut) {
+            client.app.ut = ut;
+
+            function cont(result) {
+                ut.assertEq(result.status, 200);
+                ut.nextFn();
+            }
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-blob1',
+                                           testBlob, undefined, cont);
+                },
+
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-blob2',
+                                           testBlob, undefined, cont);
+                },
+
+                function (ut) {
+                    // List of documents
+                    client.storage.list(undefined, undefined,
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    // List of blobs
+                    client.storage.list('test-storage', {},
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.nextFn();
+                        });
                 }
             ]);
         }).async();

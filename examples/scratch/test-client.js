@@ -70,6 +70,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
+                    ut.assertEq(client.getDocURL(), undefined);
                     app.expectedState = 'saving';
                     client.save({'title': "A testing document.",
                                  'blob': testBlob}, 'test-1');

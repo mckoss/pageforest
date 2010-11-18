@@ -306,7 +306,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         assertEq: function(v1, v2, stNote) {
             if (typeof v1 != typeof v2) {
                 this.assert(false, "Comparing values of different type: " +
-                            typeof v1 + ", " + typeof v2, stNote);
+                            v1 + ' (' + typeof v1 + ') != ' +
+                            v2 + ' (' + typeof v2 + ')',
+                            stNote);
                 return;
             }
             switch (typeof v1) {
