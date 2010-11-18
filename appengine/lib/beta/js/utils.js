@@ -2463,7 +2463,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             pushParam('method', 'list');
 
-            var simpleOptions = ['depth', 'keysonly', 'prefix'];
+            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
             for (var i = 0; i < simpleOptions.length; i++) {
                 var option = simpleOptions[i];
                 if (options[option] != undefined) {
