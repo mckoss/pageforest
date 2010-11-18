@@ -15,9 +15,24 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
     function TestApp(ut) {
         this.ut = ut;
+        this.status = undefined;
     }
 
     TestApp.methods({
+        expectedError: function(status) {
+            this.status = status;
+        },
+
+        onError: function(status, message) {
+            if (!this.status) {
+                this.ut.assert(false, "Unexpected error: " + status +
+                               "(" + message + ")");
+            } else {
+                this.ut.assertEq(status, this.status);
+                this.status = undefined;
+            }
+            this.ut.nextFn();
+        }
     });
 
     // Anonymous app in this test.
@@ -83,11 +98,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.app.onError = function(status, errorMessage) {
-                        client.app.onError = undefined;
-                        ut.assertEq(status, "ajax_error/404");
-                        ut.nextFn();
-                    };
+                    client.app.expectedError("ajax_error/404");
                     client.storage.getDoc('does-not-exist', function(doc) {
                         ut.assert(false, "Should never call callback.");
                         ut.nextFn();
@@ -96,11 +107,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     // Document deletion not currently supported!
-                    client.app.onError = function(status, errorMessage) {
-                        client.app.onError = undefined;
-                        ut.assertEq(status, 'ajax_error/405');
-                        ut.nextFn();
-                    };
+                    client.app.expectedError("ajax_error/405");
                     client.storage.deleteDoc('test-storage', function (result) {
                         ut.assertEq(result.status, 200);
                         ut.nextFn();
@@ -142,11 +149,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.app.onError = function(status, errorMessage) {
-                        client.app.onError = undefined;
-                        ut.assertEq(status, "ajax_error/404");
-                        ut.nextFn();
-                    };
+                    client.app.expectedError("ajax_error/404");
                     client.storage.getBlob('test-storage', 'test-blob',
                                            undefined,
                         function (result) {
@@ -346,9 +349,103 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
             ]);
         }).async();
+
+        ts.addTest("push/slice", function(ut) {
+            client.app.ut = ut;
+
+            var sliceTests = [[undefined, undefined,
+                               [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]],
+                              [-5, undefined, [5, 6, 7, 8, 9]],
+                              [undefined, 5, [0, 1, 2, 3, 4]],
+                              [2, 7, [2, 3, 4, 5, 6]]
+                             ];
+
+            ut.asyncSequence([
+                function (ut) {
+                    // The test-array might not be created yet...
+                    client.app.expectedError("ajax_error/404");
+                    client.storage.deleteBlob('test-storage', 'test-array',
+                        function (results) {
+                            client.app.expectedError();
+                            ut.assert(results.status, 200);
+                            ut.nextFn();
+                        });
+                },
+
+                // Push 10 integers into an array
+                function (ut) {
+                    var i = 0;
+
+                    function nextArg() {
+                        client.storage.push('test-storage', 'test-array', i++,
+                            function (result) {
+                                ut.assertEq(result.status, 200);
+                                if (i == 10) {
+                                    ut.nextFn();
+                                    return;
+                                }
+                                setTimeout(nextArg, 1);
+                            });
+                    }
+
+                    nextArg();
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-array', {},
+                        function (json) {
+                            ut.assertEq(json, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    this.ut = ut;
+                    var i = 0;
+
+                    function nextSlice() {
+                        var test = sliceTests[i++];
+                        console.log('slice ' + i, test[0], test[1]);
+
+                        client.storage.slice('test-storage', 'test-array',
+                                             test[0], test[1],
+                            function (json) {
+                                ut.assertEq(json, test[2]);
+                                if (i == sliceTests.length) {
+                                    ut.nextFn();
+                                    return;
+                                }
+                                setTimeout(nextSlice, 1);
+                            });
+
+                    }
+                    nextSlice();
+                },
+
+                function (ut) {
+                    client.app.expectedError("slice_range");
+                    client.storage.slice('test-storage', 'test-array',
+                                         'foo', undefined,
+                        function (result) {
+                            ut.assert(false, "unreachable");
+                        });
+                },
+
+                function (ut) {
+                    client.app.expectedError("ajax_error/404");
+                    client.storage.slice('test-storage', 'does-not-exist',
+                                         0, 0,
+                        function (result) {
+                            ut.assert(false, "unreachable");
+                        });
+                }
+            ]);
+        }).async();
     }
 
-    // TODO: PUSH, SLICE, IF-MODIFIED
+    // TODO: IF-MODIFIED, wait=
+    // TODO: Test HEAD
+    // TODO: push, max=
 
     ns.addTests = addTests;
 });

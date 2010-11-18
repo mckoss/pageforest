@@ -6,7 +6,8 @@ import logging
 from django.conf import settings
 from django.utils import simplejson as json
 from django.http import HttpResponse, Http404, \
-    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseNotModified
+    HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseNotModified, \
+    HttpResponseServerError
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -118,8 +119,10 @@ def blob_get(request):
     mimetype = guess_mimetype(request.key_name.rstrip('/'))
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
-    if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
-        or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
+    if (not hasattr(request, 'no_cache') and
+        (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
+         or etag == request.META.get('HTTP_IF_NONE_MATCH', ''))):
+        logging.info("RNM: %r %r %r" % (last_modified, etag, request.META))
         response = HttpResponseNotModified(mimetype=mimetype)
     else:
         response = HttpResponse(blob.value, mimetype=mimetype)
@@ -382,11 +385,21 @@ def blob_slice(request):
     """
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
+
+    # Force blob_get to ignore eTag and modified_since
+    request.no_cache = True
     response = blob_get(request)
-    array = json.loads(response.content)
-    if end is not None:
-        array = array[:end]
-    if start is not None:
-        array = array[start:]
+
+    # Should not return the underlying array's ETag
+    response['ETag'] = None
+    try:
+        array = json.loads(response.content)
+        if end is not None:
+            array = array[:end]
+        if start is not None:
+            array = array[start:]
+    except:
+        logging.info("Blob not an array: %r" % response)
+        return HttpResponseServerError("Blob is not a parsable array.")
     response.content = json.dumps(array)
     return response
