@@ -13,6 +13,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var docidMessage = "Document name is missing.";
     var blobidMessage = "Blobid (key) is missing.";
     var objectMessage = "Document data is missing.";
+    var callbackMessage = "Missing callback function.";
+    var sliceMessage = "Invalid slice range (start or end value invalid).";
     var titleMessage = "Document is missing a title.";
     var blobMessage = "Document is missing a blob property.";
     var invalidJSON = "WARNING: Save object property {key} " +
@@ -25,6 +27,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         var s;
         var badProperty;
 
+        // TODO: Why not map Date properties here?
+        // How to unmap Dates on callbacks?
         function mapper(key, value) {
             if (badProperty) {
                 return value;
@@ -102,17 +106,31 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             if (funcName == 'putDoc') {
                 util.extendObject(validations, {
-                    'missing_title': [typeof json == 'object' || json.title,
+                    'missing_title': [typeof json == 'object' && json.title,
                                       titleMessage],
-                    'missing_blob': [typeof json == 'object' || json.blob,
+                    'missing_blob': [typeof json == 'object' && json.blob,
                                      blobMessage]
                 });
             }
 
             if (funcName.indexOf('put') == 0) {
-                util.extendObject(validations, {
-                    'missing_object': [json != undefined, objectMessage]
-                });
+                validations['missing_object'] =
+                    [json != undefined, objectMessage];
+            }
+
+            if (funcName.indexOf('get') == 0 || funcName == 'list' ||
+                funcName == 'slice') {
+                validations['missing_callback'] =
+                    [fnSuccess != undefined, callbackMessage];
+            }
+
+            if (funcName == 'slice') {
+                validations['slice_range'] =
+                    [(options.start == undefined ||
+                      typeof options.start == 'number') &&
+                     (options.end == undefined ||
+                      typeof options.end == 'number'),
+                     sliceMessage];
             }
 
             if (funcName.indexOf('Blob') != -1) {
@@ -183,6 +201,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             this.client.log("deleteDoc: " + docid);
             $.ajax({
+                type: 'PUT',
                 dataType: 'json',
                 url: this.getDocURL(docid) + '?method=delete',
                 error: this.errorHandler.fnMethod(this),
@@ -245,6 +264,39 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             });
         },
 
+        // Append json to a Blob array.
+        push: function(docid, blobid, json, fnSuccess) {
+            if (!this.validateArgs('putBlob', docid, blobid, json,
+                                   undefined, fnSuccess)) {
+                return;
+            }
+            fnSuccess = fnSuccess || function () {};
+
+            if (docid == undefined) {
+                this.client.onError('unsaved_document', docUnsavedMessage);
+                return;
+            }
+
+            if (typeof json != "string") {
+                json = jsonToString(json);
+            }
+
+            this.client.log('push: ' + docid + '/' + blobid +
+                            ' (' + json.length + ' bytes)');
+            $.ajax({
+                type: 'PUT',
+                url: this.getDocURL(docid, blobid) + '?method=push',
+                data: json,
+                // BUG: Shouldn't this be type text sometimes?
+                dataType: 'json',
+                processData: false,
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        },
+
         // Read a blob from storage.
         getBlob: function(docid, blobid, options, fnSuccess) {
             if (!this.validateArgs('getBlob', docid, blobid, undefined,
@@ -278,6 +330,51 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             });
         },
 
+        // Read a blob from storage.
+        slice: function(docid, blobid, start, end, fnSuccess) {
+            if (!this.validateArgs('slice', docid, blobid, undefined,
+                                   {start: start, end: end}, fnSuccess)) {
+                return;
+            }
+
+            fnSuccess = fnSuccess || function () {};
+
+            var url = this.getDocURL(docid, blobid);
+
+            var query_string = [];
+
+            function pushParam(param, value) {
+                query_string.push(param + '=' + encodeURIComponent(value));
+            }
+
+            pushParam('method', 'slice');
+
+            if (start != undefined) {
+                pushParam('start', start);
+            }
+
+            if (end != undefined) {
+                pushParam('end', end);
+            }
+
+            query_string = query_string.join('&');
+            if (query_string) {
+                url += '?' + query_string;
+            }
+
+            this.client.log('slice: ' + docid + '/' + blobid +
+                            '[' + (start || '') + ':' +
+                            (end || '') + ']');
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        },
+
         deleteBlob: function(docid, blobid, fnSuccess) {
             if (!this.validateArgs('deleteBlob', docid, blobid, undefined,
                                    undefined, fnSuccess)) {
@@ -287,6 +384,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             this.client.log('deleteBlob: ' + docid + '/' + blobid);
             $.ajax({
+                type: 'PUT',
                 dataType: 'json',
                 url: this.getDocURL(docid, blobid) + '?method=delete',
                 error: this.errorHandler.fnMethod(this),

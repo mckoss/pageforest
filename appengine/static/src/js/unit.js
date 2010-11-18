@@ -921,7 +921,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         logCoverage: function() {
             console.log("Function coverage for " + this.name + ":");
             for (var name in this.called) {
-                if (this.called.hasOwnProperty(name)) {
+                if (this.called.hasOwnProperty(name) && this.called[name] > 0) {
                     console.log(format.fixedDigits(this.called[name], 3) +
                                 ' calls to ' + name);
                 }
