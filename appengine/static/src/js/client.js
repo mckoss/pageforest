@@ -106,6 +106,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
            */
 
         getDocURL: function(blobid) {
+            if (this.docid == undefined) {
+                return undefined;
+            }
             return this.storage.getDocURL(this.docid, blobid);
         },
 

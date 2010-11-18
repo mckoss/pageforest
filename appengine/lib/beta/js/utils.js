@@ -2160,6 +2160,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var signInMessage = "You must sign in to save a document.";
     var noClientMessage = "App error: no client object available.";
     var docidMessage = "Document name is missing.";
+    var blobidMessage = "Blobid (key) is missing.";
     var objectMessage = "Document data is missing.";
     var titleMessage = "Document is missing a title.";
     var blobMessage = "Document is missing a blob property.";
@@ -2209,14 +2210,17 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     Storage.methods({
         // Return the URL for a document or blob.
         getDocURL: function(docid, blobid) {
-            if (docid == undefined) {
-                return undefined;
+            docid = docid || '';
+            blobid = blobid || '';
+
+            var url = 'http://' + this.client.appHost + '/docs/';
+
+            // Special case for URL for root of all docs
+            if (docid == '') {
+                return url;
             }
-            if (blobid == undefined) {
-                blobid = '';
-            }
-            return 'http://' + this.client.appHost + '/docs/' +
-                docid + '/' + blobid;
+
+            return url + docid + '/' + blobid;
         },
 
         errorHandler: function(xmlhttp, textStatus, errorThrown) {
@@ -2226,18 +2230,24 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             this.client.onError(code, message);
         },
 
-        validateArgs: function(funcName, docid, blobid, json, options,
-                               fnSuccess) {
+        validateArgs: function(funcName, docid, blobid, json,
+                               options, fnSuccess) {
 
             var validations = {
-                'no_username': [this.client.username, signInMessage],
-                'missing_document_name': [docid, docidMessage],
+                'no_username': [this.client.username != undefined,
+                                signInMessage],
                 'bad_options': [typeof options != 'function',
                                 badAPIMessage],
                 'bad_callback': [fnSuccess == undefined ||
                                  typeof fnSuccess == 'function',
                                  badAPIMessage]
             };
+
+            if (funcName != 'list') {
+                util.extendObject(validations, {
+                    'missing_document_name': [docid != undefined, docidMessage]
+                });
+            }
 
             if (funcName == 'putDoc') {
                 util.extendObject(validations, {
@@ -2248,9 +2258,15 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 });
             }
 
-            if (funcName == 'putDoc' || funcName == 'putBlob') {
+            if (funcName.indexOf('put') == 0) {
                 util.extendObject(validations, {
                     'missing_object': [json != undefined, objectMessage]
+                });
+            }
+
+            if (funcName.indexOf('Blob') != -1) {
+                util.extendObject(validations, {
+                    'missing_blobid': [blobid != undefined, blobidMessage]
                 });
             }
 
@@ -2274,7 +2290,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                                    undefined, fnSuccess)) {
                 return;
             }
-
             fnSuccess = fnSuccess || function () {};
 
             // Default permissions to be public readable.
@@ -2298,7 +2313,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         getDoc: function (docid, fnSuccess) {
             this.client.log("getDoc: " + docid);
-            // TODO: Should call this.storage.getDoc
             $.ajax({
                 dataType: 'json',
                 url: this.getDocURL(docid),
@@ -2309,13 +2323,30 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             });
         },
 
-        // Write a Blob to storage.
-        putBlob: function(docid, blobid, data, options, fnSuccess) {
-            if (!this.validateArgs('putBlob', docid, blobid, data, options,
-                                   fnSuccess)) {
+        deleteDoc: function (docid, fnSuccess) {
+            if (!this.validateArgs('deleteDoc', docid, undefined, undefined,
+                                   undefined, fnSuccess)) {
                 return;
             }
+            fnSuccess = fnSuccess || function () {};
 
+            this.client.log("deleteDoc: " + docid);
+            $.ajax({
+                dataType: 'json',
+                url: this.getDocURL(docid) + '?method=delete',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        },
+
+        // Write a Blob to storage.
+        putBlob: function(docid, blobid, data, options, fnSuccess) {
+            if (!this.validateArgs('putBlob', docid, blobid, data,
+                                   options, fnSuccess)) {
+                return;
+            }
             fnSuccess = fnSuccess || function () {};
             options = options || {};
 
@@ -2324,7 +2355,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            var url = this.getDocURL(docid) + blobid;
+            var url = this.getDocURL(docid, blobid);
             var query_string = [];
 
             function pushParam(param, value) {
@@ -2373,14 +2404,9 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             options = options || {};
 
             var type = 'GET';
+            var url = this.getDocURL(docid, blobid);
 
-            if (docid == undefined) {
-                this.client.onError('unsaved_document', docUnsavedMessage);
-                fnSuccess(false);
-                return;
-            }
-
-            var url = this.getDocURL(docid) + blobid;
+            // BUG: transfer-encoding ignored on GET by server?
             if (options.encoding) {
                 url += '?transfer-encoding=' + options.encoding;
             }
@@ -2399,10 +2425,75 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });
-        }
+        },
 
-        // TODO: LIST command (Blobs and Docs)
-        // TODO: DELETE command (Blobs and Docs)
+        deleteBlob: function(docid, blobid, fnSuccess) {
+            if (!this.validateArgs('deleteBlob', docid, blobid, undefined,
+                                   undefined, fnSuccess)) {
+                return;
+            }
+            fnSuccess = fnSuccess || function () {};
+
+            this.client.log('deleteBlob: ' + docid + '/' + blobid);
+            $.ajax({
+                dataType: 'json',
+                url: this.getDocURL(docid, blobid) + '?method=delete',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+
+        },
+
+        list: function(docid, options, fnSuccess) {
+            if (!this.validateArgs('list', docid, undefined, undefined,
+                                   options, fnSuccess)) {
+                return;
+            }
+            fnSuccess = fnSuccess || function () {};
+            options = options || {};
+            var url = this.getDocURL(docid);
+
+            var query_string = [];
+
+            function pushParam(param, value) {
+                query_string.push(param + '=' + encodeURIComponent(value));
+            }
+
+            pushParam('method', 'list');
+
+            var simpleOptions = ['depth', 'keysonly', 'prefix'];
+            for (var i = 0; i < simpleOptions.length; i++) {
+                var option = simpleOptions[i];
+                if (options[options]) {
+                    pushParam(option, options[option]);
+                }
+            }
+
+
+            if (options.encoding) {
+                pushParam('transfer-encoding', options.encoding);
+            }
+
+            if (options.tags) {
+                // BUG: I think the server only supports one tag filter...
+                pushParam('tag', options.tags.join(','));
+            }
+
+            url += '?' + query_string.join('&');
+
+            this.client.log('list: ' + docid +
+                            '/ (' + query_string.join(', ') + ')');
+            $.ajax({
+                url: url,
+                dataType: 'json',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    fnSuccess(result, textStatus, xmlhttp);
+                }
+            });
+        }
 
     }); // Storage.methods
 
@@ -2520,6 +2611,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
            */
 
         getDocURL: function(blobid) {
+            if (this.docid == undefined) {
+                return undefined;
+            }
             return this.storage.getDocURL(this.docid, blobid);
         },
 
