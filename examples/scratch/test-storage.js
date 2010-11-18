@@ -2,6 +2,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var storage = namespace.lookup('com.pageforest.storage');
     var format = namespace.lookup('org.startpad.format');
+    var base = namespace.lookup('org.startpad.base');
 
     var testBlob = {'testNum': 1,
                     'testString': "hello",
@@ -152,6 +153,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assert(false, "unreachable");
                         });
                 }
+
+                // TODO: HEAD request
             ]);
         }).async();
 
@@ -216,9 +219,70 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.nextFn();
                         });
                 }
+
             ]);
         }).async();
+
+        ts.addTest("list prefix and tag", function(ut) {
+            client.app.ut = ut;
+
+            function cont(result) {
+                ut.assertEq(result.status, 200);
+                ut.nextFn();
+            }
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-tag1',
+                                           testBlob, {tags: ['tag1', 'tag2']},
+                                           cont);
+                },
+
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-tag2',
+                                           testBlob, {tags: ['tag2']},
+                                           cont);
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', {prefix: 'test-b'},
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.assertEq(base.keys(result).length, 2);
+                            ut.assert(result.hasOwnProperty('test-blob1'));
+                            ut.assert(result.hasOwnProperty('test-blob2'));
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', {tag: 'tag2'},
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.assertEq(base.keys(result).length, 2);
+                            ut.assert(result.hasOwnProperty('test-tag1'));
+                            ut.assert(result.hasOwnProperty('test-tag2'));
+                            ut.assertEq(result['test-tag1'].tags,
+                                        ['tag1', 'tag2']);
+                            ut.assertEq(result['test-tag2'].tags, ['tag2']);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', {tag: 'tag1'},
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.assertEq(base.keys(result).length, 1);
+                            ut.assert(result.hasOwnProperty('test-tag1'));
+                            ut.nextFn();
+                        });
+                }
+            ]);
+        });
     }
+
+    // TODO: PUSH, SLICE, IF-MODIFIED
 
     ns.addTests = addTests;
 });
