@@ -2446,14 +2446,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         },
 
-        list: function(docid, options, fnSuccess) {
+        list: function(docid, blobid, options, fnSuccess) {
             if (!this.validateArgs('list', docid, undefined, undefined,
                                    options, fnSuccess)) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
             options = options || {};
-            var url = this.getDocURL(docid);
+            var url = this.getDocURL(docid, blobid);
 
             var query_string = [];
 

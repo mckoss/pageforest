@@ -105,6 +105,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 }
             }
             this.state = UnitTest.states.running;
+            this.trace('');
             try {
                 if (this.fnFallback) {
                     this.fnFallback(this);
@@ -282,6 +283,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         trace: function(stTrace) {
+            console.log('== [' + this.stName + '/' + stTrace + '] ==');
             this.stTrace = stTrace;
         },
 
@@ -532,6 +534,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         // Each fn(ut) must call ut.nextFn() to advance
         // Last call to nextFn calls async(false)
         asyncSequence: function(rgfn) {
+            this.assert(this.cAsync > 0,
+                        "asyncSequence called from synchronous test!");
             this.rgfn = rgfn;
             this.ifn = 0;
             this.nextFn();
