@@ -1,6 +1,7 @@
 namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var storage = namespace.lookup('com.pageforest.storage');
+    var format = namespace.lookup('org.startpad.format');
 
     var testBlob = {'testNum': 1,
                     'testString': "hello",
@@ -8,6 +9,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     'testObj': {'a': 1, 'b': 2},
                     'testArray': [1, 2, 3]
                    };
+
+    var testSha1 = "7a1f1c333b5db916a9c6aea8346efae14f1d324b";
 
     function TestApp(ut) {
         this.ut = ut;
@@ -186,8 +189,30 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', {},
                         function (result) {
                             ut.assertType(result, 'object');
-                            ut.assertType(result['test-blob1'], 'object');
-                            ut.assertType(result['test-blob2'], 'object');
+                            var dir1 = result['test-blob1'];
+                            var dir2 = result['test-blob2'];
+                            ut.assertType(dir1, 'object');
+                            ut.assertType(dir2, 'object');
+
+                            ut.assertEq(dir1.json, true);
+                            ut.assertEq(dir1.sha1, testSha1);
+                            ut.assertEq(dir1.sha1, dir2.sha1);
+                            ut.assertEq(dir1.size, dir2.size);
+                            var date1 = format.decodeClass(dir1.modified);
+                            var date2 = format.decodeClass(dir2.modified);
+                            ut.assertType(date1, Date);
+                            ut.assertLT(date1, date2);
+
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', {keysonly: true},
+                        function (result) {
+                            ut.assertType(result, 'object');
+                            ut.assertEq(result['test-blob1'], {});
+                            ut.assertEq(result['test-blob2'], {});
                             ut.nextFn();
                         });
                 }
