@@ -2466,7 +2466,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             var simpleOptions = ['depth', 'keysonly', 'prefix'];
             for (var i = 0; i < simpleOptions.length; i++) {
                 var option = simpleOptions[i];
-                if (options[options]) {
+                if (options[option] != undefined) {
                     pushParam(option, options[option]);
                 }
             }
