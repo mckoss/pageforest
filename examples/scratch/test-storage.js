@@ -179,7 +179,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     // List of documents
-                    client.storage.list(undefined, undefined,
+                    client.storage.list(undefined, undefined, {},
                         function (result) {
                             ut.assertType(result, 'object');
                             ut.assertType(result['test-storage'], 'object');
@@ -189,7 +189,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     // List of blobs
-                    client.storage.list('test-storage', {},
+                    client.storage.list('test-storage', undefined, {},
                         function (result) {
                             ut.assertType(result, 'object');
                             var dir1 = result['test-blob1'];
@@ -211,7 +211,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.storage.list('test-storage', {keysonly: true},
+                    client.storage.list('test-storage', undefined,
+                                        {keysonly: true},
                         function (result) {
                             ut.assertType(result, 'object');
                             ut.assertEq(result['test-blob1'], {});
@@ -225,6 +226,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
         ts.addTest("list prefix and tag", function(ut) {
             client.app.ut = ut;
+
+            console.log("running");
 
             function cont(result) {
                 ut.assertEq(result.status, 200);
@@ -245,7 +248,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.storage.list('test-storage', {prefix: 'test-b'},
+                    client.storage.list('test-storage', undefined,
+                                        {prefix: 'test-b'},
                         function (result) {
                             ut.assertType(result, 'object');
                             ut.assertEq(base.keys(result).length, 2);
@@ -256,7 +260,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.storage.list('test-storage', {tag: 'tag2'},
+                    client.storage.list('test-storage', undefined,
+                                        {tag: 'tag2'},
                         function (result) {
                             ut.assertType(result, 'object');
                             ut.assertEq(base.keys(result).length, 2);
@@ -270,7 +275,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.storage.list('test-storage', {tag: 'tag1'},
+                    client.storage.list('test-storage', undefined,
+                                        {tag: 'tag1'},
                         function (result) {
                             ut.assertType(result, 'object');
                             ut.assertEq(base.keys(result).length, 1);
@@ -279,7 +285,67 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         });
                 }
             ]);
-        });
+        }).async();
+
+        ts.addTest("list depth", function(ut) {
+            client.app.ut = ut;
+
+            var keys = ["root",
+                        "root/child1", "root/child2",
+                        "root/child1/child3"];
+
+            ut.asyncSequence([
+                function (ut) {
+                    var i = 0;
+
+                    function nextBlob() {
+                        client.storage.putBlob('test-storage', keys[i],
+                                               testBlob, undefined,
+                            function (result) {
+                                ut.assertEq(result.status, 200);
+                                if (++i < keys.length) {
+                                    setTimeout(nextBlob, 1);
+                                    return;
+                                }
+                                ut.nextFn();
+                            });
+                    }
+
+                    nextBlob();
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', 'root', {},
+                        function (result) {
+                            ut.assertEq(base.keys(result).length, 2);
+                            ut.assert(result.hasOwnProperty('child1'));
+                            ut.assert(result.hasOwnProperty('child2'));
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', 'root', {depth: 1},
+                        function (result) {
+                            ut.assertEq(base.keys(result).length, 2);
+                            ut.assert(result.hasOwnProperty('child1'));
+                            ut.assert(result.hasOwnProperty('child2'));
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', 'root', {depth: 0},
+                        function (result) {
+                            ut.assertEq(base.keys(result).length, 3);
+                            ut.assert(result.hasOwnProperty('child1'));
+                            ut.assert(result.hasOwnProperty('child2'));
+                            ut.assert(result.hasOwnProperty('child1/child3'));
+                            ut.nextFn();
+                        });
+                }
+            ]);
+        }).async();
     }
 
     // TODO: PUSH, SLICE, IF-MODIFIED
