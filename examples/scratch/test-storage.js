@@ -135,6 +135,19 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(result.status, 200);
                             ut.nextFn();
                         });
+                },
+
+                function (ut) {
+                    client.app.onError = function(status, errorMessage) {
+                        client.app.onError = undefined;
+                        ut.assertEq(status, "ajax_error/404");
+                        ut.nextFn();
+                    };
+                    client.storage.getBlob('test-storage', 'test-blob',
+                                           undefined,
+                        function (result) {
+                            ut.assert(false, "unreachable");
+                        });
                 }
             ]);
         }).async();
@@ -163,6 +176,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list(undefined, undefined,
                         function (result) {
                             ut.assertType(result, 'object');
+                            ut.assertType(result['test-storage'], 'object');
                             ut.nextFn();
                         });
                 },
@@ -172,6 +186,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', {},
                         function (result) {
                             ut.assertType(result, 'object');
+                            ut.assertType(result['test-blob1'], 'object');
+                            ut.assertType(result['test-blob2'], 'object');
                             ut.nextFn();
                         });
                 }
