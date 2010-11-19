@@ -555,14 +555,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return a;
     }
 
-    function valueInArray(value, a) {
+    function indexOf(value, a) {
         a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
             if (value == a[i]) {
-                return true;
+                return i;
             }
         }
-        return false;
+        return -1;
     }
 
     function map(a, fn) {
@@ -642,7 +642,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'strip': strip,
         'project': project,
         'uniqueArray': uniqueArray,
-        'valueInArray': valueInArray,
+        'indexOf': indexOf,
         'map': map,
         'filter': filter,
         'reduce': reduce,

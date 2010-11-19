@@ -329,7 +329,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             return this.username != undefined &&
                 (this.docid == undefined ||
                  (this.username == this.meta.owner ||
-                  base.valueInArray(this.username, this.meta.writers)));
+                  base.indexOf(this.username, this.meta.writers)) != -1);
         },
 
         changeState: function(state) {
@@ -656,8 +656,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 format.decodeClass(doc.modified));
             values.tags = format.wordList(doc.tags);
             values.writers = format.wordList(doc.writers);
-            values.publicReader = base.valueInArray('public',
-                                                    doc.readers);
+            values.publicReader = base.indexOf('public', doc.readers) != -1;
+
             if (this.docid == undefined) {
                 this.appDialog.enableField('message', true);
                 values.message = "Before saving, you can choose a new " +

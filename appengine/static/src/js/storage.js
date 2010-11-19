@@ -7,29 +7,31 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var util = namespace.util;
     var format = namespace.lookup('org.startpad.format');
 
-    // Error strings
-    var signInMessage = "You must sign in to save a document.";
-    var noClientMessage = "App error: no client object available.";
-    var docidMessage = "Document name is missing.";
-    var blobidMessage = "Blobid (key) is missing.";
-    var objectMessage = "Document data is missing.";
-    var callbackMessage = "Missing callback function.";
-    var sliceMessage = "Invalid slice range (start or end value invalid).";
-    var titleMessage = "Document is missing a title.";
-    var blobMessage = "Document is missing a blob property.";
-    var invalidJSON = "WARNING: Save object property {key} " +
-        "with constructor: {ctor}.";
-    var docUnsavedMessage = "Document must be saved before " +
-        "children can be saved.";
-    var badAPIMessage = "API Call invalid";
+    var errorMessages = {
+        no_username: "You must sign in to save a document.",
+        bad_options: "API Call invalid",
+        bad_callback: "API Call invalid",
+        slice_range: "Invalid slice range (start or end value invalid).",
+        missing_document_name: "Document name is missing.",
+        missing_object: "Document data is missing.",
+        missing_callback: "Missing callback function.",
+        missing_blobid: "Blobid (key) is missing.",
+        missing_title: "Document is missing a title.",
+        missing_blob: "Document is missing a blob property.",
 
-    function Query(url) {
+        invalid_json: "WARNING: Save object property {key} " +
+            "with constructor: {ctor}.",
+        doc_unsaved: "Document must be saved before " +
+            "children can be saved."
+    };
+
+    function URL(url) {
         this.url = url;
         this.params = [];
     }
 
     // REVIEW: Should this use data:StParams instead?
-    Query.methods({
+    URL.methods({
         push: function(key, value) {
             if (value != undefined) {
                 this.params.push(key + '=' + encodeURIComponent(value));
@@ -58,7 +60,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             if (typeof value == 'object' && value.constructor != Object &&
                 value.constructor != Array) {
                 console.warn(
-                    format.replaceKeys(invalidJSON,
+                    format.replaceKeys(errorMessages.invalid_json,
                                        {key: key,
                                         ctor:
                                         value.constructor.toString()}));
@@ -76,6 +78,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         }
 
         return s;
+    }
+
+    function getEtag(xmlhttp) {
+        return xmlhttp.getResponseHeader('ETag');
     }
 
     function Storage(client) {
@@ -109,63 +115,48 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         validateArgs: function(funcName, docid, blobid, json,
                                options, fnSuccess) {
 
+            var blobFuncs = ['getBlob', 'putBlob', 'push', 'slice'];
+
+            var isPutMethod = funcName.indexOf('put') == 0 ||
+                funcName == 'push';
+            var isBlobMethod = base.indexOf(funcName, blobFuncs) != -1;
+
             var validations = {
-                'no_username': [this.client.username != undefined,
-                                signInMessage],
-                'bad_options': [typeof options != 'function',
-                                badAPIMessage],
-                'bad_callback': [fnSuccess == undefined ||
-                                 typeof fnSuccess == 'function',
-                                 badAPIMessage]
+                // Data writing methods need to provide signin and data!
+                no_username: !isPutMethod || this.client.username != undefined,
+                missing_object: !isPutMethod || json != undefined,
+
+                bad_options: typeof options != 'function',
+                bad_callback: fnSuccess == undefined ||
+                    typeof fnSuccess == 'function',
+
+                // Only applies to slice method
+                slice_range: options == undefined ||
+                    (options.start == undefined ||
+                     typeof options.start == 'number') &&
+                    (options.end == undefined ||
+                     typeof options.end == 'number'),
+
+                missing_document_name: funcName == 'list' || docid != undefined,
+
+
+                // Data reading methods should have a callback function
+                missing_callback: isPutMethod || fnSuccess != undefined,
+
+                missing_blobid: !isBlobMethod || blobid != undefined,
+
+                missing_title: funcName != 'putDoc' ||
+                    typeof json == 'object' && json.title,
+                missing_blob: funcName != 'putDoc' ||
+                    typeof json == 'object' && json.blob
             };
-
-            if (funcName != 'list') {
-                util.extendObject(validations, {
-                    'missing_document_name': [docid != undefined, docidMessage]
-                });
-            }
-
-            if (funcName == 'putDoc') {
-                util.extendObject(validations, {
-                    'missing_title': [typeof json == 'object' && json.title,
-                                      titleMessage],
-                    'missing_blob': [typeof json == 'object' && json.blob,
-                                     blobMessage]
-                });
-            }
-
-            if (funcName.indexOf('put') == 0) {
-                validations['missing_object'] =
-                    [json != undefined, objectMessage];
-            }
-
-            if (funcName.indexOf('get') == 0 || funcName == 'list' ||
-                funcName == 'slice') {
-                validations['missing_callback'] =
-                    [fnSuccess != undefined, callbackMessage];
-            }
-
-            if (funcName == 'slice') {
-                validations['slice_range'] =
-                    [(options.start == undefined ||
-                      typeof options.start == 'number') &&
-                     (options.end == undefined ||
-                      typeof options.end == 'number'),
-                     sliceMessage];
-            }
-
-            if (funcName.indexOf('Blob') != -1) {
-                util.extendObject(validations, {
-                    'missing_blobid': [blobid != undefined, blobidMessage]
-                });
-            }
 
             for (var code in validations) {
                 if (validations.hasOwnProperty(code)) {
                     var validation = validations[code];
-                    if (!validation[0]) {
-                        this.client.onError(code, funcName + ': ' +
-                                            validation[1]);
+                    if (!validation) {
+                        this.client.onError(code, errorMessages[code] +
+                                            '(' + funcName + ')');
                         return false;
                     }
                 }
@@ -247,11 +238,12 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             options = options || {};
 
             if (docid == undefined) {
-                this.client.onError('unsaved_document', docUnsavedMessage);
+                this.client.onError('doc_unsaved',
+                                    errorMessages.doc_unsaved);
                 return;
             }
 
-            var url = new Query(this.getDocURL(docid, blobid));
+            var url = new URL(this.getDocURL(docid, blobid));
             if (options.encoding) {
                 url.push('transfer-encoding', options.encoding);
             }
@@ -288,12 +280,12 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
             fnSuccess = fnSuccess || function () {};
 
-            var url = new Query(this.getDocURL(docid, blobid));
+            var url = new URL(this.getDocURL(docid, blobid));
             url.push('method', 'push');
             url.push('max', options.max);
 
             if (docid == undefined) {
-                this.client.onError('unsaved_document', docUnsavedMessage);
+                this.client.onError('doc_unsaved', errorMessages.doc_unsdaved);
                 return;
             }
 
@@ -326,9 +318,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             fnSuccess = fnSuccess || function () {};
             options = options || {};
 
-            var url = new Query(this.getDocURL(docid, blobid));
+            var url = new URL(this.getDocURL(docid, blobid));
             // BUG: transfer-encoding ignored on GET by server?
             url.push('transfer-encoding', options.encoding);
+            url.push('wait', options.wait);
+            url.push('etag', options.etag);
 
             var type = 'GET';
             if (options.headOnly) {
@@ -344,28 +338,31 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 dataType: options.dataType || 'json',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
+                    console.log('ETag: ' + getEtag(xmlhttp));
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });
         },
 
         // Read a blob from storage.
-        slice: function(docid, blobid, start, end, fnSuccess) {
+        slice: function(docid, blobid, options, fnSuccess) {
             if (!this.validateArgs('slice', docid, blobid, undefined,
-                                   {start: start, end: end}, fnSuccess)) {
+                                   options, fnSuccess)) {
                 return;
             }
 
             fnSuccess = fnSuccess || function () {};
 
-            var url = new Query(this.getDocURL(docid, blobid));
+            var url = new URL(this.getDocURL(docid, blobid));
             url.push('method', 'slice');
-            url.push('start', start);
-            url.push('end', end);
+            url.push('start', options.start);
+            url.push('end', options.end);
+            url.push('wait', options.wait);
+            url.push('etag', options.etag);
 
             this.client.log('slice: ' + docid + '/' + blobid +
-                            '[' + (start || '') + ':' +
-                            (end || '') + ']');
+                            '[' + (options.start || '') + ':' +
+                            (options.end || '') + ']');
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
@@ -406,7 +403,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             fnSuccess = fnSuccess || function () {};
             options = options || {};
 
-            var url = new Query(this.getDocURL(docid, blobid));
+            var url = new URL(this.getDocURL(docid, blobid));
             url.push('method', 'list');
 
             for (var i = 0; i < simpleOptions.length; i++) {
@@ -438,6 +435,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
     ns.extend({
         'Storage': Storage,
-        'jsonToString': jsonToString
+        'jsonToString': jsonToString,
+        'getEtag': getEtag
     });
 });

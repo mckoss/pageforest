@@ -158,8 +158,8 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
             });
             ut.assertEq(s, 24);
 
-            ut.assert(base.valueInArray('a', ['b', 'a', 'c']));
-            ut.assert(!base.valueInArray(1, ['b', 'a', 'c']));
+            ut.assertEq(base.indexOf('a', ['b', 'a', 'c']), 1);
+            ut.assertEq(base.indexOf(1, ['b', 'a', 'c']), -1);
         });
 
         ts.addTest("ensureArray", function(ut) {
