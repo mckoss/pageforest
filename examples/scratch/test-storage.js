@@ -26,7 +26,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         onError: function(status, message) {
             if (!this.status) {
                 this.ut.assert(false, "Unexpected error: " + status +
-                               "(" + message + ")");
+                               " (" + message + ")");
             } else {
                 this.ut.assertEq(status, this.status);
                 this.status = undefined;
@@ -47,16 +47,15 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         ts.addTest("getDocURL", function(ut) {
             var appHost = client.appHost;
             ut.assertEq(appHost.indexOf('scratch.pageforest'), 0);
-            var storage = client.storage;
-            var url = storage.getDocURL('foo', 'bar');
+            var url = client.storage.getDocURL('foo', 'bar');
             ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/foo/bar'), url.length - 13);
 
-            var url2 = storage.getDocURL('foo');
+            var url2 = client.storage.getDocURL('foo');
             ut.assertEq(url2, url.substr(0, url.length - 3));
 
             // Should get the document root url
-            url = storage.getDocURL();
+            url = client.storage.getDocURL();
             ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/'), url.length - 6);
         });
@@ -117,27 +116,29 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         }).async();
 
         ts.addTest("Blobs: put/get/delete", function(ut) {
+            var etag;
+
             client.app.ut = ut;
-
-            function cont(result) {
-                ut.assertEq(result.status, 200);
-                ut.nextFn();
-            }
-
-            function fnGet(blob) {
-                ut.assertEq(blob, testBlob);
-                ut.nextFn();
-            }
 
             ut.asyncSequence([
                 function (ut) {
                     client.storage.putBlob('test-storage', 'test-blob',
-                                           testBlob, undefined, cont);
+                                           testBlob, undefined,
+                        function (result, status, xmlhttp) {
+                            etag = storage.getEtag(xmlhttp);
+                            ut.assertEq(result.status, 200);
+                            ut.nextFn();
+                        });
                 },
 
                 function (ut) {
                     client.storage.getBlob('test-storage', 'test-blob',
-                                           undefined, fnGet);
+                                           undefined,
+                        function (blob, status, xmlhttp) {
+                            ut.assertEq(blob, testBlob);
+                            ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.nextFn();
+                        });
                 },
 
                 function (ut) {
@@ -409,7 +410,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         console.log('slice ' + i, test[0], test[1]);
 
                         client.storage.slice('test-storage', 'test-array',
-                                             test[0], test[1],
+                                             {start: test[0], end: test[1]},
                             function (json) {
                                 ut.assertEq(json, test[2]);
                                 if (i == sliceTests.length) {
@@ -426,7 +427,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.app.expectedError("slice_range");
                     client.storage.slice('test-storage', 'test-array',
-                                         'foo', undefined,
+                                         {start: 'foo'},
                         function (result) {
                             ut.assert(false, "unreachable");
                         });
@@ -435,7 +436,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.app.expectedError("ajax_error/404");
                     client.storage.slice('test-storage', 'does-not-exist',
-                                         0, 0,
+                                         {start: 0, end: 0},
                         function (result) {
                             ut.assert(false, "unreachable");
                         });
