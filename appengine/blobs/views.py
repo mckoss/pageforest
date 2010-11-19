@@ -119,9 +119,10 @@ def blob_get(request):
     mimetype = guess_mimetype(request.key_name.rstrip('/'))
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
+    # Only use etag (not last_modified) as 1 second accuracy is not sufficient
+    # to descriminate fast getters.
     if (not hasattr(request, 'no_cache') and
-        (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
-         or etag == request.META.get('HTTP_IF_NONE_MATCH', ''))):
+        etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
         response = HttpResponseNotModified(mimetype=mimetype)
     else:
         response = HttpResponse(blob.value, mimetype=mimetype)
@@ -330,10 +331,12 @@ def atomic_update(key_name, old_sha1, new_sha1, new_value):
         return False, blob
     blob.sha1 = new_sha1
     if len(new_value) <= MAX_INTERNAL_SIZE:
+        logging.info("setting blob value to %r" % new_value)
         db.Model.__setattr__(blob, 'value', new_value)
     else:
         db.Model.__setattr__(blob, 'value', None)
     blob.put()
+    logging.info("current blob value is %r" % blob.value)
     # Update was successful, no need to try again.
     return True, blob
 
