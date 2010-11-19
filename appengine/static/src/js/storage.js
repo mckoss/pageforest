@@ -23,6 +23,27 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         "children can be saved.";
     var badAPIMessage = "API Call invalid";
 
+    function Query(url) {
+        this.url = url;
+        this.params = [];
+    }
+
+    // REVIEW: Should this use data:StParams instead?
+    Query.methods({
+        push: function(key, value) {
+            if (value != undefined) {
+                this.params.push(key + '=' + encodeURIComponent(value));
+            }
+        },
+
+        toString: function() {
+            if (this.params.length == 0) {
+                return this.url;
+            }
+            return this.url + '?' + this.params.join('&');
+        }
+    });
+
     function jsonToString(json) {
         var s;
         var badProperty;
@@ -181,6 +202,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         getDoc: function (docid, fnSuccess) {
+            if (!this.validateArgs('getDoc', docid, undefined, undefined,
+                                   undefined, fnSuccess)) {
+                return;
+            }
+            fnSuccess = fnSuccess || function () {};
             this.client.log("getDoc: " + docid);
             $.ajax({
                 dataType: 'json',
@@ -225,34 +251,24 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            var url = this.getDocURL(docid, blobid);
-            var query_string = [];
-
-            function pushParam(param, value) {
-                query_string.push(param + '=' + encodeURIComponent(value));
-            }
-
+            var url = new Query(this.getDocURL(docid, blobid));
             if (options.encoding) {
-                pushParam('transfer-encoding', options.encoding);
+                url.push('transfer-encoding', options.encoding);
             }
             if (options.tags) {
-                pushParam('tags', options.tags.join(','));
-            }
-
-            query_string = query_string.join('&');
-            if (query_string) {
-                url += '?' + query_string;
+                url.push('tags', options.tags.join(','));
             }
 
             if (typeof data != "string") {
                 data = jsonToString(data);
             }
+
             this.client.log('putBlob: ' + docid + '/' + blobid +
-                            (query_string ? '?' + query_string : '') +
+                            '?' + url.params.join(', ') +
                             ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
-                url: url,
+                url: url.toString(),
                 data: data,
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
@@ -265,12 +281,16 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         // Append json to a Blob array.
-        push: function(docid, blobid, json, fnSuccess) {
-            if (!this.validateArgs('putBlob', docid, blobid, json,
-                                   undefined, fnSuccess)) {
+        push: function(docid, blobid, json, options, fnSuccess) {
+            if (!this.validateArgs('push', docid, blobid, json,
+                                   options, fnSuccess)) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
+
+            var url = new Query(this.getDocURL(docid, blobid));
+            url.push('method', 'push');
+            url.push('max', options.max);
 
             if (docid == undefined) {
                 this.client.onError('unsaved_document', docUnsavedMessage);
@@ -285,7 +305,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                             ' (' + json.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
-                url: this.getDocURL(docid, blobid) + '?method=push',
+                url: url.toString(),
                 data: json,
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
@@ -306,20 +326,19 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             fnSuccess = fnSuccess || function () {};
             options = options || {};
 
-            var type = 'GET';
-            var url = this.getDocURL(docid, blobid);
-
+            var url = new Query(this.getDocURL(docid, blobid));
             // BUG: transfer-encoding ignored on GET by server?
-            if (options.encoding) {
-                url += '?transfer-encoding=' + options.encoding;
-            }
+            url.push('transfer-encoding', options.encoding);
+
+            var type = 'GET';
             if (options.headOnly) {
                 type = 'HEAD';
             }
+
             this.client.log('getBlob: ' + docid + '/' + blobid);
             $.ajax({
                 type: type,
-                url: url,
+                url: url.toString(),
                 // REVIEW: Is this the right default - note that 200 return
                 // codes can return error because the data is NOT json!
                 dataType: options.dataType || 'json',
@@ -339,34 +358,16 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             fnSuccess = fnSuccess || function () {};
 
-            var url = this.getDocURL(docid, blobid);
-
-            var query_string = [];
-
-            function pushParam(param, value) {
-                query_string.push(param + '=' + encodeURIComponent(value));
-            }
-
-            pushParam('method', 'slice');
-
-            if (start != undefined) {
-                pushParam('start', start);
-            }
-
-            if (end != undefined) {
-                pushParam('end', end);
-            }
-
-            query_string = query_string.join('&');
-            if (query_string) {
-                url += '?' + query_string;
-            }
+            var url = new Query(this.getDocURL(docid, blobid));
+            url.push('method', 'slice');
+            url.push('start', start);
+            url.push('end', end);
 
             this.client.log('slice: ' + docid + '/' + blobid +
                             '[' + (start || '') + ':' +
                             (end || '') + ']');
             $.ajax({
-                url: url,
+                url: url.toString(),
                 dataType: 'json',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
@@ -396,46 +397,35 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         list: function(docid, blobid, options, fnSuccess) {
+            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
+
             if (!this.validateArgs('list', docid, undefined, undefined,
                                    options, fnSuccess)) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
             options = options || {};
-            var url = this.getDocURL(docid, blobid);
 
-            var query_string = [];
+            var url = new Query(this.getDocURL(docid, blobid));
+            url.push('method', 'list');
 
-            function pushParam(param, value) {
-                query_string.push(param + '=' + encodeURIComponent(value));
-            }
-
-            pushParam('method', 'list');
-
-            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
             for (var i = 0; i < simpleOptions.length; i++) {
                 var option = simpleOptions[i];
                 if (options[option] != undefined) {
-                    pushParam(option, options[option]);
+                    url.push(option, options[option]);
                 }
             }
-
-
-            if (options.encoding) {
-                pushParam('transfer-encoding', options.encoding);
-            }
+            url.push('transfer-encoding', options.encoding);
 
             if (options.tags) {
                 // BUG: I think the server only supports one tag filter...
-                pushParam('tag', options.tags.join(','));
+                url.push('tag', options.tags.join(','));
             }
 
-            url += '?' + query_string.join('&');
-
             this.client.log('list: ' + docid +
-                            '/ (' + query_string.join(', ') + ')');
+                            '/ (' + url.params.join(', ') + ')');
             $.ajax({
-                url: url,
+                url: url.toString(),
                 dataType: 'json',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {

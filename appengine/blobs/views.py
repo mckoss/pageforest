@@ -122,7 +122,6 @@ def blob_get(request):
     if (not hasattr(request, 'no_cache') and
         (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
          or etag == request.META.get('HTTP_IF_NONE_MATCH', ''))):
-        logging.info("RNM: %r %r %r" % (last_modified, etag, request.META))
         response = HttpResponseNotModified(mimetype=mimetype)
     else:
         response = HttpResponse(blob.value, mimetype=mimetype)
@@ -391,7 +390,7 @@ def blob_slice(request):
     response = blob_get(request)
 
     # Should not return the underlying array's ETag
-    response['ETag'] = None
+    del response['ETag']
     try:
         array = json.loads(response.content)
         if end is not None:

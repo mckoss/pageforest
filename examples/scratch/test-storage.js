@@ -377,7 +377,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     var i = 0;
 
                     function nextArg() {
-                        client.storage.push('test-storage', 'test-array', i++,
+                        client.storage.push('test-storage', 'test-array',
+                                            i++, {},
                             function (result) {
                                 ut.assertEq(result.status, 200);
                                 if (i == 10) {
@@ -438,6 +439,23 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         function (result) {
                             ut.assert(false, "unreachable");
                         });
+                },
+
+                function (ut) {
+                    client.storage.push('test-storage', 'test-array',
+                                        "new", {max: 5},
+                        function (result) {
+                            ut.assertEq(result.newLength, 5);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-array', {},
+                        function (json) {
+                            ut.assertEq(json, [6, 7, 8, 9, "new"]);
+                            ut.nextFn();
+                        });
                 }
             ]);
         }).async();
@@ -445,7 +463,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
     // TODO: IF-MODIFIED, wait=
     // TODO: Test HEAD
-    // TODO: push, max=
 
     ns.addTests = addTests;
 });
