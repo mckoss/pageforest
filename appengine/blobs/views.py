@@ -109,8 +109,9 @@ def blob_get(request):
         raise Http404("Blob not found: " + original_key_name)
     etag = blob.get_etag()
     last_modified = http_datetime(blob.modified)
-    if (last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', '')
-        or etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
+    # Only use etag (not last_modified) as 1 second accuracy is not sufficient
+    # to descriminate two modifications that occur within a 1 second interval.
+    if (etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
         blob = wait_for_update(request, blob)
         if blob is None:
             raise Http404("Blob was deleted: " + request.key_name)
@@ -119,10 +120,8 @@ def blob_get(request):
     mimetype = guess_mimetype(request.key_name.rstrip('/'))
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
-    # Only use etag (not last_modified) as 1 second accuracy is not sufficient
-    # to descriminate fast getters.
-    if (not hasattr(request, 'no_cache') and
-        etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
+    if not hasattr(request, 'no_cache') and \
+        etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         response = HttpResponseNotModified(mimetype=mimetype)
     else:
         response = HttpResponse(blob.value, mimetype=mimetype)
@@ -225,6 +224,8 @@ def blob_list(request):
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
+    # REVIEW: Should we add an ETag here - and return not modifed
+    # if the list is unchanged?
     return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
 
 
@@ -386,12 +387,11 @@ def blob_slice(request):
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
 
-    # Force blob_get to ignore eTag and modified_since
+    # Force blob_get to ignore eTag
     request.no_cache = True
     response = blob_get(request)
 
     # Should not return the underlying array's ETag
-    del response['ETag']
     try:
         array = json.loads(response.content)
         if end is not None:
@@ -402,4 +402,10 @@ def blob_slice(request):
         logging.info("Blob not an array: %r" % response)
         return HttpResponseServerError("Blob is not a parsable array.")
     response.content = json.dumps(array)
+
+    # Compute an ETag specifically for the content being returned
+    etag = '"%s"' % hashlib.sha1(response.content).hexdigest()
+    if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
+        response = HttpResponseNotModified(mimetype=response.mimetype)
+    response['ETag'] = etag
     return response
