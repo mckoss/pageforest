@@ -2,6 +2,7 @@ import time
 import urllib
 import hashlib
 import logging
+import re
 
 from django.conf import settings
 from django.utils import simplejson as json
@@ -380,6 +381,9 @@ def blob_push(request):
             MAX_PUSH_ATTEMPTS}), mimetype=settings.JSON_MIMETYPE)
 
 
+slice_etag_re = re.compile(r'^"(.*)\[.*\]"$')
+
+
 def blob_slice(request):
     """
     SLICE method request handler.
@@ -387,11 +391,15 @@ def blob_slice(request):
     start = get_int(request.GET, 'start', None)
     end = get_int(request.GET, 'end', None)
 
-    # Force blob_get to ignore eTag
+    # Modify the etag from '"xxx[start:end]"' to '"xxx"'
+    etag_match = slice_etag_re.match(
+        request.META.get('HTTP_IF_NONE_MATCH', ''))
+    if etag_match:
+        request.META['HTTP_IF_NONE_MATCH'] = '"%s"' % etag_match.group(1)
+
     request.no_cache = True
     response = blob_get(request)
 
-    # Should not return the underlying array's ETag
     try:
         array = json.loads(response.content)
         if end is not None:
@@ -401,11 +409,12 @@ def blob_slice(request):
     except:
         logging.info("Blob not an array: %r" % response)
         return HttpResponseServerError("Blob is not a parsable array.")
+
+    # Modify the results of blob_get to return the slice (and matching ETag)
     response.content = json.dumps(array)
 
-    # Compute an ETag specifically for the content being returned
-    etag = '"%s"' % hashlib.sha1(response.content).hexdigest()
+    etag = '"%s[%s:%s]"' % (response['Etag'][1:-1], start or '', end or '')
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
-        response = HttpResponseNotModified(mimetype=response.mimetype)
+        response = HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE)
     response['ETag'] = etag
     return response
