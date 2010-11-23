@@ -2428,6 +2428,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
+            options = options || {};
 
             var url = new URL(this.getDocURL(docid, blobid));
             url.push('method', 'push');
@@ -2487,7 +2488,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 dataType: options.dataType || 'json',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
-                    console.log('ETag: ' + getEtag(xmlhttp));
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });

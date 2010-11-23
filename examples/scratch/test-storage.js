@@ -460,9 +460,79 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
             ]);
         }).async();
+
+        ts.addTest("wait", function(ut) {
+            var etag;
+            var timeStart;
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-wait',
+                                           [1, 2, 3, 4, 5], undefined,
+                        function (result, status, xmlhttp) {
+                            etag = storage.getEtag(xmlhttp);
+                            timeStart = new Date().getTime();
+                            ut.assertEq(result.status, 200);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-wait',
+                                           undefined,
+                        function (blob, status, xmlhttp) {
+                            var time = new Date().getTime();
+                            console.log("getTime: " + (time - timeStart));
+
+                            ut.assertLT(time - timeStart, 500);
+                            timeStart = time;
+                            ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-wait',
+                                           {wait: 3},
+                        function (blob, status, xmlhttp) {
+                            var time = new Date().getTime();
+                            console.log("getTime: " + (time - timeStart));
+
+                            ut.assertGT(time - timeStart, 3000);
+                            timeStart = time;
+                            ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.getBlob('test-storage', 'test-wait',
+                                           {wait: 10},
+                        function (blob, status, xmlhttp) {
+                            var time = new Date().getTime();
+                            console.log("getTime: " + (time - timeStart));
+
+                            // Should return within a couple of seconds of
+                            // the push changing the blob.
+                            ut.assertGT(time - timeStart, 1000);
+                            ut.assertLT(time - timeStart, 3500);
+                            timeStart = time;
+                            ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.nextFn();
+                        });
+
+                    function doPush() {
+                        client.storage.push('test-storage', 'test-wait',
+                                            6, undefined);
+                    }
+
+                    setTimeout(doPush, 1);
+                }
+
+            ]);
+        }).async();
     }
 
-    // TODO: IF-MODIFIED, wait=
     // TODO: Test HEAD
 
     ns.addTests = addTests;
