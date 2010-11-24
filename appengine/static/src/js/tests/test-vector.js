@@ -137,5 +137,94 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             }
         });
 
+        ts.addTest("ptInRect", function(ut) {
+            var i;
+            var test;
+            var rc = [10, 10, 30, 30];
+
+            var rangeTests = [
+                [[0, 0, 10], true],
+                [[-10, 0, 10], false],
+                [[5, 0, 10], true],
+                [[10, 0, 10], true],
+                [[15, 0, 10], false]
+            ];
+
+            for (i = 0; i < rangeTests.length; i++) {
+                test = rangeTests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.numInRange(test[0][0],
+                                              test[0][1],
+                                              test[0][2]),
+                            test[1]);
+            }
+
+            var pointTests = [
+                [[10, 10], true],
+                [[20, 20], true],
+                [[30, 30], true],
+                [[0, 0], false],
+                [[0, 50], false]
+            ];
+
+            for (i = 0; i < pointTests.length; i++) {
+                test = pointTests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.ptInRect(test[0], rc), test[1]);
+            }
+        });
+
+        ts.addTest("clip", function(ut) {
+            var i;
+            var test;
+            var rc = [10, 10, 30, 30];
+
+            var rangeTests = [
+                [[0, 0, 10], 0],
+                [[-10, 0, 10], 0],
+                [[5, 0, 10], 5],
+                [[10, 0, 10], 10],
+                [[15, 0, 10], 10]
+            ];
+
+            for (i = 0; i < rangeTests.length; i++) {
+                test = rangeTests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.clipToRange(test[0][0],
+                                               test[0][1],
+                                               test[0][2]),
+                            test[1]);
+            }
+
+            var pointTests = [
+                [[10, 10], [10, 10]],
+                [[20, 20], [20, 20]],
+                [[30, 30], [30, 30]],
+                [[0, 0], [10, 10]],
+                [[0, 50], [10, 30]]
+            ];
+
+            for (i = 0; i < pointTests.length; i++) {
+                test = pointTests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.ptClipToRect(test[0], rc), test[1]);
+            }
+
+            var rcTests = [
+                [[10, 10, 30, 30], [10, 10, 30, 30]],
+                [[0, 0, 10, 10], [10, 10, 10, 10]],
+                [[0, 0, 20, 20], [10, 10, 20, 20]],
+                [[15, 15, 25, 25], [15, 15, 25, 25]],
+                [[15, 0, 25, 50], [15, 10, 25, 30]],
+                [[0, 15, 50, 25], [10, 15, 30, 25]]
+            ];
+
+            for (i = 0; i < rcTests.length; i++) {
+                test = rcTests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.rcClipToRect(test[0], rc), test[1]);
+            }
+        });
+
     }; // addTests
 });
