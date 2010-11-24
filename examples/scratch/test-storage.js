@@ -507,7 +507,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     client.storage.getBlob('test-storage', 'test-wait',
-                                           {wait: 10},
+                                           {wait: 3},
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
                             console.log("getTime: " + (time - timeStart));
@@ -530,7 +530,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
 
             ]);
-        }).async();
+        }).async(true, 15000);
     }
 
     // TODO: Test HEAD
