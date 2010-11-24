@@ -1,4 +1,5 @@
 namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
+    var util = namespace.util;
     var unit = namespace.lookup('org.startpad.unit');
     var vector = namespace.lookup('org.startpad.vector');
 
@@ -174,7 +175,7 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             }
         });
 
-        ts.addTest("clip", function(ut) {
+        ts.addTest("clipToRect", function(ut) {
             var i;
             var test;
             var rc = [10, 10, 30, 30];
@@ -223,6 +224,46 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
                 test = rcTests[i];
                 ut.trace(test[0]);
                 ut.assertEq(vector.rcClipToRect(test[0], rc), test[1]);
+            }
+        });
+
+        ts.addTest("rcExpand", function(ut) {
+            var i;
+            var test;
+            var rc = [10, 10, 30, 30];
+            var tests = [
+                [[0, 0], [10, 10, 30, 30]],
+                [[1, 1], [9, 9, 31, 31]],
+                [[10, 10], [0, 0, 40, 40]],
+                [[10, 0], [0, 10, 40, 30]],
+                [[20, 20], [-10, -10, 50, 50]]
+            ];
+
+            for (i = 0; i < tests.length; i++) {
+                test = tests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.rcExpand(rc, test[0]), test[1]);
+            }
+        });
+
+        ts.addTest("keepInRect", function(ut) {
+            var i;
+            var test;
+            var rcOuter = [10, 10, 30, 30];
+            var tests = [
+                [[10, 10, 30, 30], [10, 10, 30, 30]],
+                [[5, 5, 15, 15], [10, 10, 20, 20]],
+                [[20, 20, 40, 40], [10, 10, 30, 30]],
+                [[0, 0, 100, 100], [10, 10, 30, 30]],
+                [[0, 0, 5, 5], [10, 10, 15, 15]]
+            ];
+
+            for (i = 0; i < tests.length; i++) {
+                test = tests[i];
+                ut.trace(test[0]);
+                var rc = util.copyArray(test[0]);
+                vector.keepInRect(rc, rcOuter);
+                ut.assertEq(rc, test[1]);
             }
         });
 
