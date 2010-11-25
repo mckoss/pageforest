@@ -236,7 +236,10 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
                 [[1, 1], [9, 9, 31, 31]],
                 [[10, 10], [0, 0, 40, 40]],
                 [[10, 0], [0, 10, 40, 30]],
-                [[20, 20], [-10, -10, 50, 50]]
+                [[20, 20], [-10, -10, 50, 50]],
+                [[-5, -3], [15, 13, 25, 27]],
+                [[-10, -10], [20, 20, 20, 20]],
+                [[-100, -100], [20, 20, 20, 20]]
             ];
 
             for (i = 0; i < tests.length; i++) {
@@ -264,6 +267,49 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
                 var rc = util.copyArray(test[0]);
                 vector.keepInRect(rc, rcOuter);
                 ut.assertEq(rc, test[1]);
+            }
+        });
+
+        ts.addTest("iRegClosest", function(ut) {
+            var i;
+            var test;
+            var rc = [10, 10, 30, 30];
+            var tests = [
+                [[10, 10], 0],
+                [[0, 0], 0],
+                [[20, 20], 4],
+                [[20, 4], 1],
+                [[20, 26], 7],
+                [[1000, 20], 5]
+            ];
+
+            for (i = 0; i < tests.length; i++) {
+                test = tests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.iRegClosest(test[0], rc), test[1]);
+            }
+
+        });
+
+        ts.addTest("rectDeltaReg", function(ut) {
+            var i;
+            var test;
+            var rc = [15, 15, 25, 25];
+            var rcBounds = [10, 10, 30, 30];
+            var ptSizeMin = [5, 5];
+            var tests = [
+                [[rc, [0, 0], 4, ptSizeMin, rcBounds], rc],
+                [[rc, [-5, -5], 4, ptSizeMin, rcBounds], [10, 10, 20, 20]],
+                [[rc, [-10, -10], 4, ptSizeMin, rcBounds], [10, 10, 20, 20]],
+                [[rc, [-5, -5], 0, ptSizeMin, rcBounds], [10, 10, 25, 25]],
+                [[rc, [-10, -10], 0, ptSizeMin, rcBounds], [10, 10, 30, 30]]
+            ];
+
+            for (i = 0; i < tests.length; i++) {
+                test = tests[i];
+                ut.trace(test[0]);
+                ut.assertEq(vector.rectDeltaReg.apply(undefined, test[0]),
+                            test[1]);
             }
         });
 

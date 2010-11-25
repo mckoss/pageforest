@@ -682,6 +682,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 case UnitTest.states.running:
                     break loop;
                 case UnitTest.states.completed:
+                    if (ut.cAsserts == 0) {
+                        ut.assert(false, "No asserts were made for test.");
+                    }
                     this.reportOne(this.iCur);
                     this.iCur++;
                     // Skip all remaining tests on failure if stopFail
@@ -794,7 +797,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             this.out("] ");
             if (ut.state != UnitTest.states.created) {
                 this.out(ut.cErrors + " errors out of " +
-                         ut.cAsserts + " tests");
+                         ut.cAsserts + " asserts");
                 if (ut.cTestsExpected && ut.cTestsExpected != ut.cAsserts) {
                     this.out(" (" + ut.cTestsExpected + " expected)");
                 }
