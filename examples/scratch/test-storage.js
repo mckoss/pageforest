@@ -39,8 +39,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     var client = new clientLib.Client(new TestApp());
 
     function addTests(ts) {
-
         ts.addTest("Storage", function(ut) {
+            ut.assert(client.storage != undefined);
             ts.coverage.cover('Storage');
         });
 
@@ -454,14 +454,18 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.getBlob('test-storage', 'test-array', {},
                         function (json) {
+                            console.log("running #8");
                             ut.assertEq(json, [6, 7, 8, 9, "new"]);
                             ut.nextFn();
+                            console.log("running #8A");
                         });
                 }
             ]);
-        }).async();
+        }).async(true, 10000);
 
         ts.addTest("wait", function(ut) {
+            console.log("starting wait");
+            client.app.ut = ut;
             var etag;
             var timeStart;
 

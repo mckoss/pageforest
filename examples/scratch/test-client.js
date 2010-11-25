@@ -40,6 +40,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
         ts.addTest("Client", function(ut) {
             ts.coverage.cover('Client');
+            ut.assert(client != undefined);
         });
 
         ts.addTest("save/load", function(ut) {
