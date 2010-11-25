@@ -291,7 +291,7 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
 
         });
 
-        ts.addTest("rectDeltaReg", function(ut) {
+        ts.addTest("rcDeltaReg", function(ut) {
             var i;
             var test;
             var rc = [15, 15, 25, 25];
@@ -308,7 +308,7 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             for (i = 0; i < tests.length; i++) {
                 test = tests[i];
                 ut.trace(test[0]);
-                ut.assertEq(vector.rectDeltaReg.apply(undefined, test[0]),
+                ut.assertEq(vector.rcDeltaReg.apply(undefined, test[0]),
                             test[1]);
             }
         });
