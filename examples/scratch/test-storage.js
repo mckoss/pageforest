@@ -461,7 +461,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         });
                 }
             ]);
-        }).async(true, 10000);
+        }).async(true, 15000);
 
         ts.addTest("wait", function(ut) {
             console.log("starting wait");
