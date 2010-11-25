@@ -207,8 +207,18 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         },
 
         rcExpand: function(rc, ptSize) {
-            return ns.append(ns.sub(ns.ul(rc), ptSize),
-                             ns.add(ns.lr(rc), ptSize));
+            var rcExp = ns.append(ns.sub(ns.ul(rc), ptSize),
+                                  ns.add(ns.lr(rc), ptSize));
+            // If array bounds are inverted - make a zero-dimension
+            // at the midpoint between the original coordinates.
+            var ptCenter = ns.ptCenter(rc);
+            if (rcExp[ns.x] > rcExp[ns.x2]) {
+                rcExp[ns.x] = rcExp[ns.x2] = ptCenter[ns.x];
+            }
+            if (rcExp[ns.y] > rcExp[ns.y2]) {
+                rcExp[ns.y] = rcExp[ns.y2] = ptCenter[ns.y];
+            }
+            return rcExp;
         },
 
         keepInRect: function(rcIn, rcBound) {
@@ -264,7 +274,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
             for (var i = 0; i < 9; i++) {
                 aPoints.push(ns.ptRegistration(rc, i));
             }
-            return ns.IPtClosest(pt, aPoints)[0];
+            return ns.iPtClosest(pt, aPoints)[0];
         },
 
 
@@ -339,7 +349,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 var v = arguments[iarg];
                 // Looks like a single point
                 if (typeof v[0] == "number") {
-                    d2 = ns.Distance2(pt, v);
+                    d2 = ns.distance2(pt, v);
                     if (d2Min == undefined || d2 < d2Min) {
                         d2Min = d2;
                         ptClosest = v;
@@ -351,7 +361,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 else {
                     for (var i = 0; i < v.length; i++) {
                         var vT = v[i];
-                        d2 = ns.Distance2(pt, vT);
+                        d2 = ns.distance2(pt, vT);
                         if (d2Min == undefined || d2 < d2Min) {
                             d2Min = d2;
                             ptClosest = vT;
@@ -397,18 +407,6 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
                 }
             }
             return [ptMin[0], ptMin[1], ptMax[0], ptMax[1]];
-        },
-
-        // Return json string for numeric array
-        json: function(v) {
-            var sRect = "[";
-            var chSep = "";
-            for (var i = 0; i < v.length; i++) {
-                sRect += chSep + v[i];
-                chSep = ",";
-            }
-            sRect += "]";
-            return sRect;
         }
     });
 
