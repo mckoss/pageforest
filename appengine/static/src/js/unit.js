@@ -158,6 +158,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         stopFail: function(f) {
+            if (f == undefined) {
+                f = true;
+            }
             this.fStopFail = f;
             return this;
         },
@@ -636,6 +639,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         stopFail: function(f) {
+            if (f == undefined) {
+                f = true;
+            }
             this.fStopFail = f;
             return this;
         },
