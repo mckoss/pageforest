@@ -140,6 +140,9 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
         },
 
         enable: function(f) {
+            if (f == undefined) {
+                f = true;
+            }
             this.fEnable = f;
             return this;
         },
@@ -688,7 +691,7 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
                 case UnitTest.states.running:
                     break loop;
                 case UnitTest.states.completed:
-                    if (ut.cAsserts == 0) {
+                    if (ut.cAsserts == 0 && ut.fEnable) {
                         ut.assert(false, "No asserts were made for test.");
                     }
                     this.reportOne(this.iCur);
