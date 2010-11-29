@@ -14,7 +14,8 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 from google.appengine.runtime import DeadlineExceededError
 
-from utils.decorators import jsonp, run_in_transaction, method_required
+from utils.decorators import jsonp, run_in_transaction, method_required, \
+    no_cache
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
@@ -97,6 +98,7 @@ def wait_for_update(request, blob):
     return blob
 
 
+@no_cache
 def blob_get(request):
     """
     HTTP GET request handler.
@@ -143,6 +145,7 @@ def prefix_filter(query, kind, start, stop=None,
     query.filter(property_name + ' ' + less, db.Key.from_path(kind, stop))
 
 
+@no_cache
 def blob_list(request):
     """
     List children of the selected blob, including size, modification
@@ -275,10 +278,10 @@ def blob_put(request):
                           for tag in request.GET['tags'].split(',')])
     # Save new blob to memcache and datastore.
     blob.put()
-    response = HttpResponse('{"status": 200, "statusText": "Saved"}',
+    response = HttpResponse('{"status": 200, "statusText": "Saved", ' +
+                            '"sha1": %s}' % blob.get_etag(),
                             mimetype=settings.JSON_MIMETYPE)
     response['Last-Modified'] = http_datetime(blob.modified)
-    response['ETag'] = blob.get_etag()
     return response
 
 
