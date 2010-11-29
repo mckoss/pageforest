@@ -45,6 +45,18 @@ def cache_expires(seconds):
     return decorate
 
 
+def no_cache(func):
+    """
+    Disable caching of the response.
+    """
+    def wrapper(*args, **kwargs):
+        response = func(*args, **kwargs)
+        if isinstance(response, HttpResponse):
+            response['Cache-Control'] = 'no-cache'
+            return response
+    return wrapper
+
+
 def jsonp(func):
     """
     View function decorator to wrap successful JSON response in a
