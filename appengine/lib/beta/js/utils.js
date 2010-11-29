@@ -2254,7 +2254,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     }
 
     function getEtag(xmlhttp) {
-        return xmlhttp.getResponseHeader('ETag');
+        var s = xmlhttp.getResponseHeader('ETag');
+        // Remove quotes around ETag
+        if (s != undefined) {
+            s = s.slice(1, -1);
+        }
+
+        return s;
     }
 
     function Storage(client) {
