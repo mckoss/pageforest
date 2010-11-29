@@ -125,7 +125,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.putBlob('test-storage', 'test-blob',
                                            testBlob, undefined,
                         function (result, status, xmlhttp) {
-                            etag = storage.getEtag(xmlhttp);
+                            etag = result.sha1;
                             ut.assertEq(result.status, 200);
                             ut.nextFn();
                         });
@@ -474,7 +474,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.putBlob('test-storage', 'test-wait',
                                            [1, 2, 3, 4, 5], undefined,
                         function (result, status, xmlhttp) {
-                            etag = storage.getEtag(xmlhttp);
+                            etag = result.sha1;
                             timeStart = new Date().getTime();
                             ut.assertEq(result.status, 200);
                             ut.nextFn();
@@ -510,16 +510,23 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
+                    // This test only works on the server - since the devserver
+                    // is synchronous!
+                    if (client.wwwHost == 'www.pageforest:8080') {
+                        ut.nextFn();
+                        return;
+                    }
+
                     client.storage.getBlob('test-storage', 'test-wait',
                                            {wait: 3},
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
                             console.log("getTime: " + (time - timeStart));
 
-                            // Should return within a couple of seconds of
+                            // Should return within one seconds of
                             // the push changing the blob.
                             ut.assertGT(time - timeStart, 1000);
-                            ut.assertLT(time - timeStart, 3500);
+                            ut.assertLT(time - timeStart, 2000);
                             timeStart = time;
                             ut.assertEq(storage.getEtag(xmlhttp), etag);
                             ut.nextFn();
@@ -527,7 +534,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                     function doPush() {
                         client.storage.push('test-storage', 'test-wait',
-                                            6, undefined);
+                                            6, undefined,
+                            function (result) {
+                                ut.assertEQ(result.status, 200);
+                                etag = result.newSha1;
+                            });
                     }
 
                     setTimeout(doPush, 1);
