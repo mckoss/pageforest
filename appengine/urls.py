@@ -21,8 +21,11 @@ urlpatterns = patterns(
     (r'^auth/', include('auth.appurls')),
 
     # Pageforest applications on subdomains.
+    # TODO: shouldn't these be prefixed to not conflict
+    # with application file paths?
     (r'^app/(admin/)?auth/', include('auth.appurls')),
     (r'^app/(admin/)?post/$', 'blobs.views.upload_form'),
+    (r'^app/(admin/)?channel/$', 'apps.views.get_channel'),
     (r'^app/docs/', include('docs.appurls')),
     (r'^app/mirror/$', 'mirror.views.mirror_list'),
 
