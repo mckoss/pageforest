@@ -3,8 +3,11 @@ from django.http import HttpResponse
 from django.utils import simplejson as json
 from django.shortcuts import redirect
 
+from google.appengine.api import channel
+
 from utils.shortcuts import render_to_response, lookup_or_404
 from utils.decorators import jsonp, method_required
+from utils import crypto
 
 from auth import AuthError
 from auth.middleware import AccessDenied
@@ -125,4 +128,21 @@ def app_json_put(request):
     request.app.normalize_lists()
     request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
+                        mimetype=settings.JSON_MIMETYPE)
+
+
+@jsonp
+@method_required('GET')
+def get_channel(request, extra):
+    if request.user is None:
+        return AccessDenied(request, "Not signed in.")
+    session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
+    # We don't want to leak the session_key through the channel id.
+    channel_key = crypto.hmac_sha1(session_key, request.user.password)
+
+    # TODO: Should try to return the same channel instead of creating
+    # a new one if available.
+    id = channel.create_channel(channel_key)
+
+    return HttpResponse('{"id": "%s"}' % id,
                         mimetype=settings.JSON_MIMETYPE)
