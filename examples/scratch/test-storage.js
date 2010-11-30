@@ -467,6 +467,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             console.log("starting wait");
             client.app.ut = ut;
             var etag;
+            var etagNew;
             var timeStart;
 
             ut.asyncSequence([
@@ -518,7 +519,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     }
 
                     client.storage.getBlob('test-storage', 'test-wait',
-                                           {wait: 3},
+                                           {wait: 5},
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
                             console.log("getTime: " + (time - timeStart));
@@ -526,9 +527,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             // Should return within one seconds of
                             // the push changing the blob.
                             ut.assertGT(time - timeStart, 1000);
-                            ut.assertLT(time - timeStart, 2000);
+                            ut.assertLT(time - timeStart, 2500);
                             timeStart = time;
-                            ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.assertEq(storage.getEtag(xmlhttp), etagNew);
                             ut.nextFn();
                         });
 
@@ -537,11 +538,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                                             6, undefined,
                             function (result) {
                                 ut.assertEQ(result.status, 200);
-                                etag = result.newSha1;
+                                etagNew = result.newSha1;
                             });
                     }
 
-                    setTimeout(doPush, 1);
+                    setTimeout(doPush, 500);
                 }
 
             ]);
