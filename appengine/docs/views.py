@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.http import \
     HttpResponse, HttpResponseNotModified, HttpResponseNotAllowed
@@ -81,6 +83,7 @@ def dispatch(request, doc_id):
         allow = [name[4:].upper() for name in globals()
                  if name.startswith('doc_')]
         allow.sort()
+        logging.info("ReponseNotAllowed(%r)" % allow)
         return HttpResponseNotAllowed(allow)
     view_function = globals()[function_name]
     response = view_function(request, doc_id)

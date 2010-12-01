@@ -26,6 +26,7 @@ urlpatterns = patterns(
     (r'^app/(admin/)?auth/', include('auth.appurls')),
     (r'^app/(admin/)?post/$', 'blobs.views.upload_form'),
     (r'^app/(admin/)?channel/$', 'apps.views.get_channel'),
+    (r'^app/(admin/)?channel/subscriptions/$', 'apps.views.subscriptions'),
     (r'^app/docs/', include('docs.appurls')),
     (r'^app/mirror/$', 'mirror.views.mirror_list'),
 

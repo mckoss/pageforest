@@ -54,6 +54,7 @@ def dispatch(request, doc_id, key):
         allow = [name[5:].upper() for name in globals()
                  if name.startswith('blob_')]
         allow.sort()
+        logging.info("HttpResponseNotAllowed(%r)" % allow)
         return HttpResponseNotAllowed(allow)
     view_function = globals()[function_name]
     response = view_function(request)
