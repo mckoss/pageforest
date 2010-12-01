@@ -1,9 +1,11 @@
+import time
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.utils import simplejson as json
 from django.shortcuts import redirect
 
-from google.appengine.api import channel
+from google.appengine.api import memcache
 
 from utils.shortcuts import render_to_response, lookup_or_404
 from utils.decorators import jsonp, method_required
@@ -134,15 +136,27 @@ def app_json_put(request):
 @jsonp
 @method_required('GET')
 def get_channel(request, extra):
+    """
+    Return the channel id that the client can use to receive notifications
+    from the server.
+    """
     if request.user is None:
-        return AccessDenied(request, "Not signed in.")
-    session_key = request.COOKIES[settings.SESSION_COOKIE_NAME]
-    # We don't want to leak the session_key through the channel id.
-    channel_key = crypto.hmac_sha1(session_key, request.user.password)
+        return AccessDenied(request,
+                            "Only signed in users can receive notifications.")
 
-    # TODO: Should try to return the same channel instead of creating
-    # a new one if available.
-    id = channel.create_channel(channel_key)
+    channel_data = request.user.get_session_channel(request)
 
-    return HttpResponse('{"id": "%s"}' % id,
+    return HttpResponse('{"id": "%s", "lifetime": %d}' %
+                        (channel_data['id'], channel_data['lifetime']),
                         mimetype=settings.JSON_MIMETYPE)
+
+
+@jsonp
+@method_required('GET', 'PUT')
+def subscriptions(request, extra):
+    """
+    Read or write the subscriptions being monitored by the current
+    channel.
+    """
+    if request.method == 'GET':
+        pass

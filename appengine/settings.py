@@ -48,6 +48,9 @@ SITE_EMAIL_FROM = "support@pageforest.com"
 # Change this before deploying incompatible changes.
 CACHEABLE_PREFIX = 'C2'
 
+# Memcache prefix for Channel API caches
+CHANNEL_PREFIX = 'CH1'
+
 # Cacheable mixin: show memcache and datastore hits in the server log.
 CACHEABLE_LOGGING = False
 
