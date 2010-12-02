@@ -158,6 +158,7 @@ class AuthMiddleware(object):
             and not request.path_info.startswith('/app/docs/')
             and not request.path_info.startswith('/app/mirror/')
             and not request.path_info.startswith('/app/post/')
+            and not request.path_info.startswith('/app/channel/')
             and request.method not in app_id_methods):
             return HttpResponseNotAllowed(app_id_methods)
 

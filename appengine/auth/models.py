@@ -1,4 +1,5 @@
 import time
+import datetime
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -202,6 +203,11 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         Get the (cached) channel info for the current user's session.
         """
+        def update_lifetime(cd):
+            secs_created = time.mktime(cd['created'].timetuple())
+            cd['lifetime'] = int(secs_created + CHANNEL_LIFETIME -
+                time.time())
+
         # Don't leak the session_key through the channel id - encrypt it.
         session_key = crypto.hmac_sha1(
             request.COOKIES[settings.SESSION_COOKIE_NAME],
@@ -209,14 +215,16 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
         channel_data = memcache.get(m_key)
 
-        # If no valid channel - create one
-        if channel_data == None or \
-                time.time() > channel_data['created'] + CHANNEL_LIFETIME:
-            id = channel.create_channel(session_key)
-            channel_data = {'created': time.time(),
-                            'id': id}
-            memcache.set(m_key, channel_data)
+        if channel_data is not None:
+            update_lifetime(channel_data)
 
-        channel_data['lifetime'] = channel_data['created'] + \
-            CHANNEL_LIFETIME - time.time()
+        # If no valid channel - create one
+        if channel_data == None or channel_data['lifetime'] < 0:
+            id = channel.create_channel(session_key)
+            channel_data = {'created': datetime.datetime.now(),
+                            'id': id,
+                            'subscriptions': []}
+            memcache.set(m_key, channel_data)
+            update_lifetime(channel_data)
+
         return channel_data

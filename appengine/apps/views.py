@@ -1,7 +1,8 @@
 import time
+import logging
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils import simplejson as json
 from django.shortcuts import redirect
 
@@ -10,6 +11,7 @@ from google.appengine.api import memcache
 from utils.shortcuts import render_to_response, lookup_or_404
 from utils.decorators import jsonp, method_required
 from utils import crypto
+from utils.json import ModelEncoder
 
 from auth import AuthError
 from auth.middleware import AccessDenied
@@ -146,8 +148,9 @@ def get_channel(request, extra):
 
     channel_data = request.user.get_session_channel(request)
 
-    return HttpResponse('{"id": "%s", "lifetime": %d}' %
-                        (channel_data['id'], channel_data['lifetime']),
+    return HttpResponse(json.dumps(channel_data,
+                                   indent=2,
+                                   cls=ModelEncoder),
                         mimetype=settings.JSON_MIMETYPE)
 
 
@@ -158,5 +161,15 @@ def subscriptions(request, extra):
     Read or write the subscriptions being monitored by the current
     channel.
     """
+    if request.user is None:
+        return AccessDenied(request,
+                            "Only signed in users can receive notifications.")
+
+    channel_data = request.user.get_session_channel(request)
     if request.method == 'GET':
-        pass
+        return HttpResponse(json.dumps(channel_data['subscriptions'],
+                                       indent=2,
+                                       cls=ModelEncoder),
+                            mimetype=settings.JSON_MIMETYPE)
+
+    return HttpResponseBadRequest("NYI")

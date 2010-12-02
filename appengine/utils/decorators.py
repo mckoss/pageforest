@@ -78,6 +78,8 @@ def jsonp(func):
             response = HttpResponseServerError("Application error.")
         content = response.content
 
+        logging.info("Code: %s" % response.status_code)
+
         series = (response.status_code / 100) * 100
 
         # Send redirects and not-modified directly back to the client
@@ -116,6 +118,8 @@ def method_required(*methods):
     def decorate(func):
         def wrapper(request, *args, **kwargs):
             if request.method not in methods:
+                logging.info("%s not allowed - must be one of %r" %
+                             (request.method, methods))
                 return HttpResponseNotAllowed(methods)
             return func(request, *args, **kwargs)
         return wrapper
