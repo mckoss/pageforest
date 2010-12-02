@@ -168,6 +168,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 }
             }
 
+            var obj = {docid: docid, blobid: blobid};
+            if (json) {
+                obj.jsonLength = jsonToString(json).length;
+            }
+            base.extendObject(obj, options);
+            this.client.log(funcName + ': ' +
+                            JSON.stringify(obj));
+
             return true;
         },
 
@@ -185,8 +193,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             var data = jsonToString(json);
-            this.client.log('putDoc: ' + docid +
-                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -204,7 +210,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
-            this.client.log("getDoc: " + docid);
             $.ajax({
                 dataType: 'json',
                 url: this.getDocURL(docid),
@@ -222,7 +227,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
             fnSuccess = fnSuccess || function () {};
 
-            this.client.log("deleteDoc: " + docid);
             $.ajax({
                 type: 'PUT',
                 dataType: 'json',
@@ -261,9 +265,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 data = jsonToString(data);
             }
 
-            this.client.log('putBlob: ' + docid + '/' + blobid +
-                            '?' + url.params.join(', ') +
-                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: url.toString(),
@@ -300,8 +301,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 json = jsonToString(json);
             }
 
-            this.client.log('push: ' + docid + '/' + blobid +
-                            ' (' + json.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: url.toString(),
@@ -336,7 +335,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type = 'HEAD';
             }
 
-            this.client.log('getBlob: ' + docid + '/' + blobid);
             $.ajax({
                 type: type,
                 url: url.toString(),
@@ -366,9 +364,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             url.push('wait', options.wait);
             url.push('etag', options.etag);
 
-            this.client.log('slice: ' + docid + '/' + blobid +
-                            '[' + (options.start || '') + ':' +
-                            (options.end || '') + ']');
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
@@ -386,7 +381,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
             fnSuccess = fnSuccess || function () {};
 
-            this.client.log('deleteBlob: ' + docid + '/' + blobid);
             $.ajax({
                 type: 'PUT',
                 dataType: 'json',
@@ -425,8 +419,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 url.push('tag', options.tags.join(','));
             }
 
-            this.client.log('list: ' + docid +
-                            '/ (' + url.params.join(', ') + ')');
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
@@ -435,6 +427,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });
+        },
+
+        subscribe: function(docid, blobid, options, fnSuccess) {
+
         }
 
     }); // Storage.methods
