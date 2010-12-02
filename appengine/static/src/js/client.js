@@ -136,7 +136,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var self = this;
             this.storage.getDoc(docid, function (doc) {
                 self.setDoc(doc);
-                self.setCleanDoc(docid);
             });
         },
 
@@ -230,6 +229,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.meta = base.project(doc, docProps);
             this.setAppPanelValues(this.meta);
             this.app.setDoc(doc);
+            this.setCleanDoc(doc.doc_id);
         },
 
         // Set the document to the clean state.
