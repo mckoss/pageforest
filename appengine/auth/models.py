@@ -218,8 +218,9 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         if channel_data is not None:
             update_lifetime(channel_data)
 
-        # If no valid channel - create one
-        if channel_data == None or channel_data['lifetime'] < 0:
+        # If no valid channel, or if it expires in less than
+        # 5 minutes, make a new one.
+        if channel_data == None or channel_data['lifetime'] < 5 * 60:
             id = channel.create_channel(session_key)
             channel_data = {'created': datetime.datetime.now(),
                             'id': id,

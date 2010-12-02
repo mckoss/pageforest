@@ -44,4 +44,6 @@ def subscriptions(request, extra):
                                        cls=ModelEncoder),
                             mimetype=settings.JSON_MIMETYPE)
 
+    assert request.method == 'PUT'
+
     return HttpResponseBadRequest("NYI")

@@ -2174,7 +2174,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 /* Low-level storage primitives for saving and loading documents
    and blobs.
 */
-/*global jQuery $ */
+/*global jQuery, goog $ */
 namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
@@ -2266,6 +2266,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     function Storage(client) {
         // We need the client context for Storage functions
         this.client = client;
+        this.subscriptions = {};
     }
 
     Storage.methods({
@@ -2289,6 +2290,54 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             var message = xmlhttp.statusText;
             this.client.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.client.onError(code, message);
+        },
+
+        initChannel: function(fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+            var self = this;
+            console.log("Intializing new channel");
+            $.ajax({
+                url: '/channel/',
+                dataType: 'json',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    result.expires = new Date().getTime() +
+                        1000 * result.lifetime;
+                    self.channel = new goog.appengine.Channel(result.id);
+                    self.socket = self.channel.open();
+                    self.socket.onmessage = self.onChannel.fnMethod();
+                    self.channelInfo = result;
+                    fnSuccess(result);
+                }
+            });
+
+        },
+
+        onChannel: function(evt) {
+            console.log("onChannel: ", evt.data);
+        },
+
+        subscribe: function(docid, blobid, options, fnCallback) {
+            if (!this.validateArgs('subscribe', docid, blobid, undefined,
+                                   options, fnCallback)) {
+                return;
+            }
+
+            var key = docid + '/' + (blobid || '');
+            var sub = this.subscriptions[key] || {};
+            util.extendObject(sub, options);
+            sub.fnCallback = fnCallback;
+            this.subscriptions[key] = sub;
+            this.ensureSubs();
+        },
+
+        ensureSubs: function() {
+            // Ensure we have a current channel object
+            if (this.channelInfo == undefined ||
+                this.channelInfo.expires < new Date().getTime()) {
+                this.initChannel(this.ensureSubs.fnMethod(this));
+                return;
+            }
         },
 
         validateArgs: function(funcName, docid, blobid, json,
@@ -2341,6 +2390,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 }
             }
 
+            var obj = {docid: docid, blobid: blobid};
+            if (json) {
+                obj.jsonLength = jsonToString(json).length;
+            }
+            util.extendObject(obj, options);
+            this.client.log(funcName + ': ' +
+                            JSON.stringify(obj));
+
             return true;
         },
 
@@ -2358,8 +2415,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             var data = jsonToString(json);
-            this.client.log('putDoc: ' + docid +
-                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: this.getDocURL(docid),
@@ -2377,7 +2432,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
-            this.client.log("getDoc: " + docid);
             $.ajax({
                 dataType: 'json',
                 url: this.getDocURL(docid),
@@ -2395,7 +2449,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
             fnSuccess = fnSuccess || function () {};
 
-            this.client.log("deleteDoc: " + docid);
             $.ajax({
                 type: 'PUT',
                 dataType: 'json',
@@ -2434,9 +2487,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 data = jsonToString(data);
             }
 
-            this.client.log('putBlob: ' + docid + '/' + blobid +
-                            '?' + url.params.join(', ') +
-                            ' (' + data.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: url.toString(),
@@ -2473,8 +2523,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 json = jsonToString(json);
             }
 
-            this.client.log('push: ' + docid + '/' + blobid +
-                            ' (' + json.length + ' bytes)');
             $.ajax({
                 type: 'PUT',
                 url: url.toString(),
@@ -2509,7 +2557,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type = 'HEAD';
             }
 
-            this.client.log('getBlob: ' + docid + '/' + blobid);
             $.ajax({
                 type: type,
                 url: url.toString(),
@@ -2539,9 +2586,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             url.push('wait', options.wait);
             url.push('etag', options.etag);
 
-            this.client.log('slice: ' + docid + '/' + blobid +
-                            '[' + (options.start || '') + ':' +
-                            (options.end || '') + ']');
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
@@ -2559,7 +2603,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
             fnSuccess = fnSuccess || function () {};
 
-            this.client.log('deleteBlob: ' + docid + '/' + blobid);
             $.ajax({
                 type: 'PUT',
                 dataType: 'json',
@@ -2575,7 +2618,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         list: function(docid, blobid, options, fnSuccess) {
             var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
 
-            if (!this.validateArgs('list', docid, undefined, undefined,
+            if (!this.validateArgs('list', docid, blobid, undefined,
                                    options, fnSuccess)) {
                 return;
             }
@@ -2598,8 +2641,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 url.push('tag', options.tags.join(','));
             }
 
-            this.client.log('list: ' + docid +
-                            '/ (' + url.params.join(', ') + ')');
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
@@ -2609,7 +2650,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 }
             });
         }
-
     }); // Storage.methods
 
     ns.extend({
@@ -2757,7 +2797,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var self = this;
             this.storage.getDoc(docid, function (doc) {
                 self.setDoc(doc);
-                self.setCleanDoc(docid);
             });
         },
 
@@ -2851,6 +2890,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.meta = base.project(doc, docProps);
             this.setAppPanelValues(this.meta);
             this.app.setDoc(doc);
+            this.setCleanDoc(doc.doc_id);
         },
 
         // Set the document to the clean state.

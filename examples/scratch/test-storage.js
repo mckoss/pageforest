@@ -231,8 +231,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         ts.addTest("list prefix and tag", function(ut) {
             client.app.ut = ut;
 
-            console.log("running");
-
             function cont(result) {
                 ut.assertEq(result.status, 200);
                 ut.nextFn();
@@ -407,7 +405,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                     function nextSlice() {
                         var test = sliceTests[i++];
-                        console.log('slice ' + i, test[0], test[1]);
 
                         client.storage.slice('test-storage', 'test-array',
                                              {start: test[0], end: test[1]},
@@ -454,21 +451,16 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.getBlob('test-storage', 'test-array', {},
                         function (json) {
-                            console.log("running #8");
                             ut.assertEq(json, [6, 7, 8, 9, "new"]);
                             ut.nextFn();
-                            console.log("running #8A");
                         });
                 }
             ]);
         }).async(true, 15000);
 
         ts.addTest("wait", function(ut) {
-            console.log("starting wait");
             client.app.ut = ut;
             var etag;
-            var etagNew;
-            var timeStart;
 
             ut.asyncSequence([
                 function (ut) {
@@ -476,69 +468,78 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                                            [1, 2, 3, 4, 5], undefined,
                         function (result, status, xmlhttp) {
                             etag = result.sha1;
-                            timeStart = new Date().getTime();
                             ut.assertEq(result.status, 200);
                             ut.nextFn();
                         });
                 },
 
                 function (ut) {
+                    var timeStart = new Date().getTime();
                     client.storage.getBlob('test-storage', 'test-wait',
                                            undefined,
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
-                            console.log("getTime: " + (time - timeStart));
 
                             ut.assertLT(time - timeStart, 500);
-                            timeStart = time;
                             ut.assertEq(storage.getEtag(xmlhttp), etag);
                             ut.nextFn();
                         });
                 },
 
                 function (ut) {
+                    var timeStart = new Date().getTime();
                     client.storage.getBlob('test-storage', 'test-wait',
                                            {wait: 3},
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
-                            console.log("getTime: " + (time - timeStart));
 
                             ut.assertGT(time - timeStart, 3000);
-                            timeStart = time;
                             ut.assertEq(storage.getEtag(xmlhttp), etag);
+                            ut.nextFn();
+                        });
+                }
+
+                // Removed tests for async update and early return -
+                // since these requests seem to be serialized on both
+                // the dev appserver and the production server!
+            ]);
+        }).async(true, 15000);
+
+        ts.addTest("channel", function(ut) {
+            client.app.ut = ut;
+            var etag;
+            var etagNew;
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putBlob('test-storage', 'test-channel',
+                                           [1, 2, 3, 4, 5], undefined,
+                        function (result, status, xmlhttp) {
+                            etag = result.sha1;
+                            ut.assertEq(result.status, 200);
                             ut.nextFn();
                         });
                 },
 
                 function (ut) {
-                    // This test only works on the server - since the devserver
-                    // is synchronous!
-                    if (client.wwwHost == 'www.pageforest:8080') {
-                        ut.nextFn();
-                        return;
-                    }
+                    var timeStart = new Date().getTime();
 
-                    client.storage.getBlob('test-storage', 'test-wait',
-                                           {wait: 5},
+                    client.storage.subscribe('test-storage', 'test-channel',
+                                             undefined,
                         function (blob, status, xmlhttp) {
                             var time = new Date().getTime();
-                            console.log("getTime: " + (time - timeStart));
-
-                            // Should return within one seconds of
-                            // the push changing the blob.
                             ut.assertGT(time - timeStart, 1000);
-                            ut.assertLT(time - timeStart, 2500);
-                            timeStart = time;
                             ut.assertEq(storage.getEtag(xmlhttp), etagNew);
                             ut.nextFn();
                         });
 
                     function doPush() {
-                        client.storage.push('test-storage', 'test-wait',
+                        client.storage.push('test-storage', 'test-channel',
                                             6, undefined,
                             function (result) {
-                                ut.assertEQ(result.status, 200);
+                                ut.assertEq(result.status, 200);
                                 etagNew = result.newSha1;
+                                ut.assertNEq(etagNew, etag);
                             });
                     }
 
@@ -546,8 +547,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
 
             ]);
-        }).async(true, 15000);
-    }
+        }).async(true);
+
+    } // addTests
 
     // TODO: Test HEAD
 
