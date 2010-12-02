@@ -25,8 +25,8 @@ urlpatterns = patterns(
     # with application file paths?
     (r'^app/(admin/)?auth/', include('auth.appurls')),
     (r'^app/(admin/)?post/$', 'blobs.views.upload_form'),
-    (r'^app/(admin/)?channel/$', 'apps.views.get_channel'),
-    (r'^app/(admin/)?channel/subscriptions/$', 'apps.views.subscriptions'),
+    (r'^app/(admin/)?channel/$', 'utils.channel.get_channel'),
+    (r'^app/(admin/)?channel/subscriptions/$', 'utils.channel.subscriptions'),
     (r'^app/docs/', include('docs.appurls')),
     (r'^app/mirror/$', 'mirror.views.mirror_list'),
 
