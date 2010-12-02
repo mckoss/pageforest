@@ -1,7 +1,7 @@
 /* Low-level storage primitives for saving and loading documents
    and blobs.
 */
-/*global jQuery $ */
+/*global jQuery, goog $ */
 namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
@@ -93,6 +93,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     function Storage(client) {
         // We need the client context for Storage functions
         this.client = client;
+        this.subscriptions = {};
     }
 
     Storage.methods({
@@ -116,6 +117,54 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             var message = xmlhttp.statusText;
             this.client.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.client.onError(code, message);
+        },
+
+        initChannel: function(fnSuccess) {
+            fnSuccess = fnSuccess || function () {};
+            var self = this;
+            console.log("Intializing new channel");
+            $.ajax({
+                url: '/channel/',
+                dataType: 'json',
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    result.expires = new Date().getTime() +
+                        1000 * result.lifetime;
+                    self.channel = new goog.appengine.Channel(result.id);
+                    self.socket = self.channel.open();
+                    self.socket.onmessage = self.onChannel.fnMethod();
+                    self.channelInfo = result;
+                    fnSuccess(result);
+                }
+            });
+
+        },
+
+        onChannel: function(evt) {
+            console.log("onChannel: ", evt.data);
+        },
+
+        subscribe: function(docid, blobid, options, fnCallback) {
+            if (!this.validateArgs('subscribe', docid, blobid, undefined,
+                                   options, fnCallback)) {
+                return;
+            }
+
+            var key = docid + '/' + (blobid || '');
+            var sub = this.subscriptions[key] || {};
+            util.extendObject(sub, options);
+            sub.fnCallback = fnCallback;
+            this.subscriptions[key] = sub;
+            this.ensureSubs();
+        },
+
+        ensureSubs: function() {
+            // Ensure we have a current channel object
+            if (this.channelInfo == undefined ||
+                this.channelInfo.expires < new Date().getTime()) {
+                this.initChannel(this.ensureSubs.fnMethod(this));
+                return;
+            }
         },
 
         validateArgs: function(funcName, docid, blobid, json,
@@ -172,7 +221,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             if (json) {
                 obj.jsonLength = jsonToString(json).length;
             }
-            base.extendObject(obj, options);
+            util.extendObject(obj, options);
             this.client.log(funcName + ': ' +
                             JSON.stringify(obj));
 
@@ -396,7 +445,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         list: function(docid, blobid, options, fnSuccess) {
             var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
 
-            if (!this.validateArgs('list', docid, undefined, undefined,
+            if (!this.validateArgs('list', docid, blobid, undefined,
                                    options, fnSuccess)) {
                 return;
             }
@@ -427,12 +476,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });
-        },
-
-        subscribe: function(docid, blobid, options, fnSuccess) {
-
         }
-
     }); // Storage.methods
 
     ns.extend({
