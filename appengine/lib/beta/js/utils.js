@@ -2304,7 +2304,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                         1000 * result.lifetime;
                     self.channel = new goog.appengine.Channel(result.token);
                     self.socket = self.channel.open();
-                    self.socket.onmessage = self.onChannel.fnMethod();
+                    self.socket.onmessage = self.onChannel.fnMethod(self);
                     self.channelInfo = result;
                     fnSuccess(result);
                 }
@@ -2312,12 +2312,20 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         onChannel: function(evt) {
-            var message = evt.data;
+            // Message format: {app: appId,
+            //                  key: key,
+            //                  method: string (PUT or PUSH),
+            //                  data: {size: number,
+            //                         modified: { Date },
+            //                         sha1: string
+            //                        }
+            //                 }
+            var message = JSON.parse(evt.data);
             console.log("onChannel: ", message);
 
             var sub = this.subscriptions[message.key];
             if (sub == undefined) {
-                console.log("No subscription for channel message.", message);
+                console.log("No subscription for channel key.", message.key);
                 return;
             }
             sub.fn(message);
@@ -2329,8 +2337,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            var key = docid + '/' + (blobid || '');
             var sub;
+            var key = docid + '/';
+            if (blobid != undefined) {
+                key += blobid + '/';
+            }
 
             if (fn == undefined || options && options.enabled === false) {
                 sub = this.subscriptions[key];

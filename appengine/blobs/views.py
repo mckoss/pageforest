@@ -280,7 +280,10 @@ def blob_put(request):
                           for tag in request.GET['tags'].split(',')])
     # Save new blob to memcache and datastore.
     blob.put()
-    dispatch_subscriptions(request, request.key_name, {'method': 'PUT'})
+    dispatch_subscriptions(blob.key().name(), 'PUT',
+                           {'sha1': blob.sha1,
+                            'size': blob.size,
+                            'modified': blob.modified})
     response = HttpResponse('{"status": 200, "statusText": "Saved", ' +
                             '"sha1": %s}' % blob.get_etag(),
                             mimetype=settings.JSON_MIMETYPE)
@@ -343,6 +346,10 @@ def atomic_update(key_name, old_sha1, new_sha1, new_value):
     else:
         db.Model.__setattr__(blob, 'value', None)
     blob.put()
+    dispatch_subscriptions(blob.key().name(), 'PUSH',
+                           {'sha1': blob.sha1,
+                            'size': blob.size,
+                            'modified': blob.modified})
     # Update was successful, no need to try again.
     return True, blob
 

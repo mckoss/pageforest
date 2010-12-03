@@ -79,6 +79,9 @@ def add_subscription(key, session_key, expires):
     For each key, we store a dictionary of subscribers:
        {session_key: {'expires': expires_time, ...}
     """
+    # Keys are paths normalized to end in trailing slash
+    if not key.endswith('/'):
+        key += '/'
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key) or {}
     subscriptions[session_key] = {'expires': expires}
@@ -97,7 +100,7 @@ def save_subscriptions(sub_key, subscriptions):
     memcache.set(sub_key, subscriptions)
 
 
-def dispatch_subscriptions(request, key, data):
+def dispatch_subscriptions(key, method, data):
     """
     Dispatch messages for appid/key
     """
@@ -107,9 +110,10 @@ def dispatch_subscriptions(request, key, data):
     if subscriptions is None:
         return
 
+    app_id, path = key.split('/', 1)
     now = time.time()
     fan_out = 0
-    for key, sub in subscriptions.items():
+    for session_key, sub in subscriptions.items():
         if sub['expires'] < now:
             continue
         fan_out += 1
@@ -118,11 +122,13 @@ def dispatch_subscriptions(request, key, data):
             logging.info("Too many subscribers (%d) on %s." %
                          (len(subscriptions), key))
             break
-        message = json.dumps({'key': key,
+        message = json.dumps({'key': path,
+                              'app': app_id,
+                              'method': method,
                               'data': data},
                              cls=ModelEncoder)
-        logging.info("Sending: %s->%s" % (sub.key, message))
-        channel.send_message(sub.key, message)
+        logging.info("Sending: %s->%s" % (session_key, message))
+        channel.send_message(session_key, message)
 
 
 def get_session_channel(session_key):
