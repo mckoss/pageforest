@@ -526,10 +526,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                     client.storage.subscribe('test-storage', 'test-channel',
                                              undefined,
-                        function (blob, status, xmlhttp) {
+                        function (message) {
                             var time = new Date().getTime();
-                            ut.assertGT(time - timeStart, 1000);
-                            ut.assertEq(storage.getEtag(xmlhttp), etagNew);
+                            ut.assertGT(time - timeStart, 500);
+                            ut.assertEq(message.method, 'PUSH');
+                            ut.assertEq(message.data.sha1, etagNew);
                             ut.nextFn();
                         });
 
