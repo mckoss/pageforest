@@ -21,6 +21,7 @@ from utils.mime import guess_mimetype
 from utils.json import ModelEncoder
 from utils.shortcuts import render_to_response, lookup_or_404, \
     get_int, get_bool
+from utils.channel import dispatch_subscriptions
 
 from chunks.models import Chunk
 from blobs.models import Blob, MAX_INTERNAL_SIZE
@@ -279,6 +280,7 @@ def blob_put(request):
                           for tag in request.GET['tags'].split(',')])
     # Save new blob to memcache and datastore.
     blob.put()
+    dispatch_subscriptions(request, request.key_name, {'method': 'PUT'})
     response = HttpResponse('{"status": 200, "statusText": "Saved", ' +
                             '"sha1": %s}' % blob.get_etag(),
                             mimetype=settings.JSON_MIMETYPE)
