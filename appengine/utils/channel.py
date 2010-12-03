@@ -59,6 +59,7 @@ def subscriptions(request, extra):
 
     # TODO: Expire any old subscriptions NOT in the new set
     for key, sub in channel_data['subscriptions'].items():
+        key = '/'.join((request.app.get_app_id(), key))
         add_subscription(key, session_key, channel_data['expires'])
 
     m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
@@ -97,6 +98,10 @@ def save_subscriptions(sub_key, subscriptions):
 
 
 def dispatch_subscriptions(request, key, data):
+    """
+    Dispatch messages for appid/key
+    """
+    logging.info("dispatch: %s (%r)" % (key, data))
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key)
     if subscriptions is None:
@@ -116,6 +121,7 @@ def dispatch_subscriptions(request, key, data):
         message = json.dumps({'key': key,
                               'data': data},
                              cls=ModelEncoder)
+        logging.info("Sending: %s->%s" % (sub.key, message))
         channel.send_message(sub.key, message)
 
 
