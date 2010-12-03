@@ -1,9 +1,7 @@
 import time
-import datetime
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
-from google.appengine.api import channel
 
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
@@ -15,8 +13,6 @@ import settings
 
 CHALLENGE_EXPIRATION = 60  # Seconds.
 CHALLENGE_CACHE_PREFIX = 'CR1~'
-
-CHANNEL_LIFETIME = 60 * 60 * 2
 
 
 class User(db.Expando, Timestamped, Migratable, Cacheable):
@@ -198,34 +194,3 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
                 raise AuthError(
                     "You have already created %d apps." % count)
         return True
-
-    def get_session_channel(self, request):
-        """
-        Get the (cached) channel info for the current user's session.
-        """
-        def update_lifetime(cd):
-            secs_created = time.mktime(cd['created'].timetuple())
-            cd['lifetime'] = int(secs_created + CHANNEL_LIFETIME -
-                time.time())
-
-        # Don't leak the session_key through the channel id - encrypt it.
-        session_key = crypto.hmac_sha1(
-            request.COOKIES[settings.SESSION_COOKIE_NAME],
-            self.password)
-        m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
-        channel_data = memcache.get(m_key)
-
-        if channel_data is not None:
-            update_lifetime(channel_data)
-
-        # If no valid channel, or if it expires in less than
-        # 5 minutes, make a new one.
-        if channel_data == None or channel_data['lifetime'] < 5 * 60:
-            id = channel.create_channel(session_key)
-            channel_data = {'created': datetime.datetime.now(),
-                            'id': id,
-                            'subscriptions': []}
-            memcache.set(m_key, channel_data)
-            update_lifetime(channel_data)
-
-        return channel_data
