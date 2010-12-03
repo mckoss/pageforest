@@ -2298,35 +2298,53 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             console.log("Intializing new channel");
             $.ajax({
                 url: '/channel/',
-                dataType: 'json',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
                     result.expires = new Date().getTime() +
                         1000 * result.lifetime;
-                    self.channel = new goog.appengine.Channel(result.id);
+                    self.channel = new goog.appengine.Channel(result.token);
                     self.socket = self.channel.open();
                     self.socket.onmessage = self.onChannel.fnMethod();
                     self.channelInfo = result;
                     fnSuccess(result);
                 }
             });
-
         },
 
         onChannel: function(evt) {
-            console.log("onChannel: ", evt.data);
+            var message = evt.data;
+            console.log("onChannel: ", message);
+
+            var sub = this.subscriptions[message.key];
+            if (sub == undefined) {
+                console.log("No subscription for channel message.", message);
+                return;
+            }
+            sub.fn(message);
         },
 
-        subscribe: function(docid, blobid, options, fnCallback) {
+        subscribe: function(docid, blobid, options, fn) {
             if (!this.validateArgs('subscribe', docid, blobid, undefined,
-                                   options, fnCallback)) {
+                                   options, fn)) {
                 return;
             }
 
             var key = docid + '/' + (blobid || '');
-            var sub = this.subscriptions[key] || {};
+            var sub;
+
+            if (fn == undefined || options && options.enabled === false) {
+                sub = this.subscriptions[key];
+                if (sub == undefined) {
+                    return;
+                }
+                sub.enabled = false;
+                this.ensureSubs();
+                return;
+            }
+
+            sub = this.subscriptions[key] || {enabled: true};
             util.extendObject(sub, options);
-            sub.fnCallback = fnCallback;
+            sub.fn = fn;
             this.subscriptions[key] = sub;
             this.ensureSubs();
         },
@@ -2338,6 +2356,18 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 this.initChannel(this.ensureSubs.fnMethod(this));
                 return;
             }
+
+            var self = this;
+            $.ajax({
+                type: 'PUT',
+                url: '/channel/subscriptions',
+                dataType: 'json',
+                data: jsonToString(this.subscriptions),
+                error: this.errorHandler.fnMethod(this),
+                success: function (result, textStatus, xmlhttp) {
+                    console.log("Subscriptions updated.");
+                }
+            });
         },
 
         validateArgs: function(funcName, docid, blobid, json,
