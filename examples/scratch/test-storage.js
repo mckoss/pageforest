@@ -512,12 +512,22 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
             ut.asyncSequence([
                 function (ut) {
+                    // Eat all previously queued messages
+                    client.storage.subscribe('test-storage', 'test-channel',
+                                             undefined,
+                        function (message) {
+                            ut.nextFn();
+                            ut.assertEq(message.method, 'PUT');
+                        });
+                    ut.nextFn();
+                },
+
+                function (ut) {
                     client.storage.putBlob('test-storage', 'test-channel',
                                            [1, 2, 3, 4, 5], undefined,
                         function (result, status, xmlhttp) {
                             etag = result.sha1;
                             ut.assertEq(result.status, 200);
-                            ut.nextFn();
                         });
                 },
 
