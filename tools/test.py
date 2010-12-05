@@ -11,8 +11,8 @@ def find_in_path(file_name):
     for d in path.split(os.pathsep):
         file_path = os.path.abspath(os.path.join(d, file_name))
         if os.path.exists(file_path):
-            return file_path
-    return file_name
+            return '"%s"' % file_path
+    return '"%s"' % file_name
 
 if __name__ == '__main__':
     command = ['python2.5',
