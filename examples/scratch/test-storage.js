@@ -519,7 +519,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         ts.addTest("channel", function(ut) {
             client.app.ut = ut;
             var etag;
-            var etagNew;
+            var newEtag;
+            var newSha1;
 
             ut.asyncSequence([
                 function (ut) {
@@ -551,7 +552,10 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             var time = new Date().getTime();
                             ut.assertGT(time - timeStart, 1000);
                             ut.assertEq(message.method, 'PUSH');
-                            ut.assertEq(message.data.sha1, etagNew);
+                            if (newEtag) {
+                                ut.assertEq(message.data.sha1, newEtag);
+                            }
+                            newSha1 = message.data.sha1;
                             ut.nextFn();
                         });
 
@@ -560,8 +564,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                                             6, undefined,
                             function (result) {
                                 ut.assertEq(result.status, 200);
-                                etagNew = result.newSha1;
-                                ut.assertNEq(etagNew, etag);
+                                newEtag = result.newSha1;
+                                if (newSha1) {
+                                    ut.assertEq(newEtag, newSha1);
+                                }
+                                ut.assertNEq(newEtag, etag);
                             });
                     }
 
