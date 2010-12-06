@@ -46,6 +46,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     //     reading or writing a document (optional).
     // app.onUserChange(username) - Called when the user signs in or signs out
     // app.onStateChange(new, old) - Notify app about current state changes.
+    // app.onInfo(code, message) - Informational messages about the client
+    //     status.
     function Client(app) {
         // Make a dummy app if none given - but warn the developer.
         if (app == undefined) {
@@ -409,14 +411,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onError: function(status, message) {
-            var formatted = "client error: " + message +
-                ' (' + status + ')';
-            this.log(formatted);
-
+            this.log("client error: " + message + ' (' + status + ')');
             this.showError(message);
-
             if (this.app.onError) {
                 this.app.onError(status, message);
+            }
+        },
+
+        onInfo: function(code, message) {
+            this.log(code + ' (' + message + ')');
+            if (this.app.onInfo) {
+                this.app.onInfo(code, message);
             }
         },
 
