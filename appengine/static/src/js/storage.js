@@ -115,14 +115,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         errorHandler: function(xmlhttp, textStatus, errorThrown) {
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.statusText;
-            this.client.log(message + ' (' + code + ')', {'obj': xmlhttp});
             this.client.onError(code, message);
         },
 
         initChannel: function(fnSuccess) {
             fnSuccess = fnSuccess || function () {};
             var self = this;
-            this.client.log("Intializing new channel");
+            this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
                 url: '/channel/',
                 error: this.errorHandler.fnMethod(this),
@@ -134,11 +133,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     self.socket = self.channel.open();
                     self.socket.onmessage = self.onChannel.fnMethod(self);
                     self.socket.onopen = function() {
-                        self.client.log("Channel socket is open.");
+                        self.client.onInfo('channel/open',
+                                           "Channel socket is open.");
                         fnSuccess(self.channelInfo);
                     };
                     self.socket.onclose = function() {
-                        self.client.log("Channel socket is closed.");
                         self.client.onError('channel/closed',
                             "Realtime messages from PageForest " +
                             "are no longer available.");
@@ -160,13 +159,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                        }
             //                 }
             var message = JSON.parse(evt.data);
-            this.client.log("onChannel: " + message.key +
+            this.client.onInfo('channel/message', message.key +
                             ' (' + message.method + ')');
 
             var sub = this.subscriptions[message.key];
             if (sub == undefined) {
-                this.client.log("No subscription for channel key: " +
-                                message.key);
+                this.client.onError('channel/nosub',
+                                    "No subscription for channel key: " +
+                                    message.key);
                 return;
             }
             if (sub.enabled) {
@@ -217,7 +217,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 data: jsonToString(this.subscriptions),
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
-                    self.client.log("Subscriptions updated.");
+                    self.client.onInfo('channel/updated',
+                                       "Subscriptions updated.");
                 }
             });
         },
@@ -272,13 +273,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 }
             }
 
-            var obj = {docid: docid, blobid: blobid};
-            if (json) {
-                obj.jsonLength = jsonToString(json).length;
-            }
-            util.extendObject(obj, options);
-            this.client.log(funcName + ': ' +
-                            JSON.stringify(obj));
+            this.client.log(funcName + ': ' + docid +
+                            (blobid ? '/' + blobid : ''));
 
             return true;
         },

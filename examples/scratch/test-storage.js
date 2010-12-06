@@ -16,6 +16,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     function TestApp(ut) {
         this.ut = ut;
         this.status = undefined;
+        this.waitingFor = undefined;
     }
 
     TestApp.methods({
@@ -32,6 +33,16 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 this.status = undefined;
             }
             this.ut.nextFn();
+        },
+
+        onInfo: function(code, message) {
+            if (!this.waitingFor) {
+                return;
+            }
+            if (this.waitingFor == code) {
+                delete this.waitingFor;
+                this.ut.nextFn();
+            }
         }
     });
 
@@ -509,26 +520,17 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             client.app.ut = ut;
             var etag;
             var etagNew;
-            var fHasPut = false;
 
             ut.asyncSequence([
                 function (ut) {
-                    // Eat all previously queued messages
+                    client.app.waitingFor = 'channel/updated';
+
                     client.storage.subscribe('test-storage', 'test-channel',
                                              undefined,
                         function (message) {
                             ut.assertEq(message.method, 'PUT');
-                            if (fHasPut) {
-                                ut.nextFn();
-                            }
+                            ut.nextFn();
                         });
-
-                    function delay() {
-                        ut.nextFn();
-                    }
-
-                    // Wait for channel to update
-                    setTimeout(delay, 1000);
                 },
 
                 function (ut) {
@@ -537,7 +539,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         function (result, status, xmlhttp) {
                             etag = result.sha1;
                             ut.assertEq(result.status, 200);
-                            fHasPut = true;
                         });
                 },
 
