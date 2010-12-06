@@ -543,7 +543,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     var timeStart = new Date().getTime();
-                    console.log("Start of #3");
 
                     client.storage.subscribe('test-storage', 'test-channel',
                                              undefined,
@@ -556,7 +555,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         });
 
                     function doPush() {
-                        console.log("doPush");
                         client.storage.push('test-storage', 'test-channel',
                                             6, undefined,
                             function (result) {

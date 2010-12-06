@@ -2295,18 +2295,30 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         initChannel: function(fnSuccess) {
             fnSuccess = fnSuccess || function () {};
             var self = this;
-            console.log("Intializing new channel");
+            this.client.log("Intializing new channel");
             $.ajax({
                 url: '/channel/',
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
                     result.expires = new Date().getTime() +
                         1000 * result.lifetime;
+                    self.channelInfo = result;
                     self.channel = new goog.appengine.Channel(result.token);
                     self.socket = self.channel.open();
                     self.socket.onmessage = self.onChannel.fnMethod(self);
-                    self.channelInfo = result;
-                    fnSuccess(result);
+                    self.socket.onopen = function() {
+                        self.client.log("Channel socket is open.");
+                        fnSuccess(self.channelInfo);
+                    };
+                    self.socket.onclose = function() {
+                        self.client.log("Channel socket is closed.");
+                        self.client.onError('channel/closed',
+                            "Realtime messages from PageForest " +
+                            "are no longer available.");
+                        delete self.channelInfo;
+                        delete self.channel;
+                        delete self.socket;
+                    };
                 }
             });
         },
@@ -2321,14 +2333,18 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                        }
             //                 }
             var message = JSON.parse(evt.data);
-            console.log("onChannel: ", message);
+            this.client.log("onChannel: " + message.key +
+                            ' (' + message.method + ')');
 
             var sub = this.subscriptions[message.key];
             if (sub == undefined) {
-                console.log("No subscription for channel key.", message.key);
+                this.client.log("No subscription for channel key: " +
+                                message.key);
                 return;
             }
-            sub.fn(message);
+            if (sub.enabled) {
+                sub.fn(message);
+            }
         },
 
         subscribe: function(docid, blobid, options, fn) {
@@ -2337,27 +2353,25 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            var sub;
+            options = options || {};
+            options.enabled = (fn != undefined);
+            options.fn = fn;
+            if (fn == undefined) {
+                options.enabled = false;
+            }
+
             var key = docid + '/';
             if (blobid != undefined) {
                 key += blobid + '/';
             }
 
-            if (fn == undefined || options && options.enabled === false) {
-                sub = this.subscriptions[key];
-                if (sub == undefined) {
-                    return;
-                }
-                sub.enabled = false;
-                this.ensureSubs();
-                return;
-            }
+            var sub = this.subscriptions[key] || {enabled: false};
+            var subNew = util.extendObject({}, sub, {enabled: true}, options);
+            this.subscriptions[key] = subNew;
 
-            sub = this.subscriptions[key] || {enabled: true};
-            util.extendObject(sub, options);
-            sub.fn = fn;
-            this.subscriptions[key] = sub;
-            this.ensureSubs();
+            if (sub.enabled != subNew.enabled) {
+                this.ensureSubs();
+            }
         },
 
         ensureSubs: function() {
@@ -2376,7 +2390,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 data: jsonToString(this.subscriptions),
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
-                    console.log("Subscriptions updated.");
+                    self.client.log("Subscriptions updated.");
                 }
             });
         },
