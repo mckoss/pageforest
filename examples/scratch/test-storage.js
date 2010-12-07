@@ -86,15 +86,17 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             ut.asyncSequence([
                 function (ut) {
                     // Force a login check.
-                    ut.assertEq(client.username, undefined,
-                                "shouldn't be logged in at startup");
                     client.app.onUserChange = function(username) {
                         client.app.onUserChange = undefined;
                         ut.assertType(username, 'string');
                         ut.assertEq(client.state, 'clean');
                         ut.nextFn();
                     };
-                    client.poll();
+                    if (client.username == undefined) {
+                        client.poll();
+                    } else {
+                        client.app.onUserChange(client.username);
+                    }
                 },
 
                 function (ut) {
@@ -242,7 +244,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
 
             ]);
-        }).async();
+        }).async(true, 15000);
 
         ts.addTest("list prefix and tag", function(ut) {
             client.app.ut = ut;
@@ -527,8 +529,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             client.app.skip = false;
             // dev_appserver will deliver state notifications
             var etag;
-            var newEtag;
-            var newSha1;
+            var etagNew;
 
             ut.asyncSequence([
                 function (ut) {
@@ -543,7 +544,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(message.method, 'PUT');
                             ut.assertEq(message.key,
                                         'test-storage/test-channel/');
-                            ut.assertEq(message.data.sha1, etag);
+                            if (etag == undefined) {
+                                etag = message.data.sha1;
+                            } else {
+                                ut.assertEq(message.data.sha1, etag);
+                            }
                             ut.nextFn();
                         });
                     ut.assert(client.storage.hasSubscription('test-storage',
@@ -554,8 +559,12 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.putBlob('test-storage', 'test-channel',
                                            [1, 2, 3, 4, 5], undefined,
                         function (result, status, xmlhttp) {
-                            etag = result.sha1;
                             ut.assertEq(result.status, 200);
+                            if (etag == undefined) {
+                                etag = result.sha1;
+                            } else {
+                                ut.assertEq(result.sha1, etag);
+                            }
                         });
                 },
 
@@ -570,11 +579,13 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(message.key,
                                         'test-storage/test-channel/');
                             ut.assertEq(message.method, 'PUSH');
-                            if (newEtag) {
-                                ut.assertEq(message.data.sha1, newEtag);
+                            if (etagNew == undefined) {
+                                etagNew = message.data.sha1;
+                            } else {
+                                ut.assertEq(message.data.sha1, etagNew);
+                                ut.assertNEq(etagNew, etag);
+                                ut.nextFn();
                             }
-                            newSha1 = message.data.sha1;
-                            ut.nextFn();
                         });
 
                     function doPush() {
@@ -582,11 +593,13 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                                             6, undefined,
                             function (result) {
                                 ut.assertEq(result.status, 200);
-                                newEtag = result.newSha1;
-                                if (newSha1) {
-                                    ut.assertEq(newEtag, newSha1);
+                                if (etagNew == undefined) {
+                                    etagNew = result.newSha1;
+                                } else {
+                                    ut.assertEq(result.newSha1, etagNew);
+                                    ut.assertNEq(etagNew, etag);
+                                    ut.nextFn();
                                 }
-                                ut.assertNEq(newEtag, etag);
                             });
                     }
 
@@ -618,7 +631,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     setTimeout(doPut, 1000);
                 }
             ]);
-        }).async(true);
+        }).async(true, 15000);
 
     } // addTests
 
