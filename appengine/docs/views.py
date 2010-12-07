@@ -11,6 +11,7 @@ from utils.json import ModelEncoder
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
+from utils.channel import dispatch_subscriptions
 from auth.decorators import login_required
 from auth.middleware import AccessDenied
 
@@ -133,7 +134,12 @@ def doc_put(request, doc_id):
     if 'blob' in parsed:
         key_name = request.doc.key().name() + '/'
         value = json.dumps(parsed['blob'], sort_keys=True)
-        Blob(key_name=key_name, value=value).put()
+        blob = Blob(key_name=key_name, value=value)
+        blob.put()
+        dispatch_subscriptions(key_name, 'PUT',
+                               {'sha1': blob.sha1,
+                                'size': blob.size,
+                                'modified': blob.modified})
 
     json_result = json.dumps({
             'status': 200,
