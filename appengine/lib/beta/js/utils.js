@@ -2929,7 +2929,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         onSaveSuccess: function(result) {
             base.extendIfChanged(this.meta, this.metaDoc,
-                                 base.project(result, ['modified', 'owner', 'sha1']));
+                                 base.project(result,
+                                              ['modified', 'owner', 'sha1']));
             this.setCleanDoc(result.docid);
 
             this.setAppPanelValues(this.meta);
