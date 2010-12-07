@@ -2303,6 +2303,12 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            if (this.client.username == undefined) {
+                this.client.onError('channel/user',
+                    "You must be signed in to receive notifications.");
+                return;
+            }
+
             var self = this;
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
@@ -2380,9 +2386,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 this.subscriptions = {};
             }
 
-            // TODO: Remove enabled flag?  Just remove from subscriptions list?
-            // BUG: Multiple clients will over-write the channel's subscriptsions
-            // since all shared on session!
+            // TODO: Remove enabled flag? Just remove from
+            // subscriptions list? BUG: Multiple clients will
+            // over-write the channel's subscriptsions since all
+            // shared on session!
             var sub = this.subscriptions[key] || {enabled: false};
             var subNew = util.extendObject({}, sub, {enabled: true}, options);
             this.subscriptions[key] = subNew;
@@ -2922,7 +2929,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         onSaveSuccess: function(result) {
             base.extendIfChanged(this.meta, this.metaDoc,
-                                 base.project(result, ['modified', 'owner']));
+                                 base.project(result, ['modified', 'owner', 'sha1']));
             this.setCleanDoc(result.docid);
 
             this.setAppPanelValues(this.meta);
@@ -2978,7 +2985,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Callback function for auto-load subscribtion
         onAutoLoad: function (message) {
             if (!this.autoLoad ||
-                message.key != this.docid + '/') {
+                message.key != this.docid + '/' ||
+                message.data.modified.isoformat ==
+                this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
                 return;
             }
@@ -2997,8 +3006,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Subscribe to document changes if we're an auto-load document
             if (this.autoLoad && this.docid != undefined) {
-                this.storage.subscribe(this.docid, undefined, {exclusive: true},
-                                       this.onAutoLoad.fnMethod(this));
+                if (!this.storage.hasSubscription(this.docid)) {
+                    this.storage.subscribe(this.docid, undefined,
+                                           {exclusive: true},
+                                           this.onAutoLoad.fnMethod(this));
+                }
             }
 
             // Enable polling to kick off a load().

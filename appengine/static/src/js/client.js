@@ -183,7 +183,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         onSaveSuccess: function(result) {
             base.extendIfChanged(this.meta, this.metaDoc,
-                                 base.project(result, ['modified', 'owner']));
+                                 base.project(result,
+                                              ['modified', 'owner', 'sha1']));
             this.setCleanDoc(result.docid);
 
             this.setAppPanelValues(this.meta);
@@ -239,7 +240,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Callback function for auto-load subscribtion
         onAutoLoad: function (message) {
             if (!this.autoLoad ||
-                message.key != this.docid + '/') {
+                message.key != this.docid + '/' ||
+                message.data.modified.isoformat ==
+                this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
                 return;
             }
@@ -258,8 +261,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             // Subscribe to document changes if we're an auto-load document
             if (this.autoLoad && this.docid != undefined) {
-                this.storage.subscribe(this.docid, undefined, {exclusive: true},
-                                       this.onAutoLoad.fnMethod(this));
+                if (!this.storage.hasSubscription(this.docid)) {
+                    this.storage.subscribe(this.docid, undefined,
+                                           {exclusive: true},
+                                           this.onAutoLoad.fnMethod(this));
+                }
             }
 
             // Enable polling to kick off a load().

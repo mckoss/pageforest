@@ -130,6 +130,12 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            if (this.client.username == undefined) {
+                this.client.onError('channel/user',
+                    "You must be signed in to receive notifications.");
+                return;
+            }
+
             var self = this;
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
@@ -207,9 +213,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 this.subscriptions = {};
             }
 
-            // TODO: Remove enabled flag?  Just remove from subscriptions list?
-            // BUG: Multiple clients will over-write the channel's subscriptsions
-            // since all shared on session!
+            // TODO: Remove enabled flag? Just remove from
+            // subscriptions list? BUG: Multiple clients will
+            // over-write the channel's subscriptsions since all
+            // shared on session!
             var sub = this.subscriptions[key] || {enabled: false};
             var subNew = util.extendObject({}, sub, {enabled: true}, options);
             this.subscriptions[key] = subNew;
