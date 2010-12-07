@@ -33,6 +33,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         "and so cannot be saved.";
     var noAppMessage = "Warning: no app object provided - " +
         "only direct storage api's can be used.";
+    var autoLoadError = "Not autoloading: ";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -81,6 +82,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
+        this.autoLoad = false;
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -234,14 +236,31 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.setCleanDoc(doc.doc_id);
         },
 
+        // Callback function for auto-load subscribtion
+        onAutoLoad: function (message) {
+            if (!this.autoLoad ||
+                message.key != this.docid + '/') {
+                this.log(autoLoadError + message.key);
+                return;
+            }
+            this.load(this.docid);
+        },
+
         // Set the document to the clean state.
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
         setCleanDoc: function(docid, preserveHash) {
             this.docid = docid;
             this.changeState('clean');
+
             // Remember the clean state of the document
             this.lastJSON = storage.jsonToString(this.getDoc());
+
+            // Subscribe to document changes if we're an auto-load document
+            if (this.autoLoad && this.docid != undefined) {
+                this.storage.subscribe(this.docid, undefined, {exclusive: true},
+                                       this.onAutoLoad.fnMethod(this));
+            }
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -252,8 +271,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (docid == undefined) {
                 docid = '';
             }
-
-            this.log('clean doc: ' + docid);
 
             window.location.hash = docid;
             this.lastHash = window.location.hash;
@@ -411,7 +428,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onError: function(status, message) {
-            this.log("client error: " + message + ' (' + status + ')');
+            this.log(message + ' (' + status + ')');
             this.showError(message);
             if (this.app.onError) {
                 this.app.onError(status, message);
@@ -419,7 +436,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onInfo: function(code, message) {
-            this.log(code + ' (' + message + ')');
+            this.log(message + ' (' + code + ')');
             if (this.app.onInfo) {
                 this.app.onInfo(code, message);
             }
@@ -467,7 +484,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onUserChange: function() {
-            this.log("onUserChange: " + this.username);
+            this.log("user: " + this.username);
             this.updateAppBar();
             if (this.app.onUserChange) {
                 this.app.onUserChange(this.username);

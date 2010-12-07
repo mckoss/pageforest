@@ -23,6 +23,10 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
         // Use the standard Pageforest UI widget.
         ns.client.addAppBar();
 
+        // This app demonstrates auto-loading - will reload the doc if
+        // it is changed by another user.
+        ns.client.autoLoad = true;
+
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();

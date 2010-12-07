@@ -534,6 +534,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.app.waitingFor = 'channel/updated';
 
+                    ut.assert(!client.storage.hasSubscription('test-storage',
+                                                              'test-channel'));
                     client.storage.subscribe('test-storage', 'test-channel',
                                              undefined,
                         function (message) {
@@ -544,6 +546,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(message.data.sha1, etag);
                             ut.nextFn();
                         });
+                    ut.assert(client.storage.hasSubscription('test-storage',
+                                                             'test-channel'));
                 },
 
                 function (ut) {
