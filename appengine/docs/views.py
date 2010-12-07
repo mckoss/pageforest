@@ -139,7 +139,10 @@ def doc_put(request, doc_id):
         dispatch_subscriptions(key_name, 'PUT',
                                {'sha1': blob.sha1,
                                 'size': blob.size,
-                                'modified': blob.modified})
+                                'modified': request.doc.modified})
+
+    # TODO: Note that modifying only doc meta-data does not trigger
+    # a channel subscription update.  Should it?
 
     json_result = json.dumps({
             'status': 200,
