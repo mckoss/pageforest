@@ -36,6 +36,7 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
     sha1 = db.StringProperty()
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
+    # TODO: Add owner
 
     # Schema version for Migratable mixin:
     current_schema = 3

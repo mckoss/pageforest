@@ -28,11 +28,13 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             if (!this.status) {
                 this.ut.assert(false, "Unexpected error: " + status +
                                " (" + message + ")");
-            } else {
-                this.ut.assertEq(status, this.status);
-                this.status = undefined;
+                return;
             }
-            this.ut.nextFn();
+            this.ut.assertEq(status, this.status);
+            if (status == this.status) {
+                this.status = undefined;
+                this.ut.nextFn();
+            }
         },
 
         onInfo: function(code, message) {
@@ -573,8 +575,32 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     }
 
                     setTimeout(doPush, 1000);
-                }
+                },
 
+                function (ut) {
+                    var timeStart = new Date().getTime();
+
+                    client.storage.subscribe('test-storage', undefined,
+                                             undefined,
+                        function (message) {
+                            var time = new Date().getTime();
+                            ut.assertGT(time - timeStart, 1000);
+                            ut.assertEq(message.method, 'PUT');
+                            ut.nextFn();
+                        });
+
+                    function doPut() {
+                        client.storage.putDoc('test-storage',
+                            {title: "Test storage document - " +
+                             "channel update.",
+                             blob: testBlob},
+                            function (result) {
+                                ut.assertEq(result.status, 200);
+                            });
+                    }
+
+                    setTimeout(doPut, 1000);
+                }
             ]);
         }).async(true);
 
