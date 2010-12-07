@@ -6,6 +6,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
     var format = namespace.lookup('org.startpad.format');
+    var loader = namespace.lookup('org.startpad.loader');
 
     var errorMessages = {
         no_username: "You must sign in to save a document.",
@@ -120,6 +121,15 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         initChannel: function(fnSuccess) {
             fnSuccess = fnSuccess || function () {};
+
+            // Load the required channel api client library
+            if (typeof goog == 'undefined' ||
+                typeof goog.appengine == 'undefined') {
+                loader.loadScript('/_ah/channel/jsapi',
+                    this.initChannel.fnMethod(this).fnArgs(fnSuccess));
+                return;
+            }
+
             var self = this;
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
@@ -192,6 +202,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 key += blobid + '/';
             }
 
+            if (options.exclusive) {
+                delete options.exclusive;
+                this.subscriptions = {};
+            }
+
+            // TODO: Remove enabled flag?  Just remove from subscriptions list?
+            // BUG: Multiple clients will over-write the channel's subscriptsions
+            // since all shared on session!
             var sub = this.subscriptions[key] || {enabled: false};
             var subNew = util.extendObject({}, sub, {enabled: true}, options);
             this.subscriptions[key] = subNew;
@@ -199,6 +217,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             if (sub.enabled != subNew.enabled) {
                 this.ensureSubs();
             }
+        },
+
+        hasSubscription: function(docid, blobid) {
+            var key = docid + '/';
+            if (blobid != undefined) {
+                key += blobid + '/';
+            }
+            return this.subscriptions[key] != undefined;
         },
 
         ensureSubs: function() {

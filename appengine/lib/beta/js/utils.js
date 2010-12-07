@@ -2179,6 +2179,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
     var format = namespace.lookup('org.startpad.format');
+    var loader = namespace.lookup('org.startpad.loader');
 
     var errorMessages = {
         no_username: "You must sign in to save a document.",
@@ -2293,6 +2294,15 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         initChannel: function(fnSuccess) {
             fnSuccess = fnSuccess || function () {};
+
+            // Load the required channel api client library
+            if (typeof goog == 'undefined' ||
+                typeof goog.appengine == 'undefined') {
+                loader.loadScript('/_ah/channel/jsapi',
+                    this.initChannel.fnMethod(this).fnArgs(fnSuccess));
+                return;
+            }
+
             var self = this;
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
@@ -2365,6 +2375,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 key += blobid + '/';
             }
 
+            if (options.exclusive) {
+                delete options.exclusive;
+                this.subscriptions = {};
+            }
+
+            // TODO: Remove enabled flag?  Just remove from subscriptions list?
+            // BUG: Multiple clients will over-write the channel's subscriptsions
+            // since all shared on session!
             var sub = this.subscriptions[key] || {enabled: false};
             var subNew = util.extendObject({}, sub, {enabled: true}, options);
             this.subscriptions[key] = subNew;
@@ -2372,6 +2390,14 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             if (sub.enabled != subNew.enabled) {
                 this.ensureSubs();
             }
+        },
+
+        hasSubscription: function(docid, blobid) {
+            var key = docid + '/';
+            if (blobid != undefined) {
+                key += blobid + '/';
+            }
+            return this.subscriptions[key] != undefined;
         },
 
         ensureSubs: function() {
@@ -2746,6 +2772,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         "and so cannot be saved.";
     var noAppMessage = "Warning: no app object provided - " +
         "only direct storage api's can be used.";
+    var autoLoadError = "Not autoloading: ";
 
     var docProps = ['title', 'tags',
                     'owner', 'readers', 'writers',
@@ -2794,6 +2821,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
+        this.autoLoad = false;
 
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
@@ -2947,14 +2975,31 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.setCleanDoc(doc.doc_id);
         },
 
+        // Callback function for auto-load subscribtion
+        onAutoLoad: function (message) {
+            if (!this.autoLoad ||
+                message.key != this.docid + '/') {
+                this.log(autoLoadError + message.key);
+                return;
+            }
+            this.load(this.docid);
+        },
+
         // Set the document to the clean state.
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
         setCleanDoc: function(docid, preserveHash) {
             this.docid = docid;
             this.changeState('clean');
+
             // Remember the clean state of the document
             this.lastJSON = storage.jsonToString(this.getDoc());
+
+            // Subscribe to document changes if we're an auto-load document
+            if (this.autoLoad && this.docid != undefined) {
+                this.storage.subscribe(this.docid, undefined, {exclusive: true},
+                                       this.onAutoLoad.fnMethod(this));
+            }
 
             // Enable polling to kick off a load().
             if (preserveHash) {
@@ -2965,8 +3010,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (docid == undefined) {
                 docid = '';
             }
-
-            this.log('clean doc: ' + docid);
 
             window.location.hash = docid;
             this.lastHash = window.location.hash;
@@ -3124,7 +3167,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onError: function(status, message) {
-            this.log("client error: " + message + ' (' + status + ')');
+            this.log(message + ' (' + status + ')');
             this.showError(message);
             if (this.app.onError) {
                 this.app.onError(status, message);
@@ -3132,7 +3175,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onInfo: function(code, message) {
-            this.log(code + ' (' + message + ')');
+            this.log(message + ' (' + code + ')');
             if (this.app.onInfo) {
                 this.app.onInfo(code, message);
             }
@@ -3180,7 +3223,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         onUserChange: function() {
-            this.log("onUserChange: " + this.username);
+            this.log("user: " + this.username);
             this.updateAppBar();
             if (this.app.onUserChange) {
                 this.app.onUserChange(this.username);
@@ -3447,4 +3490,138 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         Client: Client
     });
 
+});
+/* Begin file: loader.js */
+/*jslint rhino: true */
+namespace.lookup('org.startpad.loader').defineOnce(function(ns) {
+    var base = namespace.lookup('org.startpad.base');
+    var dom = namespace.lookup('org.startpad.dom');
+
+    var iTimer;
+    var callbacks = [];
+
+    function checkLoaded() {
+        for (var i = 0; i < callbacks.length;) {
+            var callback = callbacks[i];
+            if (callback[0]._isDefined) {
+                var fn = callback[1];
+                callbacks.splice(i, 1);
+                fn();
+            }
+            else {
+                i++;
+            }
+        }
+        if (callbacks.length == 0) {
+            clearInterval(iTimer);
+            iTimer = undefined;
+        }
+    }
+
+    // Load a script - and call callback when loaded.
+    function loadScript(url, fnCallback) {
+        console.log("loading script: " + url + " ...");
+
+        // Rhino supports load directly
+        if (typeof load != 'undefined') {
+            load(url);
+            if (fnCallback) {
+                fnCallback();
+            }
+            return;
+        }
+
+        var script = document.createElement("script");
+        script.src = url;
+        script.type = "text/javascript";
+
+        function loaded() {
+            console.log(url + " - loaded.");
+            fnCallback();
+        }
+
+        // FIXME: This seems to break in Firefox (works in Chrome)
+        // Safer to use the timer to trigger callbacks.
+        if (fnCallback) {
+            dom.bind(script, 'load', loaded);
+        }
+
+        document.getElementsByTagName('head')[0].appendChild(script);
+    }
+
+    function loadStylesheet(url) {
+        var head = document.getElementsByTagName('head')[0];
+        var link = document.createElement('link');
+        link.rel = "stylesheet";
+        link.type = "text/css";
+        link.href = url;
+
+        head.appendChild(link);
+    }
+
+    // Call the callback once the namespace has been defined
+    function waitForNamespace(targetNamespace, fnCallback) {
+        if (targetNamespace._isDefined) {
+            fnCallback();
+            return;
+        }
+
+        if (iTimer == undefined) {
+            iTimer = setInterval(checkLoaded, 500);
+        }
+
+        callbacks.push([targetNamespace, fnCallback]);
+    }
+
+    // Load a namespace if it's not already defined. Uses a location
+    // map to indicate which files contain each namespace.
+    function loadNamespace(name, locations, fnCallback) {
+        var targetNamespace = namespace.lookup(name);
+
+        if (!targetNamespace._isDefined) {
+            if (locations[name] == undefined) {
+                throw new Error("Unknown namespace location: " + name);
+            }
+            loadScript(locations[name]);
+        }
+
+        waitForNamespace(targetNamespace, function () {
+            ns.loadReferences(targetNamespace._referenced,
+                              locations,
+                              fnCallback);
+        });
+    }
+
+    // Load the  references that haven't yet been defined.
+    function loadReferences(nsList, locations, fnCallback) {
+        var countRemaining = nsList.length;
+        if (countRemaining == 0) {
+            fnCallback();
+            return;
+        }
+
+        var paths = base.map(nsList, function(ns) {
+            return ns._path;
+        });
+
+        function decrementCount() {
+            countRemaining--;
+            if (countRemaining == 0) {
+                fnCallback();
+            }
+        }
+
+        for (var i = 0; i < nsList.length; i++) {
+            var name = nsList[i]._path;
+            loadNamespace(name, locations, decrementCount);
+        }
+    }
+
+    // Exports.
+    ns.extend({
+        'loadScript': loadScript,
+        'loadStylesheet': loadStylesheet,
+        'loadNamespace': loadNamespace,
+        'loadReferences': loadReferences
+    });
 });
