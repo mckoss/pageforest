@@ -17,6 +17,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         this.ut = ut;
         this.status = undefined;
         this.waitingFor = undefined;
+        this.skip = true;
     }
 
     TestApp.methods({
@@ -33,7 +34,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             this.ut.assertEq(status, this.status);
             if (status == this.status) {
                 this.status = undefined;
-                this.ut.nextFn();
+                if (this.skip) {
+                    this.ut.nextFn();
+                }
             }
         },
 
@@ -520,6 +523,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
         ts.addTest("channel", function(ut) {
             client.app.ut = ut;
+            client.app.status = 'channel/nosub';
+            client.app.skip = false;
+            // dev_appserver will deliver state notifications
             var etag;
             var newEtag;
             var newSha1;
@@ -531,7 +537,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.subscribe('test-storage', 'test-channel',
                                              undefined,
                         function (message) {
+                            ut.assertEq(message.app, 'scratch');
                             ut.assertEq(message.method, 'PUT');
+                            ut.assertEq(message.key,
+                                        'test-storage/test-channel/');
+                            ut.assertEq(message.data.sha1, etag);
                             ut.nextFn();
                         });
                 },
@@ -553,6 +563,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         function (message) {
                             var time = new Date().getTime();
                             ut.assertGT(time - timeStart, 1000);
+                            ut.assertEq(message.key,
+                                        'test-storage/test-channel/');
                             ut.assertEq(message.method, 'PUSH');
                             if (newEtag) {
                                 ut.assertEq(message.data.sha1, newEtag);

@@ -55,15 +55,24 @@ def subscriptions(request, extra):
     assert request.method == 'PUT'
 
     # TODO: Add error checking to format of channel data
-    channel_data['subscriptions'] = json.loads(request.raw_post_data)
+    subs = json.loads(request.raw_post_data)
 
-    # TODO: Expire any old subscriptions NOT in the new set
-    for key, sub in channel_data['subscriptions'].items():
+    # Expire any old subscriptions NOT in the new set
+    for key in channel_data['subscriptions']:
+        if key not in subs:
+            add_subscription(key, session_key, 0)
+
+    for key, sub in subs.items():
         key = '/'.join((request.app.get_app_id(), key))
-        add_subscription(key, session_key, channel_data['expires'])
+        expires = channel_data['expires']
+        if sub['enabled'] == False:
+            expires = 0
+            del subs[key]
+        add_subscription(key, session_key, expires)
 
+    channel_data['subscriptions'] = subs
     m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
-    memcache.set(m_key, channel_data)
+    memcache.set(m_key, channel_data, channel_data['expires'])
 
     json_result = json.dumps({
             'status': 200,
@@ -77,7 +86,7 @@ def subscriptions(request, extra):
 def add_subscription(key, session_key, expires):
     """
     For each key, we store a dictionary of subscribers:
-       {session_key: {'expires': expires_time, ...}
+       {session_key: {'expires': expires_time}
     """
     # Keys are paths normalized to end in trailing slash
     if not key.endswith('/'):
@@ -93,18 +102,20 @@ def save_subscriptions(sub_key, subscriptions):
     Remove any expired subscriptions and save the rest to memcache.
     """
     now = time.time()
-    for key, sub in subscriptions.items():
+    max_expires = 0
+    for session_key, sub in subscriptions.items():
+        max_expires = max(max_expires, sub['expires'])
         if sub['expires'] < now:
-            del subscriptions[key]
+            del subscriptions[session_key]
 
-    memcache.set(sub_key, subscriptions)
+    logging.info("subscription saved for %s: %r" % (sub_key, subscriptions))
+    memcache.set(sub_key, subscriptions, max_expires)
 
 
 def dispatch_subscriptions(key, method, data):
     """
     Dispatch messages for appid/key
     """
-    logging.info("dispatch: %s (%r)" % (key, data))
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key)
     if subscriptions is None:
@@ -113,8 +124,10 @@ def dispatch_subscriptions(key, method, data):
     app_id, path = key.split('/', 1)
     now = time.time()
     fan_out = 0
+    save = False
     for session_key, sub in subscriptions.items():
         if sub['expires'] < now:
+            save = True
             continue
         fan_out += 1
         # TODO: Use task queues to increase fan_out
@@ -129,6 +142,9 @@ def dispatch_subscriptions(key, method, data):
                              cls=ModelEncoder)
         logging.info("Sending: %s->%s" % (session_key, message))
         channel.send_message(session_key, message)
+
+    if save:
+        save_subscriptions(key, subscriptions)
 
 
 def get_session_channel(session_key):
@@ -149,7 +165,7 @@ def get_session_channel(session_key):
                         'expires': int(time.time() + CHANNEL_LIFETIME),
                         'token': token,
                         'subscriptions': {}}
-        memcache.set(m_key, channel_data)
+        memcache.set(m_key, channel_data, channel_data['expires'])
         update_lifetime(channel_data)
 
     return channel_data

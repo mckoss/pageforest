@@ -218,7 +218,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
                     self.client.onInfo('channel/updated',
-                                       "Subscriptions updated.");
+                                       "Subscriptions updated: " +
+                                       base.keys(result.subscriptions).length);
                 }
             });
         },
