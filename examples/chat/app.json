@@ -1,0 +1,24 @@
+{
+  "application": "chat",
+  "cloneable": false,
+  "icon": null,
+  "owner": "jcrocholl",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "demo",
+    "sample",
+    "chat",
+    "multiplayer"
+  ],
+  "title": "Chat",
+  "url": "http://chat.pageforest.com/",
+  "writers": [
+    "mike",
+    "mckoss",
+    "johann",
+    "jcrocholl"
+  ]
+}
