@@ -1,5 +1,7 @@
 from google.appengine.ext import db
 
+from django.conf import settings
+
 from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
 from utils.json import assert_boolean, assert_string, assert_string_list
 
@@ -38,7 +40,9 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         if 'authenticated' in self.readers:
             return True
         username = user.get_username()
-        return username == self.owner or username in self.readers
+        return username == self.owner or \
+            username in self.readers or \
+            username in settings.SUPER_USERS
 
     def is_writable(self, user=None):
         """
@@ -51,7 +55,9 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         if 'authenticated' in self.writers:
             return True
         username = user.get_username()
-        return username == self.owner or username in self.writers
+        return username == self.owner or \
+            username in self.writers or \
+            username in settings.SUPER_USERS
 
     def update_writers(self, writers, **kwargs):
         """

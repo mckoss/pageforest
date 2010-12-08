@@ -117,7 +117,7 @@ class SignUpTest(AppTestCase):
 
     def test_username_reserved(self):
         """Reserved usernames are enforced."""
-        for name in 'root admin test'.split():
+        for name in 'admin test'.split():
             response = self.www_client.post(SIGN_UP, {'username': name})
             self.assertContains(response, "This username is reserved.")
 

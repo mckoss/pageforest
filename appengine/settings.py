@@ -39,6 +39,8 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
+SUPER_USERS = ['root']
+
 SITE_NAME = "Pageforest"
 SITE_OWNER = "StartPad"
 SITE_CONTACT_INFO = "811 First Ave, Suite 480, Seattle, WA 98104"
@@ -150,7 +152,7 @@ HIDDEN_PROPERTIES = (
 RESERVED_USERNAMES = """
 public authenticated
 
-admin administrator root
+admin administrator
 staff info spam abuse
 www www-data webmaster postmaster
 test tester testuser testclient
