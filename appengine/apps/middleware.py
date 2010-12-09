@@ -56,6 +56,7 @@ class AppMiddleware(object):
         if request.app is None and request.path_info == '/auth/challenge/':
             # Create a dummy app with a secret for challenge authentication.
             request.app = App.create(app_id)
+            # FIXME: This is creating apps in the database for each challenge?
             request.app.put()
         if request.app is None:
             return HttpResponseNotFound(

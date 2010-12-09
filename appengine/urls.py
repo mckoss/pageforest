@@ -35,7 +35,7 @@ urlpatterns = patterns(
 
     # Static hosting for Pageforest apps.
     (r'^app/admin/app.json/$', 'apps.views.app_json'),
-    (r'^app/(admin/)?(?P<doc_id>)(?P<key>[A-Za-z0-9\._/-]*)',
+    (r'^app/(admin/)?(?P<doc_id>)(?P<key>.*)$',
      'blobs.views.dispatch'),
 
     # Simulate different API proxy errors.

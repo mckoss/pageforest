@@ -1,5 +1,6 @@
 import os
 import mimetypes
+import logging
 
 # Override and extend Python's mimetypes module.
 MIMETYPES = {

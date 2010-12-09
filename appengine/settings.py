@@ -185,6 +185,9 @@ profile
 RESERVED_APP_KEYS = (
     'docs',          # Saved application documents
     'auth',          # Authentication urls
+    'mirror',        # For editor.pf.com
+    'post',          # For post requests
+    'channel'        # Channel API support
     'static',        # Used in app.yaml
     'lib',           # Used in app.yaml
     'shell',         # Used in app.yaml
