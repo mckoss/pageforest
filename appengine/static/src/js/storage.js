@@ -314,6 +314,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         // Save a document to the Pageforest store
+        // TODO: Add Tags support here.
         putDoc: function(docid, json, fnSuccess) {
             if (!this.validateArgs('putDoc', docid, undefined, json,
                                    undefined, fnSuccess)) {

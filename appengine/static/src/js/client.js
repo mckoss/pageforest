@@ -144,6 +144,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         save: function (json, docid) {
+            // BUG: If called by client to force a save - then this
+            // is a no-op - but the doc might be dirty - esp if
+            // we are not autosaving and polling for dirty state!
             if (this.isSaved()) {
                 return;
             }
