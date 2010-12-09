@@ -102,7 +102,6 @@ class PermissionTest(AppTestCase):
                                        content_type=settings.JSON_MIMETYPE)
         self.assertContains(response, '"statusText": "Saved"')
         self.assertContains(response,
-                            '"modified": {"__class__": "Date", ' +
                             '"isoformat": "2010-11-12T13:14:15Z')
         # Other authenticated users should have write permission.
         self.app_client.cookies[settings.SESSION_COOKIE_NAME] = \
