@@ -174,7 +174,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             dataType: 'json',
             error: onError,
             success: function(message) {
-                ns.listing = message;
+                ns.listing = message.items;
                 if (!ns.filename || ns.filename.substr(-1) == '/') {
                     showFiles();
                 }
