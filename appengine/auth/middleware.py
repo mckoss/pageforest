@@ -1,3 +1,5 @@
+import logging
+
 from urlparse import urlparse
 
 from django.conf import settings
@@ -137,11 +139,12 @@ class AuthMiddleware(object):
             if not referer_is_trusted(request):
                 return AccessDenied(request)
 
-        # Allow authentication attempts.
+        # Allow authentication attempts and channel api.
         if (request.path_info == '/app/admin/auth/challenge/'
             or request.path_info.startswith('/app/admin/auth/verify/')
             or request.path_info.startswith('/app/auth/set-session/')
-            or request.path_info.startswith('/app/auth/username/')):
+            or request.path_info.startswith('/app/auth/username/')
+            or request.path_info.startswith('/app/channel')):
             return
 
         # Let authenticated user create an app by uploading app.json.
@@ -153,12 +156,13 @@ class AuthMiddleware(object):
             return
 
         # Only allow GET and HEAD for app_id.pageforest.com.
+        # FIXME: Should be a more elegant method than this to handle
+        # reserved URL's.
         app_id_methods = ('GET', 'HEAD')
         if (request.subdomain is None and not request.app.is_www()
             and not request.path_info.startswith('/app/docs/')
             and not request.path_info.startswith('/app/mirror/')
             and not request.path_info.startswith('/app/post/')
-            and not request.path_info.startswith('/app/channel/')
             and request.method not in app_id_methods):
             return HttpResponseNotAllowed(app_id_methods)
 
