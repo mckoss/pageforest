@@ -297,11 +297,17 @@ def list_remote_files():
     Get the list of files on the remote server, with metadata.
     """
     url = options.root_url + '?method=list&depth=0'
+    options.listing = []
     if options.verbose:
         print("Listing: %s" % url)
     try:
         response = urllib2.urlopen(AuthRequest(url))
-        options.listing = json.loads(response.read(), object_hook=as_datetime)
+        result = json.loads(response.read(), object_hook=as_datetime)
+        # Change result of list command on 12/8/10
+        if 'items' in result:
+            options.listing = result['items']
+        else:
+            options.listing = result
     except urllib2.HTTPError, e:
         options.listing = {}
         if options.verbose:

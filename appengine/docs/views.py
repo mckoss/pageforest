@@ -20,6 +20,9 @@ from blobs.models import Blob
 from blobs.views import blob_list
 
 from utils.json import ModelEncoder, HttpJSONResponse
+from utils.shortcuts import get_int, get_bool
+
+MAX_LIST = 1000
 
 
 @login_required
@@ -49,26 +52,47 @@ def app_docs(request):
     ?owner=username
     ?readers=public
     ?writers=username
+
+    See blob_list for similar code...
+
+    REVIEW: Is this safe to add @jsonp - would need to only
+    return to approved domains or public documents?
     """
-    query = Doc.all()
+    try:
+        keys_only = get_bool(request.GET, 'keysonly', default=False)
+        limit = get_int(request.GET, 'limit', default=MAX_LIST)
+        limit = min(limit, MAX_LIST)
+    except ValueError, error:
+        return HttpJSONResponse({'statusText': error.message}, status=400)
+
+    query = Doc.all(keys_only=keys_only)
+
     query.filter('owner', request.user.get_username())
     key_name = request.app.get_app_id()
     query.filter('__key__ >=', db.Key.from_path('Doc', key_name + '/'))
     query.filter('__key__ <', db.Key.from_path('Doc', key_name + '0'))
-    docs = query.fetch(100)
+
+    if 'cursor' in request.GET:
+        query.with_cursor(request.GET['cursor'])
+
+    docs = query.fetch(limit)
     blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
                  for doc in docs]
+    # TODO: Cache sha1 and size in doc, so we don't have to fetch
+    # the blobs!
     blobs = db.get(blob_keys)
-    result = {}
+    items = {}
     for doc, blob in zip(docs, blobs):
-        info = {'json': True}
+        info = {'json': True,
+                'modified': doc.modified,
+                }
         if blob:
-            info['modified'] = max(doc.modified, blob.modified)
             info['sha1'] = blob.sha1
             info['size'] = len(blob.value)
-        else:
-            info['modified'] = doc.modified
-        result[doc.doc_id] = info
+        items[doc.doc_id] = info
+    result = {'items': items}
+    if (len(docs) == limit):
+        result['cursor'] = query.cursor()
     return HttpJSONResponse(result, status=None)
 
 
@@ -124,8 +148,10 @@ def doc_put(request, doc_id):
         parsed = json.loads(request.raw_post_data)
         request.doc.update_from_json(parsed, user=request.user)
     except ValueError, error:
-        # TODO: Format error as JSON.
-        return HttpResponse(unicode(error), mimetype='text/plain', status=400)
+        return HttpJSONResponse({'statusText': unicode(error)}, status=400)
+
+    # Should call update_tags as in blob_put
+
     request.doc.normalize_lists()
     request.doc.put()
     # Write JSON blob to blob storage.
@@ -153,7 +179,7 @@ def doc_put(request, doc_id):
 
 def doc_list(request, doc_id):
     """
-    List blobs inside a document, using the blob list interface.
+    List blobs inside the root document, using the blob list interface.
     """
     request.key_name = request.doc.key().name() + '/'
     return blob_list(request)

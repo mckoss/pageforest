@@ -112,5 +112,6 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
 
     def update_from_json(self, parsed, **kwargs):
         self.update_string_property(parsed, 'title', **kwargs)
+        # FIXME: update_tags should be used for tag handling as in blobs
         for key in ('tags', 'readers', 'writers'):
             self.update_string_list_property(parsed, key, **kwargs)

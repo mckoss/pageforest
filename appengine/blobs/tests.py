@@ -333,35 +333,38 @@ class TaggableTest(AppTestCase):
         response = self.app_client.get('/docs/mydoc/?method=list&tag=3-4')
         self.assertContains(response, """\
 {
-  "tagblob": {
-    "json": false,
-    "modified": {
-      "__class__": "Date",
-      "isoformat": "2010-11-12T13:14:15Z"
-    },
-    "sha1": "84e52dc7aeb405f3b4faa3937cfe430bcd36488d",
-    "size": 20,
-    "tags": [
-      "0",
-      "1",
-      "2",
-      "3-4"
-    ]
-  }
-}""")
+  "items": {
+    "tagblob": {
+      "json": false,
+      "modified": {
+        "__class__": "Date",
+        "isoformat": "2010-11-12T13:14:15Z"
+      },
+      "sha1": "84e52dc7aeb405f3b4faa3937cfe430bcd36488d",
+      "size": 20,
+      "tags": [
+        "0",
+        "1",
+        "2",
+        "3-4"
+      ]
+    }
+  }""")
         response = self.app_client.get(
             '/docs/mydoc/?method=list&tag=3-4&keysonly=true')
         self.assertContains(response, """\
 {
-  "tagblob": {}
-}""")
+  "items": {
+    "tagblob": {}
+  }""")
         response = self.app_client.get(
             '/docs/mydoc/?method=list&tag=2&keysonly=true')
         self.assertContains(response, """\
 {
-  "tagblob": {},
-  "tagblob2": {}
-}""")
+  "items": {
+    "tagblob": {},
+    "tagblob2": {}
+  }""")
 
     def test_max(self):
         """The maximum number of tags should be enforced in the back-end."""
@@ -500,16 +503,17 @@ class ListTest(AppTestCase):
             ]:
             self.assertContains(self.app_client.get(url), """\
 {
-  "one": {
-    "json": false,
-    "modified": {
-      "__class__": "Date",
-      "isoformat": "2010-11-12T13:14:15Z"
-    },
-    "sha1": "fe05bcdcdc4928012781a5f1a2a77cbb5398e106",
-    "size": 3
-  }
-}""")
+  "items": {
+    "one": {
+      "json": false,
+      "modified": {
+        "__class__": "Date",
+        "isoformat": "2010-11-12T13:14:15Z"
+      },
+      "sha1": "fe05bcdcdc4928012781a5f1a2a77cbb5398e106",
+      "size": 3
+    }
+  }""")
 
     def test_keys_only_1(self):
         """List method with depth=1 should return only direct children."""
@@ -520,8 +524,9 @@ class ListTest(AppTestCase):
             ]:
             self.assertContains(self.app_client.get(url), """\
 {
-  "one": {}
-}""")
+  "items": {
+    "one": {}
+  }""")
 
     def test_depth_2(self):
         """List method with depth=2 should return only two levels."""
@@ -555,7 +560,7 @@ class ListTest(AppTestCase):
             response = self.app_client.get(url)
             decoded = json.loads(response.content)
             self.assertEqual(
-                set(decoded.keys()),
+                set(decoded['items'].keys()),
                 set(('one', 'one/two', 'one/two/three', 'one/two/three/four')))
         # Check that LIST has populated memcache again.
         for key_name in four_keys:
@@ -571,11 +576,12 @@ class ListTest(AppTestCase):
             response = self.app_client.get(url)
             self.assertContains(response, """\
 {
-  "one": {},
-  "one/two": {},
-  "one/two/three": {},
-  "one/two/three/four": {}
-}""")
+  "items": {
+    "one": {},
+    "one/two": {},
+    "one/two/three": {},
+    "one/two/three/four": {}
+  }""")
 
     def test_relative(self):
         """List method with relative depth should show three but not four."""
@@ -599,19 +605,20 @@ class ListTest(AppTestCase):
             ]:
             self.assertContains(self.app_client.get(url), """\
 {
-  "1234": {
-    "json": true,
-    "modified": {
-      "__class__": "Date",
-      "isoformat": "2010-11-12T13:14:15Z"
+  "items": {
+    "1234": {
+      "json": true,
+      "modified": {
+        "__class__": "Date",
+        "isoformat": "2010-11-12T13:14:15Z"
+      },
+      "sha1": "aa8c41330509455ee5679d04ed41535d280d9a89",
+      "size": 4
     },
-    "sha1": "aa8c41330509455ee5679d04ed41535d280d9a89",
-    "size": 4
-  },
-  "MyDoc": {
-    "json": true,
-    "modified": {
-      "__class__": "Date",
+    "MyDoc": {
+      "json": true,
+      "modified": {
+        "__class__": "Date",
 """)
 
 
@@ -633,7 +640,7 @@ class PrefixTest(AppTestCase):
         url = '/docs/mydoc/?method=LIST&keysonly=true&prefix=pr'
         response = self.app_client.get(url)
         decoded = json.loads(response.content)
-        self.assertEqual(set(decoded.keys()),
+        self.assertEqual(set(decoded['items'].keys()),
                          set(['pre', 'prefix', 'pro']))
 
 
