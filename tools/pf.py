@@ -10,7 +10,8 @@ from datetime import datetime
 from fnmatch import fnmatch
 from optparse import OptionParser
 
-MAX_FILE_SIZE = 1024 * 1024
+# Swag at max content that can fit in a Blob
+MAX_FILE_SIZE = 1024 * 1024 - 200
 
 try:
     try:
@@ -26,6 +27,15 @@ PASSWORD_FILENAME = '.passwd'
 IGNORE_FILENAMES = ['pf.py', '.*', '*~', '#*#', '*.bak', '*.rej', '*.orig']
 COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
+
+
+def intcomma(value):
+    orig = str(value)
+    while True:
+        new = re.sub("^(-?\d+)(\d{3})", '\g<1>,\g<2>', orig)
+        if orig == new:
+            return new
+        orig = new
 
 
 def as_datetime(dct):
@@ -183,8 +193,8 @@ def upload_file(filename, url=None):
         url = options.root_url + urllib.quote(urlpath)
     data = open(filename, 'rb').read()
     if len(data) > MAX_FILE_SIZE:
-        print("Skipping %s - file too large (%d bytes)." %
-              (filename, len(data)))
+        print("Skipping %s - file too large (%s bytes)." %
+              (filename, intcomma(len(data))))
         return
     keyname = filename.replace(os.path.sep, '/')
     # Check if the remote file is already up-to-date.
@@ -196,7 +206,7 @@ def upload_file(filename, url=None):
             return
     # Upload file to Pageforest backend.
     if not options.quiet:
-        print("Uploading: %s (%d bytes)" % (url, len(data)))
+        print("Uploading: %s (%s bytes)" % (url, intcomma(len(data))))
     response = urllib2.urlopen(PutRequest(url, data))
     if options.verbose:
         print(response.read())
@@ -238,7 +248,7 @@ def download_file(filename, url=None):
     # Download file from Pageforest backend.
     if not options.quiet:
         if 'size' in info:
-            print("Downloading: %s (%d bytes)" % (url, info['size']))
+            print("Downloading: %s (%s bytes)" % (url, intcomma(info['size'])))
         else:
             print("Downloading: %s" % url)
     response = urllib2.urlopen(AuthRequest(url))
@@ -297,17 +307,25 @@ def list_remote_files():
     Get the list of files on the remote server, with metadata.
     """
     url = options.root_url + '?method=list&depth=0'
-    options.listing = []
+    options.listing = {}
     if options.verbose:
         print("Listing: %s" % url)
     try:
-        response = urllib2.urlopen(AuthRequest(url))
-        result = json.loads(response.read(), object_hook=as_datetime)
-        # Change result of list command on 12/8/10
-        if 'items' in result:
-            options.listing = result['items']
-        else:
-            options.listing = result
+        cursor_param = ""
+        while True:
+            response = urllib2.urlopen(AuthRequest(url + cursor_param))
+            result = json.loads(response.read(), object_hook=as_datetime)
+            # Change result of list command on 12/8/10
+            if 'items' in result:
+                options.listing.update(result['items'])
+                if 'cursor' not in result:
+                    break
+                cursor_param = "&cursor=%s" % result['cursor']
+                if options.verbose:
+                    print("Paging: %s" % cursor_param)
+            else:
+                options.listing = result
+                break
     except urllib2.HTTPError, e:
         options.listing = {}
         if options.verbose:
@@ -363,11 +381,11 @@ def put_command(args):
 
 
 def list_file(filename, metadata):
-    print '%s  %s  %s\t(%d bytes)' % (
+    print '%s  %s  %s\t(%s bytes)' % (
         metadata['sha1'],
         metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
         filename,
-        metadata['size'])
+        intcomma(metadata['size']))
 
 
 def vacuum_command(args):
@@ -389,7 +407,8 @@ def vacuum_command(args):
     if not selected:
         return
     answer = raw_input(
-        "Are you sure you want to DELETE %d remote files? " % len(selected))
+        "Are you sure you want to DELETE %s remote files? " %
+        intcomma(len(selected)))
     if answer.lower().startswith('y'):
         for filename in selected:
             delete_file(filename)
