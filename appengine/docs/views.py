@@ -19,7 +19,7 @@ from docs.models import Doc
 from blobs.models import Blob
 from blobs.views import blob_list
 
-from utils.json import ModelEncoder
+from utils.json import ModelEncoder, HttpJSONResponse
 
 
 @login_required
@@ -69,9 +69,7 @@ def app_docs(request):
         else:
             info['modified'] = doc.modified
         result[doc.doc_id] = info
-    serialized = json.dumps(result, sort_keys=True, indent=2,
-                            separators=(',', ': '), cls=ModelEncoder)
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse(result, status=None)
 
 
 @jsonp
@@ -133,7 +131,10 @@ def doc_put(request, doc_id):
     # Write JSON blob to blob storage.
     if 'blob' in parsed:
         key_name = request.doc.key().name() + '/'
-        value = json.dumps(parsed['blob'], sort_keys=True)
+        # Smallest format - and canonical ordering
+        value = json.dumps(parsed['blob'],
+                           separators=(',', ':'),
+                           sort_keys=True)
         blob = Blob(key_name=key_name, value=value)
         blob.put()
         dispatch_subscriptions(key_name, 'PUT',
@@ -144,13 +145,10 @@ def doc_put(request, doc_id):
     # TODO: Note that modifying only doc meta-data does not trigger
     # a channel subscription update.  Should it?
 
-    json_result = json.dumps({
-            'status': 200,
-            'statusText': "Saved",
-            'modified': request.doc.modified,
-            }, cls=ModelEncoder)
-
-    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse({
+        'statusText': "Saved",
+        'modified': request.doc.modified,
+        })
 
 
 def doc_list(request, doc_id):

@@ -439,7 +439,7 @@ class JsonArrayTest(AppTestCase):
             content_type="text/plain")
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 3')
-        self.assertContent('/docs/mydoc/chat', '["hi", "howdy", "bye"]')
+        self.assertContent('/docs/mydoc/chat', '["hi","howdy","bye"]')
 
     def test_push_chunk(self):
         """Test that push creates a new chunk if over 600 bytes."""
@@ -454,10 +454,10 @@ class JsonArrayTest(AppTestCase):
                            '["howdy", "%s"]' % big_string)
         chat = Blob.get_by_key_name('myapp/mydoc/chat/')
         self.assertEqual(db.Model.__getattribute__(chat, 'value'), None)
-        self.assertEqual(chat.sha1, 'b8ffe72b2ebd15f3329e7f31ea89a1b2c7153838')
+        self.assertEqual(chat.sha1, 'edaf212265859b15da1710abd7fd610643066271')
         chunk = Chunk.get_by_key_name(chat.sha1)
         self.assertEqual(chunk.value,
-                         '["hello", "hi", "howdy", "%s"]' % big_string)
+                         '["hello","hi","howdy","%s"]' % big_string)
         # Push again to check that a new chunk is created.
         response = self.app_client.post(
             '/docs/mydoc/chat?method=PUSH',
@@ -473,9 +473,9 @@ class JsonArrayTest(AppTestCase):
         self.assertContains(response, '"statusText": "Pushed"')
         self.assertContains(response, '"newLength": 2')
         chat = Blob.get_by_key_name('myapp/mydoc/chat/')
-        self.assertEqual(chat.sha1, '55b06adde3decd5c6e3559c5d9602d9fc839d6aa')
+        self.assertEqual(chat.sha1, '4403b0823b3354eac496a2e462b2dd0a7d112739')
         self.assertEqual(db.Model.__getattribute__(chat, 'value'),
-                         '["hey", "ho"]')
+                         '["hey","ho"]')
         self.assertFalse(Chunk.get_by_key_name(chat.sha1))
 
 

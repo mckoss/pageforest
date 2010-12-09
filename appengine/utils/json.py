@@ -77,16 +77,16 @@ def assert_string_list(key, value):
             raise ValueError("Expected string values inside %s list." % key)
 
 
-# FIXME: This function should be used in more places where we are returning
-# well-known JSON.
 class HttpJSONResponse(HttpResponse):
-    def __init__(self, json_dict=None, status=None):
+    def __init__(self, json_dict=None, status=200):
         if json_dict is None:
             json_dict = {}
-        if status is None:
-            status = 200
-        json_dict['status'] = status
-        content = json.dumps(json_dict, sort_keys=True, indent=2)
+        if status is not None:
+            json_dict['status'] = status
+        # We don't want extra spaces after commas since we and
+        # embedding newlines there, anyway.
+        content = json.dumps(json_dict, sort_keys=True, indent=2,
+                             separators=(',', ': '), cls=ModelEncoder)
         super(HttpJSONResponse, self).__init__(content,
             mimetype=settings.JSON_MIMETYPE_CS,
             status=status)

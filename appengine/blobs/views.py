@@ -18,7 +18,7 @@ from utils.decorators import jsonp, run_in_transaction, method_required, \
     no_cache
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
-from utils.json import ModelEncoder
+from utils.json import ModelEncoder, HttpJSONResponse
 from utils.shortcuts import render_to_response, lookup_or_404, \
     get_int, get_bool
 from utils.channel import dispatch_subscriptions
@@ -168,6 +168,9 @@ def blob_list(request):
     index.html (depth 1)
     images/gradient.jpg (depth 2)
     but not style/css/main.css (depth 3)
+
+    REVIEW: For large numbers of files, only depth=0 and depth=1
+    make and sense.  But we also need paging mechanism.
     """
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)
@@ -231,12 +234,10 @@ def blob_list(request):
             'json': True,
             'modified': request.app.modified,
             }
-    # Generate pretty JSON output.
-    serialized = json.dumps(result, sort_keys=True, indent=2,
-                            separators=(',', ': '), cls=ModelEncoder)
+
     # REVIEW: Should we add an ETag here - and return not modifed
     # if the list is unchanged?
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse(result, status=None)
 
 
 @method_required('GET')
@@ -288,9 +289,9 @@ def blob_put(request):
                            {'sha1': blob.sha1,
                             'size': blob.size,
                             'modified': blob.modified})
-    response = HttpResponse('{"status": 200, "statusText": "Saved", ' +
-                            '"sha1": %s}' % blob.get_etag(),
-                            mimetype=settings.JSON_MIMETYPE_CS)
+    response = HttpJSONResponse({
+            'statusText': "Saved",
+            'sha1': blob.sha1})
     response['Last-Modified'] = http_datetime(blob.modified)
     return response
 
@@ -316,7 +317,7 @@ def json_push(old_value, value, max_length):
     array.append(value)
     array = array[-max_length:]
     new_length = len(array)
-    new_value = json.dumps(array)
+    new_value = json.dumps(array, separators=(',', ':'))
     new_sha1 = hashlib.sha1(new_value).hexdigest()
     # Create a new chunk if necessary.
     if len(new_value) > MAX_INTERNAL_SIZE:
@@ -386,16 +387,16 @@ def blob_push(request):
         success, blob = atomic_update(
             request.key_name, old_sha1, new_sha1, new_value)
         if success:
-            return HttpResponse(json.dumps({
-                        "status": 200,
-                        "statusText": "Pushed",
-                        "newLength": new_length,
-                        "newSha1": new_sha1,
-                        }), mimetype=settings.JSON_MIMETYPE_CS)
+            return HttpJSONResponse({
+                    "statusText": "Pushed",
+                    "newLength": new_length,
+                    "newSha1": new_sha1,
+                    })
     else:
-        return HttpResponse(json.dumps({"status": 503, "statusText":
-            "Too many concurrent updates, giving up after %d push attempts." %
-            MAX_PUSH_ATTEMPTS}), mimetype=settings.JSON_MIMETYPE_CS)
+        return HttpJSONResponse({
+                "statusText":
+                    "Failed to update after %d push attempts." %
+                MAX_PUSH_ATTEMPTS}, status=503)
 
 
 slice_etag_re = re.compile(r'^"(.*)\[.*\]"$')
