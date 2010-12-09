@@ -190,8 +190,8 @@ class SignInTest(AppTestCase):
         response = self.www_client.post(SIGN_IN, {
                 'username': 'peter',
                 'password': self.peter.password})
-        self.assertContains(response,
-                            '"status": 200, "statusText": "Authenticated"')
+        self.assertContains(response, '"status": 200')
+        self.assertContains(response, '"statusText": "Authenticated"')
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))
         self.assertEqual(cookie['max-age'], 86400)
@@ -255,8 +255,8 @@ class AppSignInTest(AppTestCase):
                                  {'username': 'peter',
                                   'password': self.peter.password,
                                   'app_auth': 'checked'})
-        self.assertContains(response,
-                            '"status": 200, "statusText": "Authenticated"')
+        self.assertContains(response, '"status": 200')
+        self.assertContains(response, '"statusText": "Authenticated"')
         # Expect a first-party session cookie to www.pageforest.com
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|12'))

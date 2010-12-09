@@ -125,6 +125,10 @@ def blob_get(request):
     mimetype = guess_mimetype(request.key_name.rstrip('/'))
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
+    if mimetype.startswith('text') or \
+            mimetype == settings.JSON_MIMETYPE:
+        mimetype += '; charset=utf-8'
+    logging.info("mimetype: %s" % mimetype)
     if not hasattr(request, 'no_cache') and \
         etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         response = HttpResponseNotModified(mimetype=mimetype)
@@ -232,7 +236,7 @@ def blob_list(request):
                             separators=(',', ': '), cls=ModelEncoder)
     # REVIEW: Should we add an ETag here - and return not modifed
     # if the list is unchanged?
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)
 
 
 @method_required('GET')
@@ -286,7 +290,7 @@ def blob_put(request):
                             'modified': blob.modified})
     response = HttpResponse('{"status": 200, "statusText": "Saved", ' +
                             '"sha1": %s}' % blob.get_etag(),
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype=settings.JSON_MIMETYPE_CS)
     response['Last-Modified'] = http_datetime(blob.modified)
     return response
 
@@ -298,7 +302,7 @@ def blob_delete(request):
     blob = lookup_or_404(Blob, request.key_name)
     blob.delete()
     return HttpResponse('{"status": 200, "statusText": "Deleted"}',
-                        mimetype=settings.JSON_MIMETYPE)
+                        mimetype=settings.JSON_MIMETYPE_CS)
 
 
 def json_push(old_value, value, max_length):
@@ -387,11 +391,11 @@ def blob_push(request):
                         "statusText": "Pushed",
                         "newLength": new_length,
                         "newSha1": new_sha1,
-                        }), mimetype=settings.JSON_MIMETYPE)
+                        }), mimetype=settings.JSON_MIMETYPE_CS)
     else:
         return HttpResponse(json.dumps({"status": 503, "statusText":
             "Too many concurrent updates, giving up after %d push attempts." %
-            MAX_PUSH_ATTEMPTS}), mimetype=settings.JSON_MIMETYPE)
+            MAX_PUSH_ATTEMPTS}), mimetype=settings.JSON_MIMETYPE_CS)
 
 
 slice_etag_re = re.compile(r'^"(.*)\[.*\]"$')
@@ -428,6 +432,6 @@ def blob_slice(request):
 
     etag = '"%s[%s:%s]"' % (response['Etag'][1:-1], start or '', end or '')
     if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
-        response = HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE)
+        response = HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE_CS)
     response['ETag'] = etag
     return response

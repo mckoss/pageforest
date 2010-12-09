@@ -44,4 +44,4 @@ def mirror_list(request):
     # Generate pretty JSON output.
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)

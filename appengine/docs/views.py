@@ -71,7 +71,7 @@ def app_docs(request):
         result[doc.doc_id] = info
     serialized = json.dumps(result, sort_keys=True, indent=2,
                             separators=(',', ': '), cls=ModelEncoder)
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)
 
 
 @jsonp
@@ -105,11 +105,11 @@ def doc_get(request, doc_id):
     # Generate Last-Modified header and compare with If-Modified-Since.
     last_modified = http_datetime(modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
-        return HttpResponseNotModified()
+        return HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE_CS)
     # Generate pretty JSON output.
     result = request.doc.to_json(exclude=settings.HIDDEN_PROPERTIES,
                                  extra=extra)
-    response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE)
+    response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE_CS)
     response['Last-Modified'] = last_modified
     return response
 
@@ -150,7 +150,7 @@ def doc_put(request, doc_id):
             'modified': request.doc.modified,
             }, cls=ModelEncoder)
 
-    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE_CS)
 
 
 def doc_list(request, doc_id):

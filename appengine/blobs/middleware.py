@@ -58,6 +58,6 @@ class PostMiddleware(object):
             return response
         if request.path_info not in ['/app/post/', '/app/admin/post/']:
             return response
-        if response['Content-Type'] == settings.JSON_MIMETYPE:
+        if response['Content-Type'] == settings.JSON_MIMETYPE_CS:
             response['Content-Type'] = 'text/plain'
         return response

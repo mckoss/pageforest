@@ -278,26 +278,27 @@ class MimeTest(AppTestCase):
         """Test that the mime type is guessed correctly for HTML."""
         response = self.put_and_get('/index.html')
         self.assertContains(response, 'data')
-        self.assertEqual(response['Content-Type'], 'text/html')
+        self.assertTrue(response['Content-Type'].startswith('text/html'))
         # Try again with the top-level alias for index.html.
         response = self.admin_client.get('/')
         self.assertContains(response, 'data')
-        self.assertEqual(response['Content-Type'], 'text/html')
+        self.assertTrue(response['Content-Type'].startswith('text/html'))
 
     def test_css(self):
         """Test that the mime type is guessed correctly for CSS."""
         response = self.put_and_get('/styles/css/style.css')
-        self.assertEqual(response['Content-Type'], 'text/css')
+        self.assertTrue(response['Content-Type'].startswith('text/css'))
 
     def test_js(self):
         """Test that the mime type is guessed correctly for JS."""
         response = self.put_and_get('/scripts/test.js')
-        self.assertEqual(response['Content-Type'], 'application/javascript')
+        self.assertTrue(response['Content-Type'].
+                        startswith('application/javascript'))
 
     def test_json(self):
         """Test that the mime type is guessed correctly for JSON."""
         response = self.put_and_get('/extra/test.json')
-        self.assertEqual(response['Content-Type'], 'application/json')
+        self.assertEqual(response['Content-Type'], settings.JSON_MIMETYPE_CS)
 
     def test_jpg(self):
         """Test that the mime type is guessed correctly for JPG."""

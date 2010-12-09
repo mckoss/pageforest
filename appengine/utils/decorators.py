@@ -95,10 +95,10 @@ def jsonp(func):
                 "message": content,
                 }, sort_keys=True, indent=4)
             response.status_code = 200
-            response['Content-Type'] = settings.JSON_MIMETYPE
+            response['Content-Type'] = settings.JSON_MIMETYPE_CS
 
         # Encode arbitrary strings as valid JSON.
-        if response['Content-Type'] != settings.JSON_MIMETYPE:
+        if response['Content-Type'] != settings.JSON_MIMETYPE_CS:
             # Remove trailing newlines.
             content = content.rstrip('\n')
             content = json.dumps(content)
