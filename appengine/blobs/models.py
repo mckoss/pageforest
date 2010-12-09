@@ -37,7 +37,7 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
     sha1 = db.StringProperty()
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
-    # TODO: Add owner
+    # TODO: Add owner - Ownable mixin with security checks?
 
     # Schema version for Migratable mixin:
     current_schema = 3
