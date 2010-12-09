@@ -88,6 +88,7 @@ APPEND_SLASH = False
 
 # Content-Type header for JSON data.
 JSON_MIMETYPE = 'application/json'
+JSON_MIMETYPE_CS = JSON_MIMETYPE + '; charset=utf-8'
 
 # Allowed formats for pageforest identifiers:
 USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]{,30}[a-zA-Z0-9]"

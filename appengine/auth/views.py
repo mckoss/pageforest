@@ -79,7 +79,7 @@ def email_verification(request, verification=None):
             and 'resend' in request.POST and request.user):
             send_email_verification(request, request.user)
             return HttpResponse('{"resent": true}',
-                                mimetype=settings.JSON_MIMETYPE)
+                                mimetype=settings.JSON_MIMETYPE_CS)
         # Show verification status for the currently sign-in in user.
         user = request.user
         if user is None:
@@ -111,16 +111,16 @@ def sign_up(request):
     # Return form errors as JSON.
     if not form.is_valid():
         return HttpResponse(form.errors_json(),
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype=settings.JSON_MIMETYPE_CS)
     # Return empty errors object for validate.
     if 'validate' in request.POST:
-        return HttpResponse('{}', mimetype=settings.JSON_MIMETYPE)
+        return HttpResponse('{}', mimetype=settings.JSON_MIMETYPE_CS)
     # Create a new user, generate a session key, return success.
     assert request.method == 'POST'
     user = form.save()
     send_email_verification(request, user)
     response = HttpResponse('{"status": 200, "statusText": "Registered"}',
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype=settings.JSON_MIMETYPE_CS)
     response.set_cookie(settings.SESSION_COOKIE_NAME,
                         user.generate_session_key(request.app),
                         max_age=settings.SESSION_COOKIE_AGE)
@@ -177,7 +177,7 @@ def sign_in(request, app_id=None):
             form.errors['password'] = form.errors['__all__']
             del form.errors['__all__']
         return HttpResponse(form.errors_json(),
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype=settings.JSON_MIMETYPE_CS)
 
     user = form.cleaned_data['user']
     json_dict = {'status': 200,

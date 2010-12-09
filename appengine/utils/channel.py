@@ -33,7 +33,7 @@ def get_channel(request, extra):
     return HttpResponse(json.dumps(channel_data,
                                    indent=2,
                                    cls=ModelEncoder),
-                        mimetype=settings.JSON_MIMETYPE)
+                        mimetype=settings.JSON_MIMETYPE_CS)
 
 
 @jsonp
@@ -50,7 +50,7 @@ def subscriptions(request, extra):
         return HttpResponse(json.dumps(channel_data['subscriptions'],
                                        indent=2,
                                        cls=ModelEncoder),
-                            mimetype=settings.JSON_MIMETYPE)
+                            mimetype=settings.JSON_MIMETYPE_CS)
 
     assert request.method == 'PUT'
 
@@ -80,7 +80,7 @@ def subscriptions(request, extra):
             'subscriptions': channel_data['subscriptions']
             }, cls=ModelEncoder)
 
-    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE_CS)
 
 
 def add_subscription(key, session_key, expires):

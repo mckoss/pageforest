@@ -102,7 +102,7 @@ def app_json_get(request):
     content = request.app.to_json(
         exclude=settings.HIDDEN_PROPERTIES + ('created', 'modified'),
         extra={"application": request.app.get_app_id()})
-    return HttpResponse(content, mimetype=settings.JSON_MIMETYPE)
+    return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
 
 def app_json_put(request):
@@ -132,4 +132,4 @@ def app_json_put(request):
     request.app.normalize_lists()
     request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
-                        mimetype=settings.JSON_MIMETYPE)
+                        mimetype=settings.JSON_MIMETYPE_CS)
