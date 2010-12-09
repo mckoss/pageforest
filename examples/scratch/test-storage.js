@@ -203,8 +203,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     // List of documents
                     client.storage.list(undefined, undefined, {},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            ut.assertType(result['test-storage'], 'object');
+                            ut.assertType(result.items, 'object');
+                            ut.assertType(result.items['test-storage'],
+                                          'object');
                             ut.nextFn();
                         });
                 },
@@ -213,9 +214,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     // List of blobs
                     client.storage.list('test-storage', undefined, {},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            var dir1 = result['test-blob1'];
-                            var dir2 = result['test-blob2'];
+                            ut.assertType(result.items, 'object');
+                            var dir1 = result.items['test-blob1'];
+                            var dir2 = result.items['test-blob2'];
                             ut.assertType(dir1, 'object');
                             ut.assertType(dir2, 'object');
 
@@ -236,9 +237,9 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', undefined,
                                         {keysonly: true},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            ut.assertEq(result['test-blob1'], {});
-                            ut.assertEq(result['test-blob2'], {});
+                            ut.assertType(result.items, 'object');
+                            ut.assertEq(result.items['test-blob1'], {});
+                            ut.assertEq(result.items['test-blob2'], {});
                             ut.nextFn();
                         });
                 }
@@ -271,10 +272,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', undefined,
                                         {prefix: 'test-b'},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            ut.assertEq(base.keys(result).length, 2);
-                            ut.assert(result.hasOwnProperty('test-blob1'));
-                            ut.assert(result.hasOwnProperty('test-blob2'));
+                            var items = result.items;
+                            ut.assertType(items, 'object');
+                            ut.assertEq(base.keys(items).length, 2);
+                            ut.assert(items.hasOwnProperty('test-blob1'));
+                            ut.assert(items.hasOwnProperty('test-blob2'));
                             ut.nextFn();
                         });
                 },
@@ -283,13 +285,14 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', undefined,
                                         {tag: 'tag2'},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            ut.assertEq(base.keys(result).length, 2);
-                            ut.assert(result.hasOwnProperty('test-tag1'));
-                            ut.assert(result.hasOwnProperty('test-tag2'));
-                            ut.assertEq(result['test-tag1'].tags,
+                            var items = result.items;
+                            ut.assertType(items, 'object');
+                            ut.assertEq(base.keys(items).length, 2);
+                            ut.assert(items.hasOwnProperty('test-tag1'));
+                            ut.assert(items.hasOwnProperty('test-tag2'));
+                            ut.assertEq(items['test-tag1'].tags,
                                         ['tag1', 'tag2']);
-                            ut.assertEq(result['test-tag2'].tags, ['tag2']);
+                            ut.assertEq(items['test-tag2'].tags, ['tag2']);
                             ut.nextFn();
                         });
                 },
@@ -298,9 +301,10 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.list('test-storage', undefined,
                                         {tag: 'tag1'},
                         function (result) {
-                            ut.assertType(result, 'object');
-                            ut.assertEq(base.keys(result).length, 1);
-                            ut.assert(result.hasOwnProperty('test-tag1'));
+                            var items = result.items;
+                            ut.assertType(items, 'object');
+                            ut.assertEq(base.keys(items).length, 1);
+                            ut.assert(items.hasOwnProperty('test-tag1'));
                             ut.nextFn();
                         });
                 }
@@ -337,9 +341,10 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.list('test-storage', 'root', {},
                         function (result) {
-                            ut.assertEq(base.keys(result).length, 2);
-                            ut.assert(result.hasOwnProperty('child1'));
-                            ut.assert(result.hasOwnProperty('child2'));
+                            var items = result.items;
+                            ut.assertEq(base.keys(items).length, 2);
+                            ut.assert(items.hasOwnProperty('child1'));
+                            ut.assert(items.hasOwnProperty('child2'));
                             ut.nextFn();
                         });
                 },
@@ -347,9 +352,10 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.list('test-storage', 'root', {depth: 1},
                         function (result) {
-                            ut.assertEq(base.keys(result).length, 2);
-                            ut.assert(result.hasOwnProperty('child1'));
-                            ut.assert(result.hasOwnProperty('child2'));
+                            var items = result.items;
+                            ut.assertEq(base.keys(items).length, 2);
+                            ut.assert(items.hasOwnProperty('child1'));
+                            ut.assert(items.hasOwnProperty('child2'));
                             ut.nextFn();
                         });
                 },
@@ -357,10 +363,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.list('test-storage', 'root', {depth: 0},
                         function (result) {
-                            ut.assertEq(base.keys(result).length, 3);
-                            ut.assert(result.hasOwnProperty('child1'));
-                            ut.assert(result.hasOwnProperty('child2'));
-                            ut.assert(result.hasOwnProperty('child1/child3'));
+                            var items = result.items;
+                            ut.assertEq(base.keys(items).length, 3);
+                            ut.assert(items.hasOwnProperty('child1'));
+                            ut.assert(items.hasOwnProperty('child2'));
+                            ut.assert(items.hasOwnProperty('child1/child3'));
                             ut.nextFn();
                         });
                 }

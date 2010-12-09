@@ -29,6 +29,7 @@ from apps.views import app_json_get
 
 ROOT_METHODS = ('GET', 'HEAD', 'LIST')
 MAX_PUSH_ATTEMPTS = 5
+MAX_LIST = 1000
 
 
 @jsonp
@@ -128,7 +129,6 @@ def blob_get(request):
     if mimetype.startswith('text') or \
             mimetype == settings.JSON_MIMETYPE:
         mimetype += '; charset=utf-8'
-    logging.info("mimetype: %s" % mimetype)
     if not hasattr(request, 'no_cache') and \
         etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
         response = HttpResponseNotModified(mimetype=mimetype)
@@ -174,10 +174,14 @@ def blob_list(request):
     """
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)
+        limit = get_int(request.GET, 'limit', default=MAX_LIST)
+        limit = min(limit, MAX_LIST)
         depth = get_int(request.GET, 'depth', default=1)
     except ValueError, error:
-        return HttpResponseBadRequest(error.message, 'text/plain')
+        return HttpJSONResponse({'statusText': error.message}, status=400)
+
     query = Blob.all(keys_only=keys_only)
+
     if 'tag' in request.GET:
         query.filter('tags', urllib.unquote_plus(request.GET['tag']))
         depth = 0
@@ -187,15 +191,15 @@ def blob_list(request):
         query.filter('directory', request.key_name)
     else:
         prefix_filter(query, 'Blob', request.key_name, greater='>')
+
+    if 'cursor' in request.GET:
+        query.with_cursor(request.GET['cursor'])
     strip_levels = request.key_name.count('/')
-    result = {}
-    # FIXME: This fetches only 1000 blobs with one datastore query.
-    # With depth=2, deeply nested blobs will be ignored, so we may
-    # return only few results even if there are more at depth 1 and 2.
-    # To solve this, recursively run a datastore query for each child
-    # up to the requested level. However, that may be very expensive.
+
+    blobs = {}
     memcache_mapping = {}
-    for blob in query.fetch(1000):
+    raw_results = query.fetch(limit)
+    for blob in raw_results:
         if keys_only:
             key = blob
         else:
@@ -207,20 +211,22 @@ def blob_list(request):
             continue
         filename = '/'.join(parts)
         if keys_only:
-            result[filename] = {}
+            blobs[filename] = {}
             continue
-        result[filename] = {
+        blobs[filename] = {
             'size': blob.size,
             'sha1': blob.sha1,
             'json': blob.valid_json,
             'modified': blob.modified,
             }
         if blob.tags:
-            result[filename]['tags'] = blob.tags
-        # Save small blobs directly to memcache.
+            blobs[filename]['tags'] = blob.tags
+        # Might as well fill memcache with the small blobs we've read.
         if blob._value is None or len(blob._value) <= MAX_INTERNAL_SIZE:
             memcache_mapping[blob.get_cache_key()] = blob.to_protobuf()
+
     memcache.set_multi(memcache_mapping)
+
     # Add app.json at the top level of a Pageforest application.
     if (request.key_name == 'apps/' + request.app.get_app_id() + '/'
         and 'app.json'.startswith(request.GET.get('prefix', ''))
@@ -228,7 +234,7 @@ def blob_list(request):
         response = app_json_get(request)
         assert response.status_code == 200
         app_json = response.content
-        result['app.json'] = {
+        blobs['app.json'] = {
             'size': len(app_json),
             'sha1': hashlib.sha1(app_json).hexdigest(),
             'json': True,
@@ -237,6 +243,13 @@ def blob_list(request):
 
     # REVIEW: Should we add an ETag here - and return not modifed
     # if the list is unchanged?
+    result = {'items': blobs}
+
+    # Only return the cursor, if there is some hope of getting additional
+    # results.
+    if len(raw_results) == limit:
+        result['cursor'] = query.cursor()
+
     return HttpJSONResponse(result, status=None)
 
 
