@@ -207,7 +207,7 @@ def upload_file(filename, url=None):
     # Upload file to Pageforest backend.
     if not options.quiet:
         print("Uploading: %s (%s bytes)" % (url, intcomma(len(data))))
-    response = urllib2.urlopen(PutRequest(url, data))
+    response = urllib2.urlopen(PutRequest(url), data)
     if options.verbose:
         print(response.read())
 
