@@ -83,6 +83,22 @@ def main():
     """
 
     global options
+    parser = OptionParser(
+        usage="%prog [options]")
+    parser.add_option('-v', '--verbose', action='store_true',
+        help="run all checks with more output")
+    parser.add_option('-p', '--prompt', action='store_true',
+        help="ask before running any checks")
+    parser.add_option('-n', '--nose', action='store_true',
+        help="add unittest options --with-xunit --with-doctest")
+    for name in ('pylint', 'jslint-tools', 'jslint-static', 'jslint-examples',
+                 'unittest', 'jstest', 'pep8', 'whitespace'):
+        parser.add_option('--' + name, action='callback',
+                          callback=part_callback,
+                          help="run only selected checks")
+    (options, args) = parser.parse_args()
+    unit_level = options.verbose and '-v2' or '-v0'
+
     all_checks = [
         ('pylint',
          "python %s -e %s %s" %
@@ -104,8 +120,8 @@ def main():
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.root_dir, 'examples'))),
 
-        ('unittest', "python2.5 %s test -v0" %
-         (os.path.join(pftool.app_dir, 'manage.py'))),
+        ('unittest', "python2.5 %s test %s" %
+         (os.path.join(pftool.app_dir, 'manage.py'), unit_level)),
 
         ('jstest',
          "python %s -q -a" % pftool.tool_path('jstest.py')),
@@ -117,19 +133,6 @@ def main():
          (pftool.tool_path('whitespace.py'), pftool.root_dir)),
         ]
 
-    parser = OptionParser(
-        usage="%prog [options]")
-    parser.add_option('-v', '--verbose', action='store_true',
-        help="run all checks with more output")
-    parser.add_option('-p', '--prompt', action='store_true',
-        help="ask before running any checks")
-    parser.add_option('-n', '--nose', action='store_true',
-        help="add unittest options --with-xunit --with-doctest")
-    for name, command in all_checks:
-        parser.add_option('--' + name, action='callback',
-                          callback=part_callback,
-                          help="run only selected checks")
-    (options, args) = parser.parse_args()
     if not hasattr(options, 'checks'):
         options.checks = [name for name, command in all_checks]
 
