@@ -4,10 +4,13 @@ import re
 import os
 import hmac
 import hashlib
+import urllib
 import urllib2
 from datetime import datetime
 from fnmatch import fnmatch
 from optparse import OptionParser
+
+MAX_FILE_SIZE = 1024 * 1024
 
 try:
     try:
@@ -177,8 +180,12 @@ def upload_file(filename, url=None):
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
             urlpath = urlpath[2:]
-        url = options.root_url + urlpath
+        url = options.root_url + urllib.quote(urlpath)
     data = open(filename, 'rb').read()
+    if len(data) > MAX_FILE_SIZE:
+        print("Skipping %s - file too large (%d bytes)." %
+              (filename, len(data)))
+        return
     keyname = filename.replace(os.path.sep, '/')
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and keyname in options.listing:

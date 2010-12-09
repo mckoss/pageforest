@@ -1,4 +1,5 @@
 from hashlib import sha1
+import logging
 
 from google.appengine.ext import db
 
