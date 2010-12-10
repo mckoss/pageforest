@@ -2487,6 +2487,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         // Save a document to the Pageforest store
+        // TODO: Add Tags support here.
         putDoc: function(docid, json, fnSuccess) {
             if (!this.validateArgs('putDoc', docid, undefined, json,
                                    undefined, fnSuccess)) {
@@ -2890,6 +2891,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         save: function (json, docid) {
+            // BUG: If called by client to force a save - then this
+            // is a no-op - but the doc might be dirty - esp if
+            // we are not autosaving and polling for dirty state!
             if (this.isSaved()) {
                 return;
             }
