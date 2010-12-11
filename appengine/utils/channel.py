@@ -77,7 +77,7 @@ def subscriptions(request, extra):
     json_result = json.dumps({
             'status': 200,
             'statusText': "Saved",
-            'subscriptions': channel_data['subscriptions']
+            'subscriptions': channel_data['subscriptions'],
             }, cls=ModelEncoder)
 
     return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE_CS)
