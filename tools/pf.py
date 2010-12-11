@@ -80,19 +80,19 @@ def hmac_sha1(key, message):
 def sign_in():
     url = options.root_url + 'auth/challenge'
     if options.verbose:
-        print("Getting %s" % url)
+        print "Getting %s" % url
     challenge = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
-        print("Challenge: %s" % challenge)
+        print "Challenge: %s" % challenge
     userpass = hmac_sha1(options.password, options.username.lower())
     signature = hmac_sha1(userpass, challenge)
     reply = '|'.join((options.username, challenge, signature))
     url = options.root_url + 'auth/verify/' + reply
     if options.verbose:
-        print("Response: %s" % url)
+        print "Response: %s" % url
     session_key = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
-        print("Session key: %s" % session_key)
+        print "Session key: %s" % session_key
     return session_key
 
 
@@ -106,7 +106,7 @@ def load_application():
         parsed = {}
     if 'application' in parsed:
         application = parsed['application']
-        print("Application: " + application)
+        print "Application: " + application
     else:
         application = raw_input("Application: ")
     return application
@@ -197,8 +197,8 @@ def upload_file(filename, url=None):
         url = options.root_url + urllib.quote(urlpath)
     data = open(filename, 'rb').read()
     if len(data) > MAX_FILE_SIZE:
-        print("Skipping %s - file too large (%s bytes)." %
-              (filename, intcomma(len(data))))
+        print "Skipping %s - file too large (%s bytes)." % \
+              (filename, intcomma(len(data)))
         return
     keyname = filename.replace(os.path.sep, '/')
     # Check if the remote file is already up-to-date.
@@ -206,14 +206,14 @@ def upload_file(filename, url=None):
         sha1 = hashlib.sha1(data).hexdigest()
         if options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
-                print("Already up-to-date: %s" % filename)
+                print "Already up-to-date: %s" % filename
             return
     # Upload file to Pageforest backend.
     if not options.quiet:
-        print("Uploading: %s (%s bytes)" % (url, intcomma(len(data))))
+        print "Uploading: %s (%s bytes)" % (url, intcomma(len(data)))
     response = urllib2.urlopen(PutRequest(url), data)
     if options.verbose:
-        print(response.read())
+        print response.read()
 
 
 def delete_file(filename, url=None):
@@ -226,10 +226,10 @@ def delete_file(filename, url=None):
             urlpath = urlpath[2:]
         url = options.root_url + urlpath
     if not options.quiet:
-        print("Deleting: %s" % url)
+        print "Deleting: %s" % url
     response = urllib2.urlopen(DeleteRequest(url))
     if options.verbose:
-        print(response.read())
+        print response.read()
 
 
 def download_file(filename, url=None):
@@ -247,14 +247,14 @@ def download_file(filename, url=None):
         info = options.listing[filename]
         if info['sha1'] == sha1_file(filename):
             if options.verbose:
-                print("Already up-to-date: %s" % filename)
+                print "Already up-to-date: %s" % filename
             return
     # Download file from Pageforest backend.
     if not options.quiet:
         if 'size' in info:
-            print("Downloading: %s (%s bytes)" % (url, intcomma(info['size'])))
+            print "Downloading: %s (%s bytes)" % (url, intcomma(info['size']))
         else:
-            print("Downloading: %s" % url)
+            print "Downloading: %s" % url
     response = urllib2.urlopen(AuthRequest(url))
     outfile = open(filename, 'wb')
     outfile.write(response.read())
@@ -324,13 +324,13 @@ def list_remote_files():
                     break
                 cursor_param = "&cursor=%s" % result['cursor']
                 if options.verbose:
-                    print("Paging: %s" % cursor_param)
+                    print "Paging: %s" % cursor_param
             else:
                 options.listing = result
                 break
     except urllib2.HTTPError, e:
         options.listing = {}
-        print(unicode(e))
+        print unicode(e)
 
 
 def get_command(args):
@@ -349,7 +349,7 @@ def get_command(args):
         dirname = os.path.dirname(filename)
         if dirname and not os.path.exists(dirname):
             if options.verbose:
-                print("Making directory: %s" % dirname)
+                print "Making directory: %s" % dirname
             os.makedirs(dirname)
         # Download file from Pageforest backend server.
         download_file(filename)
@@ -406,6 +406,7 @@ def vacuum_command(args):
         list_file(filename, options.listing[filename])
         selected.append(filename)
     if not selected:
+        print "No files to vacuum."
         return
     answer = raw_input(
         "Are you sure you want to DELETE %s remote files? " %
@@ -507,7 +508,7 @@ if __name__ == '__main__':
     try:
         main()
     except urllib2.HTTPError, e:
-        print("%s: %s - see pferror.html for details." % (e, e.url))
+        print "%s: %s - see pferror.html for details." % (e, e.url)
         error_file = open(ERROR_FILENAME, 'wb')
         error_file.write(e.read())
         error_file.close()
