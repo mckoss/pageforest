@@ -24,7 +24,9 @@ except ImportError:
 SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
-IGNORE_FILENAMES = ['pf.py', '.*', '*~', '#*#', '*.bak', '*.rej', '*.orig']
+ERROR_FILENAME = 'pferror.html'
+IGNORE_FILENAMES = ['pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
+                    '*.bak', '*.rej', '*.orig']
 COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
@@ -157,9 +159,6 @@ def config():
     if options.command not in COMMANDS:
         parser.error("Unsupported command: " + options.command)
 
-    if options.verbose:
-        print("Found simplejson in %s" % os.path.dirname(json.__file__))
-
     if not options.server:
         options.server = "pageforest.com"
 
@@ -236,7 +235,7 @@ def download_file(filename, url=None):
         urlpath = filename.replace('\\', '/')
         if urlpath.startswith('./'):
             urlpath = urlpath[2:]
-        url = options.root_url + urlpath
+        url = options.root_url + urllib.quote(urlpath)
     # Check if the local file is already up-to-date.
     info = {}
     if hasattr(options, 'listing') and filename in options.listing:
@@ -308,8 +307,6 @@ def list_remote_files():
     """
     url = options.root_url + '?method=list&depth=0'
     options.listing = {}
-    if options.verbose:
-        print("Listing: %s" % url)
     try:
         cursor_param = ""
         while True:
@@ -328,8 +325,7 @@ def list_remote_files():
                 break
     except urllib2.HTTPError, e:
         options.listing = {}
-        if options.verbose:
-            print(unicode(e))
+        print(unicode(e))
 
 
 def get_command(args):
@@ -506,6 +502,7 @@ if __name__ == '__main__':
     try:
         main()
     except urllib2.HTTPError, e:
-        print("%s: %s" % (e, e.url))
-        for line in e.fp.readlines()[:140]:
-            print(line.rstrip())
+        print("%s: %s - see pferror.html for details." % (e, e.url))
+        error_file = open(ERROR_FILENAME, 'wb')
+        error_file.write(e.read())
+        error_file.close()
