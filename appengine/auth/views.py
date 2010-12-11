@@ -66,6 +66,7 @@ def email_verification(request, verification=None):
     state of the signed-in user.
     """
     error = None
+    user = None
     if verification:
         try:
             user = User.verify_email(verification, request.app.secret)
