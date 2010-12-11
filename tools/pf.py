@@ -27,7 +27,7 @@ PASSWORD_FILENAME = '.passwd'
 ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ['pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
                     '*.bak', '*.rej', '*.orig']
-COMMANDS = ['get', 'put', 'list', 'vacuum', 'sha1', 'test']
+commands = None
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
 
@@ -137,7 +137,12 @@ def config():
     """
     Get configuration from command line, app.json and user input.
     """
-    usage = "usage: %prog [options] (" + '|'.join(COMMANDS) + ") [filenames]"
+    global commands
+
+    commands = [function.split('_')[0] for function in globals()
+                if function.endswith('_command')]
+    commands.sort()
+    usage = "usage: %prog [options] (" + '|'.join(commands) + ") [filenames]"
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
         help="deploy to this server (default: pageforest.com")
@@ -153,10 +158,10 @@ def config():
     if not options.command:
         parser.error("Empty command.")
     # Prefix expansion.
-    for command in COMMANDS:
+    for command in commands:
         if command.startswith(options.command):
             options.command = command
-    if options.command not in COMMANDS:
+    if options.command not in commands:
         parser.error("Unsupported command: " + options.command)
 
     if not options.server:
