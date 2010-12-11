@@ -98,18 +98,20 @@ def sign_in():
 
 def load_application():
     """
-    Load application from app.json, or ask the user for it.
+    Load application from META_FILENAME, or ask the user for it.
     """
-    if os.path.exists('app.json'):
+    if options.application is not None:
+        return
+
+    if os.path.exists(META_FILENAME):
         parsed = json.loads(open(META_FILENAME, 'r').read())
     else:
         parsed = {}
     if 'application' in parsed:
-        application = parsed['application']
-        print "Application: " + application
+        options.application = parsed['application']
+        print "Application: " + options.application
     else:
-        application = raw_input("Application: ")
-    return application
+        options.application = raw_input("Application: ")
 
 
 def load_credentials():
@@ -135,9 +137,9 @@ def save_credentials():
 
 def config():
     """
-    Get configuration from command line, app.json and user input.
+    Get configuration from command line, META_FILENAME and user input.
     """
-    global commands
+    global options, commands
 
     commands = [function.split('_')[0] for function in globals()
                 if function.endswith('_command')]
@@ -148,6 +150,7 @@ def config():
         help="deploy to this server (default: pageforest.com")
     parser.add_option('-u', '--username')
     parser.add_option('-p', '--password')
+    parser.add_option('-a', '--application')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
     options, args = parser.parse_args()
@@ -170,7 +173,7 @@ def config():
     if options.command == 'test':
         options.application = 'pfpytest'
     else:
-        options.application = load_application()
+        load_application()
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
@@ -183,7 +186,7 @@ def config():
         from getpass import getpass
         options.password = getpass("Password: ")
         options.save = True
-    return options, args
+    return args
 
 
 def upload_file(filename, url=None):
@@ -456,7 +459,7 @@ def test_command(args):
     if not os.path.exists(dirname):
         os.mkdir(dirname)
     os.chdir(dirname)
-    # Create app.json with metadata.
+    # Create META_FILENAME with metadata.
     outfile = open(META_FILENAME, 'w')
     outfile.write('{"application": "%s"}' % options.application)
     outfile.close()
@@ -480,7 +483,7 @@ def test_command(args):
     read_data = infile.read()
     infile.close()
     assert read_data == write_data
-    # Verify app.json content.
+    # Verify META_FILENAME content.
     infile = open(META_FILENAME, 'r')
     app_json = infile.read()
     infile.close()
@@ -494,8 +497,7 @@ def test_command(args):
 
 
 def main():
-    global options
-    options, args = config()
+    args = config()
     options.root_url = 'http://%s.%s.%s/' % (
         SUBDOMAIN, options.application, options.server)
     options.session_key = sign_in()
