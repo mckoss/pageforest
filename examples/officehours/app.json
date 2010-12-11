@@ -1,0 +1,14 @@
+{
+  "application": "officehours",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": ["productivity", "calendar"],
+  "title": "Office Hours",
+  "writers": [
+  ]
+}
