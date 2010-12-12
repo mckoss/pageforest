@@ -41,6 +41,8 @@ MANAGERS = ADMINS
 
 SUPER_USERS = ['root']
 
+MAX_APPS = 3
+
 SITE_NAME = "Pageforest"
 SITE_OWNER = "StartPad"
 SITE_CONTACT_INFO = "811 First Ave, Suite 480, Seattle, WA 98104"

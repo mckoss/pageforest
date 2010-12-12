@@ -25,6 +25,8 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
     last_login = db.DateTimeProperty(auto_now_add=True)
     email = db.EmailProperty()
     email_verified = db.DateTimeProperty()
+    max_apps = db.IntegerProperty(default=settings.MAX_APPS)
+    is_admin = db.BooleanProperty(default=False)
 
     def __unicode__(self):
         return self.username
@@ -188,9 +190,11 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
             # Each user must complete email verification before creating apps.
             if self.email_verified is None:
                 raise AuthError("Please verify your email address.")
-            # Each user can only create 10 apps.
             count = App.all().filter('owner', self.get_username()).count()
-            if count >= 10:
+            if count >= self.max_apps:
+                logging.warn("%s attempted to create more than %d apps." %
+                             (self.email, count))
                 raise AuthError(
-                    "You have already created %d apps." % count)
+                    "Send email to %s to create more than %d apps." %
+                    (settings.SITE_EMAIL_FROM, count))
         return True

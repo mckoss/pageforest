@@ -57,6 +57,9 @@ def app_docs(request):
 
     REVIEW: Is this safe to add @jsonp - would need to only
     return to approved domains or public documents?
+
+    And why is this just the current user's docs?  No way to enumerate
+    all the docs in the application?  What about for the application owner?
     """
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)

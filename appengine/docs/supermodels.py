@@ -21,6 +21,13 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
     owner = db.StringProperty()        # Lowercase username of the creator.
     writers = db.StringListProperty()  # Usernames that have write access.
     readers = db.StringListProperty()  # Usernames that have read access.
+    deleted = db.BooleanProperty(default=False)
+
+    current_schema = 2
+
+    def migrate(self):
+        if self.schema < 2:
+            self.deleted = False
 
     def normalize_lists(self):
         """
