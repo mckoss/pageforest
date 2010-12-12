@@ -1,0 +1,40 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Chess - PageForest</title>
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+var chess = namespace.lookup("com.pageforest.chess");
+$(document).ready(chess.onReady);
+</script>
+</head>
+<body>
+<div id="board"></div>
+<div id="buttons">
+<input type="button" onclick="chess.undo()" value="Undo" />
+<input type="button" onclick="chess.signInOut()" value="Sign in" />
+</div>
+<table id="moves">
+<tfoot>
+<tr>
+<th style="width:3ex"></th>
+<th style="width:7ex">White</th>
+<th style="width:7ex">Black</th>
+</tr>
+</tfoot>
+<tbody></tbody>
+</table>
+<div id="debug"></div>
+</body>
+</html>
