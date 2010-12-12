@@ -28,6 +28,11 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
     max_apps = db.IntegerProperty(default=settings.MAX_APPS)
     is_admin = db.BooleanProperty(default=False)
 
+    current_schema = 2
+
+    def migrate(self):
+
+
     def __unicode__(self):
         return self.username
 

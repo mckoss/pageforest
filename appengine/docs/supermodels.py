@@ -23,10 +23,11 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
     readers = db.StringListProperty()  # Usernames that have read access.
     deleted = db.BooleanProperty(default=False)
 
-    current_schema = 2
+    superdoc_schema = 100              # Migratable schema should be
+                                       # added to superdoc_schema
 
     def migrate(self):
-        if self.schema < 2:
+        if self.schema < 100:
             self.deleted = False
 
     def normalize_lists(self):

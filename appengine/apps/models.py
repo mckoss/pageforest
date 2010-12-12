@@ -37,6 +37,8 @@ class App(SuperDoc):
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
     icon = db.StringProperty()          # Favicon for editor and www.
 
+    current_schema = superdoc_schema + 1
+
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])
