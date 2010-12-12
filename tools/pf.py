@@ -189,15 +189,20 @@ def config():
     return args
 
 
+def url_from_filename(filename):
+    urlpath = filename.replace('\\', '/')
+    if urlpath.startswith('./'):
+        urlpath = urlpath[2:]
+    url = options.root_url + urllib.quote(urlpath)
+    return url
+
+
 def upload_file(filename, url=None):
     """
     Upload one file to the server.
     """
     if url is None:
-        urlpath = filename.replace('\\', '/')
-        if urlpath.startswith('./'):
-            urlpath = urlpath[2:]
-        url = options.root_url + urllib.quote(urlpath)
+        url = url_from_filename(filename)
     data = open(filename, 'rb').read()
     if len(data) > MAX_FILE_SIZE:
         print "Skipping %s - file too large (%s bytes)." % \
@@ -221,13 +226,10 @@ def upload_file(filename, url=None):
 
 def delete_file(filename, url=None):
     """
-    Upload one file to the server.
+    Delete one file from the server.
     """
     if url is None:
-        urlpath = filename.replace('\\', '/')
-        if urlpath.startswith('./'):
-            urlpath = urlpath[2:]
-        url = options.root_url + urlpath
+        url = url_from_filename(filename)
     if not options.quiet:
         print "Deleting: %s" % url
     response = urllib2.urlopen(DeleteRequest(url))
@@ -240,10 +242,7 @@ def download_file(filename, url=None):
     Download a file from the server.
     """
     if url is None:
-        urlpath = filename.replace('\\', '/')
-        if urlpath.startswith('./'):
-            urlpath = urlpath[2:]
-        url = options.root_url + urllib.quote(urlpath)
+        url = url_from_filename(filename)
     # Check if the local file is already up-to-date.
     info = {}
     if hasattr(options, 'listing') and filename in options.listing:
@@ -336,6 +335,14 @@ def list_remote_files():
         print unicode(e)
 
 
+def print_file_info(filename, metadata):
+    print '%s  %s  %s\t(%s bytes)' % (
+        metadata['sha1'],
+        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
+        filename,
+        intcomma(metadata['size']))
+
+
 def get_command(args):
     """
     Download all files for an app, except files that are already
@@ -384,12 +391,19 @@ def put_command(args):
             upload_file(path)
 
 
-def list_file(filename, metadata):
-    print '%s  %s  %s\t(%s bytes)' % (
-        metadata['sha1'],
-        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
-        filename,
-        intcomma(metadata['size']))
+def delete_command(args):
+    """
+    Download all files for an app, except files that are already
+    up-to-date (same SHA-1 hash as remote).
+    """
+    list_remote_files()
+    download_file(META_FILENAME)
+    filenames = options.listing.keys()
+    filenames.sort()
+    for filename in filenames:
+        if args and not prefix_match(args, filename):
+            continue
+        delete_file(filename)
 
 
 def vacuum_command(args):
@@ -406,7 +420,7 @@ def vacuum_command(args):
             continue
         if os.path.isfile(filename):
             continue
-        list_file(filename, options.listing[filename])
+        print_file_info(filename, options.listing[filename])
         selected.append(filename)
     if not selected:
         print "No files to vacuum."
@@ -430,7 +444,7 @@ def list_command(args):
     for filename in filenames:
         if args and not prefix_match(args, filename):
             continue
-        list_file(filename, options.listing[filename])
+        print_file_info(filename, options.listing[filename])
 
 
 def sha1_command(args):
