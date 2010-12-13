@@ -1,4 +1,5 @@
 import time
+import logging
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -31,7 +32,9 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
     current_schema = 2
 
     def migrate(self):
-
+        if self.schema < 2:
+            self.max_apps = settings.MAX_APPS
+            self.is_admin = False
 
     def __unicode__(self):
         return self.username
@@ -62,12 +65,6 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         hmac = crypto.hmac_sha1(self.get_username(), password)
         return hmac == self.password
-
-    def migrate(self):
-        """
-        Update entity to the current schema.
-        """
-        pass
 
     @classmethod
     def verify_signature(cls, signature, app, remote_ip):
@@ -191,14 +188,21 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         Check if this user is allowed to perform the specified action.
         """
+        if self.is_admin:
+            return True
+
         if action == App.create:
             # Each user must complete email verification before creating apps.
             if self.email_verified is None:
                 raise AuthError("Please verify your email address.")
-            count = App.all().filter('owner', self.get_username()).count()
+
+            # Make sure they haven't already used their quota.
+            results = App.all().filter('owner', self.get_username())
+            results = [app for app in results if not app.deleted]
+            count = len(results)
             if count >= self.max_apps:
-                logging.warn("%s attempted to create more than %d apps." %
-                             (self.email, count))
+                logging.warning("%s attempted to create more than %d apps." %
+                                (self.email, count))
                 raise AuthError(
                     "Send email to %s to create more than %d apps." %
                     (settings.SITE_EMAIL_FROM, count))

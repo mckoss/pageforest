@@ -60,23 +60,16 @@ class AppForm(AjaxForm):
         tags = self.cleaned_data['tags']
         return tags
 
-    def save(self, commit=True):
+    def save(self):
         """
         Create a new app with the form data.
         """
-        if 'url' not in self.cleaned_data:
-            self.cleaned_data['url'] = 'http://%s.%s/' % (
-                self.cleaned_data['app_id'], settings.DEFAULT_DOMAIN)
-        app = App(
-            key_name=self.cleaned_data['app_id'],
+        app = App.create(self.cleaned_data['app_id'],
             title=self.cleaned_data['title'],
             tags=self.cleaned_data['tags'].split(),
             owner=self.cleaned_data['owner'],
             readers=self.cleaned_data['readers'].split(),
             writers=self.cleaned_data['writers'].split(),
             url=self.cleaned_data['url'],
-            referers=self.cleaned_data['referers'].split(),
-            secret=crypto.random64())
-        if commit:
-            app.put()
+            referers=self.cleaned_data['referers'].split())
         return app

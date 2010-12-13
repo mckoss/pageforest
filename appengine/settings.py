@@ -121,6 +121,13 @@ DOMAINS = [
     'localhost',
 ]
 
+# Temporary mapping of custom domains to PF application
+CUSTOM_DOMAINS = {
+    'test.mckoss.com': 'mckoss',
+    'apptest.beedesk.com': 'beedesk-test',
+    'www.beedesk.com': 'beedesk'
+}
+
 # Enable mirroring for trusted applications.
 APPS_WITH_MIRROR = ['editor']
 

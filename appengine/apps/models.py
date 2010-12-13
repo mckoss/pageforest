@@ -8,6 +8,7 @@ from django.conf import settings
 from django.core.urlresolvers import reverse
 
 from utils import crypto
+from utils.middleware import RequestMiddleware
 
 from docs.supermodels import SuperDoc
 from blobs.models import Blob
@@ -37,7 +38,7 @@ class App(SuperDoc):
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
     icon = db.StringProperty()          # Favicon for editor and www.
 
-    current_schema = superdoc_schema + 1
+    current_schema = SuperDoc.current_schema + 1
 
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
@@ -80,22 +81,33 @@ class App(SuperDoc):
         return app
 
     @classmethod
-    def create(cls, app_id, user=None):
+    def create(cls, app_id, user=None, **kwargs):
         """
-        All App creation should go through this method.
+        All user App creation should go through this method.
 
         TODO: Check quotas and permissions.
         """
         if app_id in settings.RESERVED_APPS:
-            raise ValueError("Application %s is reserved." % app_id)
+            raise ValueError("Application is reserved: %s." % app_id)
+
+        kwargs.setdefault('url',
+                          'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN))
+
         username = user and user.get_username() or ''
+        logging.info("Creating app %s for %s" % (app_id, username))
+
         title = app_id.capitalize()
-        url = 'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN)
-        logging.info("Creating app: %s" % app_id)
         # A new application has private read and write access by default,
         # but may be updated immediately by app.json upload.
-        return App(key_name=app_id, owner=username, title=title,
-                   url=url, secret=crypto.random64())
+        return App(key_name=app_id, owner=username, secret=crypto.random64(),
+                   **kwargs)
+
+    def put(self):
+        request = RequestMiddleware.get_request()
+        if request is not None and hasattr(request, 'user') and \
+                not self.is_saved():
+            request.user.assert_authorized(request, App.create)
+        super(App, self).put()
 
     def update_from_json(self, parsed, **kwargs):
         super(App, self).update_from_json(parsed, **kwargs)

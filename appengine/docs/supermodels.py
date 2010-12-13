@@ -23,8 +23,8 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
     readers = db.StringListProperty()  # Usernames that have read access.
     deleted = db.BooleanProperty(default=False)
 
-    superdoc_schema = 100              # Migratable schema should be
-                                       # added to superdoc_schema
+    current_schema = 100               # Migratable schema should be
+                                       # added to SuperDoc.schema
 
     def migrate(self):
         if self.schema < 100:
@@ -123,3 +123,11 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         # FIXME: update_tags should be used for tag handling as in blobs
         for key in ('tags', 'readers', 'writers'):
             self.update_string_list_property(parsed, key, **kwargs)
+        self.normalize_lists()
+
+    def delete(self):
+        """
+        A document (or app) can contain child blobs.  If it's a small number,
+        we try to delete them here.  If not, we mark the doc as deleted and
+        will clean up the child blobs in the backgroun.
+        """
