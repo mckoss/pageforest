@@ -102,13 +102,6 @@ class App(SuperDoc):
         return App(key_name=app_id, owner=username, secret=crypto.random64(),
                    **kwargs)
 
-    def put(self):
-        request = RequestMiddleware.get_request()
-        if request is not None and hasattr(request, 'user') and \
-                not self.is_saved():
-            request.user.assert_authorized(request, App.create)
-        super(App, self).put()
-
     def update_from_json(self, parsed, **kwargs):
         super(App, self).update_from_json(parsed, **kwargs)
         self.update_string_property(parsed, 'url', **kwargs)
