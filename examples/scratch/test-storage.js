@@ -107,6 +107,12 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
+                    client.storage.putBlob('test-storage', 'secret-blob',
+                                           {secret: 'password'}, undefined,
+                                           cont);
+                },
+
+                function (ut) {
                     client.storage.getDoc('test-storage', function(doc) {
                         ut.assertEq(doc.title, "Test storage document.");
                         ut.assertEq(doc.blob, testBlob);
@@ -123,12 +129,46 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    // Document deletion not currently supported!
-                    client.app.expectedError("ajax_error/405");
                     client.storage.deleteDoc('test-storage', function (result) {
                         ut.assertEq(result.status, 200);
                         ut.nextFn();
                     });
+                },
+
+                function (ut) {
+                    // Make sure the doc is really deleted
+                    client.app.expectedError("ajax_error/404");
+                    client.storage.getDoc('test-storage', function(doc) {
+                        ut.assert(false, "Document not actually deleted.");
+                        ut.nextFn();
+                    });
+                },
+
+                function (ut) {
+                    // And we can't get to it's child blob
+                    client.app.expectedError("ajax_error/404");
+                    client.storage.getBlob('test-storage', 'secret-blob', undefined,
+                        function (result) {
+                            ut.assert(false, "Child Blob of deleted document visible.");
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    // Create a same-named doc
+                    client.storage.putDoc('test-storage',
+                                          {title: "Test storage document.",
+                                           blob: testBlob},
+                                          cont);
+                },
+
+                function (ut) {
+                    // And the new blob should NOT inherit the Blob orphan
+                    client.storage.getBlob('test-storage', 'secret-blob', undefined,
+                        function (result) {
+                            ut.assert(false, "Orphaned Blob of deleted document visible.");
+                            ut.nextFn();
+                        });
                 }
             ]);
         }).async();
