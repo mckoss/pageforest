@@ -1,0 +1,29 @@
+cron:
+- url: /dashboard/cron
+  description: collect statistics for the dashboard
+  schedule: every 20 minutes
+  timezone: America/Los_Angeles
+
+- url: /backups/users/cron
+  description: incremental backup for User model
+  schedule: every 57 minutes
+  timezone: America/Los_Angeles
+
+- url: /backups/apps/cron
+  description: incremental backup for Apps model
+  schedule: every 59 minutes
+  timezone: America/Los_Angeles
+
+- url: /backups/docs/cron
+  description: incremental backup for Docs model
+  schedule: every 61 minutes
+  timezone: America/Los_Angeles
+
+- url: /backups/blobs/cron
+  description: incremental backup for Blob model
+  schedule: every 63 minutes
+  timezone: America/Los_Angeles
+
+- url: /chunks/cron/vacuum
+  description: delete unreferenced chunks
+  schedule: every 23 minutes

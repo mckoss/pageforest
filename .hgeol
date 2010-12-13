@@ -1,0 +1,9 @@
+[patterns]
+**.py = native
+**.txt = native
+**.html = native
+**.js = native
+**.css = native
+**.cmd = native
+**.patch = native
+**.yaml = native

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra-head %}
+<meta name="viewport" content="width={{ layout.viewport_width }}" />
+<meta http-equiv="refresh" content="600" />
+<style type="text/css">
+body {
+  background-color: black;
+  color: #222;
+  padding: 0;
+  margin: {{ layout.body_margin }}px;
+}
+div.center {
+  width: {{ layout.chart_width }}px;
+  text-align: center;
+}
+img.chart {
+  width: {{ layout.chart_width }}px;
+  height: {{ layout.chart_height }}px;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div><img src="{{ users_chart }}" class="chart" /></div>
+<div class="center" style="color:#00FF00">
+<div style="float:left">{{ start_date }}</div>
+<div style="float:right">{{ today_date }}</div>
+New users per hour
+</div>
+
+<div><img src="{{ apps_chart }}" class="chart" /></div>
+<div class="center" style="color:#0080FF">
+<div style="float:left">{{ start_date }}</div>
+<div style="float:right">{{ today_date }}</div>
+New apps per hour
+</div>
+
+<div><img src="{{ docs_chart }}" class="chart" /></div>
+<div class="center" style="color:#FFFF00">
+<div style="float:left">{{ start_date }}</div>
+<div style="float:right">{{ today_date }}</div>
+New docs per hour
+</div>
+
+<div><img src="{{ blobs_chart }}" class="chart" /></div>
+<div class="center"  style="color:#FF0000">
+<div style="float:left">{{ start_date }}</div>
+<div style="float:right">{{ today_date }}</div>
+New blobs per hour
+</div>
+
+<p>
+{{ now }}<br />
+{{ CURRENT_VERSION_ID }}<br />
+{{ SERVER_SOFTWARE }}<br />
+</p>
+{% endblock content %}

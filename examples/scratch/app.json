@@ -1,0 +1,20 @@
+{
+  "application": "scratch",
+  "cloneable": true,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "demo",
+    "sample"
+  ],
+  "title": "Pageforest Sample Application",
+  "url": "http://scratch.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
+}
