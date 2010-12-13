@@ -11,7 +11,7 @@ from google.appengine.api import memcache
 from utils.shortcuts import render_to_response, lookup_or_404
 from utils.decorators import jsonp, method_required
 from utils import crypto
-from utils.json import ModelEncoder
+from utils.json import ModelEncoder, HttpJSONResponse
 
 from auth import AuthError
 from auth.middleware import AccessDenied
@@ -105,22 +105,24 @@ def app_json_get(request):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
 
-@login_required
+#@login_required
 def app_json_put(request):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
-    if request.app.owner is None:
+    if not request.app.owner:
         request.app.owner = request.user.get_username()
     if not request.app.is_writable(request.user):
         return AccessDenied(request, "No write permission.")
     # Update app from uploaded JSON data.
+    status = 403
     try:
+        request.user.assert_authorized(App.create)
+        status = 400
         parsed = json.loads(request.raw_post_data)
         request.app.update_from_json(parsed)
-    except ValueError, error:
-        # TODO: Format error as JSON.
-        return HttpResponse(unicode(error), mimetype='text/plain', status=400)
+    except Exception, error:
+        return HttpJSONResponse({'textStatus': unicode(error)}, status=status)
     request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE_CS)
