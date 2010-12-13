@@ -91,7 +91,8 @@ def main():
                              ignored=options.ignored,
                              pass_key='jslint-' + options.level)
     dirty_files = [path for path in walk.walk_files(*args)
-                   if not pftool.is_third_party(path)]
+                   if not path.endswith(".min.js") and
+                   not pftool.is_third_party(path)]
 
     # LAME: This chdir is need because jslint-cl has a load that only
     # works in the tools directory and rhino has no way to discover

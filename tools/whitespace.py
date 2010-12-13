@@ -13,6 +13,7 @@ jquery-*.js
 *.xml *.zip
 *.gif *.png *.jpg
 *.patch
+pferror.html
 """.split()
 
 

@@ -46,26 +46,32 @@ class AppMiddleware(object):
         if parts[0] == settings.ADMIN_SUBDOMAIN:
             request.subdomain = parts[0]
             hostname = '.'.join(parts[1:])
+
         # Extract app_id from hostname.
-        app_id = app_id_from_trusted_domain(hostname)
+        app_id = settings.CUSTOM_DOMAINS.get(hostname,
+            app_id_from_trusted_domain(hostname))
         if app_id is None:
             return HttpResponseNotFound(
-                "Domain not in settings.DOMAINS: " + hostname)
+                ("Unknown domain (%s).  " +
+                "Send email to %s to setup a custom %s domain.") %
+                (hostname, settings.SITE_EMAIL_FROM, settings.SITE_NAME))
 
         request.app = App.lookup(app_id)
         if request.app is None and request.path_info == '/auth/challenge/':
             # Create a dummy app with a secret for challenge authentication.
+            # Note that it has not owner.  We won't save it to the datastore
+            # without an authorized owner.
             request.app = App.create(app_id)
-            # FIXME: This is creating apps in the database for each challenge?
-            request.app.put()
+            request.app.cache_put()
+
         if request.app is None:
             return HttpResponseNotFound(
-                "Application not found for hostname: " + hostname)
+                "Application not found for app: " + app_id)
 
         if request.app.is_www():
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
-                return HttpResponseNotFound("URL reserved for internal use.")
+                return reserved_url(request)
         else:
             if settings.DEBUG and DEBUG_URL_REWRITE:
                 logging.info(" original URL: http://" +

@@ -105,31 +105,22 @@ def app_json_get(request):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
 
+@login_required
 def app_json_put(request):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
-    if not request.app.owner:
-        # Check session key.
-        if request.user is None:
-            return AccessDenied(request, "Not signed in.")
-        # Check app creator permission.
-        try:
-            request.user.assert_authorized(App.create)
-        except AuthError, error:
-            return AccessDenied(request, error.message)
-        # Update the dummy app to be owned by the current user.
+    if request.app.owner is None:
         request.app.owner = request.user.get_username()
     if not request.app.is_writable(request.user):
         return AccessDenied(request, "No write permission.")
     # Update app from uploaded JSON data.
     try:
         parsed = json.loads(request.raw_post_data)
-        request.app.update_from_json(parsed, user=request.user)
+        request.app.update_from_json(parsed)
     except ValueError, error:
         # TODO: Format error as JSON.
         return HttpResponse(unicode(error), mimetype='text/plain', status=400)
-    request.app.normalize_lists()
     request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE_CS)

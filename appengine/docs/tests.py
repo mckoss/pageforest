@@ -25,7 +25,7 @@ class DocumentTest(AppTestCase):
             ]:
             response = self.app_client.post(url, {'key': 'value'})
             self.assertEqual(response.status_code, 405)
-            self.assertEqual(response['Allow'], 'GET, LIST, PUT')
+            self.assertEqual(response['Allow'], 'DELETE, GET, LIST, PUT')
 
     def test_json(self):
         """Test JSON serializer for document."""

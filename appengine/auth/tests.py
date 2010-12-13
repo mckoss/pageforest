@@ -49,7 +49,7 @@ class MigratableTest(AppTestCase):
             'User.migrate': User.migrate,
             'logging.info': logging.info,
             }
-        User.current_schema = 3
+        User.current_schema = 99
         User.migrate = Mock()
         logging.info = Mock(wraps=logging.info)
 
@@ -63,12 +63,12 @@ class MigratableTest(AppTestCase):
         """Test schema migration for User model."""
         self.assertEqual(logging.info.call_count, 0)
         self.assertEqual(User.migrate.call_count, 0)
-        self.assertEqual(self.peter.schema, 1)
+        self.assertEqual(self.peter.schema, 2)
         self.peter.update_schema()
-        self.assertEqual(self.peter.schema, 3)
+        self.assertEqual(self.peter.schema, 99)
         self.assertEqual(User.migrate.call_count, 1)
         self.assertEqual(logging.info.call_args[0][0],
-                         u"Updated User entity peter from schema 1 to 3")
+                         u"Updated User entity peter from schema 2 to 99")
 
 
 class SignUpTest(AppTestCase):
@@ -584,16 +584,14 @@ class AppCreatorTest(AppTestCase):
         self.assertContains(response, 'Please verify your email address.',
                             status_code=403)
 
-    def test_eleven_apps(self):
-        for index in range(2, 12):
+    def test_toomany_apps(self):
+        for index in range(2, 5):
             self.sign_in('myapp%d' % index, self.peter)
             response = self.client.put('/app.json', '{}',
                                        content_type='application/json')
-            if index < 11:
+            if index <= 3:
                 self.assertContains(response, 'Saved')
-        self.assertContains(
-            response, 'You have already created 10 apps.',
-            status_code=403)
+        self.assertContains(response, '3 apps', status_code=403)
 
 
 class CookieTest(AppTestCase):

@@ -128,6 +128,8 @@ def doc_get(request, doc_id):
         extra = {"blob": json.loads(blob.value)}
         modified = max(modified, blob.modified)
     # Generate Last-Modified header and compare with If-Modified-Since.
+    # Should update to SHA1 hash of document to avoid failures from writes
+    # in the same second.
     last_modified = http_datetime(modified)
     if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
         return HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE_CS)
@@ -155,7 +157,6 @@ def doc_put(request, doc_id):
 
     # Should call update_tags as in blob_put
 
-    request.doc.normalize_lists()
     request.doc.put()
     # Write JSON blob to blob storage.
     if 'blob' in parsed:
@@ -178,6 +179,14 @@ def doc_put(request, doc_id):
         'statusText': "Saved",
         'modified': request.doc.modified,
         })
+
+
+def doc_delete(request, docid):
+    """
+    HTTP DELETE request handler.
+    """
+    request.doc.delete()
+    return HttpJSONResponse({'statusText': "Deleted"})
 
 
 def doc_list(request, doc_id):

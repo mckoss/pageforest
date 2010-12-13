@@ -13,12 +13,7 @@ class Doc(SuperDoc):
     """
     doc_id = db.StringProperty()  # May contain uppercase letters.
 
-    current_schema = superdoc_schema + 1
-
-    def migrate(self):
-        # SuperDoc change
-        if self.schema < 2:
-            self.deleted = False
+    current_schema = SuperDoc.current_schema + 1
 
     def get_absolute_url(self):
         """

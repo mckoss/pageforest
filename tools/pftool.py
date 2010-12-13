@@ -39,7 +39,15 @@ def is_third_party(path):
     Then we skip certain checks, e.g. jslint.
     """
     parts = path.split(os.path.sep)
-    return 'codemirror' in parts or 'fancybox' in parts
+    if 'jqtouch' in parts:
+        return True
+    if 'touchlayer' in parts:
+        return True
+    if 'iscroll' in parts:
+        return True
+    if 'codemirror' in parts or 'fancybox' in parts:
+        return True
+    return False
 
 
 def tool_path(file_name):
