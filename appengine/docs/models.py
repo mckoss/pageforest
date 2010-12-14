@@ -3,7 +3,6 @@ from django.conf import settings
 from google.appengine.ext import db
 
 from docs.supermodels import SuperDoc
-from apps.models import App
 
 
 class Doc(SuperDoc):
@@ -16,18 +15,25 @@ class Doc(SuperDoc):
     current_schema = SuperDoc.current_schema + 1
 
     def blob_key_prefix(self):
+        """
+        Blob keys are 'appid/docid/...'
+        """
         return self.key().name()
 
-    def get_absolute_url(self):
+    def get_absolute_url(self, app=None):
         """
         Get the absolute URL for this model instance.
+
+        Note: This was causing errors in ciruclar references between
+        apps and docs.  I'm passing in the app as a parameter
+        now to eliminate the circular import.  Is there a better way?
         """
         app_id = self.key().name().split('/')[0]
-        app = App.get_by_key_name(app_id)
+        # app = App.get_by_key_name(app_id)
         # REVIEW: Why do we have this fallback.  Note that DEFAULT_DOMAIN
         # is not correct for the localhost case.
         if app is None:
-            return 'http://%s.%s/docs/%s' % (
+            return 'http://%s.%s/#%s' % (
                 app_id, settings.DEFAULT_DOMAIN, self.doc_id)
         return app.url + '#' + self.doc_id
 
