@@ -3,14 +3,13 @@ import time
 import logging
 
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseBadRequest
 from django.utils import simplejson as json
 
 from google.appengine.api import memcache
 from google.appengine.api import channel
 
 from utils.decorators import jsonp, method_required
-from utils.json import ModelEncoder
+from utils.json import ModelEncoder, HttpJSONResponse
 from utils import crypto
 
 from auth.decorators import login_required
@@ -29,11 +28,7 @@ def get_channel(request, extra):
     """
     session_key = get_session_key(request)
     channel_data = get_session_channel(session_key)
-
-    return HttpResponse(json.dumps(channel_data,
-                                   indent=2,
-                                   cls=ModelEncoder),
-                        mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse(channel_data, status=None)
 
 
 @jsonp
@@ -47,10 +42,7 @@ def subscriptions(request, extra):
     session_key = get_session_key(request)
     channel_data = get_session_channel(session_key)
     if request.method == 'GET':
-        return HttpResponse(json.dumps(channel_data['subscriptions'],
-                                       indent=2,
-                                       cls=ModelEncoder),
-                            mimetype=settings.JSON_MIMETYPE_CS)
+        return HttpJSONResponse(channel_data['subscriptions'], status=None)
 
     assert request.method == 'PUT'
 
@@ -60,6 +52,7 @@ def subscriptions(request, extra):
     # Expire any old subscriptions NOT in the new set
     for key in channel_data['subscriptions']:
         if key not in subs:
+            key = '/'.join((request.app.get_app_id(), key))
             add_subscription(key, session_key, 0)
 
     for key, sub in subs.items():
@@ -74,18 +67,17 @@ def subscriptions(request, extra):
     m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
     memcache.set(m_key, channel_data, channel_data['expires'])
 
-    json_result = json.dumps({
-            'status': 200,
+    logging.info("Channel saved: %r" % channel_data)
+
+    return HttpJSONResponse({
             'statusText': "Saved",
             'subscriptions': channel_data['subscriptions'],
-            }, cls=ModelEncoder)
-
-    return HttpResponse(json_result, mimetype=settings.JSON_MIMETYPE_CS)
+            })
 
 
 def add_subscription(key, session_key, expires):
     """
-    For each key, we store a dictionary of subscribers:
+    For each storage key, we store a dictionary of subscribers:
        {session_key: {'expires': expires_time}
     """
     # Keys are paths normalized to end in trailing slash
