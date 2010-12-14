@@ -59,7 +59,9 @@ class Migratable(db.Model):
         Migrate entity to current_schema, then write it back to
         memcache and datastore.
         """
-        if self.schema == self.current_schema:
+        # Don't migrate downward - note that migrate() may not
+        # even be defined yet!
+        if self.schema >= self.current_schema:
             return
         schema_old = self.schema
         self.migrate()
