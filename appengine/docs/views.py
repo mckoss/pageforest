@@ -144,9 +144,14 @@ def doc_get(request, doc_id):
 def doc_put(request, doc_id):
     """
     Parse incoming JSON blob and update meta info for this document.
+
+    TODO: Have an if-modified and return 409 Conflict if
+    the passed in hash or modified date is incorrect.
     """
+    status = 200
     if request.doc is None:
         # Create this document. TODO: Quota check.
+        status = 201
         request.doc = Doc.create(request.app.get_app_id(), doc_id,
                                  request.user)
     try:
@@ -176,16 +181,20 @@ def doc_put(request, doc_id):
     # a channel subscription update.  Should it?
 
     return HttpJSONResponse({
-        'statusText': "Saved",
+        'statusText': status == 200 and "Saved" or "Created",
         'modified': request.doc.modified,
-        })
+        }, status=status)
 
 
 def doc_delete(request, docid):
     """
     HTTP DELETE request handler.
+
+    TODO: Have an if-modified and return 409 Conflict if
+    the passed in hash or modified date is incorrect.
     """
     request.doc.delete()
+    request.doc = None
     return HttpJSONResponse({'statusText': "Deleted"})
 
 

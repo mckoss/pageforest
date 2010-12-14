@@ -96,7 +96,7 @@ def wait_for_update(request, blob):
             if blob is None or blob.sha1 != original_sha1:
                 break
     except DeadlineExceededError:
-        logging.info("Caught DeadlineExceededError after %.1fs",
+        logging.info("Caught DeadlineExceededError after %.1fs" %
                      time.time() - start)
     return blob
 
@@ -278,6 +278,9 @@ def get_request_content(request):
 def blob_put(request):
     """
     HTTP PUT request handler.
+
+    TODO: Have an if-modified and return 409 Conflict if
+    the passed in hash or modified date is incorrect
     """
     value = get_request_content(request)
     if isinstance(value, unicode):
@@ -312,11 +315,13 @@ def blob_put(request):
 def blob_delete(request):
     """
     HTTP DELETE request handler.
+
+    TODO: Have an if-modified and return 409 Conflict if
+    the passed in hash or modified date is incorrect.
     """
     blob = lookup_or_404(Blob, request.key_name)
     blob.delete()
-    return HttpResponse('{"status": 200, "statusText": "Deleted"}',
-                        mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse({"statusText": "Deleted"})
 
 
 def json_push(old_value, value, max_length):

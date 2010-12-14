@@ -1,9 +1,17 @@
+import logging
+
 from google.appengine.ext import db
 
 from django.conf import settings
 
+from google.appengine.runtime import DeadlineExceededError
+
 from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
 from utils.json import assert_boolean, assert_string, assert_string_list
+
+from blobs.models import Blob
+
+PAGING_SIZE = 500
 
 
 class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
@@ -88,6 +96,63 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
                 # Don't let authenticated user remove his own write access.
                 self.writers.append(username)
 
+    def blob_key_prefix(self):
+        """
+        Return a key prefix that can be used to find child Blobs.
+
+        The key will be appended with '/' and the unique blob key.
+        """
+        raise NotImplementedError("Document type does not define a Blob key.")
+
+    def all_blobs(self, keys_only=False):
+        """
+        Generate a Query object restricted to the child Blobs of
+        this Doc or App.
+        """
+        key_prefix = self.blob_key_prefix()
+        query = Blob.all(keys_only=keys_only)
+        query.filter('__key__ >=', db.Key.from_path('Blob', key_prefix + '/'))
+        query.filter('__key__ <', db.Key.from_path('Blob', key_prefix + '0'))
+        return query
+
+    def delete(self):
+        """
+        A document (or app) can contain child blobs.  If it's a small number,
+        we try to delete them here.  If not, we mark the doc as deleted and
+        will clean up the child blobs in the background (TBD).
+
+        Note that each call to delete() will attempt to delete more of the
+        blobs until it succeeds.
+
+        Returns:
+           True - document and all child blobs were successfully deleted,
+           False - document just marked as deleted - but children still exist
+        """
+        self.deleted = True
+        self.put()
+
+        query = self.all_blobs(keys_only=True)
+        keys = None
+        count = 0
+        try:
+            while True:
+                if keys is None:
+                    keys = query.fetch(PAGING_SIZE)
+                if len(keys) == 0:
+                    break
+                self.delete_keys(keys)
+                count += len(keys)
+                if len(keys) < PAGING_SIZE:
+                    break
+                query.with_cursor(query.cursor())
+        except DeadlineExceededError:
+            logging.info("Deadline Exceeded for %s.delete(%s) - %d confirmed." %
+                         (self.kind(), self.key().name(), count))
+            return False
+        logging.info("Deleted %d child blobs of %s:%s." %
+                     (count, self.kind(), self.key().name()))
+        super(SuperDoc, self).delete()
+
     def update_boolean_property(self, parsed, key, **kwargs):
         # TODO: Merge update_*_property methods into one and detect
         # the property type automatically.
@@ -124,10 +189,3 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         for key in ('tags', 'readers', 'writers'):
             self.update_string_list_property(parsed, key, **kwargs)
         self.normalize_lists()
-
-    def delete(self):
-        """
-        A document (or app) can contain child blobs.  If it's a small number,
-        we try to delete them here.  If not, we mark the doc as deleted and
-        will clean up the child blobs in the backgroun.
-        """
