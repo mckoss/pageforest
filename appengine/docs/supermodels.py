@@ -108,6 +108,8 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         """
         Generate a Query object restricted to the child Blobs of
         this Doc or App.
+
+        Note that the Blob 'appid/doc/' - the "internal" Doc Blob is included.
         """
         key_prefix = self.blob_key_prefix()
         query = Blob.all(keys_only=keys_only)
