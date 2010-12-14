@@ -24,7 +24,7 @@ class AppTestCase(TestCase):
 
     Users: peter, paul (not email verified)
     Apps: www, myapp
-    Docs: myapp/mydoc
+    Docs: myapp/mydoc (owned by peter)
     Blobs: apps/myapp/index.html/
            myapp/mydoc/ (Doc's Blob)
            myapp/mydoc/myblob (Child Blob)
