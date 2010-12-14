@@ -130,6 +130,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            // TODO: Relax this rule - and generate unique session key
+            // per window.
             if (this.client.username == undefined) {
                 this.client.onError('channel/user',
                     "You must be signed in to receive notifications.");
