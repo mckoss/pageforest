@@ -15,26 +15,27 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
     function TestApp(ut) {
         this.ut = ut;
-        this.status = undefined;
+        this.ignore = undefined;
         this.waitingFor = undefined;
         this.skip = true;
     }
 
     TestApp.methods({
         expectedError: function(status) {
-            this.status = status;
+            this.ignore = status;
+            this.skip = true;
         },
 
         onError: function(status, message) {
-            if (!this.status) {
+            if (!this.ignore) {
                 this.ut.assert(false, "Unexpected error: " + status +
                                " (" + message + ")");
                 return;
             }
-            this.ut.assertEq(status, this.status);
-            if (status == this.status) {
-                this.status = undefined;
+            this.ut.assertEq(status, this.ignore);
+            if (status == this.ignore) {
                 if (this.skip) {
+                    this.ignore = undefined;
                     this.ut.nextFn();
                 }
             }
@@ -164,6 +165,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     // And the new blob should NOT inherit the Blob orphan
+                    client.app.expectedError("ajax_error/404");
                     client.storage.getBlob('test-storage', 'secret-blob', undefined,
                         function (result) {
                             ut.assert(false, "Orphaned Blob of deleted document visible.");
@@ -572,7 +574,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
         ts.addTest("channel", function(ut) {
             client.app.ut = ut;
-            client.app.status = 'channel/nosub';
+            client.app.ignore = 'channel/nosub';
             client.app.skip = false;
             // dev_appserver will deliver state notifications
             var etag;

@@ -115,32 +115,28 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
         query.filter('__key__ <', db.Key.from_path('Blob', key_prefix + '0'))
         return query
 
-    def delete(self):
+    def delete_blobs(self):
         """
         A document (or app) can contain child blobs.  If it's a small number,
         we try to delete them here.  If not, we mark the doc as deleted and
         will clean up the child blobs in the background (TBD).
 
-        Note that each call to delete() will attempt to delete more of the
+        Note that each call to delete_blobs() will attempt to delete more of the
         blobs until it succeeds.
 
         Returns:
            True - document and all child blobs were successfully deleted,
            False - document just marked as deleted - but children still exist
         """
-        self.deleted = True
-        self.put()
-
         query = self.all_blobs(keys_only=True)
         keys = None
         count = 0
         try:
             while True:
-                if keys is None:
-                    keys = query.fetch(PAGING_SIZE)
+                keys = query.fetch(PAGING_SIZE)
                 if len(keys) == 0:
                     break
-                self.delete_keys(keys)
+                Blob.delete_keys(keys)
                 count += len(keys)
                 if len(keys) < PAGING_SIZE:
                     break
@@ -149,9 +145,23 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
             logging.info("Deadline Exceeded for %s.delete(%s) - %d confirmed." %
                          (self.kind(), self.key().name(), count))
             return False
+
         logging.info("Deleted %d child blobs of %s:%s." %
                      (count, self.kind(), self.key().name()))
-        super(SuperDoc, self).delete()
+        return True
+
+    def delete(self):
+        """
+        Override delete operation - tries to delete all child blobs as well.
+
+        The document will either be marked as deleted or actually deleted if
+        all it's child blobs can be deleted before the request deadline is
+        exceeded.
+        """
+        self.deleted = True
+        self.put()
+        if self.delete_blobs():
+            super(SuperDoc, self).delete()
 
     def update_boolean_property(self, parsed, key, **kwargs):
         # TODO: Merge update_*_property methods into one and detect
