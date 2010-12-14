@@ -188,7 +188,6 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         Check if this user is allowed to perform the specified action.
         """
-        print "assert_authorized"
         if self.is_admin:
             return True
 
