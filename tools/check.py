@@ -126,7 +126,7 @@ def main():
         ('jstest',
          "python %s -q -a" % pftool.tool_path('jstest.py')),
 
-        ('pep8', "pep8 --count --repeat --exclude %s %s" %
+        ('pep8', "pep8 --max-line-length=100 --count --repeat --exclude %s %s" %
          (','.join(PEP8_EXCLUDE), pftool.root_dir)),
 
         ('whitespace', "python %s %s" %
