@@ -188,7 +188,7 @@ profile
 
 # Reserved key prefixes in the application namespace.
 # http://app_id.pageforest.com/_key_/...
-# Internally, these are mapped to:
+# Internally, these are mapped to URL:
 # /app/_key_/...
 # TODO: Check for these prefixes in the application blob
 # uploader on the server side.
@@ -202,6 +202,9 @@ RESERVED_APP_KEYS = (
     'lib',           # Used in app.yaml
     'shell',         # Used in app.yaml
     'stats',         # Used in app.yaml
+    'apps',          # App Blob keys are stored as 'apps/appid/*'
+                     # as opposed to 'appid/*' so we have to
+                     # reserve 'apps'
 
     # Reserved for future use
     'data',

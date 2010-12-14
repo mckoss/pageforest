@@ -134,7 +134,7 @@ class TimestampedTest(AppTestCase):
         response = self.app_client.put(
             '/docs/foo/', '{"title": "Created Document"}',
             content_type='text/plain')
-        self.assertContains(response, 'Saved')
+        self.assertContains(response, 'Created', status_code=201)
         entity = Doc.get_by_key_name('myapp/foo')
         self.assertEqual(entity.title, 'Created Document')
         self.assertEqual(entity.created_ip, '10.11.12.13')

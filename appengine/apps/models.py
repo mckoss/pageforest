@@ -48,6 +48,9 @@ class App(SuperDoc):
         """Return the key name which contains the app id."""
         return self.key().name()
 
+    def blob_key_prefix(self):
+        return 'apps/' + self.get_app_id()
+
     def get_form_dict(self):
         """Return a dict that can be used as initial argument for a form."""
         return {

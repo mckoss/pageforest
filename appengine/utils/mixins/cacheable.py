@@ -148,6 +148,17 @@ class Cacheable(Serializable):
         super(Cacheable, self).delete()
 
     @classmethod
+    def delete_keys(cls, keys):
+        """
+        Replacement for db.delete(keys) for this instance type.
+
+        Removed from memcache first, and then deletes from database.
+        """
+        cache_keys = [cls.class_get_cache_key(key.name()) for key in keys]
+        memcache.delete_multi(cache_keys)
+        db.delete(keys)
+
+    @classmethod
     def get(cls, keys):
         """
         TODO: Use memcache here.
