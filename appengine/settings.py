@@ -155,6 +155,7 @@ HIDDEN_PROPERTIES = (
     'created_ip',
     'modified_ip',
     'schema',
+    'deleted',
     )
 
 # Prevent account registration with some well-known usernames.
