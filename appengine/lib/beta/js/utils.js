@@ -2303,6 +2303,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            // TODO: Relax this rule - and generate unique session key
+            // per window.
             if (this.client.username == undefined) {
                 this.client.onError('channel/user',
                     "You must be signed in to receive notifications.");
@@ -2347,6 +2349,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                         sha1: string
             //                        }
             //                 }
+            // TODO: Change key to docid:, blobid:
             var message = JSON.parse(evt.data);
             this.client.onInfo('channel/message', message.key +
                             ' (' + message.method + ')');
@@ -2364,6 +2367,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         subscribe: function(docid, blobid, options, fn) {
+            // TODO: Add options.onError to callback for errors
+            // on this subscribe.
             if (!this.validateArgs('subscribe', docid, blobid, undefined,
                                    options, fn)) {
                 return;
@@ -2423,6 +2428,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 data: jsonToString(this.subscriptions),
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
+                    // TODO: Notify each newly open subscription
+                    // function with a {method: 'INIT', key: ''}
+                    // ALSO - guarantee that the subscription function
+                    // gets either 'INIT' OR 'ERROR' callback.
                     self.client.onInfo('channel/updated',
                                        "Subscriptions updated: " +
                                        base.keys(result.subscriptions).length);
@@ -2625,6 +2634,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         // Read a blob from storage.
         getBlob: function(docid, blobid, options, fnSuccess) {
+            // TODO: Allow for error function callback in options (all
+            // functions in storage).
             if (!this.validateArgs('getBlob', docid, blobid, undefined,
                                    options, fnSuccess)) {
                 return;
