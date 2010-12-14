@@ -1,15 +1,14 @@
 #!/bin/bash
 
-sudo apt-get install sqlite
-sudo apt-get install libsqlite3-dev
-sudo easy_install pep8
+# Run this script as sudo ...
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 DOWN_DIR="$HOME/Downloads"
 SRC_DIR="$HOME/src"
+BIN_DIR="$HOME/bin"
 
-# TODO: Conditional download function
-# TODO: Put all file version string at top of this file
+# TODO: Put all file version strings at top of this file
+# TODO: Add command line to install a single component - or "all"
 
 # download <url> - do nothing if already downloaded
 function download {
@@ -36,9 +35,8 @@ function download_zip {
     download $1
 
     cd $DEST_PARENT
-    sudo rm -rf $DEST_DIR
-    sudo unzip $DOWN_DIR/$FILE
-    sudo chmod -R o+rwx $DEST_DIR
+    rm -rf $DEST_DIR
+    unzip $DOWN_DIR/$FILE
     cd $DEST_DIR
 }
 
@@ -58,6 +56,19 @@ function download_tar {
     cd $DEST_DIR
 }
 
+
+# Install SqlLite
+read -p "Install SqlLite (y/n): "
+if [ "$REPLY" = "y" ]; then
+    apt-get install sqlite
+    apt-get install libsqlite3-dev
+fi
+
+read -p "Install Pep8 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    easy_install pep8
+fi
+
 # Install OpenSSL
 read -p "Install Open SSL (y/n): "
 if [ "$REPLY" = "y" ]; then
@@ -65,7 +76,7 @@ if [ "$REPLY" = "y" ]; then
 
     ./config
     make
-    sudo make install
+    make install
 fi
 
 # Get Python 2.5.2
@@ -75,7 +86,7 @@ if [ "$REPLY" = "y" ]; then
 
     ./configure
     make
-    sudo make altinstall
+    make altinstall
 fi
 
 read -p "Python Setup Tools (y/n): "
@@ -84,15 +95,19 @@ if [ "$REPLY" = "y" ]; then
     sh setuptools-0.6c11-py2.5.egg
 fi
 
-sudo easy_install-2.5 mock
-sudo easy_install-2.5 PIL
+# Install Python Extras
+read -p "Install Mock and PIL (y/n): "
+if [ "$REPLY" = "y" ]; then
+    easy_install-2.5 mock
+    easy_install-2.5 PIL
+fi
 
 # Get SSL Library not supported in native 2.5.2
 read -p "Install Python ssl Library (y/n): "
 if [ "$REPLY" = "y" ]; then
     download_tar http://pypi.python.org/packages/source/s/ssl/ssl-1.15.tar.gz $SRC_DIR/ssl-1.15
 
-    sudo python2.5 setup.py install
+    python2.5 setup.py install
 fi
 
 # Get Django 1.1
@@ -100,7 +115,7 @@ read -p "Install Django 1.1 (y/n): "
 if [ "$REPLY" = "y" ]; then
     download_tar http://media.djangoproject.com/releases/1.1/Django-1.1.2.tar.gz $SRC_DIR/Django-1.1.2
 
-    sudo python2.5 setup.py install
+    python2.5 setup.py install
 fi
 
 AE_DIR="/usr/local/google_appengine"
@@ -109,16 +124,18 @@ AE_DIR="/usr/local/google_appengine"
 read -p "Install App Engine (y/n): "
 if [ "$REPLY" = "y" ]; then
     download_zip http://googleappengine.googlecode.com/files/google_appengine_1.4.0.zip $AE_DIR
+    chmod -R o+rwx .
 
     # Put dev_appserver.py and appcfg.py directly into PATH
     cd /usr/local/bin
-    sudo ln -f -s $AE_DIR/dev_appserver.py
-    sudo ln -f -s $AE_DIR/appcfg.py
+    ln -f -s $AE_DIR/dev_appserver.py
+    ln -f -s $AE_DIR/appcfg.py
 fi
 
 read -p "Install App Engine Helper (y/n): "
 if [ "$REPLY" = "y" ]; then
     download_zip http://google-app-engine-django.googlecode.com/files/appengine_helper_for_django-r105.zip $AE_DIR/appengine_helper_for_django
+    chmod -R o+rwx .
 
     patch -p1 -i $SCRIPT_DIR/aeh.patch
 
