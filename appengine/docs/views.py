@@ -44,12 +44,11 @@ def index(request):
 @method_required('LIST')
 def app_docs(request):
     """
-    List the current user's documents within the current app.
+    List the current user's OWNED documents within the current app.
 
     TODO: Add flexible filters as query string arguments.
     ?prefix=abc
     ?tag=demo
-    ?owner=username
     ?readers=public
     ?writers=username
 
@@ -58,8 +57,11 @@ def app_docs(request):
     REVIEW: Is this safe to add @jsonp - would need to only
     return to approved domains or public documents?
 
-    And why is this just the current user's docs?  No way to enumerate
+    REVIEW: And why is this just the current user's docs?  No way to enumerate
     all the docs in the application?  What about for the application owner?
+
+    TODO: Cache sha1 and size in doc, so we don't have to fetch the
+    blobs!
     """
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)
@@ -68,30 +70,33 @@ def app_docs(request):
     except ValueError, error:
         return HttpJSONResponse({'statusText': error.message}, status=400)
 
-    query = Doc.all(keys_only=keys_only)
-
+    query = request.app.all_docs(keys_only=keys_only)
     query.filter('owner', request.user.get_username())
-    key_name = request.app.get_app_id()
-    query.filter('__key__ >=', db.Key.from_path('Doc', key_name + '/'))
-    query.filter('__key__ <', db.Key.from_path('Doc', key_name + '0'))
 
     if 'cursor' in request.GET:
         query.with_cursor(request.GET['cursor'])
 
     docs = query.fetch(limit)
-    blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
-                 for doc in docs]
-    # TODO: Cache sha1 and size in doc, so we don't have to fetch
-    # the blobs!
-    blobs = db.get(blob_keys)
+    if not keys_only:
+        blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
+                     for doc in docs]
+        blobs = db.get(blob_keys)
     items = {}
-    for doc, blob in zip(docs, blobs):
+    for i, doc in enumerate(docs):
+        if keys_only:
+            # WARNING: Document tombstones WILL show up in the
+            # keys_only form of the list command.
+            doc_id = doc.name().split('/')[1]
+            items[doc_id] = {}
+            continue
+        if doc.deleted:
+            continue
         info = {'json': True,
                 'modified': doc.modified,
                 }
-        if blob:
-            info['sha1'] = blob.sha1
-            info['size'] = len(blob.value)
+        if blobs[i]:
+            info['sha1'] = blobs[i].sha1
+            info['size'] = blobs[i].size
         items[doc.doc_id] = info
     result = {'items': items}
     if (len(docs) == limit):
@@ -202,5 +207,5 @@ def doc_list(request, doc_id):
     """
     List blobs inside the root document, using the blob list interface.
     """
-    request.key_name = request.doc.key().name() + '/'
+    request.key_name = request.doc.blob_key_prefix() + '/'
     return blob_list(request)
