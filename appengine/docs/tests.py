@@ -67,6 +67,19 @@ class DocumentTest(AppTestCase):
         self.assertContains(response, 'Document not found: myapp/unknown',
                             status_code=404)
 
+    def test_delete(self):
+        """Document deletion."""
+        # Doc and blob available
+        for url in ['/docs/mydoc', '/docs/mydoc/myblob']:
+            response = self.app_client.get(url)
+            self.assertEqual(response.status_code, 200)
+        # Simulate tombstone - hiding doc and child blobs
+        self.doc.deleted = True
+        self.doc.put()
+        for url in ['/docs/mydoc', '/docs/mydoc/myblob']:
+            response = self.app_client.get(url)
+            self.assertEqual(response.status_code, 404, url)
+
 
 class PermissionTest(AppTestCase):
 
