@@ -16,8 +16,7 @@ class Doc(SuperDoc):
     current_schema = SuperDoc.current_schema + 1
 
     def blob_key_prefix(self):
-        parts = self.key().name().split('/')
-        return parts[0] + '/' + self.doc_id
+        return self.key().name()
 
     def get_absolute_url(self):
         """
