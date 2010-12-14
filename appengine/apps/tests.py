@@ -21,6 +21,14 @@ TAG_REGEX = re.compile(r'<[/!\w][^>]*>')
 class AppTestCase(TestCase):
     """
     Reusable TestCase with automatic users, apps, documents.
+
+    Users: peter, paul (not email verified)
+    Apps: www, myapp
+    Docs: myapp/mydoc
+    Blobs: apps/myapp/index.html/
+           myapp/mydoc/ (Doc's Blob)
+           myapp/mydoc/myblob (Child Blob)
+    Clients: www, myapp, admin.myapp
     """
 
     def setUp(self):
@@ -114,7 +122,7 @@ class AppTestCase(TestCase):
         try:
             super(AppTestCase, self).assertContains(response, *args, **kwargs)
         except:
-            logging.error(self.extract_content(response))
+            logging.error("assertContains:\n" + self.extract_content(response))
             raise
 
     def assertRedirects(self, response, *args, **kwargs):
@@ -122,7 +130,7 @@ class AppTestCase(TestCase):
         try:
             super(AppTestCase, self).assertRedirects(response, *args, **kwargs)
         except:
-            logging.error(self.extract_content(response))
+            logging.error("assertRedirects:\n" + self.extract_content(response))
             raise
 
 
