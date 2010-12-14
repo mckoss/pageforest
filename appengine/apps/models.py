@@ -11,7 +11,7 @@ from utils import crypto
 from utils.middleware import RequestMiddleware
 
 from docs.supermodels import SuperDoc
-from blobs.models import Blob
+from docs.models import Doc
 
 CACHE_PREFIX = 'GBH1~'
 
@@ -112,9 +112,18 @@ class App(SuperDoc):
         self.update_string_list_property(parsed, 'referers', **kwargs)
         self.update_boolean_property(parsed, 'cloneable', **kwargs)
 
+    # TODO: Remove this
     def fetch_static_blobs(self, limit=100):
-        key_name = 'apps/' + self.get_app_id()
-        query = Blob.all()
-        query.filter('__key__ >=', db.Key.from_path('Blob', key_name + '/'))
-        query.filter('__key__ <', db.Key.from_path('Blob', key_name + '0'))
+        query = self.all_blobs()
         return query.fetch(limit)
+
+    def all_docs(self, keys_only=False):
+        """
+        Similar to all_blobs() - generate a query object for all the Docs
+        belonging to this appliction.
+        """
+        query = Doc.all(keys_only=keys_only)
+        appid = self.get_app_id()
+        query.filter('__key__ >=', db.Key.from_path('Doc', appid + '/'))
+        query.filter('__key__ <', db.Key.from_path('Doc', appid + '0'))
+        return query
