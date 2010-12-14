@@ -1,6 +1,8 @@
 import datetime
+import logging
 
 from django.conf import settings
+from django.utils import simplejson as json
 
 from apps.tests import AppTestCase
 
@@ -68,17 +70,38 @@ class DocumentTest(AppTestCase):
                             status_code=404)
 
     def test_delete(self):
-        """Document deletion."""
-        # Doc and blob available
+        """Document deletion and tombstones."""
+        self.sign_in(self.peter)
+
+        # Verify doc and blobs can be read
         for url in ['/docs/mydoc', '/docs/mydoc/myblob']:
             response = self.app_client.get(url)
             self.assertEqual(response.status_code, 200)
+        response = self.app_client.put('/docs/mydoc/child1', '', content_type='text')
+        self.assertEqual(response.status_code, 200)
+        response = self.app_client.get('/docs/mydoc?method=list')
+        self.assertEqual(response.status_code, 200)
+        result = json.loads(response.content)
+        self.assertEqual(len(result['items']), 2, response.content)
+        blobs = self.doc.all_blobs().fetch(100)
+        self.assertEqual(len(blobs), 3, [blob.key().name() for blob in blobs])
+
         # Simulate tombstone - hiding doc and child blobs
         self.doc.deleted = True
         self.doc.put()
         for url in ['/docs/mydoc', '/docs/mydoc/myblob']:
             response = self.app_client.get(url)
             self.assertEqual(response.status_code, 404, url)
+        response = self.app_client.put('/docs/mydoc/child2', '', content_type='text')
+        self.assertEqual(response.status_code, 404)
+        response = self.app_client.get('/docs/mydoc?method=list')
+        self.assertEqual(response.status_code, 404)
+
+        blobs = self.doc.all_blobs().fetch(100)
+        self.assertEqual(len(blobs), 3)
+        self.doc.delete()
+        blobs = self.doc.all_blobs().fetch(100)
+        self.assertEqual(len(blobs), 0)
 
 
 class PermissionTest(AppTestCase):

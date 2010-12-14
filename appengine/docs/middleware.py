@@ -36,8 +36,12 @@ class DocMiddleware(object):
         request.doc = Doc.get_by_key_name(key_name)
 
         if request.doc:
-            # The document was found.
-            return
+            if not request.doc.deleted:
+                # Found
+                return
+            else:
+                # Tombstone - treat as not found.
+                request.doc = None
 
         if request.method == 'PUT' and DOC_REGEX.match(request.path_info):
             # This request is going to create the document.
