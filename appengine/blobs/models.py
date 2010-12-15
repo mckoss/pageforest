@@ -6,7 +6,7 @@ from google.appengine.ext import db
 from django.conf import settings
 from django.utils import simplejson as json
 
-from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
+from utils.mixins import Timestamped, Migratable, Taggable, Cacheable, Hashable
 from utils.mime import guess_mimetype
 from utils.json import is_valid_json
 
@@ -22,7 +22,7 @@ CERTAINLY_NOT_JSON = ['text/html', 'text/css', 'application/pdf']
 MAX_INTERNAL_SIZE = 600  # bytes
 
 
-class Blob(Timestamped, Migratable, Taggable, Cacheable):
+class Blob(Timestamped, Migratable, Taggable, Hashable, Cacheable):
     """
     Key-value store for PageForest documents and resources.
 
@@ -33,10 +33,9 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
     automatically updated before datastore put.
     """
     value = db.BlobProperty()
-    size = db.IntegerProperty()
-    sha1 = db.StringProperty()
     valid_json = db.BooleanProperty(indexed=False)
     directory = db.StringProperty()
+
     # TODO: Add owner - Ownable mixin with security checks?
 
     # Schema version for Migratable mixin:
@@ -49,10 +48,21 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         if key_name is not None:
             key_parts = key_name.rstrip('/').split('/')
             self.directory = '/'.join(key_parts[:-1]) + '/'
-        # Update the metadata properties: size, sha1, valid_json.
         value = kwargs.get('value')
         if value is not None:
             self.__setattr__('value', value)
+
+    def migrate(self):
+        """
+        Update entity to the current schema.
+        """
+        if self.schema < 2:
+            # Update metadata and store data in separate Chunk if large.
+            value = self.__getattribute__('value')
+            self.__setattr__('value', value)
+        if self.schema < 3:
+            # Datastore put will enable indexing for sha1 property.
+            pass
 
     def __getattribute__(self, name):
         """
@@ -76,8 +86,7 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         if name != 'value':
             db.Model.__setattr__(self, name, value)
             return
-        self.size = len(value)
-        self.sha1 = sha1(value).hexdigest()
+        self.update_hash(value)
         # Attempt to parse JSON, unless the file extension indicates a
         # well-known MIME type that doesn't allow JSON data.
         mimetype = guess_mimetype(self.key().name().rstrip('/'))
@@ -106,10 +115,6 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         domain = app_id + '.' + settings.DEFAULT_DOMAIN
         return 'http://' + domain + key
 
-    def get_etag(self):
-        """Return ETag for use in the HTTP header."""
-        return '"%s"' % self.sha1
-
     def to_backup(self):
         """
         Return file contents for zipfile backup. Modification time is
@@ -132,15 +137,3 @@ class Blob(Timestamped, Migratable, Taggable, Cacheable):
         # Copy the internal value, but don't load Chunk from datastore.
         result._value = self._value
         return result
-
-    def migrate(self):
-        """
-        Update entity to the current schema.
-        """
-        if self.schema < 2:
-            # Update metadata and store data in separate Chunk if large.
-            value = self.__getattribute__('value')
-            self.__setattr__('value', value)
-        if self.schema < 3:
-            # Datastore put will enable indexing for sha1 property.
-            pass

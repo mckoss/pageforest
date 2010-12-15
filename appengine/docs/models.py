@@ -1,8 +1,10 @@
 from django.conf import settings
+from django.utils import simplejson as json
 
 from google.appengine.ext import db
 
 from docs.supermodels import SuperDoc
+import blobs.models
 
 
 class Doc(SuperDoc):
@@ -12,13 +14,17 @@ class Doc(SuperDoc):
     """
     doc_id = db.StringProperty()  # May contain uppercase letters.
 
-    current_schema = SuperDoc.current_schema + 1
+    current_schema = SuperDoc.current_schema + 3
 
     def blob_key_prefix(self):
         """
         Blob keys are 'appid/docid/...'
         """
         return self.key().name()
+
+    def get_etag(self):
+        """Return ETag for use in the HTTP header."""
+        return '"%s"' % self.sha1
 
     def get_absolute_url(self, app=None):
         """
@@ -47,3 +53,15 @@ class Doc(SuperDoc):
         title = doc_id and doc_id[0].upper() + doc_id[1:] or ''
         return Doc(key_name=key_name, doc_id=doc_id,
                    title=title, owner=username)
+
+    def to_json(self, exclude=None):
+        """
+        Standard json formatted string for the document.
+        """
+        if exclude is None:
+            exclude = ()
+        exclude += settings.HIDDEN_PROPERTIES
+        blob = blobs.models.Blob.get_by_key_name(self.blob_key_prefix() + '/')
+        extra = blob and {"blob": json.loads(blob.value)} or {}
+        result = super(Doc, self).to_json(exclude=exclude, extra=extra)
+        return result
