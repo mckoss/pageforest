@@ -55,14 +55,34 @@ class Hashable(Serializable):
 
     def get_etag(self):
         """Return ETag for use in the HTTP header."""
+        if sha1 is None:
+            return None
         return '"%s"' % self.sha1
 
     def update_hash(self, value=None):
+        value = value or self.to_json(exclude=('sha1', 'size'))
         if value is None:
-            value = self.to_json(exclude=('sha1', 'size'))
+            return
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 
     def update_headers(self, response):
         response['ETag'] = self.get_etag()
         # Hashable is the end of the MRO chain - don't call super
+
+    def invalidate_hash(self):
+        self.sha1 = None
+        self.size = None
+
+    def put(self):
+        """
+        If we've not calculated a hash for this object, be sure
+        to update it before storing in the database.
+
+        Note that subclasses can either call update_hash() when they
+        modify an object, or invalidate_hash() to force it to
+        be recalculated when stored.
+        """
+        if self.sha1 is None:
+            self.update_hash()
+        super(Hashable, self).put()
