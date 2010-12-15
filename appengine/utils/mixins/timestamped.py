@@ -2,6 +2,7 @@ from google.appengine.ext import db
 import datetime
 
 from utils.middleware import RequestMiddleware
+from utils.http import http_datetime
 
 
 class Timestamped(db.Model):
@@ -29,3 +30,8 @@ class Timestamped(db.Model):
         # after a put().
         self.modified = datetime.datetime.now()
         super(Timestamped, self).put(*args, **kwargs)
+
+    def update_headers(self, response):
+        response['Last-Modified'] = http_datetime(self.modified)
+        response['X-Last-Modified-ISO'] = self.modified.isoformat() + 'Z'
+        super(Timestamped, self).update_headers(response)

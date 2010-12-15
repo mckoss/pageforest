@@ -6,7 +6,7 @@ from django.conf import settings
 
 from google.appengine.runtime import DeadlineExceededError
 
-from utils.mixins import Timestamped, Migratable, Taggable, Cacheable
+from utils.mixins import Timestamped, Migratable, Taggable, Cacheable, Hashable
 from utils.json import assert_boolean, assert_string, assert_string_list
 
 from blobs.models import Blob
@@ -14,7 +14,7 @@ from blobs.models import Blob
 PAGING_SIZE = 500
 
 
-class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
+class SuperDoc(Timestamped, Migratable, Taggable, Hashable, Cacheable):
     """
     Parent class for App and Doc with shared functionality.
 
@@ -31,12 +31,14 @@ class SuperDoc(Timestamped, Migratable, Taggable, Cacheable):
     readers = db.StringListProperty()  # Usernames that have read access.
     deleted = db.BooleanProperty(default=False)
 
-    current_schema = 100               # Migratable schema should be
+    current_schema = 200               # Migratable schema should be
                                        # added to SuperDoc.schema
 
     def migrate(self):
         if self.schema < 100:
             self.deleted = False
+        if self.schema < 200:
+            self.update_hash()
 
     def normalize_lists(self):
         """

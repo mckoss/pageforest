@@ -114,15 +114,13 @@ def blob_get(request):
     if blob is None:
         raise Http404("Blob not found: " + original_key_name)
     etag = blob.get_etag()
-    last_modified = http_datetime(blob.modified)
-    # Only use etag (not last_modified) as 1 second accuracy is not sufficient
-    # to descriminate two modifications that occur within a 1 second interval.
+    # The browser controls sendind HTTP_IF_MODIFIED_SINCE - so we can't
+    # rely on that since two writes can be made in a 1 second interval.
     if (etag == request.META.get('HTTP_IF_NONE_MATCH', '')):
         blob = wait_for_update(request, blob)
         if blob is None:
             raise Http404("Blob was deleted: " + request.key_name)
         etag = blob.get_etag()
-        last_modified = http_datetime(blob.modified)
     mimetype = guess_mimetype(request.key_name.rstrip('/'))
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
@@ -134,7 +132,8 @@ def blob_get(request):
         response = HttpResponseNotModified(mimetype=mimetype)
     else:
         response = HttpResponse(blob.value, mimetype=mimetype)
-    response['Last-Modified'] = last_modified
+    response['Last-Modified'] = http_datetime(blob.modified)
+    response['X-Last-Modified-ISO'] = blob.modified.isoformat() + 'Z'
     response['ETag'] = etag
     return response
 
@@ -309,6 +308,8 @@ def blob_put(request):
             'statusText': "Saved",
             'sha1': blob.sha1})
     response['Last-Modified'] = http_datetime(blob.modified)
+    response['X-Last-Modified-ISO'] = blob.modified.isoformat() + 'Z'
+    response['ETag'] = blob.get_etag()
     return response
 
 

@@ -1,5 +1,7 @@
 import logging
 
+from hashlib import sha1
+
 from django.conf import settings
 from django.http import \
     HttpResponse, HttpResponseNotModified, HttpResponseNotAllowed
@@ -123,26 +125,14 @@ def dispatch(request, doc_id):
 
 def doc_get(request, doc_id):
     """
-    Get JSON blob with meta info for this document.
+    Return JSON formatted representation of a Doc.
     """
-    extra = None
-    modified = request.doc.modified
-    # Get extra data from blob store.
-    blob = Blob.get_by_key_name(request.doc.key().name() + '/')
-    if blob:
-        extra = {"blob": json.loads(blob.value)}
-        modified = max(modified, blob.modified)
-    # Generate Last-Modified header and compare with If-Modified-Since.
-    # Should update to SHA1 hash of document to avoid failures from writes
-    # in the same second.
-    last_modified = http_datetime(modified)
-    if last_modified == request.META.get('HTTP_IF_MODIFIED_SINCE', ''):
-        return HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE_CS)
-    # Generate pretty JSON output.
-    result = request.doc.to_json(exclude=settings.HIDDEN_PROPERTIES,
-                                 extra=extra)
-    response = HttpResponse(result, mimetype=settings.JSON_MIMETYPE_CS)
-    response['Last-Modified'] = last_modified
+    etag = request.doc.get_etag()
+    if etag == request.META.get('HTTP_IF_NONE_MATCH', ''):
+        response = HttpResponseNotModified(mimetype=settings.JSON_MIMETYPE_CS)
+    else:
+        response = HttpResponse(request.doc.to_json(), mimetype=settings.JSON_MIMETYPE_CS)
+    request.doc.update_headers(response)
     return response
 
 
@@ -167,28 +157,33 @@ def doc_put(request, doc_id):
 
     # Should call update_tags as in blob_put
 
-    request.doc.put()
     # Write JSON blob to blob storage.
+    key_name = request.doc.blob_key_prefix() + '/'
     if 'blob' in parsed:
-        key_name = request.doc.key().name() + '/'
         # Smallest format - and canonical ordering
         value = json.dumps(parsed['blob'],
                            separators=(',', ':'),
                            sort_keys=True)
         blob = Blob(key_name=key_name, value=value)
         blob.put()
-        dispatch_subscriptions(key_name, 'PUT',
-                               {'sha1': blob.sha1,
-                                'size': blob.size,
-                                'modified': request.doc.modified})
 
-    # TODO: Note that modifying only doc meta-data does not trigger
-    # a channel subscription update.  Should it?
+    # Write document after blob updated - for sha1 calculation
+    request.doc.update_hash()
+    request.doc.put()
 
-    return HttpJSONResponse({
+    dispatch_subscriptions(key_name, 'PUT',
+                           {'sha1': request.doc.sha1,
+                            'size': request.doc.size,
+                            'modified': request.doc.modified})
+
+    response = HttpJSONResponse({
         'statusText': status == 200 and "Saved" or "Created",
         'modified': request.doc.modified,
+        'sha1': request.doc.sha1,
         }, status=status)
+
+    request.doc.update_headers(response)
+    return response
 
 
 def doc_delete(request, docid):

@@ -51,7 +51,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         var s;
         var badProperty;
 
-        // TODO: Why not map Date properties here?
+        // TODO: Map Date properties here?
         // How to unmap Dates on callbacks?
         function mapper(key, value) {
             if (badProperty) {
