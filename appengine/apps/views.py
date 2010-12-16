@@ -111,18 +111,20 @@ def app_json_put(request):
     Parse incoming JSON blob and update meta info for this app.
     """
     if not request.app.owner:
+        try:
+            request.user.assert_authorized(App.create)
+        except Exception, error:
+            return HttpJSONResponse({'textStatus': unicode(error)}, status=403)
         request.app.owner = request.user.get_username()
+
     if not request.app.is_writable(request.user):
         return AccessDenied(request, "No write permission.")
+
     # Update app from uploaded JSON data.
-    status = 403
-    try:
-        request.user.assert_authorized(App.create)
-        status = 400
-        parsed = json.loads(request.raw_post_data)
-        request.app.update_from_json(parsed)
-    except Exception, error:
-        return HttpJSONResponse({'textStatus': unicode(error)}, status=status)
+    parsed = json.loads(request.raw_post_data)
+    # TODO: Should confirm that user is retaining write permission as either
+    # owner or writer!
+    request.app.update_from_json(parsed)
     request.app.put()
     return HttpResponse('{"status": 200, "statusText": "Saved"}',
                         mimetype=settings.JSON_MIMETYPE_CS)
