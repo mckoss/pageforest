@@ -76,6 +76,8 @@ def check_permissions(request, resource, method_override=None):
             # non-public applications.
             skip_referer_check = (
                 # Referer check may be skipped for HTML blobs ...
+                # REVIEW: Are we exposing ALL HTML documents to
+                # unpermitted users?
                 (request.path_info == '/app/' or
                  request.path_info.endswith('.html/'))
                 # ... but only static app data, not inside documents ...

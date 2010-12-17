@@ -177,13 +177,11 @@ def blob_list(request):
 
     # REVIEW: This doesn't seem to be working for multiple tag params.
     for tag in request.GET.getlist('tag'):
-        logging.info("Adding filter: tag=%s", urllib.unquote_plus(tag))
         query.filter('tags', urllib.unquote_plus(tag))
     if 'prefix' in request.GET:
         depth = 0
 
     if depth == 1:
-        logging.info("Filtering on directory: %s" % request.key_name)
         query.filter('directory', request.key_name)
         if 'order' in request.GET:
             order_prop = request.GET['order']
@@ -217,7 +215,6 @@ def blob_list(request):
         parts = key.name().split('/')
         parts = parts[strip_levels:-1]
         if depth != 0 and len(parts) > depth:
-            logging.info("Ignoring deep blob %r" % parts)
             # Ignore blobs that are deeper than maximum depth.
             continue
         rel_key = '/'.join(parts)
@@ -462,7 +459,6 @@ def blob_slice(request):
         if start is not None:
             array = array[start:]
     except:
-        logging.info("Blob not an array: %r" % response)
         return HttpResponseServerError("Blob is not a parsable array.")
 
     # Modify the results of blob_get to return the slice (and matching ETag)
