@@ -220,7 +220,7 @@ def upload_file(filename, url=None):
                 sha1 = app['sha1']
         if options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
-                print "Already up-to-date: %s" % filename
+                print "File hashes match: %s" % filename
             return
         elif options.verbose:
             print "Hash %s (file) != %s (server)." % (sha1, options.listing[keyname]['sha1'])
@@ -261,7 +261,7 @@ def download_file(filename, url=None):
         info = options.listing[filename]
         if info['sha1'] == sha1_file(filename):
             if options.verbose:
-                print "Already up-to-date: %s" % filename
+                print "File hashes match: %s" % filename
             return
     # Download file from Pageforest backend.
     or_not = options.noop and " (Not!)" or ""
