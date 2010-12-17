@@ -153,6 +153,8 @@ def config():
     parser.add_option('-a', '--application')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
+    parser.add_option('-n', '--noop', action='store_true',
+                      help="don't perform update operations")
     options, args = parser.parse_args()
 
     if not args:
@@ -212,16 +214,24 @@ def upload_file(filename, url=None):
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and keyname in options.listing:
         sha1 = hashlib.sha1(data).hexdigest()
+        if filename == META_FILENAME:
+            app = json.loads(data)
+            if 'sha1' in app:
+                sha1 = app['sha1']
         if options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
                 print "Already up-to-date: %s" % filename
             return
+        elif options.verbose:
+            print "Hash %s (file) != %s (server)." % (sha1, options.listing[keyname]['sha1'])
     # Upload file to Pageforest backend.
+    or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
-        print "Uploading: %s (%s bytes)" % (url, intcomma(len(data)))
-    response = urllib2.urlopen(PutRequest(url), data)
-    if options.verbose:
-        print response.read()
+        print "Uploading: %s (%s bytes)%s" % (url, intcomma(len(data)), or_not)
+    if not options.noop:
+        response = urllib2.urlopen(PutRequest(url), data)
+        if options.verbose:
+            print response.read()
 
 
 def delete_file(filename, url=None):
@@ -230,11 +240,13 @@ def delete_file(filename, url=None):
     """
     if url is None:
         url = url_from_filename(filename)
+    or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
-        print "Deleting: %s" % url
-    response = urllib2.urlopen(DeleteRequest(url))
-    if options.verbose:
-        print response.read()
+        print "Deleting: %s%s" % (url, or_not)
+    if not options.noop:
+        response = urllib2.urlopen(DeleteRequest(url))
+        if options.verbose:
+            print response.read()
 
 
 def download_file(filename, url=None):
@@ -252,15 +264,17 @@ def download_file(filename, url=None):
                 print "Already up-to-date: %s" % filename
             return
     # Download file from Pageforest backend.
+    or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
         if 'size' in info:
-            print "Downloading: %s (%s bytes)" % (url, intcomma(info['size']))
+            print "Downloading: %s (%s bytes)%s" % (url, intcomma(info['size']), or_not)
         else:
-            print "Downloading: %s" % url
-    response = urllib2.urlopen(AuthRequest(url))
-    outfile = open(filename, 'wb')
-    outfile.write(response.read())
-    outfile.close()
+            print "Downloading: %s%s" % (url, or_not)
+    if not options.noop:
+        response = urllib2.urlopen(AuthRequest(url))
+        outfile = open(filename, 'wb')
+        outfile.write(response.read())
+        outfile.close()
 
 
 def prefix_match(args, filename):
@@ -321,6 +335,13 @@ def list_remote_files():
             result = json.loads(response.read(), object_hook=as_datetime)
             # Change result of list command on 12/8/10
             if 'items' in result:
+                # Changed items from dict to array on 12/16/10!
+                if type(result['items']) == list:
+                    item_dict = {}
+                    for item in result['items']:
+                        item_dict[item['key']] = item
+                    result['items'] = item_dict
+
                 options.listing.update(result['items'])
                 if 'cursor' not in result:
                     break
@@ -345,6 +366,8 @@ def get_command(args):
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
+        if filename == META_FILENAME:
+            continue
         if args and not prefix_match(args, filename):
             continue
         # Make directory if needed.
