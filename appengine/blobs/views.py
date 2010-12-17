@@ -32,7 +32,7 @@ ROOT_METHODS = ('GET', 'HEAD', 'LIST')
 MAX_PUSH_ATTEMPTS = 5
 MAX_LIST = 1000
 
-ALLOWED_ORDER_PROPS = ('modified', 'created', 'size')
+ALLOWED_ORDER_PROPS = ('modified', '-modified')
 
 
 @jsonp
@@ -177,18 +177,26 @@ def blob_list(request):
 
     # REVIEW: This doesn't seem to be working for multiple tag params.
     for tag in request.GET.getlist('tag'):
+        logging.info("Adding filter: tag=%s", urllib.unquote_plus(tag))
         query.filter('tags', urllib.unquote_plus(tag))
+    if 'prefix' in request.GET:
         depth = 0
+
     if depth == 1:
+        logging.info("Filtering on directory: %s" % request.key_name)
         query.filter('directory', request.key_name)
         if 'order' in request.GET:
             order_prop = request.GET['order']
-            if order_prop.startswith('-'):
-                order_prop = order_prop[1:]
-                if order_prop in ALLOWED_ORDER_PROPS:
-                    logging.info("order: %s" % order_prop)
-                    query.order(request.GET['order'])
+            if order_prop not in ALLOWED_ORDER_PROPS:
+                return HttpJSONResponse({'statusText': "Invalid order clause: '%s'" % order_prop},
+                                        status=400)
+            query.order(order_prop)
     else:
+        if 'order' in request.GET:
+            return HttpJSONResponse(
+                {'statusText': "Ordering incompatible with deep traversal.  " +
+                 "Use depth=1, and no prefix=."},
+                status=400)
         if 'prefix' in request.GET:
             prefix_filter(query, 'Blob', request.key_name + request.GET['prefix'])
         else:
@@ -198,7 +206,7 @@ def blob_list(request):
         query.with_cursor(request.GET['cursor'])
     strip_levels = request.key_name.count('/')
 
-    blobs = {}
+    blobs = []
     memcache_mapping = {}
     raw_results = query.fetch(limit)
     for blob in raw_results:
@@ -208,22 +216,28 @@ def blob_list(request):
             key = blob.key()
         parts = key.name().split('/')
         parts = parts[strip_levels:-1]
-        if depth and len(parts) > depth:
+        if depth != 0 and len(parts) > depth:
+            logging.info("Ignoring deep blob %r" % parts)
             # Ignore blobs that are deeper than maximum depth.
             continue
-        filename = '/'.join(parts)
+        rel_key = '/'.join(parts)
+        item = {'key': rel_key}
         if keys_only:
-            blobs[filename] = {}
+            blobs.append(item)
             continue
-        blobs[filename] = {
+        item.update({
+            'key': rel_key,
             'size': blob.size,
             'sha1': blob.sha1,
             'json': blob.valid_json,
             'modified': blob.modified,
-            }
+            })
         if blob.tags:
-            blobs[filename]['tags'] = blob.tags
+            item['tags'] = blob.tags
+        blobs.append(item)
         # Might as well fill memcache with the small blobs we've read.
+        # REVIEW: Would be nice if this were a function in Cachable to
+        # preserve information hiding of that mixin.
         if blob._value is None or len(blob._value) <= MAX_INTERNAL_SIZE:
             memcache_mapping[blob.get_cache_key()] = blob.to_protobuf()
 

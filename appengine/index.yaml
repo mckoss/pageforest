@@ -25,7 +25,24 @@ indexes:
   properties:
   - name: directory
   - name: modified
+
+- kind: Blob
+  properties:
+  - name: directory
+  - name: modified
     direction: desc
+
+- kind: Blob
+  properties:
+  - name: directory
+  - name: size
+    direction: desc
+
+- kind: Blob
+  properties:
+  - name: directory
+  - name: tags
+  - name: modified
 
 - kind: Blob
   properties:
