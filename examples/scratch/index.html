@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <!--
    scratch.Pageforest.com - Sample Application
 
@@ -10,17 +11,20 @@
 
        http://www.pageforest.com/apps/scratch/clone/
   -->
+
 <title>Scratch Sample Pageforest Application</title>
 
 <!--
    You can change the default icon for your application
    by editing /images/icon.png and /image/touch.png (used for
-   iPhone and iPad).
+   iPhone and iPad shortcuts).
   -->
+
 <link rel="icon" type="image/png" href="/images/icon.png" />
 <link rel="apple-touch-icon" href="/images/touch.png" />
 
 <!-- A simple application-specific style sheet -->
+
 <link rel="stylesheet" type="text/css" href="style.css" />
 
 <!--
@@ -34,6 +38,7 @@
 
    API reference: http://code.google.com/p/pageforest/wiki/ClientLibrary
   -->
+
 <link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
 <script type="text/javascript"
         src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
@@ -41,6 +46,7 @@
 <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
 
 <!-- The scratch application code is in main.js -->
+
 <script type="text/javascript" src="main.js"></script>
 
 <script type="text/javascript">
@@ -89,6 +95,7 @@
      A simple form whose contains will be saved and loaded from the
      Pageforest data store.  See main.js.
     -->
+
   <fieldset>
     <legend>Data Fields</legend>
     <ul>
@@ -103,6 +110,7 @@
      These links are for informational purposes only - you should remove them
      from you application when you build your own app.
     -->
+
   <fieldset>
     <legend>Explore</legend>
     <ol>
@@ -119,9 +127,10 @@
   </fieldset>
 
 <!--
-   Standard Google Analytics tracking.  Can be removed from your own app,
+   Standard Google Analytics tracking.  This can be removed from your own app,
    or replaced with your own account id.
   -->
+
 <script type="text/javascript">
   var _gaq = _gaq || [];
   _gaq.push(['_setAccount', 'UA-2072869-7']);
@@ -129,7 +138,8 @@
 
   (function() {
     var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
-    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') +
+        '.google-analytics.com/ga.js';
     var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
   })();
 </script>
