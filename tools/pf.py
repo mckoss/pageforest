@@ -352,8 +352,10 @@ def list_remote_files():
                 options.listing = result
                 break
     except urllib2.HTTPError, e:
+        print "Error listing files: %s: %s" % (unicode(e), e.read())
+        # For newly created apps - listing will return error.
+        # Treat as empty on the server.
         options.listing = {}
-        print unicode(e)
 
 
 def get_command(args):
@@ -552,7 +554,17 @@ if __name__ == '__main__':
     try:
         main()
     except urllib2.HTTPError, e:
-        print "%s: %s - see pferror.html for details." % (e, e.url)
-        error_file = open(ERROR_FILENAME, 'wb')
-        error_file.write(e.read())
-        error_file.close()
+        result = e.read()
+        try:
+            json_response = json.loads(result)
+            if 'textStatus' in json_response:
+                print "Error: %s" % json_response['textStatus']
+            else:
+                print json_response
+        except:
+            print "%s: %s - see pferror.html for details." % (e, e.url)
+            error_file = open(ERROR_FILENAME, 'wb')
+            error_file.write(result + '\n')
+            error_file.close()
+
+        exit(1)
