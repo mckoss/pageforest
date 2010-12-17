@@ -35,7 +35,7 @@ urlpatterns = patterns(
 
     # Static hosting for Pageforest apps.
     (r'^app/admin/app.json/$', 'apps.views.app_json'),
-    # The docid will be empty - key is path to an app blob
+    # Static app blob resources (files) - docid will be empty
     (r'^app/(admin/)?(?P<doc_id>)(?P<key>.*)$',
      'blobs.views.dispatch'),
 
