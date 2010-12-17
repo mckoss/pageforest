@@ -22,6 +22,7 @@ from utils.json import ModelEncoder, HttpJSONResponse
 from utils.shortcuts import render_to_response, lookup_or_404, \
     get_int, get_bool
 from utils.channel import dispatch_subscriptions
+from utils.models import prefix_filter
 
 from chunks.models import Chunk
 from blobs.models import Blob, MAX_INTERNAL_SIZE
@@ -31,12 +32,16 @@ ROOT_METHODS = ('GET', 'HEAD', 'LIST')
 MAX_PUSH_ATTEMPTS = 5
 MAX_LIST = 1000
 
+ALLOWED_ORDER_PROPS = ('modified', 'created', 'size')
+
 
 @jsonp
 def dispatch(request, doc_id, key):
     """
     Dispatch requests to the blob storage interface.
     """
+    # REVIEW: This seems like it should be in App or Doc middleware
+    # not in a view function!
     if doc_id:
         request.key_name = '/'.join(
             (request.app.get_app_id(), doc_id.lower(), key))
@@ -51,6 +56,7 @@ def dispatch(request, doc_id, key):
         # Force a trailing slash to allow pre-order traversal on key
         # names, and to prevent separate documents on /foo and /foo/
         request.key_name += '/'
+
     function_name = 'blob_' + request.method.lower()
     if function_name not in globals():
         allow = [name[5:].upper() for name in globals()
@@ -138,18 +144,6 @@ def blob_get(request):
     return response
 
 
-def prefix_filter(query, kind, start, stop=None,
-                  property_name='__key__', greater='>=', less='<'):
-    """
-    Add a prefix filter to an existing query object.
-    """
-    if stop is None:
-        # Increase the last character of the start value.
-        stop = start[:-1] + chr(ord(start[-1]) + 1)
-    query.filter(property_name + ' ' + greater, db.Key.from_path(kind, start))
-    query.filter(property_name + ' ' + less, db.Key.from_path(kind, stop))
-
-
 @no_cache
 def blob_list(request):
     """
@@ -181,15 +175,24 @@ def blob_list(request):
 
     query = Blob.all(keys_only=keys_only)
 
-    if 'tag' in request.GET:
-        query.filter('tags', urllib.unquote_plus(request.GET['tag']))
+    # REVIEW: This doesn't seem to be working for multiple tag params.
+    for tag in request.GET.getlist('tag'):
+        query.filter('tags', urllib.unquote_plus(tag))
         depth = 0
-    elif 'prefix' in request.GET:
-        prefix_filter(query, 'Blob', request.key_name + request.GET['prefix'])
-    elif depth == 1:
+    if depth == 1:
         query.filter('directory', request.key_name)
+        if 'order' in request.GET:
+            order_prop = request.GET['order']
+            if order_prop.startswith('-'):
+                order_prop = order_prop[1:]
+                if order_prop in ALLOWED_ORDER_PROPS:
+                    logging.info("order: %s" % order_prop)
+                    query.order(request.GET['order'])
     else:
-        prefix_filter(query, 'Blob', request.key_name, greater='>')
+        if 'prefix' in request.GET:
+            prefix_filter(query, 'Blob', request.key_name + request.GET['prefix'])
+        else:
+            prefix_filter(query, 'Blob', request.key_name, greater='>')
 
     if 'cursor' in request.GET:
         query.with_cursor(request.GET['cursor'])
@@ -317,7 +320,7 @@ def blob_delete(request):
     """
     HTTP DELETE request handler.
 
-    TODO: Have an if-modified and return 409 Conflict if
+    TODO: Have an If-Match and return 409 Conflict if
     the passed in hash or modified date is incorrect.
     """
     blob = lookup_or_404(Blob, request.key_name)

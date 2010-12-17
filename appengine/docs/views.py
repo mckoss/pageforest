@@ -62,8 +62,7 @@ def app_docs(request):
     REVIEW: And why is this just the current user's docs?  No way to enumerate
     all the docs in the application?  What about for the application owner?
 
-    TODO: Cache sha1 and size in doc, so we don't have to fetch the
-    blobs!
+    TODO: Allow all the Blob LIST parameters.
     """
     try:
         keys_only = get_bool(request.GET, 'keysonly', default=False)
@@ -72,8 +71,7 @@ def app_docs(request):
     except ValueError, error:
         return HttpJSONResponse({'statusText': error.message}, status=400)
 
-    query = request.app.all_docs(keys_only=keys_only)
-    query.filter('owner', request.user.get_username())
+    query = request.app.all_docs(owner=request.user.get_username(), keys_only=keys_only)
 
     if 'cursor' in request.GET:
         query.with_cursor(request.GET['cursor'])
@@ -93,12 +91,10 @@ def app_docs(request):
             continue
         if doc.deleted:
             continue
-        info = {'json': True,
-                'modified': doc.modified,
+        info = {'modified': doc.modified,
+                'sha1': doc.sha1,
+                'size': doc.size
                 }
-        if blobs[i]:
-            info['sha1'] = blobs[i].sha1
-            info['size'] = blobs[i].size
         items[doc.doc_id] = info
     result = {'items': items}
     if (len(docs) == limit):

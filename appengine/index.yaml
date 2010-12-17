@@ -23,6 +23,12 @@ indexes:
 
 - kind: Blob
   properties:
+  - name: directory
+  - name: modified
+    direction: desc
+
+- kind: Blob
+  properties:
   - name: tags
   - name: modified
 

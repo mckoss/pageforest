@@ -607,16 +607,14 @@ class ListTest(AppTestCase):
 {
   "items": {
     "1234": {
-      "json": true,
       "modified": {
         "__class__": "Date",
         "isoformat": "2010-11-12T13:14:15Z"
       },
-      "sha1": "aa8c41330509455ee5679d04ed41535d280d9a89",
-      "size": 4
+      "sha1": "eb7cac8b6c27e8785a0531c41ee5b82f2906c419",
+      "size": 108
     },
     "MyDoc": {
-      "json": true,
       "modified": {
         "__class__": "Date",
 """)

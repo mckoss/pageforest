@@ -2877,7 +2877,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Load a document as the default document for this running application.
         load: function (docid) {
             if (this.app.setDoc == undefined) {
-                this.log(noSetDocMessage, {level: 'warn'});
+                this.log(noSetDocMessage, {level: 'warn', once: true});
                 return;
             }
 

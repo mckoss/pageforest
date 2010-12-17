@@ -335,14 +335,6 @@ def list_remote_files():
         print unicode(e)
 
 
-def print_file_info(filename, metadata):
-    print '%s  %s  %s\t(%s bytes)' % (
-        metadata['sha1'],
-        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
-        filename,
-        intcomma(metadata['size']))
-
-
 def get_command(args):
     """
     Download all files for an app, except files that are already
@@ -433,6 +425,14 @@ def vacuum_command(args):
             delete_file(filename)
 
 
+def print_file_info(filename, metadata):
+    print '%s  %s  %s\t(%s bytes)' % (
+        metadata['sha1'],
+        metadata['modified'].strftime('%Y-%m-%d %H:%M:%S'),
+        filename,
+        intcomma(metadata['size']))
+
+
 def list_command(args):
     """
     Show SHA-1 hash and filename for remote files. If args specified,
@@ -441,10 +441,15 @@ def list_command(args):
     list_remote_files()
     filenames = options.listing.keys()
     filenames.sort()
+    count = 0
+    size = 0
     for filename in filenames:
         if args and not prefix_match(args, filename):
             continue
         print_file_info(filename, options.listing[filename])
+        count += 1
+        size += options.listing[filename]['size']
+    print "%s files: %s Total bytes" % (intcomma(count), intcomma(size))
 
 
 def sha1_command(args):
