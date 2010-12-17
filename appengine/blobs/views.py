@@ -250,12 +250,13 @@ def blob_list(request):
         response = app_json_get(request)
         assert response.status_code == 200
         app_json = response.content
-        blobs['app.json'] = {
-            'size': len(app_json),
-            'sha1': hashlib.sha1(app_json).hexdigest(),
-            'json': True,
-            'modified': request.app.modified,
-            }
+        blobs.append({
+                'key': 'app.json',
+                'size': len(app_json),
+                'sha1': hashlib.sha1(app_json).hexdigest(),
+                'json': True,
+                'modified': request.app.modified,
+                })
 
     # REVIEW: Should we add an ETag here - and return not modifed
     # if the list is unchanged?
