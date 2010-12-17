@@ -60,7 +60,12 @@ class Hashable(Serializable):
         return '"%s"' % self.sha1
 
     def update_hash(self, value=None):
-        value = value or self.to_json(exclude=('sha1', 'size'))
+        """
+        Update the has value of the model.
+
+        Excludes meta-data like the sha1, size, and date properties.
+        """
+        value = value or self.to_json(exclude=('sha1', 'size', 'created', 'modified'))
         if value is None:
             return
         self.sha1 = sha1(value).hexdigest()

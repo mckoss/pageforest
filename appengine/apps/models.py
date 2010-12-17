@@ -117,12 +117,20 @@ class App(SuperDoc):
         query = self.all_blobs()
         return query.fetch(limit)
 
-    def all_docs(self, keys_only=False):
+    def all_docs(self, owner=None, keys_only=False):
         """
         Similar to all_blobs() - generate a query object for all the Docs
         belonging to this appliction.
+
+        TODO: The problem with this query is that it cannot be combined with
+        any other ordering key.
+
+        Review: Is __key__ order implied?  When I combine with limit I don't
+        seem to be getting the lowest keys first.
         """
         query = Doc.all(keys_only=keys_only)
+        if owner:
+            query.filter('owner', owner)
         appid = self.get_app_id()
         query.filter('__key__ >=', db.Key.from_path('Doc', appid + '/'))
         query.filter('__key__ <', db.Key.from_path('Doc', appid + '0'))

@@ -112,6 +112,10 @@ class SuperDoc(Timestamped, Migratable, Taggable, Hashable, Cacheable):
         this Doc or App.
 
         Note that the Blob 'appid/doc/' - the "internal" Doc Blob is included.
+
+        TODO: Should change schema to include an appid and blobid field - that
+        way, we can generate queries with order() properties on something OTHER
+        than the key (like -modified).
         """
         key_prefix = self.blob_key_prefix()
         query = Blob.all(keys_only=keys_only)

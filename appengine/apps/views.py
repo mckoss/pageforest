@@ -105,6 +105,7 @@ def app_json_get(request):
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
 
+# REVIEW: Why not login required?
 #@login_required
 def app_json_put(request):
     """

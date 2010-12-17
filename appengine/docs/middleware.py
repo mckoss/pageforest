@@ -20,6 +20,10 @@ class DocMiddleware(object):
         """
         Load the document for this request, if required.
 
+        Sets:
+
+        request.doc
+
         The following paths will have request.doc loaded for doc_id:
         /app/docs/doc_id/
         /app/docs/doc_id/blob/key/with/slashes/
