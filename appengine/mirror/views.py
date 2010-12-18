@@ -1,10 +1,6 @@
 import logging
 
-from django.conf import settings
-from django.http import HttpResponse
-from django.utils import simplejson as json
-
-from utils.json import ModelEncoder
+from utils.json import ModelEncoder, HttpJSONResponse
 from utils.decorators import jsonp, method_required
 from auth.decorators import login_required
 
@@ -30,18 +26,18 @@ def mirror_list(request):
     # Combine and load apps from the datastore.
     app_names = set(owner_apps + writer_apps)
     apps = App.get_by_key_name(app_names)
-    result = {}
+    items = []
     for app in apps:
-        result[app.get_app_id()] = {
+        info = {
+            'app': app.get_app_id(),
             'cloneable': app.cloneable,
             'modified': app.modified,
             'owner': app.owner,
             'title': app.title,
             'url': app.url,
             'tags': app.tags,
-            'icon': app.icon,
             }
-    # Generate pretty JSON output.
-    serialized = json.dumps(result, sort_keys=True, indent=2,
-                            separators=(',', ': '), cls=ModelEncoder)
-    return HttpResponse(serialized, mimetype=settings.JSON_MIMETYPE_CS)
+        if app.icon:
+            info['icon'] = app.icon
+        items.append(info)
+    return HttpJSONResponse({'items': items}, status=None)
