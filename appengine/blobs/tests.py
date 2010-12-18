@@ -621,8 +621,9 @@ class ListTest(AppTestCase):
             ]:
             self.assertContains(self.app_client.get(url), """\
 {
-  "items": {
-    "1234": {
+  "items": [
+    {
+      "key": "1234",
       "modified": {
         "__class__": "Date",
         "isoformat": "2010-11-12T13:14:15Z"
@@ -630,7 +631,8 @@ class ListTest(AppTestCase):
       "sha1": "eb7cac8b6c27e8785a0531c41ee5b82f2906c419",
       "size": 108
     },
-    "MyDoc": {
+    {
+      "key": "MyDoc",
       "modified": {
         "__class__": "Date",
 """)
