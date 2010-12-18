@@ -2,11 +2,13 @@
   "application": "editor",
   "cloneable": false,
   "icon": "images/icon.png",
-  "owner": "jcrocholl",
+  "owner": "mckoss",
   "readers": [
     "public"
   ],
   "referers": [],
+  "sha1": "383358574152dd45a246bbee6610abf0cc2a1786",
+  "size": 454,
   "tags": [
     "meta",
     "editor"
