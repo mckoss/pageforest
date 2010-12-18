@@ -87,9 +87,11 @@ class HttpJSONResponse(HttpResponse):
         # embedding newlines there, anyway.
         content = json.dumps(json_dict, sort_keys=True, indent=2,
                              separators=(',', ': '), cls=ModelEncoder)
-        super(HttpJSONResponse, self).__init__(content,
-            mimetype=settings.JSON_MIMETYPE_CS,
-            status=status)
+        # REVIEW: This used to call super(HttpJSONResponse, self) - bug that
+        # was generating errors about self not being a derived class???
+        HttpResponse.__init__(self, content,
+                              mimetype=settings.JSON_MIMETYPE_CS,
+                              status=status)
 
 
 if __name__ == '__main__':
