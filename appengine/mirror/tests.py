@@ -26,6 +26,14 @@ class MirrorTest(AppTestCase):
         self.assertContains(
             editor_client.get('/mirror/other/index.html'),
             '<html>')
+        result = editor_client.get('/mirror?method=list')
+        print result
+        self.assertContains(result, \
+"""{
+  "items": [
+    {
+      "app": "myapp",
+      "cloneable": false,""")
 
     def test_untrusted(self):
         """The prefix filter should return only matching blobs."""
