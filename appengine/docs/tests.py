@@ -188,8 +188,7 @@ class TimestampedTest(AppTestCase):
         self.assertEqual(entity.created.isoformat(), '2010-11-12T13:14:15')
         self.assertEqual(entity.modified.isoformat(), '2010-11-12T13:14:15')
         # Update same entity from a different IP address.
-        datetime.datetime.now.return_value = \
-            self.datetime(2010, 11, 12, 13, 14, 16)
+        datetime.datetime.advance_time(1)
         self.app_client.defaults['REMOTE_ADDR'] = '10.11.12.14'
         response = self.app_client.put(
             '/docs/foo/', '{"title": "Modified Document"}',

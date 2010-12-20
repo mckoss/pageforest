@@ -18,6 +18,24 @@ from utils.middleware import RequestMiddleware
 TAG_REGEX = re.compile(r'<[/!\w][^>]*>')
 
 
+class MockDatetime(datetime.datetime):
+    orig_datetime = datetime.datetime
+    base_time = datetime.datetime(2010, 11, 12, 13, 14, 15)
+    delta_secs = 0
+
+    @classmethod
+    def now(cls):
+        return cls.base_time + datetime.timedelta(0, cls.delta_secs)
+
+    @classmethod
+    def advance_time(cls, secs):
+        cls.delta_secs += secs
+
+    @classmethod
+    def reset_time(cls):
+        cls.delta_secs = 0
+
+
 class AppTestCase(TestCase):
     """
     Reusable TestCase with automatic users, apps, documents.
@@ -35,10 +53,8 @@ class AppTestCase(TestCase):
         # Reset the RequestMiddleware.
         RequestMiddleware.thread_local = None
         # Mock the datetime object.
-        self.datetime = datetime.datetime
-        datetime.datetime = Mock()
-        datetime.datetime.now.return_value = \
-            self.datetime(2010, 11, 12, 13, 14, 15)
+        datetime.datetime = MockDatetime
+        MockDatetime.reset_time()
         # Create some users.
         self.peter = User(key_name='peter', username='Peter',
                           email='peter@example.com',
@@ -86,7 +102,7 @@ class AppTestCase(TestCase):
             HTTP_REFERER='http://myapp.pageforest.com/')
 
     def tearDown(self):
-        datetime.datetime = self.datetime
+        datetime.datetime = MockDatetime.orig_datetime
 
     def sign_in(self, user):
         """
