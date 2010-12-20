@@ -149,7 +149,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             url: '/mirror?method=list',
             dataType: 'json',
             success: function(message) {
-                ns.appListing = message;
+                ns.appListing = message.items;
                 if (!ns.app_id) {
                     showApps();
                 }
