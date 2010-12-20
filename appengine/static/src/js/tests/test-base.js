@@ -273,6 +273,21 @@ namespace.lookup('org.startpad.base.test').defineOnce(function (ns) {
                       "same object - different prototypes");
         });
 
+        ts.addTest("dictFromArray", function(ut) {
+            var tests = [
+                ['a', [], {}],
+                ['a', [{a: 'a'}, {a: 'b'}], {a: {a: 'a'}, b: {a: 'b'}}],
+                ['a', [{a: 'a', b: 1}, {a: 'a', b: 2}], {a: {a: 'a', b: 2}}]
+            ];
+
+            for (var i = 0; i < tests.length; i++) {
+                ut.trace(i);
+                var test = tests[i];
+                console.log(test);
+                var d = base.dictFromArray(test[1], test[0]);
+                ut.assertEq(d, test[2]);
+            }
+        });
     }; // addTests
 
 }); // org.startpad.base.test
