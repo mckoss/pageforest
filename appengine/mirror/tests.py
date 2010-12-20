@@ -30,9 +30,8 @@ class MirrorTest(AppTestCase):
         print result
         self.assertContains(result, \
 """{
-  "items": [
-    {
-      "app": "myapp",
+  "items": {
+    "myapp": {
       "cloneable": false,""")
 
     def test_untrusted(self):

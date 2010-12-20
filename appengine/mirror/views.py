@@ -26,10 +26,9 @@ def mirror_list(request):
     # Combine and load apps from the datastore.
     app_names = set(owner_apps + writer_apps)
     apps = App.get_by_key_name(app_names)
-    items = []
+    items = {}
     for app in apps:
         info = {
-            'app': app.get_app_id(),
             'cloneable': app.cloneable,
             'modified': app.modified,
             'owner': app.owner,
@@ -39,5 +38,5 @@ def mirror_list(request):
             }
         if app.icon:
             info['icon'] = app.icon
-        items.append(info)
+        items[app.get_app_id()] = info
     return HttpJSONResponse({'items': items}, status=None)

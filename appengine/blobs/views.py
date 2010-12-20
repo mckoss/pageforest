@@ -181,6 +181,7 @@ def blob_list(request):
     if 'prefix' in request.GET:
         depth = 0
 
+    has_order = False
     if depth == 1:
         query.filter('directory', request.key_name)
         if 'order' in request.GET:
@@ -189,6 +190,7 @@ def blob_list(request):
                 return HttpJSONResponse({'statusText': "Invalid order clause: '%s'" % order_prop},
                                         status=400)
             query.order(order_prop)
+            has_order = True
     else:
         if 'order' in request.GET:
             return HttpJSONResponse(
@@ -204,7 +206,8 @@ def blob_list(request):
         query.with_cursor(request.GET['cursor'])
     strip_levels = request.key_name.count('/')
 
-    blobs = []
+    order = []
+    blobs = {}
     memcache_mapping = {}
     raw_results = query.fetch(limit)
     for blob in raw_results:
@@ -214,24 +217,29 @@ def blob_list(request):
             key = blob.key()
         parts = key.name().split('/')
         parts = parts[strip_levels:-1]
+        # TODO: If we add a key_depth field, we can get the store
+        # to do the zig-zag query to return just the blobs at a fixed
+        # depth with the key prefix.
         if depth != 0 and len(parts) > depth:
             # Ignore blobs that are deeper than maximum depth.
             continue
         rel_key = '/'.join(parts)
-        item = {'key': rel_key}
         if keys_only:
-            blobs.append(item)
+            blobs[rel_key] = {}
+            if has_order:
+                order.append(rel_key)
             continue
-        item.update({
-            'key': rel_key,
+        item = {
             'size': blob.size,
             'sha1': blob.sha1,
             'json': blob.valid_json,
             'modified': blob.modified,
-            })
+            }
         if blob.tags:
             item['tags'] = blob.tags
-        blobs.append(item)
+        blobs[rel_key] = item
+        if has_order:
+            order.append(rel_key)
         # Might as well fill memcache with the small blobs we've read.
         # REVIEW: Would be nice if this were a function in Cachable to
         # preserve information hiding of that mixin.
@@ -247,17 +255,19 @@ def blob_list(request):
         response = app_json_get(request)
         assert response.status_code == 200
         app_json = response.content
-        blobs.append({
-                'key': 'app.json',
-                'size': len(app_json),
-                'sha1': hashlib.sha1(app_json).hexdigest(),
-                'json': True,
-                'modified': request.app.modified,
-                })
+        # REVIEW: Not added to the ordered list.
+        blobs['app.json'] = {
+            'size': len(app_json),
+            'sha1': hashlib.sha1(app_json).hexdigest(),
+            'json': True,
+            'modified': request.app.modified,
+            }
 
     # REVIEW: Should we add an ETag here - and return not modifed
     # if the list is unchanged?
     result = {'items': blobs}
+    if has_order:
+        result['order'] = order
 
     # Only return the cursor, if there is some hope of getting additional
     # results.

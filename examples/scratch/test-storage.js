@@ -245,7 +245,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     // List of documents
                     client.storage.list(undefined, undefined, {},
                         function (result) {
-                            ut.assertType(result.items, Array);
+                            ut.assertType(result.items, 'object');
                             ut.assertType(result.items['test-storage'],
                                           'object');
                             ut.nextFn();
@@ -256,7 +256,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     // List of blobs
                     client.storage.list('test-storage', undefined, {},
                         function (result) {
-                            ut.assertType(result.items, Array);
+                            ut.assertType(result.items, Object);
                             var dir1 = result.items['test-blob1'];
                             var dir2 = result.items['test-blob2'];
                             ut.assertType(dir1, 'object');

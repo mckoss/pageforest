@@ -601,7 +601,7 @@ class CookieTest(AppTestCase):
         '/does/not/exist.txt': (404, 'Blob not found'),
         '/docs/mydoc/': (200, '"title":'),
         '/docs/mydoc/myblob/': (200, '["json"]'),
-        '/docs/mydoc/?method=list': (200, '"key": "myblob"'),
+        '/docs/mydoc/?method=list': (200, '"myblob":'),
         }
 
     def test_public_read(self):

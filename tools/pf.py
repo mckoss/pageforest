@@ -335,13 +335,6 @@ def list_remote_files():
             result = json.loads(response.read(), object_hook=as_datetime)
             # Change result of list command on 12/8/10
             if 'items' in result:
-                # Changed items from dict to array on 12/16/10!
-                if type(result['items']) == list:
-                    item_dict = {}
-                    for item in result['items']:
-                        item_dict[item['key']] = item
-                    result['items'] = item_dict
-
                 options.listing.update(result['items'])
                 if 'cursor' not in result:
                     break
