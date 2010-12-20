@@ -149,11 +149,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             url: '/mirror?method=list',
             dataType: 'json',
             success: function(message) {
-                ns.appListing = {};
-                for (var i = 0; i < message.items.length; i++) {
-                    var app = message.items[i];
-                    ns.appListing[app.app] = app;
-                }
+                ns.appListing = message;
                 if (!ns.app_id) {
                     showApps();
                 }
@@ -178,11 +174,7 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             dataType: 'json',
             error: onError,
             success: function(message) {
-                ns.listing = {};
-                for (var i = 0; i < message.items.length; i++) {
-                    var file = message.items[i];
-                    ns.listing[file.key] = file;
-                }
+                ns.listing = message.items;
                 if (!ns.filename || ns.filename.substr(-1) == '/') {
                     showFiles();
                 }

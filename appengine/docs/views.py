@@ -81,23 +81,21 @@ def app_docs(request):
         blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
                      for doc in docs]
         blobs = db.get(blob_keys)
-    items = []
+    items = {}
     for doc in docs:
         if keys_only:
             # WARNING: Document tombstones WILL show up in the
             # keys_only form of the list command.
-            # Note that 'doc' is really a Key() here!
             doc_id = doc.name().split('/')[1]
-            items.append({'key': doc_id})
+            items[doc_id] = {}
             continue
         if doc.deleted:
             continue
-        items.append({
-                'key': doc.doc_id,
-                'modified': doc.modified,
+        info = {'modified': doc.modified,
                 'sha1': doc.sha1,
                 'size': doc.size
-                })
+                }
+        items[doc.doc_id] = info
     result = {'items': items}
     if (len(docs) == limit):
         result['cursor'] = query.cursor()
