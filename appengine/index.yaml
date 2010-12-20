@@ -35,19 +35,15 @@ indexes:
 - kind: Blob
   properties:
   - name: directory
-  - name: size
-    direction: desc
+  - name: tags
+  - name: modified
 
 - kind: Blob
   properties:
   - name: directory
   - name: tags
   - name: modified
-
-- kind: Blob
-  properties:
-  - name: tags
-  - name: modified
+    direction: desc
 
 - kind: Doc
   properties:
