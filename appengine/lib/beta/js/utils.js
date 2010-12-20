@@ -479,7 +479,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     // Undefined properties are treated the same as un-set properties
     // in both Arrays and Objects.
     // Note that two objects with the same OWN properties can be equal
-    // if if they have different prototype chains (and inherited values).
+    // if they have different prototype chains (and inherited values).
     function isEqual(a, b) {
         if (a === b) {
             return true;
@@ -625,6 +625,17 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
     }
 
+    function dictFromArray(a, keyName) {
+        var d = {};
+        for (var i = 0; i < a.length; i++) {
+            if (a[i] === undefined || !(keyName in a[i])) {
+                continue;
+            }
+            d[a[i][keyName]] = a[i];
+        }
+        return d;
+    }
+
     // TODO: Use native implementations where available
     // in Array.prototype: map, reduce, filter, every, some,
     // indexOf, lastIndexOf.
@@ -649,7 +660,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'keys': keys,
         'forEach': forEach,
         'ensureArray': ensureArray,
-        'isEqual': isEqual
+        'isEqual': isEqual,
+        'dictFromArray': dictFromArray
     });
 
 }); // startpad.base
