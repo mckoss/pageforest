@@ -252,13 +252,10 @@ def blob_list(request):
     if (request.key_name == 'apps/' + request.app.get_app_id() + '/'
         and 'app.json'.startswith(request.GET.get('prefix', ''))
         and 'tag' not in request.GET):
-        response = app_json_get(request)
-        assert response.status_code == 200
-        app_json = response.content
         # REVIEW: Not added to the ordered list.
         blobs['app.json'] = {
-            'size': len(app_json),
-            'sha1': hashlib.sha1(app_json).hexdigest(),
+            'size': request.app.size,
+            'sha1': request.app.sha1,
             'json': True,
             'modified': request.app.modified,
             }
