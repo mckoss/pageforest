@@ -597,6 +597,25 @@ class ListTest(AppTestCase):
             self.assertContains(response, 'three": {')
             self.assertNotContains(response, 'four')
 
+    def test_list_order(self):
+        """Ordering by modification date."""
+        datetime.datetime.advance_time(1)
+        Blob(key_name='myapp/1234/one-a/', value='one-a').put()
+        datetime.datetime.advance_time(1)
+        Blob(key_name='myapp/1234/one-b/', value='one-b').put()
+        result = self.app_client.get('/docs/1234?method=list&order=modified')
+        json_result = json.loads(result.content)
+        self.assertTrue('items' in json_result)
+        self.assertTrue('order' in json_result)
+        self.assertEqual(json_result['order'],
+                         ['one', 'one-a', 'one-b'])
+        result = self.app_client.get('/docs/1234?method=list&depth=0&order=modified')
+        self.assertEqual(result.status_code, 400)
+        result = self.app_client.get('/docs/1234?method=list&order=-modified')
+        json_result = json.loads(result.content)
+        self.assertEqual(json_result['order'],
+                         ['one-b', 'one-a', 'one'])
+
     def test_app_doc_list(self):
         """The app_doc_list function should show Peter's documents."""
         for url in [
