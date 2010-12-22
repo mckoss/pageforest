@@ -356,7 +356,6 @@ def sha1_file(filename, data=None):
     if filename == META_FILENAME:
         app = json.loads(data)
         data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application'))
-        print "re-hash: %s" % data
     return hashlib.sha1(data).hexdigest()
 
 
