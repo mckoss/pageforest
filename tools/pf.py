@@ -213,11 +213,7 @@ def upload_file(filename, url=None):
     keyname = filename.replace(os.path.sep, '/')
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and keyname in options.listing:
-        sha1 = hashlib.sha1(data).hexdigest()
-        if filename == META_FILENAME:
-            app = json.loads(data)
-            if 'sha1' in app:
-                sha1 = app['sha1']
+        sha1 = sha1_file(filename, data)
         if options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
                 print "File hashes match: %s" % filename
@@ -309,17 +305,22 @@ def upload_dir(path):
             upload_file(os.path.join(dirpath, filename))
 
 
-def sha1_file(filename):
+def sha1_file(filename, data=None):
     """
     Hash the contents of a file with SHA-1.
     Return the hexdigest, or None if file not found.
     """
     if not os.path.exists(filename):
         return None
-    infile = open(filename, 'rb')
-    content = infile.read()
-    infile.close()
-    return hashlib.sha1(content).hexdigest()
+    if data is None:
+        infile = open(filename, 'rb')
+        data = infile.read()
+        infile.close()
+    if filename == META_FILENAME:
+        app = json.loads(data)
+        if 'sha1' in app:
+            return app['sha1']
+    return hashlib.sha1(data).hexdigest()
 
 
 def list_remote_files():
