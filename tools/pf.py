@@ -153,6 +153,8 @@ def config():
     parser.add_option('-a', '--application')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
+    parser.add_option('-f', '--force', action='store_true',
+                      help="Ignore sha1 hashes and get/put all files.")
     parser.add_option('-n', '--noop', action='store_true',
                       help="don't perform update operations")
     options, args = parser.parse_args()
@@ -214,7 +216,7 @@ def upload_file(filename, url=None):
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and keyname in options.listing:
         sha1 = sha1_file(filename, data)
-        if options.listing[keyname]['sha1'] == sha1:
+        if not options.force and options.listing[keyname]['sha1'] == sha1:
             if options.verbose:
                 print "File hashes match: %s" % filename
             return
@@ -255,7 +257,7 @@ def download_file(filename, url=None):
     info = {}
     if hasattr(options, 'listing') and filename in options.listing:
         info = options.listing[filename]
-        if info['sha1'] == sha1_file(filename):
+        if not options.force and info['sha1'] == sha1_file(filename):
             if options.verbose:
                 print "File hashes match: %s" % filename
             return
