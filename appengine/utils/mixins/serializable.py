@@ -1,5 +1,10 @@
+import logging
+import traceback
+import pprint
+
 from  hashlib import sha1
 
+from django.conf import settings
 from django.utils import simplejson as json
 
 from google.appengine.ext import db
@@ -27,6 +32,9 @@ class Serializable(db.Model):
         """
         Serialize a datastore entity to JSON.
         """
+        if exclude is None:
+            exclude = ()
+        exclude += settings.HIDDEN_PROPERTIES
         result = {}
         for name in self.properties():
             if exclude and name in exclude:
@@ -37,7 +45,8 @@ class Serializable(db.Model):
         if extra:
             result.update(extra)
         if indent is None:
-            return json.dumps(result, sort_keys=True, cls=ModelEncoder)
+            return json.dumps(result, sort_keys=True,
+                              separators=(',', ':'), cls=ModelEncoder)
         else:
             return json.dumps(result, sort_keys=True, cls=ModelEncoder,
                               indent=indent, separators=(',', ': ')) + '\n'
@@ -65,9 +74,13 @@ class Hashable(Serializable):
 
         Excludes meta-data like the sha1, size, and date properties.
         """
-        value = value or self.to_json(exclude=('sha1', 'size', 'created', 'modified'))
+        value = value or self.to_json(exclude=('sha1', 'size',
+                                               'created', 'modified'))
         if value is None:
+            self.sha1 = None
+            self.size = 0
             return
+        logging.info("Hash: %s" % value)
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 

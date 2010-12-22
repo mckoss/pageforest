@@ -164,7 +164,6 @@ def doc_put(request, doc_id):
         blob.put()
 
     # Write document after blob updated - for sha1 calculation
-    request.doc.update_hash()
     request.doc.put()
 
     dispatch_subscriptions(key_name, 'PUT',

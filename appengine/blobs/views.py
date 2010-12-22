@@ -252,7 +252,7 @@ def blob_list(request):
     if (request.key_name == 'apps/' + request.app.get_app_id() + '/'
         and 'app.json'.startswith(request.GET.get('prefix', ''))
         and 'tag' not in request.GET):
-        # REVIEW: Not added to the ordered list.
+        # REVIEW: Not added to the ordered list, if any.
         blobs['app.json'] = {
             'size': request.app.size,
             'sha1': request.app.sha1,

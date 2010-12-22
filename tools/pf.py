@@ -305,6 +305,42 @@ def upload_dir(path):
             upload_file(os.path.join(dirpath, filename))
 
 
+class ModelEncoder(json.JSONEncoder):
+    """
+    Encode some common datastore property types to JSON.
+    """
+
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {"__class__": "Date",
+                    "isoformat": obj.isoformat() + 'Z'}
+        return json.JSONEncoder.default(self, obj)
+
+
+def to_json(d, extra=None, include=None, exclude=None, indent=2):
+    """
+    Serialize an object to json.
+    """
+    assert isinstance(d, dict)
+    if exclude is None:
+        exclude = ()
+    result = {}
+    for name in d:
+        if exclude and name in exclude:
+            continue
+        if include and name not in include:
+            continue
+        result[name] = d[name]
+    if extra:
+        result.update(extra)
+    if indent is None:
+        return json.dumps(result, sort_keys=True,
+                          separators=(',', ':'), cls=ModelEncoder)
+    else:
+        return json.dumps(result, sort_keys=True, cls=ModelEncoder,
+                          indent=indent, separators=(',', ': ')) + '\n'
+
+
 def sha1_file(filename, data=None):
     """
     Hash the contents of a file with SHA-1.
@@ -316,10 +352,11 @@ def sha1_file(filename, data=None):
         infile = open(filename, 'rb')
         data = infile.read()
         infile.close()
+    # Normalize document for sha1 computation.
     if filename == META_FILENAME:
         app = json.loads(data)
-        if 'sha1' in app:
-            return app['sha1']
+        data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application'))
+        print "re-hash: %s" % data
     return hashlib.sha1(data).hexdigest()
 
 

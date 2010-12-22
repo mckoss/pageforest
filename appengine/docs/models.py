@@ -58,10 +58,6 @@ class Doc(SuperDoc):
         """
         Standard json formatted string for the document.
         """
-        if exclude is None:
-            exclude = ()
-        exclude += settings.HIDDEN_PROPERTIES
         blob = blobs.models.Blob.get_by_key_name(self.blob_key_prefix() + '/')
         extra = blob and {"blob": json.loads(blob.value)} or {}
-        result = super(Doc, self).to_json(exclude=exclude, extra=extra)
-        return result
+        return super(Doc, self).to_json(exclude=exclude, extra=extra)
