@@ -6,6 +6,7 @@ import hmac
 import hashlib
 import urllib
 import urllib2
+from base64 import b64encode
 from datetime import datetime
 from fnmatch import fnmatch
 from optparse import OptionParser
@@ -25,8 +26,9 @@ SUBDOMAIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 ERROR_FILENAME = 'pferror.html'
-IGNORE_FILENAMES = ['pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
-                    '*.bak', '*.rej', '*.orig']
+IGNORE_FILENAMES = ('pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
+                    '*.bak', '*.rej', '*.orig')
+TEXT_FILE_EXTS = ('.txt', '.htm', '.html', '.css', '.js', '.json')
 commands = None
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
@@ -201,6 +203,13 @@ def url_from_filename(filename):
     return url
 
 
+def is_binary(filename):
+    ext = os.path.splitext(filename.lower())[1]
+    if ext in TEXT_FILE_EXTS:
+        return False
+    return True
+
+
 def upload_file(filename, url=None):
     """
     Upload one file to the server.
@@ -227,6 +236,13 @@ def upload_file(filename, url=None):
     if not options.quiet:
         print "Uploading: %s (%s bytes)%s" % (url, intcomma(len(data)), or_not)
     if not options.noop:
+        # Some versions of python have problems with raw binary PUT's - treating data
+        # as ascii and complaining.  So, use base64 transfer encoding.
+        if is_binary(filename):
+            data = b64encode(data)
+            url += '?transfer-encoding=base64'
+            if options.verbose:
+                print "Encoding %s as base64" % filename
         response = urllib2.urlopen(PutRequest(url), data)
         if options.verbose:
             print response.read()
