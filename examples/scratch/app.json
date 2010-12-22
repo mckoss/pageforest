@@ -1,22 +1,14 @@
 {
   "application": "scratch",
   "cloneable": true,
-  "created": {
-    "__class__": "Date",
-    "isoformat": "2010-12-21T15:12:11.124648Z"
-  },
   "icon": "images/icon.png",
-  "modified": {
-    "__class__": "Date",
-    "isoformat": "2010-12-22T21:17:25.568328Z"
-  },
   "owner": "mckoss",
   "readers": [
     "public"
   ],
   "referers": [],
-  "sha1": "1102ff565d4bcb857caa4a434bdd432cbb2dd906",
-  "size": 304,
+  "sha1": "54c925db6818e2ec0d42072627a94256d10c1996",
+  "size": 641,
   "tags": [
     "demo",
     "sample"
