@@ -80,7 +80,6 @@ class Hashable(Serializable):
             self.sha1 = None
             self.size = 0
             return
-        logging.info("Hash: %s" % value)
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 
