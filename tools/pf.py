@@ -28,7 +28,6 @@ PASSWORD_FILENAME = '.passwd'
 ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ('pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
                     '*.bak', '*.rej', '*.orig')
-TEXT_FILE_EXTS = ('.txt', '.htm', '.html', '.css', '.js', '.json')
 commands = None
 APP_REGEX = re.compile(r'\s*"application":\s*\"([a-z0-9-]+)"')
 
@@ -155,6 +154,9 @@ def config():
     parser.add_option('-a', '--application')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
+    parser.add_option('-r', '--raw', action='store_true',
+                      help="Default is to upload all files using base64 encoding.  "
+                      "This option overrides and sends raw binary files.")
     parser.add_option('-f', '--force', action='store_true',
                       help="Ignore sha1 hashes and get/put all files.")
     parser.add_option('-n', '--noop', action='store_true',
@@ -203,9 +205,8 @@ def url_from_filename(filename):
     return url
 
 
-def is_binary(filename):
-    ext = os.path.splitext(filename.lower())[1]
-    if ext in TEXT_FILE_EXTS:
+def should_encode(filename):
+    if options.raw or filename == META_FILENAME:
         return False
     return True
 
@@ -238,11 +239,9 @@ def upload_file(filename, url=None):
     if not options.noop:
         # Some versions of python have problems with raw binary PUT's - treating data
         # as ascii and complaining.  So, use base64 transfer encoding.
-        if is_binary(filename):
+        if should_encode(filename):
             data = b64encode(data)
             url += '?transfer-encoding=base64'
-            if options.verbose:
-                print "Encoding %s as base64" % filename
         response = urllib2.urlopen(PutRequest(url), data)
         if options.verbose:
             print response.read()
