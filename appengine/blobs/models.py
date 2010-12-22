@@ -42,15 +42,20 @@ class Blob(Timestamped, Migratable, Taggable, Hashable, Cacheable):
     current_schema = 3
 
     def __init__(self, *args, **kwargs):
+        self._in_init = True
         super(Blob, self).__init__(*args, **kwargs)
+        self._in_init = False
+
         # Set the directory property from the key name.
         key_name = kwargs.get('key_name')
         if key_name is not None:
             key_parts = key_name.rstrip('/').split('/')
             self.directory = '/'.join(key_parts[:-1]) + '/'
-        value = kwargs.get('value')
-        if value is not None:
-            self.__setattr__('value', value)
+
+        # Only update hash if value is given AND the
+        # sha1 hasn't been initialized already.
+        if 'value' in kwargs and self.sha1 is None:
+            self.set_value(kwargs['value'])
 
     def migrate(self):
         """
@@ -67,26 +72,30 @@ class Blob(Timestamped, Migratable, Taggable, Hashable, Cacheable):
     def __getattribute__(self, name):
         """
         Get data from self.value or a separate Chunk.
+
+        Note that self._value is the actual storage in the
+        Blob - whereas self.value mirrors the stored chunk's
+        value when allocated.
         """
-        # print '__getattribute__', name
-        result = db.Model.__getattribute__(self, name)
-        if name == 'value' and result is None:
+        result = super(Blob, self).__getattribute__(name)
+        if name != 'value':
+            return result
+        if result is None and self.sha1 is not None:
             chunk = Chunk.get_by_key_name(self.sha1)
             if chunk is None:
                 return None
             return chunk.value
         return result
 
-    def __setattr__(self, name, value):
+    def set_value(self, value):
         """
-        When setting blob.value, also update size, sha1 and
-        valid_json, and put large value in a separate Chunk.
+        Set value and update all computed properties that are not
+        already initialized. We want to defer these when multiple
+        properties are set at once in __init__, since some are
+        expensive and the value will be restored directly.
         """
-        # print '__setattr__', name, value
-        if name != 'value':
-            db.Model.__setattr__(self, name, value)
-            return
         self.update_hash(value)
+
         # Attempt to parse JSON, unless the file extension indicates a
         # well-known MIME type that doesn't allow JSON data.
         mimetype = guess_mimetype(self.key().name().rstrip('/'))
@@ -94,13 +103,22 @@ class Blob(Timestamped, Migratable, Taggable, Hashable, Cacheable):
             self.valid_json = False
         else:
             self.valid_json = is_valid_json(value)
+
         # Store value in a separate Chunk if it's large.
         if self.size > MAX_INTERNAL_SIZE:
             if not Chunk.exists(self.sha1):
                 Chunk(key_name=self.sha1, value=value).put()
-            db.Model.__setattr__(self, name, None)
+            super(Blob, self).__setattr__('value', None)
         else:
-            db.Model.__setattr__(self, name, value)
+            super(Blob, self).__setattr__('value', value)
+
+    def __setattr__(self, name, value):
+        if name == 'value':
+            if not self._in_init:
+                self.set_value(value)
+            return
+
+        super(Blob, self).__setattr__(name, value)
 
     def get_absolute_url(self):
         """
