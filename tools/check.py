@@ -12,6 +12,7 @@ import pftool
 LOGFILENAME = os.path.join(pftool.root_dir, 'check.log')
 PEP8_EXCLUDE = 'jsmin.py shell.py'.split()
 TEST_COUNT_REGEX = re.compile(r'Ran (\d+) tests in \d+\.\d+s')
+DEBUG_MODULE = "pdb"
 
 # Remove these when they pass strong jslint
 IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'events', 'json2',
@@ -91,6 +92,8 @@ def main():
         help="ask before running any checks")
     parser.add_option('-n', '--nose', action='store_true',
         help="add unittest options --with-xunit --with-doctest")
+    parser.add_option('-d', '--debug', action='store_true',
+        help="run test with debugger")
     for name in ('pylint', 'jslint-tools', 'jslint-static', 'jslint-examples',
                  'unittest', 'jstest', 'pep8', 'whitespace'):
         parser.add_option('--' + name, action='callback',
@@ -98,6 +101,7 @@ def main():
                           help="run only selected checks")
     (options, args) = parser.parse_args()
     unit_level = options.verbose and '-v2' or '-v0'
+    debug_options = options.debug and ('-m ' + DEBUG_MODULE + ' ') or ''
 
     all_checks = [
         ('pylint',
@@ -120,8 +124,8 @@ def main():
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.root_dir, 'examples'))),
 
-        ('unittest', "python2.5 %s test %s" %
-         (os.path.join(pftool.app_dir, 'manage.py'), unit_level)),
+        ('unittest', "python2.5 %s%s test %s" %
+         (debug_options, os.path.join(pftool.app_dir, 'manage.py'), unit_level)),
 
         ('jstest',
          "python %s -q -a" % pftool.tool_path('jstest.py')),
