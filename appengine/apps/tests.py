@@ -168,6 +168,20 @@ class AppJsonTest(AppTestCase):
         self.assertContains(response, '"title": "My Application"')
         self.assertContains(response, '"tags": [\n    "test",\n    "myapp"')
 
+    def test_http_method_not_allowed(self):
+        """The /doc_id/ URL should report allowed methods."""
+        self.sign_in(self.peter)
+        response = self.admin_client.post('/app.json', {'key': 'value'})
+        self.assertEqual(response.status_code, 405)
+        self.assertEqual(response['Allow'], 'DELETE, GET, PUT')
+
+    def test_delete(self):
+        self.sign_in(self.peter)
+        response = self.admin_client.delete('/app.json')
+        self.assertEqual(response.status_code, 200)
+        response = self.admin_client.get('/app.json')
+        self.assertEqual(response.status_code, 404, "NOT FOUND")
+
     def test_app_json_get_auth(self):
         """The app_json_get view function should check read permissions."""
         url = '/app.json'
