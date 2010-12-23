@@ -123,10 +123,7 @@ class App(SuperDoc):
         belonging to this appliction.
 
         TODO: The problem with this query is that it cannot be combined with
-        any other ordering key.
-
-        Review: Is __key__ order implied?  When I combine with limit I don't
-        seem to be getting the lowest keys first.
+        any other ordering key.  Need to add an appid to the doc model.
         """
         query = Doc.all(keys_only=keys_only)
         if owner:

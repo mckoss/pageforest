@@ -28,7 +28,7 @@ urlpatterns = patterns(
     (r'^app/(admin/)?channel/$', 'utils.channel.get_channel'),
     (r'^app/(admin/)?channel/subscriptions/$', 'utils.channel.subscriptions'),
     (r'^app/docs/', include('docs.appurls')),
-    (r'^app/mirror/$', 'mirror.views.mirror_list'),
+    (r'^app/mirror/$', 'apps.views.app_list'),
 
     # Application keyspace reserved for future use
     (r'^app/(docs|data)/', 'utils.views.reserved_url'),

@@ -32,6 +32,10 @@ MAX_LIST = 1000
 def index(request):
     """
     Show a list of documents for this user.
+
+    TODO: This should be a paged result.  Actualy should convert this
+    page to a cross-application app (like editor) with features like
+    view by app and tag, icon view, and list views.
     """
     title = "My documents"
     query = Doc.all()
@@ -39,7 +43,7 @@ def index(request):
     query.order('-modified')
     return render_to_response(request, 'docs/index.html', {
             'title': title,
-            'docs_list': query.fetch(100)})
+            'docs_list': query.fetch(MAX_LIST)})
 
 
 @login_required
