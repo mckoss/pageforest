@@ -42,11 +42,24 @@ def intcomma(value):
 
 
 def as_datetime(dct):
-    """Decode datetime objects from JSON dictionary."""
+    """
+    Decode datetime objects from JSON dictionary.
+    """
     if dct.get('__class__', '') == 'Date' and 'isoformat' in dct:
         isoformat = dct['isoformat'][:19]
         return datetime.strptime(isoformat, '%Y-%m-%dT%H:%M:%S')
     return dct
+
+
+class ModelEncoder(json.JSONEncoder):
+    """
+    Encode Date objects to JSON.
+    """
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return {"__class__": "Date",
+                    "isoformat": obj.isoformat() + 'Z'}
+        return json.JSONEncoder.default(self, obj)
 
 
 class AuthRequest(urllib2.Request):
@@ -146,6 +159,9 @@ def config():
                 if function.endswith('_command')]
     commands.sort()
     usage = "usage: %prog [options] (" + '|'.join(commands) + ") [filenames]"
+    for command in commands:
+        usage += "\n%s: %s" % (command, globals()[command + '_command'].__doc__)
+
     parser = OptionParser(usage=usage)
     parser.add_option('-s', '--server', metavar='<hostname>',
         help="deploy to this server (default: pageforest.com")
@@ -175,25 +191,29 @@ def config():
     if options.command not in commands:
         parser.error("Unsupported command: " + options.command)
 
+    options.local_only = options.command == 'sha1'
+
     if not options.server:
         options.server = "pageforest.com"
 
     if options.command == 'test':
         options.application = 'pfpytest'
     else:
-        load_application()
+        if not options.local_only:
+            load_application()
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
 
     options.save = False
-    if not options.username:
-        options.username = raw_input("Username: ")
-        options.save = True
-    if not options.password:
-        from getpass import getpass
-        options.password = getpass("Password: ")
-        options.save = True
+    if not options.local_only:
+        if not options.username:
+            options.username = raw_input("Username: ")
+            options.save = True
+        if not options.password:
+            from getpass import getpass
+            options.password = getpass("Password: ")
+            options.save = True
     return args
 
 
@@ -322,18 +342,6 @@ def upload_dir(path):
             upload_file(os.path.join(dirpath, filename))
 
 
-class ModelEncoder(json.JSONEncoder):
-    """
-    Encode some common datastore property types to JSON.
-    """
-
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return {"__class__": "Date",
-                    "isoformat": obj.isoformat() + 'Z'}
-        return json.JSONEncoder.default(self, obj)
-
-
 def to_json(d, extra=None, include=None, exclude=None, indent=2):
     """
     Serialize an object to json.
@@ -457,8 +465,7 @@ def put_command(args):
 
 def delete_command(args):
     """
-    Download all files for an app, except files that are already
-    up-to-date (same SHA-1 hash as remote).
+    Delete files from the server (leaves local files alone).
     """
     list_remote_files()
     download_file(META_FILENAME)
@@ -538,7 +545,10 @@ def sha1_command(args):
             infile = open(path, 'rb')
             data = infile.read()
             infile.close()
-            print '%s  %s' % (hashlib.sha1(data).hexdigest(), path)
+            print_file_info(path, {'sha1': hashlib.sha1(data).hexdigest(),
+                                   'modified': datetime.fromtimestamp(os.path.getmtime(path)),
+                                   'size': len(data)
+                                   })
 
 
 def test_command(args):
@@ -591,7 +601,8 @@ def main():
     args = config()
     options.root_url = 'http://%s.%s.%s/' % (
         SUBDOMAIN, options.application, options.server)
-    options.session_key = sign_in()
+    if not options.local_only:
+        options.session_key = sign_in()
     globals()[options.command + '_command'](args)
     if options.save:
         save_credentials()
