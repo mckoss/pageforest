@@ -21,11 +21,17 @@ from apps.models import App
 from apps.forms import AppForm
 
 
-@method_required('GET')
+@method_required('GET', 'LIST')
 def index(request):
     """
     Show a list of apps, with filtering and sorting.
+
+    TODO: Replace with apps.pageforest.com - cross app
+    app - directory and marketplace.
     """
+    if request.method == 'LIST':
+        return app_list(request)
+
     title = "Featured apps"
     query = App.all()
     if 'writer' in request.GET:
@@ -39,6 +45,42 @@ def index(request):
     apps = [app for app in query.fetch(20) if not app.is_www()]
     return render_to_response(request, 'apps/index.html', {
             'title': title, 'apps': apps})
+
+
+@login_required
+@method_required('LIST')
+def app_list(request):
+    """
+    List the current user's owned and writable apps.
+    """
+    # Get apps owned by the current user.
+    query = App.all(keys_only=True)
+    query.filter('owner', request.user.get_username())
+    owner_apps = [key.name() for key in query]
+    # Get apps with write permission for the current user.
+    query = App.all(keys_only=True)
+    query.filter('writers', request.user.get_username())
+    writer_apps = [key.name() for key in query]
+    # Combine and load apps from the datastore.
+    app_names = set(owner_apps + writer_apps)
+    apps = App.get_by_key_name(app_names)
+    items = {}
+    for app in apps:
+        info = {
+            'cloneable': app.cloneable,
+            'modified': app.modified,
+            'created': app.created,
+            'owner': app.owner,
+            'title': app.title,
+            'url': app.url,
+            'tags': app.tags,
+            'readers': app.readers,
+            'writers': app.writers,
+            }
+        if app.icon:
+            info['icon'] = app.icon
+        items[app.get_app_id()] = info
+    return HttpJSONResponse({'items': items}, status=None)
 
 
 @method_required('GET')
@@ -84,6 +126,8 @@ def clone(request, app_id):
 def app_json(request):
     """
     Read and write application info with REST API.
+
+    Note that the LIST command for the app blobs is
     """
     if request.method == 'GET':
         return app_json_get(request)
