@@ -114,6 +114,13 @@ def load_application():
     """
     Load application from META_FILENAME, or ask the user for it.
     """
+    if options.command == 'test':
+        options.application = 'pfpytest'
+        return
+
+    if options.local_only or options.command == 'listapps':
+        return
+
     if options.application is not None:
         return
 
@@ -123,7 +130,6 @@ def load_application():
         parsed = {}
     if 'application' in parsed:
         options.application = parsed['application']
-        print "Application: " + options.application
     else:
         options.application = raw_input("Application: ")
 
@@ -188,6 +194,7 @@ def config():
     for command in commands:
         if command.startswith(options.command):
             options.command = command
+            break
     if options.command not in commands:
         parser.error("Unsupported command: " + options.command)
 
@@ -196,11 +203,7 @@ def config():
     if not options.server:
         options.server = "pageforest.com"
 
-    if options.command == 'test':
-        options.application = 'pfpytest'
-    else:
-        if not options.local_only:
-            load_application()
+    load_application()
 
     if os.path.exists(PASSWORD_FILENAME):
         options.username, options.password = load_credentials()
@@ -549,6 +552,13 @@ def sha1_command(args):
                                    'modified': datetime.fromtimestamp(os.path.getmtime(path)),
                                    'size': len(data)
                                    })
+
+
+def listapps_command(args):
+    """
+    Display a list of apps that the user is allowed to write to.
+    """
+    raise Exception("Not Yet Implemented")
 
 
 def test_command(args):
