@@ -71,6 +71,8 @@ class AuthRequest(urllib2.Request):
                 options.application, options.server))
         if (hasattr(options, 'session_key')):
             self.add_header('Cookie', 'sessionkey=' + options.session_key)
+        if options.verbose:
+            print "Request: %s" % url
 
 
 class PutRequest(AuthRequest):
@@ -93,8 +95,6 @@ def hmac_sha1(key, message):
 
 def sign_in():
     url = options.root_url + 'auth/challenge'
-    if options.verbose:
-        print "Getting %s" % url
     challenge = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
         print "Challenge: %s" % challenge
@@ -246,12 +246,12 @@ def upload_file(filename, url=None):
     # Check if the remote file is already up-to-date.
     if hasattr(options, 'listing') and keyname in options.listing:
         sha1 = sha1_file(filename, data)
-        if not options.force and options.listing[keyname]['sha1'] == sha1:
-            if options.verbose:
-                print "File hashes match: %s" % filename
+        is_equal = options.listing[keyname]['sha1'] == sha1
+        if options.verbose:
+            print "SHA1 %s (local) %s %s (server) for %s" % \
+                (sha1, is_equal and "==" or "!=", options.listing[keyname]['sha1'], filename)
+        if not options.force and is_equal:
             return
-        elif options.verbose:
-            print "Hash %s (file) != %s (server)." % (sha1, options.listing[keyname]['sha1'])
     # Upload file to Pageforest backend.
     or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
@@ -264,7 +264,7 @@ def upload_file(filename, url=None):
             url += '?transfer-encoding=base64'
         response = urllib2.urlopen(PutRequest(url), data)
         if options.verbose:
-            print response.read()
+            print "Response: %s" % response.read()
 
 
 def delete_file(filename, url=None):
@@ -279,7 +279,7 @@ def delete_file(filename, url=None):
     if not options.noop:
         response = urllib2.urlopen(DeleteRequest(url))
         if options.verbose:
-            print response.read()
+            print "Response: %s" % response.read()
 
 
 def download_file(filename, url=None):
