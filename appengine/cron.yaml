@@ -24,6 +24,8 @@ cron:
   schedule: every 63 minutes
   timezone: America/Los_Angeles
 
-- url: /chunks/cron/vacuum
-  description: delete unreferenced chunks
-  schedule: every 23 minutes
+# We seem to be vacuuming chunks for Blobs that still exist.
+# Disable until debugged.
+#- url: /chunks/cron/vacuum
+#  description: delete unreferenced chunks
+#  schedule: every 23 minutes
