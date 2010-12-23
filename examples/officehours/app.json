@@ -1,14 +1,27 @@
 {
   "application": "officehours",
   "cloneable": false,
+  "created": {
+    "__class__": "Date",
+    "isoformat": "2010-12-22T20:51:43.771049Z"
+  },
   "icon": "images/icon.png",
+  "modified": {
+    "__class__": "Date",
+    "isoformat": "2010-12-23T15:11:14.007930Z"
+  },
   "owner": "mckoss",
   "readers": [
     "public"
   ],
   "referers": [],
-  "tags": ["productivity", "calendar"],
+  "sha1": "a87e9eb02688fe102da7853a265ffbd3ab98cf0d",
+  "size": 269,
+  "tags": [
+    "productivity",
+    "calendar"
+  ],
   "title": "Office Hours",
-  "writers": [
-  ]
+  "url": "http://officehours.pageforest.com/",
+  "writers": []
 }
