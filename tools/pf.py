@@ -72,7 +72,7 @@ class AuthRequest(urllib2.Request):
         if (hasattr(options, 'session_key')):
             self.add_header('Cookie', 'sessionkey=' + options.session_key)
         if options.verbose:
-            print "Request: %s" % url
+            print "HTTP %s %s" % (self.get_method(), url)
 
 
 class PutRequest(AuthRequest):
