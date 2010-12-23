@@ -50,7 +50,7 @@ SITE_EMAIL_FROM = "support@pageforest.com"
 
 # Memcache key prefix for Cacheable mixin class.
 # Change this before deploying incompatible changes.
-CACHEABLE_PREFIX = 'C2'
+CACHEABLE_PREFIX = 'C3'
 
 # Memcache prefix for Channel API caches
 CHANNEL_PREFIX = 'CH1'

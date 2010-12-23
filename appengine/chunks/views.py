@@ -25,6 +25,12 @@ def chunk_get(request, key_name):
 def vacuum(request, start):
     """
     Delete Chunks that are no longer referenced by any Blobs.
+
+    REVIEW: Chunks are vanishing - bug in here or elsewhere???
+
+    REVIEW: Since a Chunk is cacheable, why are we calling
+    db.delete(keys) instead of chunk.delete() - shouldn't we also
+    free the cache?
     """
     if not start:
         # Calculate fraction of the current day.
@@ -52,7 +58,10 @@ def vacuum(request, start):
             chunks.pop(0)
         elif chunks[0].name() > blobs[0].sha1:
             # This Blob doesn't reference a Chunk.
-            blobs_without_chunks.append(blobs.pop(0))
+            blob = blobs.pop(0)
+            if blob.size > MAX_INTERNAL_SIZE:
+                logging.error("Blob missing chunk: %s (%s)", (blob.key().name(), blob.sha1))
+                blobs_without_chunks.append(blob)
         elif chunks[0].name() < blobs[0].sha1:
             # This Chunk is not referenced by any Blobs.
             chunks_without_blobs.append(chunks.pop(0))
@@ -62,7 +71,7 @@ def vacuum(request, start):
     if chunks_without_blobs and ('HTTP_X_APPENGINE_CRON' in request.META or
                                  'confirmed' in request.POST):
         db.delete(chunks_without_blobs)
-        logging.info('deleted %d unreferenced chunks from %s to %s' % (
+        logging.warning('deleted %d unreferenced chunks from %s to %s' % (
                 len(chunks_without_blobs),
                 chunks_without_blobs[0].name(),
                 chunks_without_blobs[-1].name()))
