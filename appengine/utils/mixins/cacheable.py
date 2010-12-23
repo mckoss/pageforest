@@ -95,7 +95,7 @@ class Cacheable(Serializable):
         value = self.to_protobuf()
         return memcache.set(key, value)
 
-    def put(self, commit_interval=2.0, fake_time=None):
+    def put(self, commit_interval=2.0, fake_time=None, write_through=False):
         """
         Save this entity to datastore and memcache.
 
@@ -129,12 +129,12 @@ class Cacheable(Serializable):
         # Save entity and history to memcache.
         mapping = {self.get_cache_key(): self.to_protobuf()}
         mapping.update(history.serialize_memcache_puts())
-        if commit:
+        if commit or write_through:
             history.datastore_put = now
             mapping.update(history.serialize_datastore_put())
         memcache.set_multi(mapping)
         # Save entity to datastore, if necessary.
-        if commit:
+        if commit or write_through:
             return super(Cacheable, self).put()
 
     def cache_delete(self):

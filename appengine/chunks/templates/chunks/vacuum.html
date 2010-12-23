@@ -26,8 +26,8 @@
 </form>
 
 <ul>
-{% for chunk in chunks_without_blobs %}
-<li><a href="/chunks/{{ chunk.name }}">{{ chunk.name }}</a></li>
+{% for chunk_key in chunks_without_blobs %}
+<li><a href="/chunks/{{ chunk_key.name }}">{{ chunk_key.name }}</a></li>
 {% endfor %}
 </ul>
 {% endif %}
@@ -39,6 +39,16 @@
 <li><a href="{{ blob.get_absolute_url }}">{{ blob.sha1 }}</a></li>
 {% endfor %}
 </ul>
+{% endif %}
+
+{% if recovered_chunks %}
+<h2>{{ recovered_chunks|length}} Recovered Chunks from Memcache!</h2>
+<ul>
+{% for chunk_name in recovered_chunks %}
+<li><a href="/chunks/{{ chunk_name }}">{{ chunk_name }}</a></li>
+{% endfor %}
+</ul>
+
 {% endif %}
 
 {% endblock %}
