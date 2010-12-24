@@ -114,24 +114,28 @@ def load_application():
     """
     Load application from META_FILENAME, or ask the user for it.
     """
+    if options.local_only:
+        return
+
     if options.command == 'test':
         options.application = 'pfpytest'
-        return
 
-    if options.local_only or options.command == 'listapps':
-        return
+    if options.command == 'listapps':
+        options.application = 'www'
+        options.root_url = 'http://www.%s/' % options.server
 
-    if options.application is not None:
-        return
+    if options.application is None:
+        if os.path.exists(META_FILENAME):
+            parsed = json.loads(open(META_FILENAME, 'r').read())
+        else:
+            parsed = {}
+        if 'application' in parsed:
+            options.application = parsed['application']
+        else:
+            options.application = raw_input("Application: ")
 
-    if os.path.exists(META_FILENAME):
-        parsed = json.loads(open(META_FILENAME, 'r').read())
-    else:
-        parsed = {}
-    if 'application' in parsed:
-        options.application = parsed['application']
-    else:
-        options.application = raw_input("Application: ")
+    if not hasattr(options, 'root_url'):
+        options.root_url = 'http://%s.%s.%s/' % (ADMIN, options.application, options.server)
 
 
 def load_credentials():
@@ -221,8 +225,6 @@ def config():
             from getpass import getpass
             options.password = getpass("Password: ")
             options.save_pw = True
-
-        options.root_url = 'http://%s.%s.%s/' % (ADMIN, options.application, options.server)
 
     return args
 
@@ -562,7 +564,19 @@ def listapps_command(args):
     """
     Display a list of apps that the user is allowed to write to.
     """
-    raise Exception("Not Yet Implemented")
+    url = options.root_url + 'apps?method=list'
+    response = urllib2.urlopen(AuthRequest(url))
+    result = json.loads(response.read(), object_hook=as_datetime)
+    apps = result['items']
+    print "Apps owned by you:"
+    for app_name, app in apps.items():
+        if app['owner'] == options.username:
+            print app_name
+
+    print "\nApps owned by others:"
+    for app_name, app in apps.items():
+        if app['owner'] != options.username:
+            print "%s (by %s)" % (app_name, app['owner'])
 
 
 def test_command(args):
