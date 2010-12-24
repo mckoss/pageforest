@@ -87,6 +87,11 @@ class Blob(Timestamped, Migratable, Taggable, Hashable, Cacheable):
             return chunk.value
         return result
 
+    def update_hash(self, value=None):
+        if value is None:
+            raise Exception("Should never be called for Blob!")
+        super(Blob, self).update_hash(value)
+
     def set_value(self, value):
         """
         Set value and update all computed properties that are not
