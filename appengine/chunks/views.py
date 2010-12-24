@@ -31,6 +31,13 @@ def vacuum(request, start):
     REVIEW: Since a Chunk is cacheable, why are we calling
     db.delete(keys) instead of chunk.delete() - shouldn't we also
     free the cache?
+
+    REVIEW: The method of sweeping does not scale as the store gets
+    larger - the reason being that the starting point will only hit
+    points at random based on the time of day.  There may also be
+    more than 1,000 entries between start points.  This should be
+    changed to use task queues to pick up the sweep from the point
+    left off by the previous sweep.
     """
     if not start:
         # Calculate fraction of the current day.
@@ -38,7 +45,7 @@ def vacuum(request, start):
         minute += sec / 60.0
         hour += minute / 60.0
         fraction = (hour - 1) / 24
-        start = hex(int(fraction * 0xffffffffffffffff))[2:].rstrip('L')
+        start = "%06x" % int(fraction * 0xffffff)
     # Load up to 1000 chunk keys.
     chunks = Chunk.all(keys_only=True).order('__key__').filter(
         '__key__ >', db.Key.from_path('Chunk', start)).fetch(1000)
