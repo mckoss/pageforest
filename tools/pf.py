@@ -22,7 +22,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-SUBDOMAIN = 'admin'
+ADMIN = 'admin'
 META_FILENAME = 'app.json'
 PASSWORD_FILENAME = '.passwd'
 ERROR_FILENAME = 'pferror.html'
@@ -138,16 +138,22 @@ def load_credentials():
     """
     Load username and password from base64-encoded .passwd file.
     """
+    if not os.path.exists(PASSWORD_FILENAME):
+        return
+
     credentials = open(PASSWORD_FILENAME).readline().decode('base64')
     parts = credentials.split(':')
     if len(parts) == 2:
-        return parts
+        options.username, options.password = parts
 
 
 def save_credentials():
     """
     Save username and password to base64-encoded .passwd file.
     """
+    if not options.save_pw:
+        return
+
     yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
     yesno = yesno.strip().lower() or 'y'
     if yesno.startswith('y'):
@@ -204,19 +210,20 @@ def config():
         options.server = "pageforest.com"
 
     load_application()
+    load_credentials()
 
-    if os.path.exists(PASSWORD_FILENAME):
-        options.username, options.password = load_credentials()
-
-    options.save = False
+    options.save_pw = False
     if not options.local_only:
         if not options.username:
             options.username = raw_input("Username: ")
-            options.save = True
+            options.save_pw = True
         if not options.password:
             from getpass import getpass
             options.password = getpass("Password: ")
-            options.save = True
+            options.save_pw = True
+
+        options.root_url = 'http://%s.%s.%s/' % (ADMIN, options.application, options.server)
+
     return args
 
 
@@ -371,8 +378,7 @@ def to_json(d, extra=None, include=None, exclude=None, indent=2):
 
 def sha1_file(filename, data=None):
     """
-    Hash the contents of a file with SHA-1.
-    Return the hexdigest, or None if file not found.
+    Hash the contents of the file using SHA-1.
     """
     if not os.path.exists(filename):
         return None
@@ -536,7 +542,7 @@ def list_command(args):
 
 def sha1_command(args):
     """
-    Print the SHA-1 hash of each argument.
+    Print the SHA-1 hash of each file.
     """
     if not args:
         args = os.listdir('.')
@@ -545,12 +551,10 @@ def sha1_command(args):
             sha1_command([os.path.join(path, filename)
                           for filename in os.listdir(path)])
         if os.path.isfile(path):
-            infile = open(path, 'rb')
-            data = infile.read()
-            infile.close()
-            print_file_info(path, {'sha1': hashlib.sha1(data).hexdigest(),
+            sha1 = sha1_file(path)
+            print_file_info(path, {'sha1': sha1,
                                    'modified': datetime.fromtimestamp(os.path.getmtime(path)),
-                                   'size': len(data)
+                                   'size': os.path.getsize(path)
                                    })
 
 
@@ -609,13 +613,10 @@ def test_command(args):
 
 def main():
     args = config()
-    options.root_url = 'http://%s.%s.%s/' % (
-        SUBDOMAIN, options.application, options.server)
     if not options.local_only:
         options.session_key = sign_in()
     globals()[options.command + '_command'](args)
-    if options.save:
-        save_credentials()
+    save_credentials()
 
 
 if __name__ == '__main__':
