@@ -268,15 +268,18 @@ def upload_file(filename, url=None):
     or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
         print "Uploading: %s (%s bytes)%s" % (url, intcomma(len(data)), or_not)
-    if not options.noop:
-        # Some versions of python have problems with raw binary PUT's - treating data
-        # as ascii and complaining.  So, use base64 transfer encoding.
-        if should_encode(filename):
-            data = b64encode(data)
-            url += '?transfer-encoding=base64'
-        response = urllib2.urlopen(PutRequest(url), data)
-        if options.verbose:
-            print "Response: %s" % response.read()
+
+    if options.noop:
+        return
+
+    # Some versions of python have problems with raw binary PUT's - treating data
+    # as ascii and complaining.  So, use base64 transfer encoding.
+    if should_encode(filename):
+        data = b64encode(data)
+        url += '?transfer-encoding=base64'
+    response = urllib2.urlopen(PutRequest(url), data)
+    if options.verbose:
+        print "Response: %s" % response.read()
 
 
 def delete_file(filename, url=None):
@@ -288,10 +291,12 @@ def delete_file(filename, url=None):
     or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
         print "Deleting: %s%s" % (url, or_not)
-    if not options.noop:
-        response = urllib2.urlopen(DeleteRequest(url))
-        if options.verbose:
-            print "Response: %s" % response.read()
+    if options.noop:
+        return
+
+    response = urllib2.urlopen(DeleteRequest(url))
+    if options.verbose:
+        print "Response: %s" % response.read()
 
 
 def download_file(filename, url=None):
