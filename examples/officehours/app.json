@@ -3,25 +3,27 @@
   "cloneable": false,
   "created": {
     "__class__": "Date",
-    "isoformat": "2010-12-22T20:51:43.771049Z"
+    "isoformat": "2010-12-11T21:29:53.638004Z"
   },
   "icon": "images/icon.png",
   "modified": {
     "__class__": "Date",
-    "isoformat": "2010-12-23T15:11:14.007930Z"
+    "isoformat": "2011-01-03T19:40:02.288467Z"
   },
-  "owner": "mckoss",
+  "owner": "root",
   "readers": [
     "public"
   ],
   "referers": [],
-  "sha1": "a87e9eb02688fe102da7853a265ffbd3ab98cf0d",
-  "size": 269,
+  "sha1": "e2029e086825e9a39f93ad31d77e015226344a14",
+  "size": 270,
   "tags": [
     "productivity",
     "calendar"
   ],
   "title": "Office Hours",
   "url": "http://officehours.pageforest.com/",
-  "writers": []
+  "writers": [
+      "cwkoss", "mckoss"
+  ]
 }
