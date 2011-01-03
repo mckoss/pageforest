@@ -482,9 +482,14 @@ def put_command(args):
 def delete_command(args):
     """
     Delete files from the server (leaves local files alone).
+
+    If no filename is given, the entire app is deleted.
     """
+    if not args:
+        delete_file(META_FILENAME)
+        return
+
     list_remote_files()
-    download_file(META_FILENAME)
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
