@@ -24,7 +24,7 @@ except ImportError:
 
 ADMIN = 'admin'
 META_FILENAME = 'app.json'
-PASSWORD_FILENAME = '.passwd'
+OPTIONS_FILENAME = '.pf'
 ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ('pf.py', ERROR_FILENAME, '.*', '*~', '#*#',
                     '*.bak', '*.rej', '*.orig')
@@ -98,8 +98,7 @@ def sign_in():
     challenge = urllib2.urlopen(AuthRequest(url)).read()
     if options.verbose:
         print "Challenge: %s" % challenge
-    userpass = hmac_sha1(options.password, options.username.lower())
-    signature = hmac_sha1(userpass, challenge)
+    signature = hmac_sha1(options.secret, challenge)
     reply = '|'.join((options.username, challenge, signature))
     url = options.root_url + 'auth/verify/' + reply
     if options.verbose:
@@ -138,31 +137,32 @@ def load_application():
         options.root_url = 'http://%s.%s.%s/' % (ADMIN, options.application, options.server)
 
 
-def load_credentials():
+def load_options():
     """
-    Load username and password from base64-encoded .passwd file.
+    Load saved options from options file.
     """
-    if not os.path.exists(PASSWORD_FILENAME):
+    if not os.path.exists(OPTIONS_FILENAME):
         return
 
-    credentials = open(PASSWORD_FILENAME).readline().decode('base64')
-    parts = credentials.split(':')
-    if len(parts) == 2:
-        options.username, options.password = parts
+    file_options = json.loads(open(OPTIONS_FILENAME, 'r').read())
+    options.secret = file_options.get('secret')
+    options.server = file_options.get('server')
 
 
-def save_credentials():
+def save_options():
     """
-    Save username and password to base64-encoded .passwd file.
+    Save options in options file for later use.
     """
-    if not options.save_pw:
+
+    file_options = {}
+    if hasattr(options, 'username'):
+        file_options['username'] = options.username
+
+    if options.save_pw:
+        file_options['secret'] = options.secret
         return
 
-    yesno = raw_input("Save password in %s file (Y/n)? " % PASSWORD_FILENAME)
-    yesno = yesno.strip().lower() or 'y'
-    if yesno.startswith('y'):
-        credentials = '%s:%s' % (options.username, options.password)
-        open(PASSWORD_FILENAME, 'w').write(credentials.encode('base64'))
+    open(OTIONS_FILENAME, 'w').write(to_json(file_options))
 
 
 def config():
@@ -214,7 +214,7 @@ def config():
         options.server = "pageforest.com"
 
     load_application()
-    load_credentials()
+    load_options()
 
     options.save_pw = False
     if not options.local_only:
@@ -640,7 +640,7 @@ def main():
     if not options.local_only:
         options.session_key = sign_in()
     globals()[options.command + '_command'](args)
-    save_credentials()
+    save_options()
 
 
 if __name__ == '__main__':
