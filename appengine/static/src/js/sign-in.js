@@ -32,10 +32,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             type: "GET",
             url: url,
             dataType: "jsonp",
-            success: fn,
-            error: function() {
-                fn({status: 500});
-            }
+            success: fn
         });
     }
 
