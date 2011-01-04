@@ -90,6 +90,9 @@ class DeleteRequest(AuthRequest):
 
 
 def hmac_sha1(key, message):
+    # Convert unicode strings to byte strings - hmac will throw type error
+    key = str(key)
+    message = str(message)
     return hmac.new(key, message, hashlib.sha1).hexdigest()
 
 
@@ -139,30 +142,43 @@ def load_application():
 
 def load_options():
     """
-    Load saved options from options file.
+    Load saved options from options file.   Don't override command line
+    provided options.
     """
-    if not os.path.exists(OPTIONS_FILENAME):
-        return
+    options.local_only = options.command == 'sha1'
 
-    file_options = json.loads(open(OPTIONS_FILENAME, 'r').read())
-    options.secret = file_options.get('secret')
-    options.server = file_options.get('server')
+    options.secret = None
+    file_options = {}
+    if os.path.exists(OPTIONS_FILENAME):
+        file_options = json.loads(open(OPTIONS_FILENAME, 'r').read())
+
+    for prop in file_options:
+        if getattr(options, prop) is None:
+            setattr(options, prop, file_options.get(prop))
+
+    if not options.server:
+        options.server = "pageforest.com"
+
+    if not options.local_only:
+        if not options.username:
+            options.username = raw_input("Username: ")
+        if not options.secret:
+            if not options.password:
+                from getpass import getpass
+                options.password = getpass("Password: ")
+            options.secret = hmac_sha1(options.password, options.username.lower())
 
 
 def save_options():
     """
     Save options in options file for later use.
     """
-
     file_options = {}
-    if hasattr(options, 'username'):
-        file_options['username'] = options.username
+    file_options['username'] = options.username
+    file_options['secret'] = options.secret
+    file_options['server'] = options.server
 
-    if options.save_pw:
-        file_options['secret'] = options.secret
-        return
-
-    open(OTIONS_FILENAME, 'w').write(to_json(file_options))
+    open(OPTIONS_FILENAME, 'w').write(to_json(file_options))
 
 
 def config():
@@ -208,23 +224,8 @@ def config():
     if options.command not in commands:
         parser.error("Unsupported command: " + options.command)
 
-    options.local_only = options.command == 'sha1'
-
-    if not options.server:
-        options.server = "pageforest.com"
-
-    load_application()
     load_options()
-
-    options.save_pw = False
-    if not options.local_only:
-        if not options.username:
-            options.username = raw_input("Username: ")
-        if not options.secret:
-            if not options.password:
-                from getpass import getpass
-                options.password = getpass("Password: ")
-            options.secret = hmac_sha1(options.password, options.username.lower())
+    load_application()
 
     return args
 
