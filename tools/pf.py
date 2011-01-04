@@ -220,11 +220,11 @@ def config():
     if not options.local_only:
         if not options.username:
             options.username = raw_input("Username: ")
-            options.save_pw = True
-        if not options.password:
-            from getpass import getpass
-            options.password = getpass("Password: ")
-            options.save_pw = True
+        if not options.secret:
+            if not options.password:
+                from getpass import getpass
+                options.password = getpass("Password: ")
+            options.secret = hmac_sha1(options.password, options.username.lower())
 
     return args
 
