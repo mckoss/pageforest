@@ -12,5 +12,6 @@ nosetests.xml
 coverage.xml
 .coverage
 .passwd
+.pf
 .DS_Store
 pferror.html
