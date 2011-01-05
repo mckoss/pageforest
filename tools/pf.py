@@ -487,15 +487,46 @@ def delete_command(args):
     If no filename is given, the entire app is deleted.
     """
     if not args:
-        delete_file(META_FILENAME)
+        if if_yes("Are you sure you want to DELETE %s and all it's files from %s" %
+                  (options.application, options.server)):
+            delete_file(META_FILENAME)
         return
 
     list_remote_files()
     filenames = options.listing.keys()
-    filenames.sort()
+
+    selected = []
     for filename in filenames:
         if args and not prefix_match(args, filename):
             continue
+        selected.append(filename)
+
+    delete_files(selected)
+
+
+def if_yes(prompt):
+    answer = raw_input("%s (yes/no)? " % prompt)
+    f = answer.lower().startswith('y')
+    if not f:
+        print "I'll take that as a no."
+    return f
+
+
+def delete_files(filenames):
+    if META_FILENAME in filenames:
+        filenames.remove(META_FILENAME)
+
+    if not filenames:
+        print "No files to delete."
+        return
+
+    if not if_yes("Are you sure you want to DELETE %s files from %s" %
+                  (intcomma(len(filenames)), options.server)):
+        return
+
+    filenames.sort()
+
+    for filename in filenames:
         delete_file(filename)
 
 
@@ -506,7 +537,6 @@ def vacuum_command(args):
     """
     list_remote_files()
     filenames = options.listing.keys()
-    filenames.sort()
     selected = []
     for filename in filenames:
         if args and not prefix_match(args, filename):
@@ -515,15 +545,8 @@ def vacuum_command(args):
             continue
         print_file_info(filename, options.listing[filename])
         selected.append(filename)
-    if not selected:
-        print "No files to vacuum."
-        return
-    answer = raw_input(
-        "Are you sure you want to DELETE %s remote files? " %
-        intcomma(len(selected)))
-    if answer.lower().startswith('y'):
-        for filename in selected:
-            delete_file(filename)
+
+    delete_files(selected)
 
 
 def print_file_info(filename, metadata):
