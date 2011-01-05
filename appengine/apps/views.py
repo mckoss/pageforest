@@ -122,7 +122,7 @@ def clone(request, app_id):
 
 
 @jsonp
-@method_required('GET', 'PUT')
+@method_required('GET', 'PUT', 'DELETE')
 def app_json(request):
     """
     Read and write application info with REST API.
@@ -131,8 +131,10 @@ def app_json(request):
     """
     if request.method == 'GET':
         return app_json_get(request)
-    if request.method == 'PUT':
+    elif request.method == 'PUT':
         return app_json_put(request)
+    elif request.method == 'DELETE':
+        return app_json_delete(request)
 
 
 def app_json_get(request):
@@ -169,5 +171,23 @@ def app_json_put(request):
     # owner or writer!
     request.app.update_from_json(parsed)
     request.app.put()
-    return HttpResponse('{"status": 200, "statusText": "Saved"}',
-                        mimetype=settings.JSON_MIMETYPE_CS)
+    return HttpJSONResponse({"statusText": "Saved"})
+
+
+def app_json_delete(request):
+    """
+    Delete the application.
+
+    Note that none of the user created documents are delete - they will be orphaned.
+
+    Any new app with the same name will inherit the older documents.
+
+    REVIEW: Why are permissions handled directly here and NOT for same verbs
+    for docs (in auth/middleware)?
+    """
+    if not request.app.is_writable(request.user):
+        return AccessDenied(request, "No write permission.")
+
+    request.app.delete()
+    request.app = None
+    return HttpJSONResponse({'statusText': "Deleted"})
