@@ -118,9 +118,11 @@ def method_required(*methods):
     def decorate(func):
         def wrapper(request, *args, **kwargs):
             if request.method not in methods:
+                methods_list = list(methods)
+                methods_list.sort()
                 logging.info("%s not allowed - must be one of %r" %
-                             (request.method, methods))
-                return HttpResponseNotAllowed(methods)
+                             (request.method, methods_list))
+                return HttpResponseNotAllowed(methods_list)
             return func(request, *args, **kwargs)
         return wrapper
     return decorate
