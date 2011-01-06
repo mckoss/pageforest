@@ -123,7 +123,7 @@ AE_DIR="/usr/local/google_appengine"
 # Get AppEngine - needs to be in /usr/local for django helper to find properly?
 read -p "Install App Engine (y/n): "
 if [ "$REPLY" = "y" ]; then
-    download_zip http://googleappengine.googlecode.com/files/google_appengine_1.4.0.zip $AE_DIR
+    download_zip http://googleappengine.googlecode.com/files/google_appengine_1.4.1.zip $AE_DIR
     chmod -R o+rwx .
 
     # Put dev_appserver.py and appcfg.py directly into PATH
