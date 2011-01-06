@@ -664,6 +664,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             var time = new Date().getTime();
                             ut.assertGT(time - timeStart, 1000);
                             ut.assertEq(message.method, 'PUT');
+                            ut.assertEq(message.key, "test-storage/");
                             ut.nextFn();
                         });
 
@@ -678,6 +679,31 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     }
 
                     setTimeout(doPut, 1000);
+                },
+
+                function (ut) {
+                    var timeStart = new Date().getTime();
+
+                    client.storage.subscribe('test-storage', undefined,
+                                             {allBlobs: true},
+                        function (message) {
+                            var time = new Date().getTime();
+                            ut.assertGT(time - timeStart, 1000);
+                            ut.assertEq(message.method, 'PUT');
+                            ut.assertEq(message.key, "test-storage/test-blob-2");
+                            ut.nextFn();
+                        });
+
+                    function doBlobPut() {
+                        client.storage.putBlob('test-storage', 'test-blob-2',
+                            {title: "Test storage document - channel update.",
+                             blob: testBlob}, undefined,
+                            function (result) {
+                                ut.assertEq(result.status, 200);
+                            });
+                    }
+
+                    setTimeout(doBlobPut, 1000);
                 }
             ]);
         }).async(true, 15000);

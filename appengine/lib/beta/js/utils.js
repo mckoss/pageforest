@@ -2208,7 +2208,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         invalid_json: "WARNING: Save object property {key} " +
             "with constructor: {ctor}.",
         doc_unsaved: "Document must be saved before " +
-            "children can be saved."
+            "children can be saved.",
+        sub_option: "Option can only be applied to a Doc, not a Blob."
     };
 
     function URL(url) {
@@ -2378,6 +2379,12 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
         },
 
+        // Subscribe for notifications to Doc or Blob(s).
+        // options:
+        // exclusive - If true, replace all past subscriptions
+        //     with this one.
+        // allBlobs - If true, receive notifications for all Blob's
+        //     within a document.
         subscribe: function(docid, blobid, options, fn) {
             // TODO: Add options.onError to callback for errors
             // on this subscribe.
@@ -2389,9 +2396,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             options = options || {};
             options.enabled = (fn != undefined);
             options.fn = fn;
-            if (fn == undefined) {
-                options.enabled = false;
-            }
 
             var key = docid + '/';
             if (blobid != undefined) {
@@ -2405,15 +2409,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
             // TODO: Remove enabled flag? Just remove from
             // subscriptions list? BUG: Multiple clients will
-            // over-write the channel's subscriptsions since all
+            // over-write the channel's subscriptions since all
             // shared on session!
             var sub = this.subscriptions[key] || {enabled: false};
             var subNew = util.extendObject({}, sub, {enabled: true}, options);
             this.subscriptions[key] = subNew;
 
-            if (sub.enabled != subNew.enabled) {
-                this.ensureSubs();
-            }
+            this.ensureSubs();
         },
 
         hasSubscription: function(docid, blobid) {
@@ -2460,6 +2462,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 funcName == 'push';
             var isBlobMethod = base.indexOf(funcName, blobFuncs) != -1;
 
+            // Each of the following validations should be TRUE - or an error
+            // will be reported.
             var validations = {
                 // Data writing methods need to provide signin and data!
                 no_username: !isPutMethod || this.client.username != undefined,
@@ -2478,7 +2482,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
                 missing_document_name: funcName == 'list' || docid != undefined,
 
-
                 // Data reading methods should have a callback function
                 missing_callback: isPutMethod || fnSuccess != undefined,
 
@@ -2487,7 +2490,10 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 missing_title: funcName != 'putDoc' ||
                     typeof json == 'object' && json.title,
                 missing_blob: funcName != 'putDoc' ||
-                    typeof json == 'object' && json.blob
+                    typeof json == 'object' && json.blob,
+
+                sub_option: funcName != 'subscribe' ||
+                    options == undefined || !options.allBlobs || blobid == undefined
             };
 
             for (var code in validations) {
