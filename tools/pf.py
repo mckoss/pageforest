@@ -424,7 +424,6 @@ def list_remote_files():
                 options.listing = result
                 break
     except urllib2.HTTPError, e:
-        print "Error listing files: %s: %s" % (unicode(e), e.read())
         # For newly created apps - listing will return error.
         # Treat as empty on the server.
         options.listing = {}
