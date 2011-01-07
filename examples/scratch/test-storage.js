@@ -576,14 +576,13 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             client.app.ut = ut;
             client.app.ignore = 'channel/nosub';
             client.app.skip = false;
+            client.app.waitingFor = 'channel/updated';
             // dev_appserver will deliver state notifications
             var etag;
             var etagNew;
 
             ut.asyncSequence([
                 function (ut) {
-                    client.app.waitingFor = 'channel/updated';
-
                     ut.assert(!client.storage.hasSubscription('test-storage',
                                                               'test-channel'));
                     client.storage.subscribe('test-storage', 'test-channel',
@@ -687,10 +686,16 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     client.storage.subscribe('test-storage', undefined,
                                              {children: true},
                         function (message) {
+                            // Ignore PUT messages for doc and past blob PUTS
+                            // left over from old subscriptions!
+                            if (message.key != 'test-storage/test-blob-2/') {
+                                return;
+                            }
+                            console.log("Calling parent callback");
                             var time = new Date().getTime();
                             ut.assertGT(time - timeStart, 1000);
                             ut.assertEq(message.method, 'PUT');
-                            ut.assertEq(message.key, "test-storage/test-blob-2");
+                            ut.assertEq(message.key, "test-storage/test-blob-2/");
                             ut.nextFn();
                         });
 
@@ -706,7 +711,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     setTimeout(doBlobPut, 1000);
                 }
             ]);
-        }).async(true, 15000);
+        }).async(true, 30000);
 
     } // addTests
 

@@ -180,6 +180,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             // TODO: Change key to docid:, blobid:
             var message = JSON.parse(evt.data);
             var sub;
+            var fSent = false;
 
             this.client.onInfo('channel/message', message.key +
                             ' (' + message.method + ')');
@@ -190,18 +191,20 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 sub = this.subscriptions[parts[0] + '/'];
                 if (sub && sub.enabled && sub.children) {
                     sub.fn(message);
+                    fSent = true;
                 }
             }
 
             sub = this.subscriptions[message.key];
-            if (sub == undefined) {
+            if (sub && sub.enabled) {
+                sub.fn(message);
+                fSent = true;
+            }
+
+            if (!fSent) {
                 this.client.onError('channel/nosub',
                                     "No subscription for channel key: " +
                                     message.key);
-                return;
-            }
-            if (sub.enabled) {
-                sub.fn(message);
             }
         },
 
@@ -237,9 +240,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             // subscriptions list? BUG: Multiple clients will
             // over-write the channel's subscriptions since all
             // shared on session!
-            var sub = this.subscriptions[key] || {enabled: false};
-            var subNew = util.extendObject({}, sub, {enabled: true}, options);
-            this.subscriptions[key] = subNew;
+            this.subscriptions[key] = options;
 
             this.ensureSubs();
         },
