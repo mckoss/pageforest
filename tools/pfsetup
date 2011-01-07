@@ -66,6 +66,7 @@ fi
 
 read -p "Install Pep8 (y/n): "
 if [ "$REPLY" = "y" ]; then
+    echo "https://github.com/mckoss/pep8 is more up to date"
     easy_install pep8
 fi
 
