@@ -296,6 +296,9 @@ def verify(request, signature):
         request.app, subdomain=request.subdomain,
         seconds=settings.REAUTH_COOKIE_AGE)
     response = HttpResponse(session_key, content_type='text/plain')
+    response.set_cookie(settings.SESSION_USER_NAME, user.get_username(),
+                        path=settings.SESSION_COOKIE_PATH,
+                        max_age=settings.SESSION_COOKIE_AGE)
     response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
                         max_age=settings.SESSION_COOKIE_AGE)
     response.set_cookie(settings.REAUTH_COOKIE_NAME, reauth_cookie,
