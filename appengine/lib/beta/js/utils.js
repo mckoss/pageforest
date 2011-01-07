@@ -2364,10 +2364,21 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                 }
             // TODO: Change key to docid:, blobid:
             var message = JSON.parse(evt.data);
+            var sub;
+
             this.client.onInfo('channel/message', message.key +
                             ' (' + message.method + ')');
 
-            var sub = this.subscriptions[message.key];
+            // Check for children subscription on parent doc
+            var parts = message.key.split('/');
+            if (parts.length > 2) {
+                sub = this.subscriptions[parts[0] + '/'];
+                if (sub && sub.enabled && sub.children) {
+                    sub.fn(message);
+                }
+            }
+
+            sub = this.subscriptions[message.key];
             if (sub == undefined) {
                 this.client.onError('channel/nosub',
                                     "No subscription for channel key: " +
@@ -2383,7 +2394,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         // options:
         // exclusive - If true, replace all past subscriptions
         //     with this one.
-        // allBlobs - If true, receive notifications for all Blob's
+        // children - If true, receive notifications for all Blob's
         //     within a document.
         subscribe: function(docid, blobid, options, fn) {
             // TODO: Add options.onError to callback for errors
@@ -2493,7 +2504,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                     typeof json == 'object' && json.blob,
 
                 sub_option: funcName != 'subscribe' ||
-                    options == undefined || !options.allBlobs || blobid == undefined
+                    options == undefined || !options.children || blobid == undefined
             };
 
             for (var code in validations) {

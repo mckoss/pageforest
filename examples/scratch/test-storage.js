@@ -685,7 +685,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     var timeStart = new Date().getTime();
 
                     client.storage.subscribe('test-storage', undefined,
-                                             {allBlobs: true},
+                                             {children: true},
                         function (message) {
                             var time = new Date().getTime();
                             ut.assertGT(time - timeStart, 1000);

@@ -99,6 +99,25 @@ def get_bool(mapping, key, default=None):
     return value == 'true'
 
 
+def project(d, keys):
+    """
+    Return a dictionary that is the projection of properties
+    from the keys list.
+
+    >>> project({}, ['a'])
+    {}
+    >>> project({'a': 1, 'b': 2}, ['a'])
+    {'a': 1}
+    >>> project({'a': 1, 'b': 2}, ['b', 'c'])
+    {'b': 2}
+    """
+    result = {}
+    for key in keys:
+        if key in d:
+            result[key] = d[key]
+    return result
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()

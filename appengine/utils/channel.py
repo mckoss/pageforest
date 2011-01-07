@@ -10,6 +10,7 @@ from google.appengine.api import channel
 
 from utils.decorators import jsonp, method_required
 from utils.json import ModelEncoder, HttpJSONResponse
+from utils.shortcuts import project
 from utils import crypto
 
 from auth.decorators import login_required
@@ -61,7 +62,7 @@ def subscriptions(request, extra):
         if sub['enabled'] == False:
             expires = 0
             del subs[key]
-        add_subscription(key, session_key, expires)
+        add_subscription(key, session_key, expires, project(sub, ['children']))
 
     channel_data['subscriptions'] = subs
     m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
@@ -75,10 +76,15 @@ def subscriptions(request, extra):
             })
 
 
-def add_subscription(key, session_key, expires):
+def add_subscription(key, session_key, expires, options=None):
     """
     For each storage key, we store a dictionary of subscribers:
-       {session_key: {'expires': expires_time}
+       {session_key: {'expires': expires_time}, ...
+
+    options is an (optional) dictionary that can contain:
+
+        children: True - For a document key, subscribe to all
+        child blobs.
     """
     # Keys are paths normalized to end in trailing slash
     if not key.endswith('/'):
@@ -86,6 +92,8 @@ def add_subscription(key, session_key, expires):
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key) or {}
     subscriptions[session_key] = {'expires': expires}
+    if options:
+        subscriptions[session_key].update(options)
     save_subscriptions(sub_key, subscriptions)
 
 
@@ -104,16 +112,30 @@ def save_subscriptions(sub_key, subscriptions):
     memcache.set(sub_key, subscriptions, max_expires)
 
 
-def dispatch_subscriptions(key, method, data):
+def dispatch_subscriptions(key, method, data, original_key=None):
     """
-    Dispatch messages for appid/key
+    Dispatch messages for appid/key.
+
+    For blob keys, we also dispatch children subscriptions on the parent
+    document.
     """
+    app_id, docid, path = key.split('/', 2)
+
+    # Blob changed - also dispatch for parent document.
+    if path != '':
+        dispatch_subscriptions('%s/%s/' % (app_id, docid), method, data, key)
+
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key)
     if subscriptions is None:
         return
 
-    app_id, path = key.split('/', 1)
+    # Update path to be original one for children subscriptions
+    if original_key:
+        path = original_key.split('/', 2)[2]
+    else:
+        original_key = key
+
     now = time.time()
     fan_out = 0
     save = False
@@ -121,13 +143,15 @@ def dispatch_subscriptions(key, method, data):
         if sub['expires'] < now:
             save = True
             continue
+        if original_key != key and 'children' not in sub:
+            continue
         fan_out += 1
         # TODO: Use task queues to increase fan_out
         if fan_out > MAX_SUBSCRIBERS:
             logging.info("Too many subscribers (%d) on %s." %
                          (len(subscriptions), key))
             break
-        message = json.dumps({'key': path,
+        message = json.dumps({'key': '/'.join((docid, path)),
                               'app': app_id,
                               'method': method,
                               'data': data},
