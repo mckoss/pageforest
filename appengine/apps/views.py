@@ -155,11 +155,13 @@ def app_json_put(request):
     """
     Parse incoming JSON blob and update meta info for this app.
     """
+    status = 200
     if not request.app.owner:
         try:
             request.user.assert_authorized(App.create)
         except Exception, error:
             return HttpJSONResponse({'textStatus': unicode(error)}, status=403)
+        status = 201
         request.app.owner = request.user.get_username()
 
     if not request.app.is_writable(request.user):
@@ -171,7 +173,16 @@ def app_json_put(request):
     # owner or writer!
     request.app.update_from_json(parsed)
     request.app.put()
-    return HttpJSONResponse({"statusText": "Saved"})
+
+    response = HttpJSONResponse({
+        'statusText': status == 200 and "Saved" or "Created",
+        'modified': request.app.modified,
+        'sha1': request.app.sha1,
+        }, status=status)
+
+    request.app.update_headers(response)
+
+    return response
 
 
 def app_json_delete(request):
