@@ -590,7 +590,7 @@ class AppCreatorTest(AppTestCase):
             response = self.client.put('/app.json', '{}',
                                        content_type='application/json')
             if index <= 3:
-                self.assertContains(response, 'Saved')
+                self.assertContains(response, 'Created', status_code=201)
         self.assertContains(response, '3 apps', status_code=403)
 
 
