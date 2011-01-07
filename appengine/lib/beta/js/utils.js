@@ -2289,7 +2289,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             docid = docid || '';
             blobid = blobid || '';
 
-            var url = 'http://' + this.client.appHost + '/docs/';
+            var url = '/docs/';
 
             // Special case for URL for root of all docs
             if (docid == '') {
@@ -2743,7 +2743,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         list: function(docid, blobid, options, fnSuccess) {
-            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
+            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag', 'order'];
 
             if (!this.validateArgs('list', docid, blobid, undefined,
                                    options, fnSuccess)) {
