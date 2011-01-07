@@ -143,8 +143,6 @@ def app_json_get(request):
     """
     if not request.app.is_readable(request.user):
         return AccessDenied(request)
-    # Timestamps are excluded to avoid uploading app.json again and
-    # again because the SHA-1 hash keeps changing.
     content = request.app.to_json(extra={"application": request.app.get_app_id()})
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
