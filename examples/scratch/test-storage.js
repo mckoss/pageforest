@@ -65,7 +65,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             var appHost = client.appHost;
             ut.assertEq(appHost.indexOf('scratch.pageforest'), 0);
             var url = client.storage.getDocURL('foo', 'bar');
-            ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/foo/bar'), url.length - 13);
 
             var url2 = client.storage.getDocURL('foo');
@@ -73,7 +72,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
             // Should get the document root url
             url = client.storage.getDocURL();
-            ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/'), url.length - 6);
         });
 

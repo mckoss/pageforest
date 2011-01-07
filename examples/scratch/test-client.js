@@ -83,7 +83,6 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
                 function (ut) {
                     var url = client.getDocURL();
-                    ut.assertEq(url.indexOf('http://scratch.'), 0);
                     ut.assertEq(url.indexOf('/test-1'), url.length - 8);
 
                     app.expectedState = 'loading';
