@@ -67,7 +67,10 @@ fi
 read -p "Install Pep8 (y/n): "
 if [ "$REPLY" = "y" ]; then
     echo "https://github.com/mckoss/pep8 is more up to date"
-    easy_install pep8
+    cd $SRC_DIR
+    git clone https://mckoss@github.com/mckoss/pep8.git pep8
+    cd pep8
+    python setup.py install
 fi
 
 # Install OpenSSL
