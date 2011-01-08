@@ -19,12 +19,19 @@ class ModelEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-#                          1      2      3      4      5       6      7
+#                      1       2       3       4       5       6      7
 re_iso = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{0,6})?Z$")
 
 
 def datetime_from_iso(iso):
-    # TODO: Allow just date w/o full fractional time - or partial times
+    """
+    Convert from ISO 8601 format to a datetime.
+
+    TODO: Allow just date w/o full fractional time - or partial times
+
+    >>> datetime_from_iso("2011-01-07T01:32:13Z")
+    datetime.datetime(2011, 1, 7, 1, 32, 13)
+    """
     m = re_iso.match(iso)
     if m is None:
         return None
