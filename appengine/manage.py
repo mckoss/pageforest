@@ -20,7 +20,7 @@ import sys
 import logging
 
 sys.path.insert(1, '/usr/local/google_appengine/lib')
-sys.path.insert(1, '/usr/local/appengine_helper_for_django')
+sys.path.insert(1, '/usr/local/google_appengine/appengine_helper_for_django')
 
 try:
     import appengine_django
