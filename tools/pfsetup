@@ -17,7 +17,7 @@ function download {
 
     cd $DOWN_DIR
     if [ ! -f $FILE ]; then
-        if ! wget $FILE_PATH; then
+        if ! curl $FILE_PATH --output $FILE; then
             echo "Failed to download $FILE_PATH"
             exit 1
         fi
@@ -100,10 +100,11 @@ if [ "$REPLY" = "y" ]; then
 fi
 
 # Install Python Extras
-read -p "Install Mock and PIL (y/n): "
+read -p "Install Mock and PIL, and pylint (y/n): "
 if [ "$REPLY" = "y" ]; then
     easy_install-2.5 mock
     easy_install-2.5 PIL
+    easy_install pylint
 fi
 
 # Get SSL Library not supported in native 2.5.2
@@ -113,6 +114,17 @@ if [ "$REPLY" = "y" ]; then
 
     python2.5 setup.py install
 fi
+
+# Get Rhino - javascript engine
+read -p "Install Rhino (JavaScript Engine) (y/n): "
+if [ "$REPLY" = "y" ]; then
+    cd $HOME
+    mkdir -p Library/Java/Extensions
+
+    download_zip ftp://ftp.mozilla.org/pub/mozilla.org/js/rhino1_7R2.zip $SRC_DIR/rhino1_7R2
+    cp js.jar $HOME/Library/Java/Extensions
+fi
+
 
 # Get Django 1.1
 read -p "Install Django 1.1 (y/n): "
