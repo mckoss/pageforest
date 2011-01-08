@@ -18,7 +18,7 @@ from utils.decorators import jsonp, run_in_transaction, method_required, \
     no_cache
 from utils.http import http_datetime
 from utils.mime import guess_mimetype
-from utils.json import ModelEncoder, HttpJSONResponse
+from utils.json import ModelEncoder, HttpJSONResponse, datetime_from_iso
 from utils.shortcuts import render_to_response, lookup_or_404, \
     get_int, get_bool
 from utils.channel import dispatch_subscriptions
@@ -184,6 +184,8 @@ def blob_list(request):
     has_order = False
     if depth == 1:
         query.filter('directory', request.key_name)
+        if 'since' in request.GET:
+            query.filter('modified >', datetime_from_iso(request.GET['since']))
         if 'order' in request.GET:
             order_prop = request.GET['order']
             if order_prop not in ALLOWED_ORDER_PROPS:
@@ -192,7 +194,7 @@ def blob_list(request):
             query.order(order_prop)
             has_order = True
     else:
-        if 'order' in request.GET:
+        if 'order' in request.GET or 'since' in request.GET:
             return HttpJSONResponse(
                 {'statusText': "Ordering incompatible with deep traversal.  " +
                  "Use depth=1, and no prefix=."},
