@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Run this script as sudo ...
+
+SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
+DOWN_DIR="$HOME/Downloads"
+SRC_DIR="$HOME/src"
+BIN_DIR="$HOME/bin"
+
+# TODO: Put all file version strings at top of this file
+# TODO: Add command line to install a single component - or "all"
+
+# download <url> - do nothing if already downloaded
+function download {
+    FILE_PATH=$1
+    FILE="$( basename "$FILE_PATH" )"
+
+    cd $DOWN_DIR
+    if [ ! -f $FILE ]; then
+        if ! wget $FILE_PATH; then
+            echo "Failed to download $FILE_PATH"
+            exit 1
+        fi
+    fi
+}
+
+# download_zip <url> <destination directory>
+# download and unzip directory to destination
+# cd's to the unzipped directory as a side effect
+function download_zip {
+    DEST_PATH=$2
+    DEST_PARENT="$( dirname $DEST_PATH )"
+    DEST_DIR="$( basename $DEST_PATH )"
+
+    download $1
+
+    cd $DEST_PARENT
+    rm -rf $DEST_DIR
+    unzip $DOWN_DIR/$FILE
+    cd $DEST_DIR
+}
+
+# download_tar <url> <destination directory>
+# download and untar directory to destination
+# cd's to the untared directory as a side effect
+function download_tar {
+    DEST_PATH=$2
+    DEST_PARENT="$( dirname $DEST_PATH )"
+    DEST_DIR="$( basename $DEST_PATH )"
+
+    download $1
+
+    cd $DEST_PARENT
+    rm -rf $DEST_DIR
+    tar -xzvf $DOWN_DIR/$FILE
+    cd $DEST_DIR
+}
+
+
+# Install SqlLite
+read -p "Install SqlLite (y/n): "
+if [ "$REPLY" = "y" ]; then
+    apt-get install sqlite
+    apt-get install libsqlite3-dev
+fi
+
+read -p "Install Pep8 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    echo "https://github.com/mckoss/pep8 is more up to date"
+    cd $SRC_DIR
+    git clone https://mckoss@github.com/mckoss/pep8.git pep8
+    cd pep8
+    python setup.py install
+fi
+
+# Install OpenSSL
+read -p "Install Open SSL (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_tar http://www.openssl.org/source/openssl-0.9.8g.tar.gz $SRC_DIR/openssl-0.9.8g
+
+    ./config
+    make
+    make install
+fi
+
+# Get Python 2.5.2
+read -p "Install Python 2.5.2 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_tar http://www.python.org/ftp/python/2.5.2/Python-2.5.2.tgz $SRC_DIR/Python-2.5.2
+
+    ./configure
+    make
+    make altinstall
+fi
+
+read -p "Python Setup Tools (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download http://pypi.python.org/packages/2.5/s/setuptools/setuptools-0.6c11-py2.5.egg
+    sh setuptools-0.6c11-py2.5.egg
+fi
+
+# Install Python Extras
+read -p "Install Mock and PIL (y/n): "
+if [ "$REPLY" = "y" ]; then
+    easy_install-2.5 mock
+    easy_install-2.5 PIL
+fi
+
+# Get SSL Library not supported in native 2.5.2
+read -p "Install Python ssl Library (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_tar http://pypi.python.org/packages/source/s/ssl/ssl-1.15.tar.gz $SRC_DIR/ssl-1.15
+
+    python2.5 setup.py install
+fi
+
+# Get Django 1.1
+read -p "Install Django 1.1 (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_tar http://media.djangoproject.com/releases/1.1/Django-1.1.2.tar.gz $SRC_DIR/Django-1.1.2
+
+    python2.5 setup.py install
+fi
+
+AE_DIR="/usr/local/google_appengine"
+
+# Get AppEngine - needs to be in /usr/local for django helper to find properly?
+read -p "Install App Engine (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_zip http://googleappengine.googlecode.com/files/google_appengine_1.4.1.zip $AE_DIR
+    chmod -R o+rwx .
+
+    # Put dev_appserver.py and appcfg.py directly into PATH
+    cd /usr/local/bin
+    ln -f -s $AE_DIR/dev_appserver.py
+    ln -f -s $AE_DIR/appcfg.py
+fi
+
+read -p "Install App Engine Helper (y/n): "
+if [ "$REPLY" = "y" ]; then
+    download_zip http://google-app-engine-django.googlecode.com/files/appengine_helper_for_django-r105.zip $AE_DIR/appengine_helper_for_django
+    chmod -R o+rwx .
+
+    patch -p1 -i $SCRIPT_DIR/aeh.patch
+
+    # Remove slow or mis-behaving tests
+    cd appengine_django/tests
+    rm commands_test.py integration_test.py serialization_test.py
+fi

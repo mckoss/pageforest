@@ -1,0 +1,19 @@
+{
+  "application": "blocks",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "sample"
+  ],
+  "title": "1,000 Blocks",
+  "url": "http://blocks.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
+}
