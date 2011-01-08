@@ -104,7 +104,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             docid = docid || '';
             blobid = blobid || '';
 
-            var url = 'http://' + this.client.appHost + '/docs/';
+            var url = '/docs/';
 
             // Special case for URL for root of all docs
             if (docid == '') {
@@ -459,7 +459,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            if (typeof json != "string") {
+            if (typeof json != 'string') {
                 json = jsonToString(json);
             }
 
@@ -558,7 +558,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         list: function(docid, blobid, options, fnSuccess) {
-            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag'];
+            var i;
+            var simpleOptions = ['depth', 'keysonly', 'prefix', 'tag', 'order'];
 
             if (!this.validateArgs('list', docid, blobid, undefined,
                                    options, fnSuccess)) {
@@ -570,18 +571,28 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             var url = new URL(this.getDocURL(docid, blobid));
             url.push('method', 'list');
 
-            for (var i = 0; i < simpleOptions.length; i++) {
+            for (i = 0; i < simpleOptions.length; i++) {
                 var option = simpleOptions[i];
                 if (options[option] != undefined) {
                     url.push(option, options[option]);
                 }
             }
-            url.push('transfer-encoding', options.encoding);
 
-            if (options.tags) {
-                // BUG: I think the server only supports one tag filter...
-                url.push('tag', options.tags.join(','));
+            if (options.since) {
+                if (typeof options.since == 'object' && options.since.constructor == Date) {
+                    options.since = format.isoFromDate(options.since);
+                }
+                url.push('since', options.since);
             }
+
+            // Allow for array of tags to query for intersection
+            if (options.tags) {
+                for (i = 0; i < options.tags.length; i++) {
+                    url.push('tag', options.tags[i]);
+                }
+            }
+
+            url.push('transfer-encoding', options.encoding);
 
             $.ajax({
                 url: url.toString(),

@@ -65,7 +65,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             var appHost = client.appHost;
             ut.assertEq(appHost.indexOf('scratch.pageforest'), 0);
             var url = client.storage.getDocURL('foo', 'bar');
-            ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/foo/bar'), url.length - 13);
 
             var url2 = client.storage.getDocURL('foo');
@@ -73,7 +72,6 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
             // Should get the document root url
             url = client.storage.getDocURL();
-            ut.assertEq(url.indexOf('http://scratch.'), 0);
             ut.assertEq(url.indexOf('/docs/'), url.length - 6);
         });
 
@@ -224,6 +222,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
         ts.addTest("list", function(ut) {
             client.app.ut = ut;
+            var date1;
+            var date2;
 
             function cont(result) {
                 ut.assertEq(result.status, 200);
@@ -266,8 +266,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(dir1.sha1, testSha1);
                             ut.assertEq(dir1.sha1, dir2.sha1);
                             ut.assertEq(dir1.size, dir2.size);
-                            var date1 = format.decodeClass(dir1.modified);
-                            var date2 = format.decodeClass(dir2.modified);
+                            date1 = format.decodeClass(dir1.modified);
+                            date2 = format.decodeClass(dir2.modified);
                             ut.assertType(date1, Date);
                             ut.assertLT(date1, date2);
 
@@ -284,8 +284,35 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(result.items['test-blob2'], {});
                             ut.nextFn();
                         });
-                }
+                },
 
+                function (ut) {
+                    client.storage.list('test-storage', undefined,
+                                        {order: "modified"},
+                        function (result) {
+                            ut.assertEq(result.order, ['test-blob1', 'test-blob2']);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', undefined,
+                                        {order: "-modified"},
+                        function (result) {
+                            ut.assertEq(result.order, ['test-blob2', 'test-blob1']);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', undefined,
+                                        {since: date1},
+                        function (result) {
+                            ut.assert('test-blob2' in result.items, "has newest blob");
+                            ut.assert(!('test-blob1' in result.items), "has too old blob");
+                            ut.nextFn();
+                        });
+                }
             ]);
         }).async(true, 15000);
 
