@@ -282,6 +282,24 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                             ut.assertEq(result.items['test-blob2'], {});
                             ut.nextFn();
                         });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', undefined,
+                                        {order: "modified"},
+                        function (result) {
+                            ut.assertEq(result.order, ['test-blob1', 'test-blob2']);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.storage.list('test-storage', undefined,
+                                        {order: "-modified"},
+                        function (result) {
+                            ut.assertEq(result.order, ['test-blob2', 'test-blob1']);
+                            ut.nextFn();
+                        });
                 }
 
             ]);
