@@ -1,4 +1,5 @@
-from datetime import datetime
+import re
+from datetime import datetime, timedelta
 from django.http import HttpResponse
 
 import settings
@@ -16,6 +17,22 @@ class ModelEncoder(json.JSONEncoder):
             return {"__class__": "Date",
                     "isoformat": obj.isoformat() + 'Z'}
         return json.JSONEncoder.default(self, obj)
+
+
+#                          1      2      3      4      5       6      7
+re_iso = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{0,6})?Z$")
+
+
+def datetime_from_iso(iso):
+    # TODO: Allow just date w/o full fractional time - or partial times
+    m = re_iso.match(iso)
+    if m is None:
+        return None
+    dt = datetime(year=int(m.group(1)), month=int(m.group(2)), day=int(m.group(3)),
+                  hour=int(m.group(4)), minute=int(m.group(5)), second=int(m.group(6)))
+    if m.group(7):
+        dt += timedelta(microseconds=int(float('0' + m.group(7)) * 1000000))
+    return dt
 
 
 def is_valid_json(data):
