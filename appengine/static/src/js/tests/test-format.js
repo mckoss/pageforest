@@ -96,6 +96,7 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
 
             var dt = new Date();
             ut.assertEq(dt.getTime(), dt.valueOf(), "Javascript assumption");
+            format.setTimezone();
             var sISO = format.isoFromDate(dt);
             var sTZ = format.fixedDigits(-dt.getTimezoneOffset() / 60, 2);
             ut.assertEq(sISO.substring(sISO.length - 3), sTZ, "Timezone");

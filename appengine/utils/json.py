@@ -20,27 +20,52 @@ class ModelEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-#                      1       2       3       4       5       6      7
-re_iso = re.compile(r"^(\d{4})-?(\d{2})-?(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{0,6})?Z$")
+re_iso = re.compile(r"^(?P<year>\d{4})-?(?P<month>\d{2})?-?(?P<day>\d{2})?"
+                    r"T?(?P<hour>\d{2})?:?(?P<min>\d{2})?:?(?P<sec>\d{2})?(?P<frac>\.\d{0,6})?Z?$")
 
 
 def datetime_from_iso(iso):
     """
     Convert from ISO 8601 format to a datetime.
 
-    TODO: Allow just date w/o full fractional time - or partial times
+    We are lenient in allowing partial dates (optional month, day, and times).
+    Fixed-length versions of ISO 8601 (w/o separators) are also allowed.
+
+    Times are assumed to be in Z timezone.
+
+    TODO: Allow other numeric time zones and convert to GMT.
 
     >>> datetime_from_iso("2011-01-07T01:32:13Z")
+    datetime.datetime(2011, 1, 7, 1, 32, 13)
+    >>> datetime_from_iso("2011-01-07")
+    datetime.datetime(2011, 1, 7, 0, 0)
+    >>> datetime_from_iso("20110107")
+    datetime.datetime(2011, 1, 7, 0, 0)
+    >>> datetime_from_iso("2011-01-07T01:32")
+    datetime.datetime(2011, 1, 7, 1, 32)
+    >>> datetime_from_iso("2011-01-07T01:32:13.123Z")
+    datetime.datetime(2011, 1, 7, 1, 32, 13, 123000)
+    >>> datetime_from_iso("2011-01-07T01:32:13.123456Z")
+    datetime.datetime(2011, 1, 7, 1, 32, 13, 123456)
+    >>> datetime_from_iso("2011")
+    datetime.datetime(2011, 1, 1, 0, 0)
+    >>> datetime_from_iso("2011-02")
+    datetime.datetime(2011, 2, 1, 0, 0)
+    >>> datetime_from_iso("20110107013213")
     datetime.datetime(2011, 1, 7, 1, 32, 13)
     """
     m = re_iso.match(iso)
     if m is None:
-        return None
-    dt = datetime(year=int(m.group(1)), month=int(m.group(2)), day=int(m.group(3)),
-                  hour=int(m.group(4)), minute=int(m.group(5)), second=int(m.group(6)))
-    if m.group(7):
-        dt += timedelta(microseconds=int(float('0' + m.group(7)) * 1000000))
-    logging.info("dt: %r" % dt)
+        return "no parse"
+    year = int(m.group('year'))
+    month = int(m.group('month') or 1)
+    day = int(m.group('day') or 1)
+    hour = int(m.group('hour') or 0)
+    minutes = int(m.group('min') or 0)
+    seconds = int(m.group('sec') or 0)
+    dt = datetime(year, month, day, hour, minutes, seconds)
+    if m.group('frac'):
+        dt += timedelta(microseconds=int(float('0' + m.group('frac')) * 1000000))
     return dt
 
 

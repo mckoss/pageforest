@@ -116,7 +116,15 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // -----------------------------------------------------------------
 
     // Default timezone = local timezone
-    var tzDefault = -(new Date().getTimezoneOffset()) / 60;
+    // var tzDefault = -(new Date().getTimezoneOffset()) / 60;
+    var tzDefault = 0;
+
+    function setTimezone(tz) {
+        if (tz == undefined) {
+            tz = -(new Date().getTimezoneOffset()) / 60;
+        }
+        tzDefault = tz;
+    }
 
     function isoFromDate(dt, fTime) {
         var dtT = new Date();
@@ -331,6 +339,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
         'isoFromDate': isoFromDate,
+        'setTimezone': setTimezone,
         'decodeClass': decodeClass,
         'shortDate': shortDate,
         'wordList': wordList,

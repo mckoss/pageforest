@@ -305,10 +305,13 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
+                    var dateBump = new Date();
+                    dateBump.setTime(date1.getTime() + 1);
+                    console.log(format.isoFromDate(date1), format.isoFromDate(dateBump));
                     client.storage.list('test-storage', undefined,
-                                        {since: date1},
+                                        {since: dateBump},
                         function (result) {
-                            ut.assert('test-blob2' in result.items, "has newest blob");
+                            ut.assert('test-blob2' in result.items, "missing newest blob");
                             ut.assert(!('test-blob1' in result.items), "has too old blob");
                             ut.nextFn();
                         });
