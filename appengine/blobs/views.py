@@ -185,6 +185,11 @@ def blob_list(request):
     if depth == 1:
         query.filter('directory', request.key_name)
         if 'since' in request.GET:
+            dt = datetime_from_iso(request.GET['since'])
+            if dt is None:
+                return HttpJSONResponse({'statusText': "Date ('%s') not in ISO-8601 format." %
+                                         request.GET['since']},
+                                        status=400)
             query.filter('modified >', datetime_from_iso(request.GET['since']))
         if 'order' in request.GET:
             order_prop = request.GET['order']

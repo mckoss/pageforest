@@ -1,3 +1,4 @@
+import logging
 import re
 from datetime import datetime, timedelta
 from django.http import HttpResponse
@@ -20,7 +21,7 @@ class ModelEncoder(json.JSONEncoder):
 
 
 #                      1       2       3       4       5       6      7
-re_iso = re.compile(r"^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{0,6})?Z$")
+re_iso = re.compile(r"^(\d{4})-?(\d{2})-?(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d{0,6})?Z$")
 
 
 def datetime_from_iso(iso):
@@ -39,6 +40,7 @@ def datetime_from_iso(iso):
                   hour=int(m.group(4)), minute=int(m.group(5)), second=int(m.group(6)))
     if m.group(7):
         dt += timedelta(microseconds=int(float('0' + m.group(7)) * 1000000))
+    logging.info("dt: %r" % dt)
     return dt
 
 
