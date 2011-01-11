@@ -398,7 +398,8 @@ def sha1_file(filename, data=None):
     if filename == META_FILENAME:
         app = json.loads(data)
         data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application'))
-    return hashlib.sha1(data).hexdigest()
+    sha1 = hashlib.sha1(data).hexdigest()
+    return sha1
 
 
 def list_remote_files():
