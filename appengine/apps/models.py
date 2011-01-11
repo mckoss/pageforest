@@ -111,6 +111,7 @@ class App(SuperDoc):
         self.update_string_property(parsed, 'icon', **kwargs)
         self.update_string_list_property(parsed, 'referers', **kwargs)
         self.update_boolean_property(parsed, 'cloneable', **kwargs)
+        self.update_hash()
 
     # TODO: Remove this
     def fetch_static_blobs(self, limit=100):
