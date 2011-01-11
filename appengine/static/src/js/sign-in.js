@@ -32,7 +32,13 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             type: "GET",
             url: url,
             dataType: "jsonp",
-            success: fn
+            success: fn,
+            // We return a 404 for the jsonP - when can trigger this error
+            // Review: would be better to tunnel all results at 200 with
+            // embedded error status.
+            error: function() {
+                fn({status: 500});
+            }
         });
     }
 
