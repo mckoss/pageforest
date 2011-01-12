@@ -173,6 +173,11 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         return sub(lr(rc), ul(rc));
     }
 
+    function area(rc) {
+        var size = size(rc);
+        return size[0] * size[1];
+    }
+
     function numInRange(num, numMin, numMax) {
         return num >= numMin && num <= numMax;
     }
@@ -424,6 +429,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'copy': copy,
         'append': copy,
         'size': size,
+        'area': area,
         'numInRange': numInRange,
         'clipToRange': clipToRange,
         'ptInRect': ptInRect,
