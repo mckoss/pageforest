@@ -177,6 +177,25 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                         sha1: string
             //                        }
             //                 }
+            //
+            // We want to filter notifications for changes that we ourselves are making.
+            // Suppose we have two writers who write A (us) and B (someone else) to the same
+            // Doc/Blob. Since we rely on the server to tell us the SHA1 hash of the result, we
+            // have to wait until a PUT/PUSH return before allowing a notification to be sent
+            // to the client.
+            //
+            // A - Notification of change to A's sha1 hash
+            // B - Notification of change to B's sha1 hash
+            // R - Return from PUT/PUSH (writing A)
+            //
+            // Callback order -> Notifications
+            // A, B, R -> B won: fn(B)
+            // A, R, B -> B won: fn(B)
+            // B, A, R -> A won: none
+            // B, R, A -> A won: none
+            // R, A, B -> B won: fn(B)
+            // R, B, A -> A won: none
+            //
             // TODO: Change key to docid:, blobid:
             var message = JSON.parse(evt.data);
             var sub;
