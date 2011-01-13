@@ -21,27 +21,25 @@ MAX_SUBSCRIBERS = 30
 
 @jsonp
 @method_required('GET')
-@login_required
 def get_channel(request, extra):
     """
     Return the channel id that the client can use to receive notifications
     from the server.
     """
-    session_key = get_session_key(request)
-    channel_data = get_session_channel(session_key)
+    channel_key = get_channel_key(request)
+    channel_data = get_session_channel(channel_key)
     return HttpJSONResponse(channel_data, status=None)
 
 
 @jsonp
 @method_required('GET', 'PUT')
-@login_required
 def subscriptions(request, extra):
     """
     Read or write the subscriptions being monitored by the current
     channel.
     """
-    session_key = get_session_key(request)
-    channel_data = get_session_channel(session_key)
+    channel_key = get_channel_key(request)
+    channel_data = get_session_channel(channel_key)
     if request.method == 'GET':
         return HttpJSONResponse(channel_data['subscriptions'], status=None)
 
@@ -54,7 +52,7 @@ def subscriptions(request, extra):
     for key in channel_data['subscriptions']:
         if key not in subs:
             key = '/'.join((request.app.get_app_id(), key))
-            add_subscription(key, session_key, 0)
+            add_subscription(key, channel_key, 0)
 
     for key, sub in subs.items():
         key = '/'.join((request.app.get_app_id(), key))
@@ -62,10 +60,10 @@ def subscriptions(request, extra):
         if sub['enabled'] == False:
             expires = 0
             del subs[key]
-        add_subscription(key, session_key, expires, project(sub, ['children']))
+        add_subscription(key, channel_key, expires, project(sub, ['children']))
 
     channel_data['subscriptions'] = subs
-    m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
+    m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', channel_key))
     memcache.set(m_key, channel_data, channel_data['expires'])
 
     logging.info("Channel saved: %r" % channel_data)
@@ -76,10 +74,10 @@ def subscriptions(request, extra):
             })
 
 
-def add_subscription(key, session_key, expires, options=None):
+def add_subscription(key, channel_key, expires, options=None):
     """
     For each storage key, we store a dictionary of subscribers:
-       {session_key: {'expires': expires_time}, ...
+       {channel_key: {'expires': expires_time}, ...
 
     options is an (optional) dictionary that can contain:
 
@@ -91,9 +89,9 @@ def add_subscription(key, session_key, expires, options=None):
         key += '/'
     sub_key = '~'.join((settings.CHANNEL_PREFIX, 'sub', key))
     subscriptions = memcache.get(sub_key) or {}
-    subscriptions[session_key] = {'expires': expires}
+    subscriptions[channel_key] = {'expires': expires}
     if options:
-        subscriptions[session_key].update(options)
+        subscriptions[channel_key].update(options)
     save_subscriptions(sub_key, subscriptions)
 
 
@@ -103,10 +101,10 @@ def save_subscriptions(sub_key, subscriptions):
     """
     now = time.time()
     max_expires = 0
-    for session_key, sub in subscriptions.items():
+    for channel_key, sub in subscriptions.items():
         max_expires = max(max_expires, sub['expires'])
         if sub['expires'] < now:
-            del subscriptions[session_key]
+            del subscriptions[channel_key]
 
     logging.info("subscription saved for %s: %r" % (sub_key, subscriptions))
     memcache.set(sub_key, subscriptions, max_expires)
@@ -139,7 +137,7 @@ def dispatch_subscriptions(key, method, data, original_key=None):
     now = time.time()
     fan_out = 0
     save = False
-    for session_key, sub in subscriptions.items():
+    for channel_key, sub in subscriptions.items():
         if sub['expires'] < now:
             save = True
             continue
@@ -156,18 +154,18 @@ def dispatch_subscriptions(key, method, data, original_key=None):
                               'method': method,
                               'data': data},
                              cls=ModelEncoder)
-        logging.info("Sending: %s->%s" % (session_key, message))
-        channel.send_message(session_key, message)
+        logging.info("Sending: %s->%s" % (channel_key, message))
+        channel.send_message(channel_key, message)
 
     if save:
         save_subscriptions(key, subscriptions)
 
 
-def get_session_channel(session_key):
+def get_session_channel(channel_key):
     """
     Get the (cached) channel info for the current user's session.
     """
-    m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', session_key))
+    m_key = '~'.join((settings.CHANNEL_PREFIX, 'channel', channel_key))
     channel_data = memcache.get(m_key)
 
     if channel_data is not None:
@@ -176,7 +174,7 @@ def get_session_channel(session_key):
     # If no valid channel, or if it expires in less than
     # 5 minutes, make a new one.
     if channel_data == None or channel_data['lifetime'] < 5 * 60:
-        token = channel.create_channel(session_key)
+        token = channel.create_channel(channel_key)
         channel_data = {'created': datetime.datetime.now(),
                         'expires': int(time.time() + CHANNEL_LIFETIME),
                         'token': token,
@@ -187,14 +185,14 @@ def get_session_channel(session_key):
     return channel_data
 
 
-def get_session_key(request):
+def get_channel_key(request):
     """
-    Don't leak the session_key through the channel token - encrypt it.
+    The client must provide the channel key as a (hopefully) globally unique and
+    un-guessable string.
     """
-    session_key = crypto.hmac_sha1(
-        request.COOKIES[settings.SESSION_COOKIE_NAME],
-        request.user.password)
-    return session_key
+    if 'uid' not in request.GET:
+        raise ValueError("Missing unique client id (?uid=...) from request.")
+    return request.GET['uid']
 
 
 def update_lifetime(channel_data):
