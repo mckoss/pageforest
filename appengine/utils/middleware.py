@@ -3,6 +3,7 @@ import threading
 from django.conf import settings
 from django.shortcuts import redirect
 from django.http import HttpResponse
+from django.utils import simplejson as json
 
 from google.appengine.runtime import apiproxy_errors
 
@@ -19,6 +20,11 @@ class ResponseNotFoundMiddleware(object):
     def process_response(self, request, response):
         if response.status_code == 404 and '<html' not in response.content:
             request.exception = response.content
+            try:
+                if response['Content-Type'] == settings.JSON_MIMETYPE_CS:
+                    request.exception = json.loads(response.content)['statusText']
+            except:
+                pass
             response = render_to_response(request, '404.html', {})
             response.status_code = 404
         return response

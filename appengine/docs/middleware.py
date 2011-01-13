@@ -6,6 +6,8 @@ from django.http import HttpResponseNotFound
 
 from docs.models import Doc
 
+from utils.json import update_jsonp_response
+
 # If this matches request.path_info, it is a doc or blob request, and
 # DocMiddleware will attempt to load request.doc from the datastore.
 DOC_BLOB_REGEX = re.compile(r'^/app/docs/(%s)(/.*)?$' % settings.DOC_ID_REGEX)
@@ -52,4 +54,5 @@ class DocMiddleware(object):
             assert request.doc is None
             return
 
-        return HttpResponseNotFound("Document not found: " + key_name)
+        response = HttpResponseNotFound("Document not found: " + key_name)
+        return update_jsonp_response(request, response)
