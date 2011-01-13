@@ -2,6 +2,7 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
     var util = namespace.util;
     var unit = namespace.lookup('org.startpad.unit');
     var vector = namespace.lookup('org.startpad.vector');
+    var V = vector;
 
     ns.addTests = function(ts) {
         ts.addTest("Copy", function(ut) {
@@ -18,7 +19,6 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
         });
 
         ts.addTest("Vector functions", function(ut) {
-            var V = vector;
             var vOrig = [1, 2, 3];
             var v = V.copy(vOrig);
 
@@ -74,8 +74,27 @@ namespace.lookup('org.startpad.vector.test').defineOnce(function(ns) {
             ut.assertEq(V.max([0, 5], [-1, 10]), [0, 10]);
         }).breakOn(-1);
 
+        ts.addTest("distance functions", function(ut) {
+            var tests = [
+                [[0, 0], [1, 0], 1],
+                [[0, 0], [1, 1], 2],
+                [[0, 0, 0], [1, 1, 1], 3]
+            ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(V.distance2(test[0], test[1]), test[2]);
+            }
+            ut.assertEq(V.magnitude2([1, 2, 3]), 14);
+
+            ut.assertEq(V.area([-1, -1, 1, 1]), 4);
+
+            var u = V.unitVector([3, 4]);
+            V.subFrom(u, [3 / 5, 4 / 5]);
+            ut.assertLT(Math.abs(u[0]), 0.00001);
+            ut.assertLT(Math.abs(u[1]), 0.00001);
+        });
+
         ts.addTest("Point and Rect Functions", function(ut) {
-            var V = vector;
             var rc = [10, 10, 100, 100];
             ut.assertEq(V.ul(rc), [10, 10]);
             ut.assertEq(V.lr(rc), [100, 100]);

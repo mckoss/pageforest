@@ -20,6 +20,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'lr': 8
     };
 
+    // Subtract second vector from first (in place).
     function subFrom(v1, v2) {
         for (var i = 0; i < v1.length; i++) {
             v1[i] = v1[i] - v2[i % v2.length];
@@ -174,8 +175,8 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
     }
 
     function area(rc) {
-        var size = size(rc);
-        return size[0] * size[1];
+        var dv = size(rc);
+        return dv[0] * dv[1];
     }
 
     function numInRange(num, numMin, numMax) {
@@ -270,13 +271,23 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         return ptCenter(rc, [xScale, yScale]);
     }
 
-    // Return square of distance between to "points" (N-dimensional)
-    function distance2(v1, v2) {
+    function magnitude2(v1) {
         var d2 = 0;
         for (var i = 0; i < v1.length; i++) {
-            d2 += Math.pow((v2[i] - v1[i]), 2);
+            d2 += Math.pow(v1[i], 2);
         }
         return d2;
+    }
+
+    // Return square of distance between to "points" (N-dimensional)
+    function distance2(v1, v2) {
+        var dv = sub(v2, v1);
+        return magnitude2(dv);
+    }
+
+    function unitVector(v1) {
+        var m2 = magnitude2(v1);
+        return mult(v1, 1 / Math.sqrt(m2));
     }
 
     // Find the closest point to the given point
@@ -422,6 +433,9 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'addTo': addTo,
         'max': max,
         'mult': mult,
+        'distance2': distance2,
+        'magnitude2': magnitude2,
+        'unitVector': unitVector,
         'floor': floor,
         'dotProduct': dotProduct,
         'ul': ul,
