@@ -10,6 +10,8 @@ from django.utils import simplejson as json
 
 from google.appengine.ext import db
 
+from utils.json import HttpJSONResponse
+
 import settings
 from auth.middleware import AccessDenied
 
@@ -72,10 +74,12 @@ def jsonp(func):
         try:
             response = func(request, *args, **kwargs)
         except Http404, error:
-            response = HttpResponseNotFound(unicode(error))
+            response = HttpJSONResponse({'statusText': unicode(error)}, status=404)
+        except ValueError, error:
+            response = HttpJSONResponse({'statusText': unicode(error)}, status=400)
         except Exception, error:
             logging.error("JSONP exception handler: " + unicode(error))
-            response = HttpResponseServerError("Application error.")
+            response = HttpJSONResponse({'statusText': unicode(error)}, status=500)
         content = response.content
 
         logging.info("Code: %s" % response.status_code)
@@ -88,14 +92,7 @@ def jsonp(func):
 
         # Tunnel HTTP errors using status code 200.
         if series != 200:
-            content = json.dumps({
-                "__class__": "Error",
-                "status": response.status_code,
-                "statusText": httplib.responses[response.status_code],
-                "message": content,
-                }, sort_keys=True, indent=4)
             response.status_code = 200
-            response['Content-Type'] = settings.JSON_MIMETYPE_CS
 
         # Encode arbitrary strings as valid JSON.
         if response['Content-Type'] != settings.JSON_MIMETYPE_CS:
@@ -103,10 +100,13 @@ def jsonp(func):
             content = content.rstrip('\n')
             content = json.dumps(content)
 
+        # Response is executable code with callback wrapper
+        response['Content-Type'] = 'application/javascript'
+
         # Add the requested callback function.
         response.content = callback + '(' + content + ')'
-        response['Content-Type'] = 'application/javascript'
         return response
+
     return wrapper
 
 
