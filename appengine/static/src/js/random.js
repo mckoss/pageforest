@@ -1,4 +1,4 @@
-namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
+namespace.lookup("org.startpad.random").defineOnce(function(ns) {
 
     ns.upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     ns.lower = 'abcdefghijklmnopqrstuvwxyz';
@@ -19,4 +19,4 @@ namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
         return result.join('');
     };
 
-}); // com.pageforest.random
+});

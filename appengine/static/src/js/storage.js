@@ -131,18 +131,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
-            // TODO: Relax this rule - and generate unique session key
-            // per window.
-            if (this.client.username == undefined) {
-                this.client.onError('channel/user',
-                    "You must be signed in to receive notifications.");
-                return;
-            }
+            var url = new URL('/channel/');
+            url.push('uid', this.client.uid);
 
             var self = this;
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
-                url: '/channel/',
+                url: url.toString(),
                 error: this.errorHandler.fnMethod(this),
                 success: function (result, textStatus, xmlhttp) {
                     result.expires = new Date().getTime() +
@@ -280,10 +275,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            var url = new URL('/channel/subscriptions/');
+            url.push('uid', this.client.uid);
+
             var self = this;
             $.ajax({
                 type: 'PUT',
-                url: '/channel/subscriptions',
+                url: url.toString(),
                 dataType: 'json',
                 data: jsonToString(this.subscriptions),
                 error: this.errorHandler.fnMethod(this),

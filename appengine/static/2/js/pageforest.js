@@ -725,7 +725,7 @@ namespace.lookup('org.startpad.cookies').define(function(ns) {
 
 }); // org.startpad.cookies
 /* Begin file: random.js */
-namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
+namespace.lookup("org.startpad.random").defineOnce(function(ns) {
 
     ns.upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     ns.lower = 'abcdefghijklmnopqrstuvwxyz';
@@ -746,7 +746,7 @@ namespace.lookup("com.pageforest.random").defineOnce(function(ns) {
         return result.join('');
     };
 
-}); // com.pageforest.random
+});
 /* Begin file: crypto.js */
 /*
  * Crypto-JS trunk (r291)

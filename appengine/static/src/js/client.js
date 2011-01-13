@@ -19,6 +19,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     var dom = namespace.lookup('org.startpad.dom');
     var dialog = namespace.lookup('org.startpad.dialog');
     var vector = namespace.lookup('org.startpad.vector');
+    var random = namespace.lookup('org.startpad.random');
 
     ns.pollInterval = 1000;
 
@@ -79,6 +80,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.logged = {};
         this.lastHash = '';
         this.fFirstPoll = true;
+        this.uid = random.randomString(20);
 
         // Auto save every 60 seconds
         this.saveInterval = 60;
