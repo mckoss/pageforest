@@ -1119,6 +1119,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'lr': 8
     };
 
+    // Subtract second vector from first (in place).
     function subFrom(v1, v2) {
         for (var i = 0; i < v1.length; i++) {
             v1[i] = v1[i] - v2[i % v2.length];
@@ -1272,6 +1273,11 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         return sub(lr(rc), ul(rc));
     }
 
+    function area(rc) {
+        var dv = size(rc);
+        return dv[0] * dv[1];
+    }
+
     function numInRange(num, numMin, numMax) {
         return num >= numMin && num <= numMax;
     }
@@ -1364,13 +1370,23 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         return ptCenter(rc, [xScale, yScale]);
     }
 
-    // Return square of distance between to "points" (N-dimensional)
-    function distance2(v1, v2) {
+    function magnitude2(v1) {
         var d2 = 0;
         for (var i = 0; i < v1.length; i++) {
-            d2 += Math.pow((v2[i] - v1[i]), 2);
+            d2 += Math.pow(v1[i], 2);
         }
         return d2;
+    }
+
+    // Return square of distance between to "points" (N-dimensional)
+    function distance2(v1, v2) {
+        var dv = sub(v2, v1);
+        return magnitude2(dv);
+    }
+
+    function unitVector(v1) {
+        var m2 = magnitude2(v1);
+        return mult(v1, 1 / Math.sqrt(m2));
     }
 
     // Find the closest point to the given point
@@ -1516,6 +1532,9 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'addTo': addTo,
         'max': max,
         'mult': mult,
+        'distance2': distance2,
+        'magnitude2': magnitude2,
+        'unitVector': unitVector,
         'floor': floor,
         'dotProduct': dotProduct,
         'ul': ul,
@@ -1523,6 +1542,7 @@ namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
         'copy': copy,
         'append': copy,
         'size': size,
+        'area': area,
         'numInRange': numInRange,
         'clipToRange': clipToRange,
         'ptInRect': ptInRect,
@@ -2371,6 +2391,25 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             //                         sha1: string
             //                        }
             //                 }
+            //
+            // We want to filter notifications for changes that we ourselves are making.
+            // Suppose we have two writers who write A (us) and B (someone else) to the same
+            // Doc/Blob. Since we rely on the server to tell us the SHA1 hash of the result, we
+            // have to wait until a PUT/PUSH return before allowing a notification to be sent
+            // to the client.
+            //
+            // A - Notification of change to A's sha1 hash
+            // B - Notification of change to B's sha1 hash
+            // R - Return from PUT/PUSH (writing A)
+            //
+            // Callback order -> Notifications
+            // A, B, R -> B won: fn(B)
+            // A, R, B -> B won: fn(B)
+            // B, A, R -> A won: none
+            // B, R, A -> A won: none
+            // R, A, B -> B won: fn(B)
+            // R, B, A -> A won: none
+            //
             // TODO: Change key to docid:, blobid:
             var message = JSON.parse(evt.data);
             var sub;
@@ -3049,11 +3088,11 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         // Callback function for auto-load subscribtion
+        // TODO: Compare Sha1 hashes - not modified date to ignore a notify
         onAutoLoad: function (message) {
             if (!this.autoLoad ||
                 message.key != this.docid + '/' ||
-                message.data.modified.isoformat ==
-                this.meta.modified.isoformat) {
+                message.data.modified.isoformat == this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
                 return;
             }
