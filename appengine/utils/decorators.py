@@ -10,7 +10,7 @@ from django.utils import simplejson as json
 
 from google.appengine.ext import db
 
-from utils.json import HttpJSONResponse
+from utils.json import HttpJSONResponse, update_jsonp_response
 
 import settings
 from auth.middleware import AccessDenied
@@ -67,12 +67,12 @@ def jsonp(func):
     def wrapper(request, *args, **kwargs):
         # Check if the query string contains a callback parameter.
         callback = request.GET.get('callback', None)
-        if callback is None:
-            return func(request, *args, **kwargs)
 
         # Try to generate a response.
         try:
             response = func(request, *args, **kwargs)
+            if callback is None:
+                return response
         except Http404, error:
             response = HttpJSONResponse({'statusText': unicode(error)}, status=404)
         except ValueError, error:
@@ -80,9 +80,6 @@ def jsonp(func):
         except Exception, error:
             logging.error("JSONP exception handler: " + unicode(error))
             response = HttpJSONResponse({'statusText': unicode(error)}, status=500)
-        content = response.content
-
-        logging.info("Code: %s" % response.status_code)
 
         series = (response.status_code / 100) * 100
 
@@ -90,21 +87,7 @@ def jsonp(func):
         if series in (100, 300):
             return response
 
-        # Tunnel HTTP errors using status code 200.
-        if series != 200:
-            response.status_code = 200
-
-        # Encode arbitrary strings as valid JSON.
-        if response['Content-Type'] != settings.JSON_MIMETYPE_CS:
-            # Remove trailing newlines.
-            content = content.rstrip('\n')
-            content = json.dumps(content)
-
-        # Response is executable code with callback wrapper
-        response['Content-Type'] = 'application/javascript'
-
-        # Add the requested callback function.
-        response.content = callback + '(' + content + ')'
+        response = update_jsonp_response(request, response)
         return response
 
     return wrapper

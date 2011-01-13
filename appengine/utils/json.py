@@ -20,6 +20,30 @@ class ModelEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+def update_jsonp_response(request, response):
+    if 'callback' not in request.GET:
+        return response
+
+    # Do nothing if already encoded as javascript
+    if response['Content-Type'] == 'application/javascript':
+        return response
+
+    content = response.content
+
+    # Encode arbitrary strings as valid JSON.
+    if response['Content-Type'] != settings.JSON_MIMETYPE_CS:
+        # Remove trailing newlines.
+        content = content.rstrip('\n')
+        content = json.dumps(content)
+
+    # Add the requested callback function and javascript mime type
+    response.content = request.GET['callback'] + '(' + content + ')'
+    response['Content-Type'] = 'application/javascript'
+    response.status_code = 200
+
+    return response
+
+
 re_iso = re.compile(r"^(?P<year>\d{4})-?(?P<month>\d{2})?-?(?P<day>\d{2})?"
                     r"T?(?P<hour>\d{2})?:?(?P<min>\d{2})?:?(?P<sec>\d{2})?(?P<frac>\.\d{0,6})?Z?$")
 
