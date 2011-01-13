@@ -91,8 +91,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // initialization.
         setInterval(this.poll.fnMethod(this), ns.pollInterval);
 
-        // Catch window unload if the user tries to close an unsaved window
-        $(window).unload(this.beforeUnload.fnMethod(this));
+        // Note that jquery.unload happens too late?
+        window.onbeforeunload = this.beforeUnload.fnMethod(this);
     }
 
     Client.methods({
@@ -389,9 +389,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // The user is about to navigate away from the page - we want to
         // alert the user if he might lose changes.
         beforeUnload: function(evt) {
+            evt = evt || window.event;
             if (this.state != 'clean') {
                 evt.returnValue = unloadMessage;
-                return evt.returnValue;
+                return unloadMessage;
             }
         },
 
