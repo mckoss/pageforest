@@ -104,6 +104,7 @@ def clone(request, app_id):
         if form.is_valid():
             form.cleaned_data['owner'] = request.user.get_username()
             new_app = form.save()
+            new_app.put()
             new_app_id = new_app.get_app_id()
             for blob in app.fetch_static_blobs():
                 parts = blob.key().name().split('/')
