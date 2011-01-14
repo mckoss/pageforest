@@ -65,11 +65,10 @@ class AppForm(AjaxForm):
         Create a new app with the form data.
         """
         app = App.create(self.cleaned_data['app_id'],
+            username=self.cleaned_data['owner'],
             title=self.cleaned_data['title'],
             tags=self.cleaned_data['tags'].split(),
-            owner=self.cleaned_data['owner'],
             readers=self.cleaned_data['readers'].split(),
             writers=self.cleaned_data['writers'].split(),
-            url=self.cleaned_data['url'],
             referers=self.cleaned_data['referers'].split())
         return app

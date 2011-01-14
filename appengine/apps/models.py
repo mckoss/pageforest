@@ -84,7 +84,7 @@ class App(SuperDoc):
         return app
 
     @classmethod
-    def create(cls, app_id, user=None, **kwargs):
+    def create(cls, app_id, username='', **kwargs):
         """
         All user App creation should go through this method.
 
@@ -96,7 +96,6 @@ class App(SuperDoc):
         kwargs.setdefault('url',
                           'http://%s.%s/' % (app_id, settings.DEFAULT_DOMAIN))
 
-        username = user and user.get_username() or ''
         logging.info("Creating app %s for %s" % (app_id, username))
 
         title = app_id.capitalize()
