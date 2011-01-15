@@ -6,6 +6,7 @@ from google.appengine.api import memcache
 
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils import crypto
+from utils.shortcuts import dict_from_attrs
 
 from auth import AuthError, SignatureError
 from apps.models import App
@@ -51,6 +52,15 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
     # rename this method to user.get_lower() or similar?
     def get_username(self):
         return self.key().name()
+
+    def get_form_dict(self):
+        """
+        Return a dict that can be used as initial argument for a form.
+
+        Note that we'd ordinarily use ModelForm - but not support for AppEngine
+        db.Model's.
+        """
+        return dict_from_attrs(self, ['username', 'password', 'email', 'max_apps', 'is_admin'])
 
     def set_password(self, password):
         """

@@ -1,5 +1,6 @@
 import re
 import string
+import logging
 
 from django import forms
 from django.conf import settings
@@ -37,10 +38,32 @@ class LabeledCheckbox(forms.CheckboxInput):
         """
         check_string = super(LabeledCheckbox, self).render(name, value, attrs)
         import logging
-        logging.info('self %r' % dir(self))
         check_string += '&nbsp;<label for="id_%s">%s</label>' % (
             self.field_id, self.label)
         return mark_safe(check_string)
+
+
+class ReadonlyTextInput(forms.TextInput):
+    def render(self, name, value, attrs=None):
+        if self.attrs.get('readonly', False):
+            if value is None:
+                value = ''
+            return unicode(value)
+        return super(ReadonlyTextInput, self).render(name, value, attrs)
+
+
+class ReadonlyCheckboxInput(forms.CheckboxInput):
+    def render(self, name, value, attrs=None):
+        if self.attrs.get('readonly', False):
+            return unicode(value)
+        return super(ReadonlyCheckboxInput, self).render(name, value, attrs)
+
+
+class Static(forms.Widget):
+    def render(self, name, value, attrs=None):
+        if value is None:
+            value = ''
+        return unicode(value)
 
 
 class UsernamePasswordForm(AjaxForm):
@@ -108,6 +131,37 @@ class SignUpForm(UsernamePasswordForm):
                     password=self.cleaned_data['password'])
         user.put()
         return user
+
+
+class ProfileForm(AjaxForm):
+    """
+    Edit account information for existing users.
+    """
+    username = forms.CharField(min_length=2, max_length=30,
+                               widget=Static)
+    email = forms.EmailField(max_length=75, label="Email address",
+                             widget=Static)
+    password = forms.CharField(min_length=40, max_length=40,
+                               widget=forms.PasswordInput(render_value=False))
+    repeat = forms.CharField(max_length=40, label="Repeat password",
+                             widget=forms.PasswordInput(render_value=False), required=False)
+    is_admin = forms.BooleanField(label="Admin",
+                                  widget=ReadonlyCheckboxInput)
+    max_apps = forms.IntegerField(label="Max Apps",
+                                  widget=ReadonlyTextInput)
+
+    def enable_fields(self, user):
+        if not (user.is_admin or user.get_username() in settings.SUPER_USERS):
+            self.fields['is_admin'].widget.attrs['readonly'] = True
+            self.fields['max_apps'].widget.attrs['readonly'] = True
+
+    def save(self, user):
+        """
+        Create a new user with the form data.
+        """
+        user.max_apps = self.cleaned_data['max_apps']
+        user.is_admin = self.cleaned_data['is_admin']
+        user.put()
 
 
 class SignInForm(UsernamePasswordForm):
