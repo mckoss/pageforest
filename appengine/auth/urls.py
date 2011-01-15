@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.conf.urls.defaults import patterns, handler404, handler500
 from django.views.generic.simple import direct_to_template
 
@@ -5,6 +6,7 @@ urlpatterns = patterns(
     'auth.views',
     (r'^sign-up/$', 'sign_up'),
     (r'^sign-in/$', 'sign_in'),
+    (r'^user/(?P<username>%s)/$' % settings.USERNAME_REGEX, 'profile'),
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
     (r'^sign-out/$', 'sign_out'),
     (r'^sign-out/(?P<app_id>[^/]+)/$', 'sign_out'),

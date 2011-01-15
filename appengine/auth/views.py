@@ -18,9 +18,10 @@ from utils import crypto
 from utils.json import HttpJSONResponse
 
 from auth import SignatureError
-from auth.forms import SignUpForm, SignInForm
+from auth.forms import SignUpForm, SignInForm, ProfileForm
 from auth.models import User, CHALLENGE_EXPIRATION
 from auth.middleware import AccessDenied
+from auth.decorators import login_required
 
 from apps.models import App
 
@@ -126,6 +127,53 @@ def sign_up(request):
                         user.generate_session_key(request.app),
                         max_age=settings.SESSION_COOKIE_AGE)
     return response
+
+
+@login_required
+@method_required('GET', 'POST')
+def profile(request, username):
+    """
+    Edit your account information.
+    """
+    req_username = request.user.get_username()
+    user = User.lookup(username)
+    if user is None or \
+        not (request.user.is_admin or
+             req_username in settings.SUPER_USERS or
+             req_username == username):
+        return AccessDenied(request)
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST)
+    else:
+        form = ProfileForm(initial=User.lookup(username).get_form_dict())
+
+    form.enable_fields(request.user)
+
+    # Return HTML form for GET requests.
+    if request.method == 'GET':
+        response = render_to_response(request, 'auth/profile.html', {
+                'form': form,
+                'enablejs': ENABLEJS % reverse(profile, kwargs={'username': username}),
+                'httponly': HTTPONLY})
+        response.set_cookie('httponly', 'test')
+        return response
+
+    # Return form errors as JSON.
+    if not form.is_valid():
+        return HttpJSONResponse(form.errors_dict())
+
+    # Return empty errors object for validate.
+    if 'validate' in request.POST:
+        return HttpJSONResponse({})
+
+    form.save()
+
+    # TODO: Enable changing email address - send to old and new
+    # and record last verified address - puts account into unverified state?
+    # send_email_verification(request, user)
+
+    return HttpJSONResponse({'statusText': "Updated."})
 
 
 @method_required('GET', 'POST')

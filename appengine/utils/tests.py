@@ -11,6 +11,8 @@ from google.appengine.runtime import apiproxy_errors
 from utils.mixins import Timestamped, Migratable, Cacheable
 from utils.mixins.cacheable import CacheHistory
 
+from utils.shortcuts import dict_from_attrs
+
 
 class TestModel(Timestamped, Migratable, Cacheable):
     """Simple datastore model for testing mixins."""
@@ -149,3 +151,16 @@ class ApiProxyErrorTest(TestCase):
         """Other API proxy errors should not be caught."""
         self.assertRaises(apiproxy_errors.Error,
                           self.client.get, '/errors/apiproxy-error')
+
+
+class ShortcutTests(TestCase):
+
+    def test_dict_from_attrs(self):
+        class Fred(object):
+            def __init__(self):
+                self.a = 1
+                self.b = "test"
+
+        f = Fred()
+        self.assertEqual(dict_from_attrs(f, ['a', 'b']), {'a': 1, 'b': "test"})
+        self.assertEqual(dict_from_attrs(f, ['a']), {'a': 1})

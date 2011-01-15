@@ -301,7 +301,7 @@ COMBINE_FILES = not DEBUG
 MEDIA_FILES = {
     'js': {
         'pageforest': ['namespace', 'base', 'cookies', 'random',
-                       'crypto', 'forms', 'sign-up', 'sign-in'],
+                       'crypto', 'forms', 'sign-up', 'sign-in', 'profile'],
         },
 
     'css': {

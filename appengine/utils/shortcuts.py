@@ -118,6 +118,19 @@ def project(d, keys):
     return result
 
 
+def dict_from_attrs(o, keys):
+    """
+    Return a dictionary that is the projection of attributes
+    from the keys list.
+
+    """
+    result = {}
+    for key in keys:
+        if hasattr(o, key):
+            result[key] = getattr(o, key)
+    return result
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod()
