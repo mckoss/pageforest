@@ -3385,9 +3385,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 document.body.style.marginTop = "39px";
                 this.appBar = document.createElement('div');
                 this.appBar.setAttribute('id', 'pfAppBar');
-                this.appBar.style.position = 'absolute';
-                this.appBar.style.top = '0';
-                this.appBar.style.left = '0';
                 document.body.appendChild(this.appBar);
             }
 
