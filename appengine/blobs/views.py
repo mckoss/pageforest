@@ -190,7 +190,7 @@ def blob_list(request):
                 return HttpJSONResponse({'statusText': "Date ('%s') not in ISO-8601 format." %
                                          request.GET['since']},
                                         status=400)
-            query.filter('modified >', datetime_from_iso(request.GET['since']))
+            query.filter('modified >', dt)
         if 'order' in request.GET:
             order_prop = request.GET['order']
             if order_prop not in ALLOWED_ORDER_PROPS:
