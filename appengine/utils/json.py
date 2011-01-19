@@ -77,10 +77,12 @@ def datetime_from_iso(iso):
     datetime.datetime(2011, 2, 1, 0, 0)
     >>> datetime_from_iso("20110107013213")
     datetime.datetime(2011, 1, 7, 1, 32, 13)
+    >>> datetime_from_iso("2010-1-1") == None
+    True
     """
     m = re_iso.match(iso)
     if m is None:
-        return "no parse"
+        return None
     year = int(m.group('year'))
     month = int(m.group('month') or 1)
     day = int(m.group('day') or 1)
