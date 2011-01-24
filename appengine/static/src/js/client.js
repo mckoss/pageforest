@@ -58,6 +58,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         }
 
         this.app = app;
+        // Bind this method to errorHandler
+        this.errorHandler = this.errorHandler.fnMethod(this);
         this.storage = new storage.Storage(this);
 
         this.meta = {};
@@ -159,16 +161,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             docid = docid || this.docid;
 
-            // First save?  Assign docid like username-slug
-            // FIXME: We could over-write a previously existing document
-            // with the same name.  We should do one of:
-            // - Check for existence first
-            // - Ask the server for a unique docid
-            // - Add some randomness to the docid
-            // - Use PUT if_not_exists
             if (docid == undefined) {
-                docid = this.username + '-' + base.randomInt(10000);
-                docid = format.slugify(docid);
+                docid = format.slugify(json.title);
             }
 
             this.stateSave = this.state;
@@ -428,14 +422,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
-            this.changeState(this.stateSave);
-            var code = 'ajax_error/' + xmlhttp.status;
-            var message = xmlhttp.statusText;
-            if (message.toLowerCase() == "forbidden") {
-                message = "You don't have permission to save to this " +
-                    "document.  You may want to make a copy, instead.";
+            if (this.stateSave) {
+                this.changeState(this.stateSave);
+                this.stateSave = undefined;
             }
-            this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+            var code = 'ajax_error/' + xmlhttp.status;
+            var message = xmlhttp.responseText;
             this.onError(code, message);
         },
 
