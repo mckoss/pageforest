@@ -143,6 +143,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // REVIEW: What to do about race condition if already
             // loading or saving?
             this.stateSave = this.state;
+            this.docid = docid;
             this.changeState('loading');
 
             var self = this;
