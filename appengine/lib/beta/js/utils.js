@@ -3269,6 +3269,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             var code = 'ajax_error/' + xmlhttp.status;
             var message = xmlhttp.responseText;
+            if (message.length > 100) {
+                message = xmlhttp.statusText;
+            }
             this.onError(code, message);
         },
 
