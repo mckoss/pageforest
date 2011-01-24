@@ -88,6 +88,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.saveInterval = 60;
         this.autoLoad = false;
 
+        if (typeof app.getDoc == 'function') {
+            this.emptyDoc = app.getDoc();
+        }
+
         // REVIEW: When we support multiple clients per page, we can
         // combine all the poll functions into a shared one.
         // Note that we cannot kick off a poll() until this constructor
@@ -143,6 +147,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             var self = this;
             this.storage.getDoc(docid, function (doc) {
+                // If we're actually loading a blob - there is no docid returned.
+                if (doc.doc_id == undefined) {
+                    doc.doc_id = docid;
+                }
                 self.setDoc(doc);
             });
         },
@@ -422,6 +430,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            if (this.state == 'loading'  && this.emptyDoc) {
+                this.app.setDoc(this.emptyDoc);
+            }
             if (this.stateSave) {
                 this.changeState(this.stateSave);
                 this.stateSave = undefined;

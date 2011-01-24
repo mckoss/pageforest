@@ -11,7 +11,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     'testArray': [1, 2, 3]
                    };
 
-    var testSha1 = "7a1f1c333b5db916a9c6aea8346efae14f1d324b";
+    var testSha1 = "bd54309486ebe381f9d56ce69e24786799ab873a";
 
     function TestApp(ut) {
         this.ut = ut;

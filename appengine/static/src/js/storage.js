@@ -72,7 +72,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         }
 
         try {
-            s = JSON.stringify(json, mapper);
+            s = JSON.stringify(json, mapper, 2);
         } catch (e) {
             // Error probably indicates a circular reference
             console.error(e.message);
