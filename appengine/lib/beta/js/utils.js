@@ -2310,6 +2310,8 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         // We need the client context for Storage functions
         this.client = client;
         this.subscriptions = {};
+
+        this.errorHandler = client.errorHandler;
     }
 
     Storage.methods({
@@ -2326,12 +2328,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             }
 
             return url + docid + '/' + blobid;
-        },
-
-        errorHandler: function(xmlhttp, textStatus, errorThrown) {
-            var code = 'ajax_error/' + xmlhttp.status;
-            var message = xmlhttp.statusText;
-            this.client.onError(code, message);
         },
 
         initChannel: function(fnSuccess) {
@@ -2352,7 +2348,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             this.client.onInfo('channel/init', "Intializing new channel.");
             $.ajax({
                 url: url.toString(),
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     result.expires = new Date().getTime() +
                         1000 * result.lifetime;
@@ -2498,7 +2494,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 url: url.toString(),
                 dataType: 'json',
                 data: jsonToString(this.subscriptions),
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     // TODO: Notify each newly open subscription
                     // function with a {method: 'INIT', key: ''}
@@ -2590,7 +2586,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2606,7 +2602,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             $.ajax({
                 dataType: 'json',
                 url: this.getDocURL(docid),
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (doc, textStatus, xmlhttp) {
                     fnSuccess(doc, textStatus, xmlhttp);
                 }
@@ -2624,7 +2620,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type: 'PUT',
                 dataType: 'json',
                 url: this.getDocURL(docid) + '?method=delete',
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2665,7 +2661,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
                 processData: false,
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2701,7 +2697,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
                 processData: false,
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2736,7 +2732,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // REVIEW: Is this the right default - note that 200 return
                 // codes can return error because the data is NOT json!
                 dataType: options.dataType || 'json',
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2762,7 +2758,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2780,7 +2776,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type: 'PUT',
                 dataType: 'json',
                 url: this.getDocURL(docid, blobid) + '?method=delete',
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2828,7 +2824,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
-                error: this.errorHandler.fnMethod(this),
+                error: this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2903,6 +2899,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         }
 
         this.app = app;
+        // Bind this method to errorHandler
+        this.errorHandler = this.errorHandler.fnMethod(this);
         this.storage = new storage.Storage(this);
 
         this.meta = {};
@@ -3004,16 +3002,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             docid = docid || this.docid;
 
-            // First save?  Assign docid like username-slug
-            // FIXME: We could over-write a previously existing document
-            // with the same name.  We should do one of:
-            // - Check for existence first
-            // - Ask the server for a unique docid
-            // - Add some randomness to the docid
-            // - Use PUT if_not_exists
             if (docid == undefined) {
-                docid = this.username + '-' + base.randomInt(10000);
-                docid = format.slugify(docid);
+                docid = format.slugify(json.title);
             }
 
             this.stateSave = this.state;
@@ -3273,14 +3263,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
-            this.changeState(this.stateSave);
-            var code = 'ajax_error/' + xmlhttp.status;
-            var message = xmlhttp.statusText;
-            if (message.toLowerCase() == "forbidden") {
-                message = "You don't have permission to save to this " +
-                    "document.  You may want to make a copy, instead.";
+            if (this.stateSave) {
+                this.changeState(this.stateSave);
+                this.stateSave = undefined;
             }
-            this.log(message + ' (' + code + ')', {'obj': xmlhttp});
+            var code = 'ajax_error/' + xmlhttp.status;
+            var message = xmlhttp.responseText;
             this.onError(code, message);
         },
 
