@@ -314,8 +314,9 @@ LIB_FILES = {
     'js': {
         'json2': ['json2'],
         'utils': ['namespace', 'base', 'cookies', 'random',
-                  'format', 'vector', 'dom', 'dialog', 'storage', 'client',
-                  'loader'],
+                  'format', 'vector', 'dom', 'dialog', 'loader',
+                  'storage', 'client',
+                  ],
         },
 
     'css': {
