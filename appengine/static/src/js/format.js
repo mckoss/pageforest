@@ -329,7 +329,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     }
 
     function repeat(s, times) {
-        return new Array(times+1).join(s);
+        return new Array(times + 1).join(s);
     }
 
     ns.extend({
