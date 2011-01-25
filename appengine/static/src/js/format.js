@@ -328,6 +328,10 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return data.substr(prefix.length);
     }
 
+    function repeat(s, times) {
+        return new Array(times+1).join(s);
+    }
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
@@ -343,6 +347,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'decodeClass': decodeClass,
         'shortDate': shortDate,
         'wordList': wordList,
-        'arrayFromWordList': arrayFromWordList
+        'arrayFromWordList': arrayFromWordList,
+        'repeat': repeat
     });
 }); // org.startpad.format

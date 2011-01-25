@@ -223,14 +223,15 @@ var namespace = (function() {
     Namespace.methods({
         // Call a function with the namespace as a parameter - forming
         // a closure for the namespace definition.
-        define: function(callback) {
+        define: function(closure) {
             this._isDefined = true;
+            this._closure = closure;
             if (namespaceT.logLevel <= 1) {
                 console.info("Namespace '" + this._path + "' defined.");
             }
-            if (callback) {
+            if (closure) {
                 Namespace.defining = this;
-                callback(this);
+                closure(this);
                 Namespace.defining = undefined;
             }
             return this;
