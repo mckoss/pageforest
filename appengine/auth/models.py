@@ -45,6 +45,8 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         Prefer this accessor over direct calls to get_by_key_name.
         """
+        if username is None:
+            return None
         return cls.get_by_key_name(username.lower())
 
     # REVIEW: This is confusing because I would expect to get the

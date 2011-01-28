@@ -6,7 +6,7 @@ urlpatterns = patterns(
     'auth.views',
     (r'^sign-up/$', 'sign_up'),
     (r'^sign-in/$', 'sign_in'),
-    (r'^user/(?P<username>%s)/$' % settings.USERNAME_REGEX, 'profile'),
+    (r'^account(/(?P<username>%s))?/$' % settings.USERNAME_REGEX, 'account'),
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
     (r'^sign-out/$', 'sign_out'),
     (r'^sign-out/(?P<app_id>[^/]+)/$', 'sign_out'),

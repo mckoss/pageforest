@@ -28,7 +28,7 @@ from apps.models import App
 ENABLEJS = """
 <p id="enablejs" class="error">
 Please enable JavaScript in your browser settings and then
-<a href="%s">reload this page</a>.<p>
+<a href="#">reload this page</a>.<p>
 """
 
 HTTPONLY = """
@@ -106,7 +106,7 @@ def sign_up(request):
             return redirect(reverse(sign_in))
         response = render_to_response(request, 'auth/sign-up.html', {
                 'form': form,
-                'enablejs': ENABLEJS % reverse(sign_up),
+                'enablejs': ENABLEJS,
                 'httponly': HTTPONLY})
         response.set_cookie('httponly', 'test')
         return response
@@ -131,11 +131,13 @@ def sign_up(request):
 
 @login_required
 @method_required('GET', 'POST')
-def profile(request, username):
+def account(request, username):
     """
     Edit your account information.
     """
     req_username = request.user.get_username()
+    if username is None:
+        username = req_username
     user = User.lookup(username)
     if user is None or \
         not (request.user.is_admin or
@@ -146,15 +148,15 @@ def profile(request, username):
     if request.method == 'POST':
         form = ProfileForm(request.POST)
     else:
-        form = ProfileForm(initial=User.lookup(username).get_form_dict())
+        form = ProfileForm(initial=user.get_form_dict())
 
     form.enable_fields(request.user)
 
     # Return HTML form for GET requests.
     if request.method == 'GET':
-        response = render_to_response(request, 'auth/profile.html', {
+        response = render_to_response(request, 'auth/account.html', {
                 'form': form,
-                'enablejs': ENABLEJS % reverse(profile, kwargs={'username': username}),
+                'enablejs': ENABLEJS,
                 'httponly': HTTPONLY})
         response.set_cookie('httponly', 'test')
         return response
@@ -210,9 +212,13 @@ def sign_in(request, app_id=None):
         app_session_key = None
         if app and request.user:
             app_session_key = request.user.generate_session_key(app)
-        response = render_to_response(request, 'auth/sign-in.html', {
-                'form': form, 'cross_app': app, 'session_key': app_session_key,
-                'enablejs': ENABLEJS % reverse(sign_in), 'httponly': HTTPONLY})
+        response = render_to_response(request, 'auth/sign-in.html',
+                {
+                'form': form,
+                'cross_app': app,
+                'session_key': app_session_key,
+                'enablejs': ENABLEJS
+                })
         response.set_cookie('httponly', 'test')
         return response
 
