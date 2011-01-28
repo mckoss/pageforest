@@ -532,15 +532,29 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 '<div id="pfAppBarBox">' +
                 '<div class="pfLeft"></div>' +
                 '<div class="pfCenter">' +
-                '<span id="pfWelcome">Welcome,</span>' +
+                '{welcome}' +
                 '<span class="pfLink" id="pfUsername"></span>' +
                 '<span class="pfLink" id="pfSignIn">Sign In</span>' +
                 '<span class="pfLink" id="pfSave">Save</span>' +
                 '<div class="expander collapsed" id="pfMore"></div>' +
-                '<div id="pfLogo"></div>' +
+                '{logo}' +
                 '</div>' +
                 '<div class="pfRight"></div>' +
                 '</div>';
+
+            var objFill;
+            if (screen.width >= 640) {
+                objFill = {
+                    welcome: '<span id="pfWelcome">Welcome,</span>',
+                    logo: '<div id="pfLogo"></div>'
+                };
+            } else {
+                objFill = {
+                    welcome: '',
+                    logo: ''
+                };
+            }
+            htmlAppBar = format.replaceKeys(htmlAppBar, objFill);
 
             this.appBar = document.getElementById('pfAppBar');
             if (!this.appBar) {
