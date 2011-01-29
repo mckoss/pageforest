@@ -14,7 +14,7 @@ SAFE_SETTINGS = [
     'ADMINS', 'MANAGERS',
     'DEFAULT_DOMAIN', 'WWW_DOMAIN', 'DOMAINS',
     'MEDIA_URL', 'MEDIA_VERSION', 'LIB_URL', 'LIB_VERSION',
-    'COMBINE_FILES',
+    'COMBINE_FILES', 'APPS_WITH_MIRROR'
 ]
 
 # App Engine specific environment variables.

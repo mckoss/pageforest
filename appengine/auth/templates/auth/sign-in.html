@@ -30,7 +30,25 @@ $(document).ready(function() {
 
 {% if cross_app %}
     <p class="want_app">The application, <b>{{ cross_app.title }} ({{ cross_app.get_app_id }})</b>,
-      is requesting permission to save documents on {{ SITE_NAME }}.
+      uses the {{ SITE_NAME }} web application service to store your data.
+    </p>
+    <p>
+      If you would like to sign-in to <i>{{ cross_app.title }}</i>
+      then {% if not user %}sign-in and {% endif %} <i>Allow Access</i>, below.
+    </p>
+    <p>
+      By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
+      <ul>
+        <li>Access your {{ SITE_NAME }} user
+          name{% if user %} (<i>{{ user.username }}</i>){% endif %}.</li>
+        <li>Create, modify, and read documents in your {{ SITE_NAME }} account on your behalf.</li>
+        {% ifequal cross_app.get_app_id "editor" %}
+        <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
+        {% else %}
+        <li><i>Note that <i>{{ cross_app.title }}</i> will <b>not</b> have access to non-public
+            documents created by any other {{ SITE_NAME }} application.</li>
+        {% endifequal %}
+      </ul>
     </p>
 {% endif %}
 
