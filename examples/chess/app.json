@@ -1,0 +1,22 @@
+{
+  "application": "chess",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "jcrocholl",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "chess",
+    "game",
+    "multiplayer",
+    "touch"
+  ],
+  "title": "Chess",
+  "url": "http://chess.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
+}

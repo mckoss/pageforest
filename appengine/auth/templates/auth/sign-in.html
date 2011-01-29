@@ -1,0 +1,93 @@
+{% extends "page.html" %}
+
+{% block title %}Sign In{% endblock %}
+
+{% block extra-head %}
+<script type="text/javascript">
+var signIn = namespace.lookup("com.pageforest.auth.sign-in");
+$(document).ready(function() {
+    var username = "{{ user.username }}";
+    var appId = "{{ cross_app.get_app_id }}";
+    signIn.onReady(username, appId);
+});
+</script>
+{% endblock %}
+
+{% block both-columns %}
+
+<h2>
+{% if user %}
+    {{ user.username }}, you are signed in to {{ SITE_NAME }}
+    <span style="display:none;" class="have_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
+{% else %}
+    Sign in to {{ SITE_NAME }}
+    {% if cross_app %} and {{ cross_app.title }} ({{ cross_app.get_app_id }}){% endif %}
+{% endif %}
+</h2>
+
+{{ enablejs|safe }}
+{{ httponly|safe }}
+
+{% if cross_app %}
+    <p class="want_app">The application, <b>{{ cross_app.title }} ({{ cross_app.get_app_id }})</b>,
+      uses the {{ SITE_NAME }} web application service to store your data.
+    </p>
+    <p>
+      If you would like to sign-in to <i>{{ cross_app.title }}</i>
+      then {% if not user %}sign-in and {% endif %} <i>Allow Access</i>, below.
+    </p>
+    <p>
+      By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
+      <ul>
+        <li>Access your {{ SITE_NAME }} user
+          name{% if user %} (<i>{{ user.username }}</i>){% endif %}.</li>
+        <li>Create, modify, and read documents in your {{ SITE_NAME }} account on your behalf.</li>
+        {% ifequal cross_app.get_app_id "editor" %}
+        <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
+        {% else %}
+        <li><i>Note that <i>{{ cross_app.title }}</i> will <b>not</b> have access to non-public
+            documents created by any other {{ SITE_NAME }} application.</li>
+        {% endifequal %}
+      </ul>
+    </p>
+{% endif %}
+
+{% if form.non_field_errors %}
+    <p class="error">{{ form.non_field_errors.0 }}</p>
+{% endif %}
+
+<form id="sign-in" method="post" onsubmit="return signIn.onSubmit()">
+    {{ csrf_token }}
+    <table>
+    {% if user %}
+        {% if cross_app %}
+            <input class="want_app" type="button" value="Allow Access" onclick="return signIn.transferSession('{{ session_key }}')" />
+        {% endif %}
+    {% else %}
+        {% for field in form %}
+            <tr>
+              <td>{{ field.label_tag }}:</td>
+              <td>{{ field }}</td>
+              <td class="form-message" id="validate_{{ field.html_name }}">
+                 <span class="error">{{ field.errors.0 }}</span>
+              </td>
+            </tr>
+        {% endfor %}
+        <tr><td></td>
+          <td><input class="want_app" type="submit" value="Sign In" disabled="disabled" /></td>
+          <td></td>
+        </tr>
+    {% endif %}
+    </table>
+</form>
+
+{% if user %}
+    {% if not user.email_verified %}
+        <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
+    {% endif %}
+    <p><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
+{% else %}
+    <p>Need to create account?  <a href="/sign-up">Join Now</a>.</p>
+{% endif %}
+
+{% endblock both-columns %}

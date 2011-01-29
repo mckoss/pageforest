@@ -1,0 +1,79 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+<title>1,000 Blocks</title>
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
+<script type="text/javascript"
+src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript">
+var blocks = namespace.lookup("com.pageforest.blocks");
+$(document).ready(blocks.onReady);
+</script>
+</head>
+<body>
+<div class="page">
+<div id="divPageTitle">
+    <img src="images/1000_blocks_title.png" alt="1000 Blocks" />
+</div>
+
+<div id="divTools"></div>
+
+<div id="divBoard"></div>
+
+<fieldset>
+  <legend>Tools</legend>
+  <div class="toolBox">
+    <input type="button" title="Sets all block faces to current selection" value="Fill"
+           onclick="blocks.brd.fill();"/>
+    <input type="button" title="Randomizes all cells" value="Invert"
+           onclick="blocks.brd.invert();"/>
+    <input type="button" title="Randomizes all cells" value="Randomize"
+           onclick="blocks.brd.randomize();"/>
+    <input type="button" title="Removes all sharp corners from your current design" value="Smooth"
+           onclick="blocks.brd.smooth();"/>
+  </div>
+
+  <hr/>
+
+  <div class="toolBox">
+    <label for="rows">Rows:</label>
+    <input type="text" id="rows" size="3" value="20"/>
+    <label style="margin-left:10px;" for="columns">Cols:</label>
+    <input type="text" id="columns" size="3" value="50"/>
+    <input type="button" value="Resize" title="Changes table size (Warning: resets to black!)"
+           onclick="blocks.brd.resize();"/>
+  </div>
+</fieldset>
+
+<div id="divInfo">
+  1,000 Blocks is modelled after an exhibit by
+  <a href="http://www.curtissteiner.com/blocks/" target="_blank">Curtis Steiner</a> from the
+  <a href="http://www.seattleartmuseum.org/" target="_blank">Seattle Art Museum's</a>
+  permanent collection.
+</div>
+
+
+</div> <!-- page -->
+
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2072869-7']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+
+</body>
+</html>
