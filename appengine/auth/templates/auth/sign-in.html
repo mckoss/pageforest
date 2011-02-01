@@ -8,7 +8,8 @@ var signIn = namespace.lookup("com.pageforest.auth.sign-in");
 $(document).ready(function() {
     var username = "{{ user.username }}";
     var appId = "{{ cross_app.get_app_id }}";
-    signIn.onReady(username, appId);
+    var sessionKey = "{{ session_key }}";
+    signIn.onReady(username, appId, sessionKey);
 });
 </script>
 {% endblock %}
@@ -61,7 +62,8 @@ $(document).ready(function() {
     <table>
     {% if user %}
         {% if cross_app %}
-            <input class="want_app" type="button" value="Allow Access" onclick="return signIn.transferSession('{{ session_key }}')" />
+            <input class="want_app" type="button" value="Allow Access"
+                   onclick="signIn.transferSession(signIn.closeForm)" />
         {% endif %}
     {% else %}
         {% for field in form %}
