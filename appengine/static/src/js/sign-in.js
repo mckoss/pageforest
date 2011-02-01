@@ -2,10 +2,10 @@
   Handle logging a user into Pageforest and optionally also log them
   in to a Pageforest application.
 
-  A logged in use will get a session key on www.pageforest.com. This
+  A logged in user will get a cookie on www.pageforest.com. This
   script makes requests to appid.pageforest.com in order to get a
   cookie set on the application domain when the user wants to allow
-  the application access to his store.
+  the application access to his pageforest account.
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
@@ -53,8 +53,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
-    function transferSession(sessionKey, fn) {
-        var url = ns.appAuthURL + "set-session/" + sessionKey;
+    function transferSession(fn) {
+        var url = ns.appAuthURL + "set-session/" + ns.sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
                 return;
@@ -62,24 +62,15 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             if (fn) {
                 fn();
             }
-
-            // Close the window if this was used to
-            // sign in to the app.
-            if (sessionKey) {
-                closeForm();
-            }
         });
         return false;
     }
 
     function onSuccess(message, status, xhr) {
-        if (message.sessionKey) {
-            transferSession(message.sessionKey, function() {
-                window.location.reload();
-            });
-            return;
-        }
-        window.location.reload();
+        ns.sessionKey = message;
+        transferSession(function() {
+            window.location.reload();
+        });
     }
 
     function onError(xhr, status, message) {
@@ -120,7 +111,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     // Check if user is already logged in.
-    function onReady(username, appId) {
+    function onReady(username, appId, sessionKey) {
         // Hide message about missing JavaScript.
         $('#enablejs').hide();
         $('input').removeAttr('disabled');
@@ -130,6 +121,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         }
 
         ns.appId = appId;
+        ns.sessionKey = sessionKey;
         ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
 
         // Nothing to do until the user signs in - page will reload
@@ -153,7 +145,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     function signOut() {
         if (ns.appId) {
-            transferSession('expired', function() {
+            ns.sessionKey = 'expired';
+            transferSession(function() {
                 window.location = '/sign-out/' + ns.appId;
             });
             return;
@@ -165,7 +158,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         'onReady': onReady,
         'onSubmit': onSubmit,
         'transferSession': transferSession,
-        'signOut': signOut
+        'signOut': signOut,
+        'closeForm': closeForm
     });
 
 }); // com.pageforest.auth.sign-in
