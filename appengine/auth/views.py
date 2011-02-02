@@ -20,7 +20,7 @@ from utils.json import HttpJSONResponse
 from auth import SignatureError
 from auth.forms import SignUpForm, ProfileForm
 from auth.models import User, CHALLENGE_EXPIRATION
-from auth.middleware import AccessDenied
+from auth.middleware import AccessDenied, referer_is_trusted
 from auth.decorators import login_required
 
 from apps.models import App
@@ -176,6 +176,18 @@ def sign_in(request, app_id=None):
         'cross_app': app,
         })
     return response
+
+
+@method_required('GET')
+def get_app_session_key(request, app_id=None):
+    if not referer_is_trusted(request):
+        return AccessDenied(request)
+    app = App.lookup(app_id)
+    if app is None:
+        return HttpJSONResponse({'statusText': "Invalid application."}, status=400)
+    if request.user is None:
+        return HttpJSONResponse({'statusText': "User not signed in."}, status=400)
+    return HttpJSONResponse({'sessionKey': request.user.generate_session_key(app)})
 
 
 @jsonp

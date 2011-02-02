@@ -8,6 +8,7 @@ urlpatterns = patterns(
     (r'^sign-in/$', 'sign_in'),
     (r'^account(/(?P<username>%s))?/$' % settings.USERNAME_REGEX, 'account'),
     (r'^sign-in/(?P<app_id>[^/]+)/$', 'sign_in'),
+    (r'^get-session-key/(?P<app_id>[^/]+)/$', 'get_app_session_key'),
     (r'^sign-out/$', 'sign_out'),
     (r'^sign-out/(?P<app_id>[^/]+)/$', 'sign_out'),
     (r'^email-verify/(?P<verification>.+)/$', 'email_verification'),
