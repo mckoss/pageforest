@@ -9,10 +9,10 @@
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
+    var dom = namespace.lookup('com.pageforest.dom');
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -44,16 +44,19 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Display success, and close window in 2 seconds.
     function closeForm() {
-        if (ns.appId) {
-            $(".have_app").show();
-        }
-        $(".want_app").hide();
+        $(document.body)[ns.appId ? 'addClass' : 'removeClass']('app');
         setTimeout(window.close, 2000);
     }
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
     function transferSession(fn) {
+        if (!ns.appAuthURL) {
+            if (fn) {
+                fn();
+            }
+            return;
+        }
         var url = ns.appAuthURL + "set-session/" + ns.sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
@@ -112,35 +115,30 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Check if user is already logged in.
     function onReady(username, appId, sessionKey) {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
-
         ns.appId = appId;
         ns.sessionKey = sessionKey;
-        ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        if (appId) {
+            ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        }
 
         // Nothing to do until the user signs in - page will reload
         // on form post.
-        if (!username) {
-            return;
-        }
+        $(document.body)[username ? 'addClass' : 'removeClass']('user');
+        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
 
-        // Check (once) if we're also currently logged in @ appId
-        // without having to sign-in again.
-        // REVIEW: Isn't this insecure?
-        var url = ns.appAuthURL + "username/";
-        getJSONP(url, function(username) {
-            // We're already logged in!
-            if (typeof(username) == 'string') {
-                closeForm();
-                return;
-            }
-        });
+        if (appId) {
+            // Check (once) if we're also currently logged in @ appId
+            // without having to sign-in again.
+            // REVIEW: Isn't this insecure?
+            var url = ns.appAuthURL + "username/";
+            getJSONP(url, function(username) {
+                // We're already logged in!
+                if (typeof(username) == 'string') {
+                    closeForm();
+                    return;
+                }
+            });
+        }
     }
 
     function signOut() {

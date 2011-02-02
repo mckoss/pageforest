@@ -162,34 +162,3 @@ class ProfileForm(AjaxForm):
         user.max_apps = self.cleaned_data['max_apps']
         user.is_admin = self.cleaned_data['is_admin']
         user.put()
-
-
-class SignInForm(UsernamePasswordForm):
-    """
-    User authentication form.
-    """
-    appauth = forms.BooleanField(
-        required=False,
-        label="Application",
-        widget=LabeledCheckbox(label="Allow access", field_id='appauth'))
-
-    def clean_username(self):
-        """
-        Check that the user exists.
-        """
-        username = super(SignInForm, self).clean_username()
-        user = User.lookup(username)
-        if user is None:
-            raise forms.ValidationError("No account for %s." % username)
-        self.cleaned_data['user'] = user
-        return username
-
-    def clean(self):
-        """
-        Raise an error if the password does not match.
-        """
-        user = self.cleaned_data.get('user', None)
-        password = self.cleaned_data.get('password', None)
-        if user and password and password.lower() != user.password:
-            raise forms.ValidationError("Invalid password.")
-        return self.cleaned_data
