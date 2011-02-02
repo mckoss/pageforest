@@ -172,6 +172,15 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
         }
     }
 
+    // jQuery, annoyingly, does not have a boolean form of the hide/show command.
+    function show(elts, fShow) {
+        if (fShow) {
+            elts.show();
+        } else {
+            elts.hide():
+        }
+    }
+
     function bindIDs(aIDs) {
         var mParts = {};
         var i;
