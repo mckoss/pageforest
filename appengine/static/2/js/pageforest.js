@@ -666,6 +666,871 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     });
 
 }); // startpad.base
+/* Begin file: vector.js */
+// --------------------------------------------------------------------------
+// Vector Functions
+// --------------------------------------------------------------------------
+namespace.lookup('org.startpad.vector').defineOnce(function(ns) {
+    var util = namespace.util;
+
+    var x = 0;
+    var y = 1;
+    var x2 = 2;
+    var y2 = 3;
+    var regNums = {
+        'ul': 0,
+        'top': 1,
+        'ur': 2,
+        'left': 3,
+        'center': 4,
+        'right': 5,
+        'll': 6,
+        'bottom': 7,
+        'lr': 8
+    };
+
+    // Subtract second vector from first (in place).
+    function subFrom(v1, v2) {
+        for (var i = 0; i < v1.length; i++) {
+            v1[i] = v1[i] - v2[i % v2.length];
+        }
+        return v1;
+    }
+
+    // Append all arrays into a new array (append(v) is same as copy(v)
+    function copy() {
+        var v1 = Array.prototype.concat.apply([], arguments);
+        return v1;
+    }
+
+    function sub(v1, v2) {
+        var vDiff = copy(v1);
+        return subFrom(vDiff, v2);
+    }
+
+    // In-place vector addition
+    // If smaller arrays are added to larger ones, they wrap around
+    // so that points can be added to rects, for example.
+    function addTo(vSum) {
+        for (var iarg = 1; iarg < arguments.length; iarg++) {
+            var v = arguments[iarg];
+            for (var i = 0; i < vSum.length; i++) {
+                vSum[i] += v[i % v.length];
+            }
+        }
+        return vSum;
+    }
+
+    // Add corresponding elements of all arguments
+    function add() {
+        var vSum = copy(arguments[0]);
+        var args = util.copyArray(arguments);
+        args[0] = vSum;
+        return addTo.apply(undefined, args);
+    }
+
+    // Return new vector with element-wise max All arguments must
+    // be same dimensioned array.
+
+    // TODO: Allow mixing scalars - share code with mult -
+    // iterator/callback pattern
+    function max() {
+        var vMax = copy(arguments[0]);
+        for (var iarg = 1; iarg < arguments.length; iarg++) {
+            var v = arguments[iarg];
+            for (var i = 0; i < vMax.length; i++) {
+                if (v[i] > vMax[i]) {
+                    vMax[i] = v[i];
+                }
+            }
+        }
+        return vMax;
+    }
+
+    // Multiply corresponding elements of all arguments (including scalars)
+    // All vectors must be the same dimension (length).
+    function mult() {
+        var vProd = 1;
+        var i;
+        for (var iarg = 0; iarg < arguments.length; iarg++) {
+            var v = arguments[iarg];
+            if (typeof v === "number") {
+                // mult(scalar, scalar)
+                if (typeof vProd === "number") {
+                    vProd *= v;
+                }
+                // mult(vector, scalar)
+                else {
+                    for (i = 0; i < vProd.length; i++) {
+                        vProd[i] *= v;
+                    }
+                }
+            }
+            else {
+                // mult(scalar, vector)
+                if (typeof vProd === "number") {
+                    var vT = vProd;
+                    vProd = copy(v);
+                    for (i = 0; i < vProd.length; i++) {
+                        vProd[i] *= vT;
+                    }
+                }
+                // mult(vector, vector)
+                else {
+                    if (v.length !== vProd.length) {
+                        throw new Error("Mismatched Vector Size");
+                    }
+                    for (i = 0; i < vProd.length; i++) {
+                        vProd[i] *= v[i];
+                    }
+                }
+            }
+        }
+        return vProd;
+    }
+
+    function floor(v) {
+        var vFloor = [];
+        for (var i = 0; i < v.length; i++) {
+            vFloor[i] = Math.floor(v[i]);
+        }
+        return vFloor;
+    }
+
+    function dotProduct() {
+        var v = mult.apply(undefined, arguments);
+        var s = 0;
+        for (var i = 0; i < v.length; i++) {
+            s += v[i];
+        }
+        return s;
+    }
+
+    // Do a (deep) comparison of two arrays. Any embeded objects
+    // are assumed to also be arrays of scalars or other arrays.
+    function equal(v1, v2) {
+        if (v1.length != v2.length) {
+            return false;
+        }
+        for (var i = 0; i < v1.length; i++) {
+            if (typeof v1[i] != typeof v2[i]) {
+                return false;
+            }
+            if (typeof v1[i] == "object") {
+                if (!equal(v1[i], v2[i])) {
+                    return false;
+                }
+            } else {
+                if (v1[i] != v2[i]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Routines for dealing with Points [x, y] and Rects [left,
+    // top, bottom, right]
+    function ul(rc) {
+        return rc.slice(0, 2);
+    }
+
+    function lr(rc) {
+        return rc.slice(2, 4);
+    }
+
+    function size(rc) {
+        return sub(lr(rc), ul(rc));
+    }
+
+    function area(rc) {
+        var dv = size(rc);
+        return dv[0] * dv[1];
+    }
+
+    function numInRange(num, numMin, numMax) {
+        return num >= numMin && num <= numMax;
+    }
+
+    function clipToRange(num, numMin, numMax) {
+        if (num < numMin) {
+            return numMin;
+        }
+        if (num > numMax) {
+            return numMax;
+        }
+        return num;
+    }
+
+    function ptInRect(pt, rc) {
+        return numInRange(pt[x], rc[x], rc[x2]) &&
+            numInRange(pt[y], rc[y], rc[y2]);
+    }
+
+    function ptClipToRect(pt, rc) {
+        return [clipToRange(pt[x], rc[x], rc[x2]),
+                clipToRange(pt[y], rc[y], rc[y2])];
+    }
+
+    function rcClipToRect(rc, rcClip) {
+        return copy(ptClipToRect(ul(rc), rcClip),
+                    ptClipToRect(lr(rc), rcClip));
+    }
+
+    // Return pt (1-scale) * ul + scale * lr
+    function ptCenter(rc, scale) {
+        if (scale === undefined) {
+            scale = 0.5;
+        }
+        if (typeof scale === "number") {
+            scale = [scale, scale];
+        }
+        var pt = mult(scale, lr(rc));
+        scale = sub([1, 1], scale);
+        addTo(pt, mult(scale, ul(rc)));
+        return pt;
+    }
+
+    function rcExpand(rc, ptSize) {
+        var rcExp = copy(sub(ul(rc), ptSize),
+                         add(lr(rc), ptSize));
+        // If array bounds are inverted - make a zero-dimension
+        // at the midpoint between the original coordinates.
+        var ptC = ptCenter(rc);
+        if (rcExp[x] > rcExp[x2]) {
+            rcExp[x] = rcExp[x2] = ptC[x];
+        }
+        if (rcExp[y] > rcExp[y2]) {
+            rcExp[y] = rcExp[y2] = ptC[y];
+        }
+        return rcExp;
+    }
+
+    function keepInRect(rcIn, rcBound) {
+        // First, make sure the rectangle is not bigger than
+        // either bound dimension
+        var ptFixSize = max([0, 0], sub(size(rcIn),
+                                        size(rcBound)));
+        rcIn[x2] -= ptFixSize[x];
+        rcIn[y2] -= ptFixSize[y];
+        // Now move the rectangle to be totally within the bounds
+        var dx = 0;
+        var dy = 0;
+        dx = Math.max(0, rcBound[x] - rcIn[x]);
+        dy = Math.max(0, rcBound[y] - rcIn[y]);
+        if (dx == 0) {
+            dx = Math.min(0, rcBound[x2] - rcIn[x2]);
+        }
+        if (dy == 0) {
+            dy = Math.min(0, rcBound[y2] - rcIn[y2]);
+        }
+        addTo(rcIn, [dx, dy]);
+    }
+
+    // ptRegistration - return one of 9 registration points of a rectangle
+    // 0 1 2
+    // 3 4 5
+    // 6 7 8
+    function ptRegistration(rc, reg) {
+        if (typeof reg == 'string') {
+            reg = regNums[reg];
+        }
+        var xScale = (reg % 3) * 0.5;
+        var yScale = Math.floor(reg / 3) * 0.5;
+        return ptCenter(rc, [xScale, yScale]);
+    }
+
+    function magnitude2(v1) {
+        var d2 = 0;
+        for (var i = 0; i < v1.length; i++) {
+            d2 += Math.pow(v1[i], 2);
+        }
+        return d2;
+    }
+
+    // Return square of distance between to "points" (N-dimensional)
+    function distance2(v1, v2) {
+        var dv = sub(v2, v1);
+        return magnitude2(dv);
+    }
+
+    function unitVector(v1) {
+        var m2 = magnitude2(v1);
+        return mult(v1, 1 / Math.sqrt(m2));
+    }
+
+    // Find the closest point to the given point
+    // (multiple) arguments can be points, or arrays of points
+    // Returns [i, pt] result
+    function iPtClosest(pt) {
+        var d2Min;
+        var ptClosest;
+        var iClosest;
+        var d2;
+        var iPt = 0;
+        for (var iarg = 1; iarg < arguments.length; iarg++) {
+            var v = arguments[iarg];
+            // Looks like a single point
+            if (typeof v[0] == "number") {
+                d2 = distance2(pt, v);
+                if (d2Min == undefined || d2 < d2Min) {
+                    d2Min = d2;
+                    ptClosest = v;
+                    iClosest = iPt;
+                }
+                iPt++;
+            }
+            // Looks like an array of points
+            else {
+                for (var i = 0; i < v.length; i++) {
+                    var vT = v[i];
+                    d2 = distance2(pt, vT);
+                    if (d2Min == undefined || d2 < d2Min) {
+                        d2Min = d2;
+                        ptClosest = vT;
+                        iClosest = iPt;
+                    }
+                    iPt++;
+                }
+            }
+        }
+        return [iClosest, ptClosest];
+    }
+
+    function iRegClosest(pt, rc) {
+        var aPoints = [];
+        for (var i = 0; i < 9; i++) {
+            aPoints.push(ptRegistration(rc, i));
+        }
+        return iPtClosest(pt, aPoints)[0];
+    }
+
+
+    // Move a rectangle so that one of it's registration
+    // points is located at a given point.
+    function alignRect(rc, reg, ptTo) {
+        var ptFrom = ptRegistration(rc, reg);
+        return add(rc, sub(ptTo, ptFrom));
+    }
+
+    // Move or resize the rectangle based on the registration
+    // point to be modified.  Center (4) moves the whole rect.
+    // Others resize one or more edges of the rectangle
+    function rcDeltaReg(rc, dpt, iReg, ptSizeMin, rcBounds) {
+        var rcT;
+        if (iReg == 4) {
+            rcT = add(rc, dpt);
+            if (rcBounds) {
+                keepInRect(rcT, rcBounds);
+            }
+            return rcT;
+        }
+        var iX = iReg % 3;
+        if (iX == 1) {
+            iX = undefined;
+        }
+        var iY = Math.floor(iReg / 3);
+        if (iY == 1) {
+            iY = undefined;
+        }
+        function applyDelta(rc, dpt) {
+            var rcDelta = [0, 0, 0, 0];
+            if (iX != undefined) {
+                rcDelta[iX] = dpt[0];
+            }
+            if (iY != undefined) {
+                rcDelta[iY + 1] = dpt[1];
+            }
+            return add(rc, rcDelta);
+        }
+        rcT = applyDelta(rc, dpt);
+        // Ensure the rectangle is not less than the minimum size
+        if (!ptSizeMin) {
+            ptSizeMin = [0, 0];
+        }
+        var ptSize = size(rcT);
+        var ptFixSize = max([0, 0], sub(ptSizeMin, ptSize));
+        if (iX == 0) {
+            ptFixSize[0] *= -1;
+        }
+        if (iY == 0) {
+            ptFixSize[1] *= -1;
+        }
+        rcT = applyDelta(rcT, ptFixSize);
+        // Ensure rectangle is not outside the bounding box
+        if (rcBounds) {
+            keepInRect(rcT, rcBounds);
+        }
+        return rcT;
+    }
+
+    // Return the bounding box of the collection of pt's and rect's
+    function boundingBox() {
+        var vPoints = copy.apply(undefined, arguments);
+        if (vPoints.length % 2 !== 0) {
+            throw new Error("Invalid arguments to boundingBox");
+        }
+        var ptMin = vPoints.slice(0, 2),
+        ptMax = vPoints.slice(0, 2);
+        for (var ipt = 2; ipt < vPoints.length; ipt += 2) {
+            var pt = vPoints.slice(ipt, ipt + 2);
+            if (pt[0] < ptMin[0]) {
+                ptMin[0] = pt[0];
+            }
+            if (pt[1] < ptMin[1]) {
+                ptMin[1] = pt[1];
+            }
+            if (pt[0] > ptMax[0]) {
+                ptMax[0] = pt[0];
+            }
+            if (pt[1] > ptMax[1]) {
+                ptMax[1] = pt[1];
+            }
+        }
+        return [ptMin[0], ptMin[1], ptMax[0], ptMax[1]];
+    }
+
+    ns.extend({
+        'x': x,
+        'y': y,
+        'x2': x2,
+        'y2': y2,
+        'equal': equal,
+        'sub': sub,
+        'subFrom': subFrom,
+        'add': add,
+        'addTo': addTo,
+        'max': max,
+        'mult': mult,
+        'distance2': distance2,
+        'magnitude2': magnitude2,
+        'unitVector': unitVector,
+        'floor': floor,
+        'dotProduct': dotProduct,
+        'ul': ul,
+        'lr': lr,
+        'copy': copy,
+        'append': copy,
+        'size': size,
+        'area': area,
+        'numInRange': numInRange,
+        'clipToRange': clipToRange,
+        'ptInRect': ptInRect,
+        'ptClipToRect': ptClipToRect,
+        'rcClipToRect': rcClipToRect,
+        'ptCenter': ptCenter,
+        'boundingBox': boundingBox,
+        'ptRegistration': ptRegistration,
+        'rcExpand': rcExpand,
+        'alignRect': alignRect,
+        'keepInRect': keepInRect,
+        'iRegClosest': iRegClosest,
+        'rcDeltaReg': rcDeltaReg
+    });
+}); // startpad.vector
+/* Begin file: dom.js */
+/*globals jQuery */
+
+//--------------------------------------------------------------------------
+// DOM Functions
+// Points (pt) are [x,y]
+// Rectangles (rc) are [xTop, yLeft, xRight, yBottom]
+//--------------------------------------------------------------------------
+namespace.lookup('org.startpad.dom').define(function(ns) {
+    var util = namespace.util;
+    var vector = namespace.lookup('org.startpad.vector');
+    var base = namespace.lookup('org.startpad.base');
+    var ix = 0;
+    var iy = 1;
+    var ix2 = 2;
+    var iy2 = 3;
+
+    // Get absolute position on the page for the upper left of the element.
+    function getPos(elt) {
+        var pt = [0, 0];
+
+        while (elt.offsetParent !== null) {
+            pt[ix] += elt.offsetLeft;
+            pt[iy] += elt.offsetTop;
+            elt = elt.offsetParent;
+        }
+        return pt;
+    }
+
+    // Return size of a DOM element in a Point - includes borders, and
+    // padding, but not margins.
+    function getSize(elt) {
+        return [elt.offsetWidth, elt.offsetHeight];
+    }
+
+    // Return absolute bounding rectangle for a DOM element:
+    // [x, y, x + dx, y + dy]
+    function getRect(elt) {
+        // TODO: Should I use getClientRects or getBoundingClientRect?
+        var rc = getPos(elt);
+        var ptSize = getSize(elt);
+        rc.push(rc[ix] + ptSize[ix], rc[iy] + ptSize[iy]);
+        return rc;
+    }
+
+    // Relative rectangle within containing element
+    function getOffsetRect(elt) {
+        var rc = [elt.offsetLeft, elt.offsetTop];
+        var ptSize = getSize(elt);
+        rc.push(rc[ix] + ptSize[ix], rc[iy] + ptSize[iy]);
+        return rc;
+    }
+
+    function getMouse(evt) {
+        var x = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var y = document.documentElement.scrollTop || document.body.scrollTop;
+        return [x + evt.clientX, y + evt.clientY];
+    }
+
+    function getWindowRect() {
+        var x = document.documentElement.scrollLeft || document.body.scrollLeft;
+        var y = document.documentElement.scrollTop || document.body.scrollTop;
+        var dx = window.innerWidth ||
+            document.documentElement.clientWidth ||
+            document.body.clientWidth;
+        var dy = window.innerHeight ||
+            document.documentElement.clientHeight ||
+            document.body.clientHeight;
+        return [x, y, x + dx, y + dy];
+    }
+
+    function setPos(elt, pt) {
+        elt.style.left = pt[0] + 'px';
+        elt.style.top = pt[1] + 'px';
+    }
+
+    function setSize(elt, pt) {
+        // Setting the width of an element INSIDE the padding
+        elt.style.width = pt[0] + 'px';
+        elt.style.height = pt[1] + 'px';
+    }
+
+    function setRect(elt, rc) {
+        setPos(elt, vector.ul(rc));
+        setSize(elt, vector.size(rc));
+    }
+
+    function removeChildren(node) {
+        var child;
+        for (child = node.firstChild; child; child = node.firstChild) {
+            node.removeChild(child);
+        }
+    }
+
+    function ancestors(elem) {
+        var aAncestors = [];
+
+        while (elem != document) {
+            aAncestors.push(elem);
+            elem = elem.parentNode;
+        }
+        return aAncestors;
+    }
+
+    // Find the height of the nearest common ancestor of elemChild and elemUncle
+    function commonAncestorHeight(elemChild, elemUncle) {
+        var aChild = ancestors(elemChild);
+        var aUncle = ancestors(elemUncle);
+
+        var iChild = aChild.length - 1;
+        var iUncle = aUncle.length - 1;
+
+        while (aChild[iChild] == aUncle[iUncle] && iChild >= 0) {
+            iChild--;
+            iUncle--;
+        }
+
+        return iChild + 1;
+    }
+
+    // Set focus() on element, but NOT at the expense of scrolling the
+    // window position
+    function setFocusIfVisible(elt) {
+        if (!elt) {
+            return;
+        }
+
+        var rcElt = getRect(elt);
+        var rcWin = getWindowRect();
+
+        if (vector.PtInRect(vector.UL(rcElt), rcWin) ||
+            vector.PtInRect(vector.LR(rcElt), rcWin)) {
+            elt.focus();
+        }
+    }
+
+    function scrollToBottom(elt) {
+        elt.scrollTop = elt.scrollHeight;
+    }
+
+    // Position a slide-out div with optional animation.
+    function slide(div, pt, animation, fnCallback) {
+        if (div.style.display != 'block') {
+            div.style.display = 'block';
+        }
+
+        var rcPanel = getRect(div);
+        var panelSize = getSize(div);
+        var reg = animation == 'show' ? 'lr' : 'ur';
+        rcPanel = vector.alignRect(rcPanel, reg, pt);
+
+        // Starting position
+        setPos(div, rcPanel);
+
+        // Slide down or up based on animation
+
+        if (animation == 'show') {
+            jQuery(div).animate({
+                top: '+=' + panelSize[1]
+            }, fnCallback);
+            return;
+        }
+
+        if (animation == 'hide') {
+            jQuery(div).animate({
+                top: '-=' + panelSize[1]
+            }, function() {
+                jQuery(this).hide();
+                if (fnCallback) {
+                    fnCallback();
+                }
+            });
+        }
+    }
+
+    function bindIDs(aIDs) {
+        var mParts = {};
+        var i;
+
+        // If no array of id's is given, return all ids defined in the document
+        if (aIDs === undefined) {
+            var aAll = document.getElementsByTagName("*");
+            for (i = 0; i < aAll.length; i++) {
+                var elt = aAll[i];
+                if (elt.id && elt.id[0] != '_') {
+                    mParts[elt.id] = elt;
+                }
+            }
+            return mParts;
+        }
+
+        for (i = 0; i < aIDs.length; i++) {
+            var sID = aIDs[i];
+            mParts[sID] = document.getElementById(sID);
+        }
+        return mParts;
+    }
+
+    function initValues(aNames, mpFields, mpValues) {
+        for (var i = 0; i < aNames.length; i++) {
+            if (mpValues[aNames[i]] != undefined) {
+                mpFields[aNames[i]].value = mpValues[aNames[i]];
+            }
+        }
+    }
+
+    function readValues(aNames, mpFields, mpValues) {
+        for (var i = 0; i < aNames.length; i++) {
+            var field = mpFields[aNames[i]];
+            var value;
+
+            if (field.type == 'checkbox') {
+                value = field.checked;
+            } else {
+                value = field.value;
+            }
+            mpValues[aNames[i]] = value;
+        }
+    }
+
+    /* Poor-man's JQuery compatible selector.
+
+       Accepts simple (single) selectors in one of three formats:
+
+       #id
+       .class
+       tag
+    */
+    function $(sSelector) {
+        var ch = sSelector.substr(0, 1);
+        if (ch == '.' || ch == '#') {
+            sSelector = sSelector.substr(1);
+        }
+
+        if (ch == '#') {
+            return document.getElementById(sSelector);
+        }
+        if (ch == '.') {
+            return ns.getElementsByClassName(sSelector);
+        }
+        return document.getElementsByTagName(sSelector);
+    }
+
+    function getElementsByClassName(sClassName) {
+        if (document.getElementsByClassName) {
+            return document.getElementsByClassName(sClassName);
+        }
+
+        return ns.GetElementsByTagClassName(document, "*", sClassName);
+    }
+
+    /*
+      GetElementsByTagClassName
+
+      Written by Jonathan Snook, http://www.snook.ca/jonathan
+      Add-ons by Robert Nyman, http://www.robertnyman.com
+    */
+
+    function getElementsByTagClassName(oElm, strTagName, strClassName) {
+        var arrElements = (strTagName == "*" && oElm.all) ? oElm.all :
+            oElm.getElementsByTagName(strTagName);
+        var arrReturnElements = [];
+        strClassName = strClassName.replace(/\-/g, "\\-");
+        var oRegExp = new RegExp("(^|\\s)" + strClassName + "(\\s|$)");
+        var oElement;
+        for (var i = 0; i < arrElements.length; i++) {
+            oElement = arrElements[i];
+            if (oRegExp.test(oElement.className)) {
+                arrReturnElements.push(oElement);
+            }
+        }
+        return (arrReturnElements);
+    }
+
+    function getText(elt) {
+        // Try FF then IE standard way of getting element text
+        return base.strip(elt.textContent || elt.innerText);
+    }
+
+    function setText(elt, st) {
+        if (elt.textContent != undefined) {
+            elt.textContent = st;
+        } else {
+            elt.innerText = st;
+        }
+    }
+
+    /* Modify original event object to enable the DOM Level 2 Standard
+       Event model (make IE look like a Standards based event)
+    */
+    function wrapEvent(evt)
+    {
+        evt = evt || window.evt || {};
+
+        if (!evt.preventDefault) {
+            evt.preventDefault = function() {
+                this.returnValue = false;
+            };
+        }
+
+        if (!evt.stopPropagation) {
+            evt.stopPropagation = function() {
+                this.cancelBubble = true;
+            };
+        }
+
+        if (!evt.target) {
+            evt.target = evt.srcElement || document;
+        }
+
+        if (evt.pageX == null && evt.clientX != null) {
+            var doc = document.documentElement;
+            var body = document.body;
+            evt.pageX = evt.clientX +
+                (doc && doc.scrollLeft || body && body.scrollLeft || 0) -
+                (doc.clientLeft || 0);
+            evt.pageY = evt.clientY +
+                (doc && doc.scrollTop || body && body.scrollTop || 0) -
+                (doc.clientTop || 0);
+        }
+        return evt;
+    }
+
+    var handlers = [];
+
+    function bind(elt, event, fnCallback, capture) {
+        if (!capture) {
+            capture = false;
+        }
+
+        var fnWrap = function() {
+            var args = util.copyArray(arguments);
+            args[0] = wrapEvent(args[0]);
+            return fnCallback.apply(elt, arguments);
+        };
+
+        if (elt.addEventListener) {
+            elt.addEventListener(event, fnWrap, capture);
+        } else if (elt.attachEvent) {
+            elt.attachEvent('on' + event, fnWrap);
+        } else {
+            elt['on' + event] = fnWrap;
+        }
+
+        handlers.push({
+            'elt': elt,
+            'event': event,
+            'capture': capture,
+            'fn': fnWrap
+        });
+
+        return handlers.length - 1;
+    }
+
+    function unbind(i) {
+        var handler = handlers[i];
+        if (handler == undefined) {
+            return;
+        }
+        handlers[i] = undefined;
+
+        var elt = handler.elt;
+        if (elt.removeEventListener) {
+            elt.removeEventListener(handler.event, handler.fn, handler.capture);
+        }
+        else if (elt.attachEvent) {
+            elt.detachEvent('on' + handler.event, handler.fn);
+        }
+        else {
+            elt['on' + handler.event] = undefined;
+        }
+    }
+
+    ns.extend({
+        'getPos': getPos,
+        'getSize': getSize,
+        'getRect': getRect,
+        'getOffsetRect': getOffsetRect,
+        'getMouse': getMouse,
+        'getWindowRect': getWindowRect,
+        'setPos': setPos,
+        'setSize': setSize,
+        'setRect': setRect,
+        'removeChildren': removeChildren,
+        'ancestors': ancestors,
+        'commonAncestorHeight': commonAncestorHeight,
+        'setFocusIfVisible': setFocusIfVisible,
+        'scrollToBottom': scrollToBottom,
+        'bindIDs': bindIDs,
+        'initValues': initValues,
+        'readValues': readValues,
+        '$': $,
+        'select': $,
+        'getElementsByClassName': getElementsByClassName,
+        'getElementsByTagClassName': getElementsByTagClassName,
+        'getText': getText,
+        'setText': setText,
+        'slide': slide,
+        'bind': bind,
+        'unbind': unbind
+    });
+
+}); // startpad.dom
 /* Begin file: cookies.js */
 namespace.lookup('org.startpad.cookies').define(function(ns) {
     /*
@@ -1285,10 +2150,15 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
+    var dom = namespace.lookup('org.startpad.dom');
+
+    var appId;
+    var appAuthURL;
+    var sessionKey;
+    var username;
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -1320,21 +2190,40 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Display success, and close window in 2 seconds.
     function closeForm() {
-        if (ns.appId) {
-            $(".have_app").show();
-        }
-        $(".want_app").hide();
+        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
         setTimeout(window.close, 2000);
+    }
+
+    function getSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appId || sessionKey) {
+            fn();
+            return;
+        }
+        $.getJSON('/get-session-key/' + appId, function (json) {
+            if (json.status != 200) {
+                $('#error').text = json.statusText;
+                return;
+            }
+            $(document.body).addClass('session');
+            sessionKey = json.sessionKey;
+        });
     }
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
-    function transferSession(fn) {
-        var url = ns.appAuthURL + "set-session/" + ns.sessionKey;
+    function transferSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appAuthURL) {
+            fn();
+            return;
+        }
+        var url = appAuthURL + "set-session/" + sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
                 return;
             }
+            $(document.body).removeClass('session');
             if (fn) {
                 fn();
             }
@@ -1343,10 +2232,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSuccess(message, status, xhr) {
-        ns.sessionKey = message;
-        transferSession(function() {
-            window.location.reload();
-        });
+        $(document.body).addClass('user');
+        $('.username').text(username);
+        getSessionKey(transferSessionKey);
     }
 
     function onError(xhr, status, message) {
@@ -1364,7 +2252,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        var username = $('#id_username').val();
+        username = $('#id_username').val();
         var lower = username.toLowerCase();
         var password = $('#id_password').val();
         var userpass = crypto.HMAC(crypto.SHA1, lower, password);
@@ -1386,44 +2274,44 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    // Check if user is already logged in.
-    function onReady(username, appId, sessionKey) {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
+    function onReady(usernameT, appIdT) {
+        appId = appIdT;
+        username = usernameT;
+        if (appId) {
+            appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         }
-
-        ns.appId = appId;
-        ns.sessionKey = sessionKey;
-        ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
 
         // Nothing to do until the user signs in - page will reload
         // on form post.
-        if (!username) {
-            return;
+        $(document.body)[username ? 'addClass' : 'removeClass']('user');
+        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
+
+        // If already logged in - get the sessionKey
+        if (username) {
+            $('.username').text(username);
+            getSessionKey();
         }
 
-        // Check (once) if we're also currently logged in @ appId
-        // without having to sign-in again.
-        // REVIEW: Isn't this insecure?
-        var url = ns.appAuthURL + "username/";
-        getJSONP(url, function(username) {
-            // We're already logged in!
-            if (typeof(username) == 'string') {
-                closeForm();
-                return;
-            }
-        });
+        if (appId) {
+            // Check (once) if we're also currently logged in @ appId
+            // without having to sign-in again.
+            // REVIEW: Isn't this insecure?
+            var url = appAuthURL + "username/";
+            getJSONP(url, function(username) {
+                // We're already logged in!
+                if (typeof(username) == 'string') {
+                    closeForm();
+                    return;
+                }
+            });
+        }
     }
 
     function signOut() {
-        if (ns.appId) {
-            ns.sessionKey = 'expired';
-            transferSession(function() {
-                window.location = '/sign-out/' + ns.appId;
+        if (appId) {
+            sessionKey = 'expired';
+            transferSessionKey(function() {
+                window.location = '/sign-out/' + appId;
             });
             return;
         }
@@ -1433,7 +2321,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     ns.extend({
         'onReady': onReady,
         'onSubmit': onSubmit,
-        'transferSession': transferSession,
+        'transferSessionKey': transferSessionKey,
         'signOut': signOut,
         'closeForm': closeForm
     });

@@ -12,7 +12,12 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
-    var dom = namespace.lookup('com.pageforest.dom');
+    var dom = namespace.lookup('org.startpad.dom');
+
+    var appId;
+    var appAuthURL;
+    var sessionKey;
+    var username;
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -44,24 +49,40 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Display success, and close window in 2 seconds.
     function closeForm() {
-        $(document.body)[ns.appId ? 'addClass' : 'removeClass']('app');
+        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
         setTimeout(window.close, 2000);
+    }
+
+    function getSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appId || sessionKey) {
+            fn();
+            return;
+        }
+        $.getJSON('/get-session-key/' + appId, function (json) {
+            if (json.status != 200) {
+                $('#error').text = json.statusText;
+                return;
+            }
+            $(document.body).addClass('session');
+            sessionKey = json.sessionKey;
+        });
     }
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
-    function transferSession(fn) {
-        if (!ns.appAuthURL) {
-            if (fn) {
-                fn();
-            }
+    function transferSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appAuthURL) {
+            fn();
             return;
         }
-        var url = ns.appAuthURL + "set-session/" + ns.sessionKey;
+        var url = appAuthURL + "set-session/" + sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
                 return;
             }
+            $(document.body).removeClass('session');
             if (fn) {
                 fn();
             }
@@ -70,10 +91,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSuccess(message, status, xhr) {
-        ns.sessionKey = message;
-        transferSession(function() {
-            window.location.reload();
-        });
+        $(document.body).addClass('user');
+        $('.username').text(username);
+        getSessionKey(transferSessionKey);
     }
 
     function onError(xhr, status, message) {
@@ -91,7 +111,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        var username = $('#id_username').val();
+        username = $('#id_username').val();
         var lower = username.toLowerCase();
         var password = $('#id_password').val();
         var userpass = crypto.HMAC(crypto.SHA1, lower, password);
@@ -113,12 +133,11 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    // Check if user is already logged in.
-    function onReady(username, appId, sessionKey) {
-        ns.appId = appId;
-        ns.sessionKey = sessionKey;
+    function onReady(usernameT, appIdT) {
+        appId = appIdT;
+        username = usernameT;
         if (appId) {
-            ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+            appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         }
 
         // Nothing to do until the user signs in - page will reload
@@ -126,11 +145,17 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         $(document.body)[username ? 'addClass' : 'removeClass']('user');
         $(document.body)[appId ? 'addClass' : 'removeClass']('app');
 
+        // If already logged in - get the sessionKey
+        if (username) {
+            $('.username').text(username);
+            getSessionKey();
+        }
+
         if (appId) {
             // Check (once) if we're also currently logged in @ appId
             // without having to sign-in again.
             // REVIEW: Isn't this insecure?
-            var url = ns.appAuthURL + "username/";
+            var url = appAuthURL + "username/";
             getJSONP(url, function(username) {
                 // We're already logged in!
                 if (typeof(username) == 'string') {
@@ -142,10 +167,10 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function signOut() {
-        if (ns.appId) {
-            ns.sessionKey = 'expired';
-            transferSession(function() {
-                window.location = '/sign-out/' + ns.appId;
+        if (appId) {
+            sessionKey = 'expired';
+            transferSessionKey(function() {
+                window.location = '/sign-out/' + appId;
             });
             return;
         }
@@ -155,7 +180,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     ns.extend({
         'onReady': onReady,
         'onSubmit': onSubmit,
-        'transferSession': transferSession,
+        'transferSessionKey': transferSessionKey,
         'signOut': signOut,
         'closeForm': closeForm
     });
