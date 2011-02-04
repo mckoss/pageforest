@@ -5,35 +5,26 @@ body {
     padding: 0;
 }
 
-body.app .if_not_app, body:not(.app) .if_app { display: none; }
-body.user .if_not_user, body:not(.user) .if_user { display: none; }
+body.app .if-not-app, body:not(.app) .if-app { display: none; }
+body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
 h1 { text-align: center; }
 h2 { padding-top: 5px; }
-div.spacer { height: 10px; }
-div.spacer2 { height: 20px; width: 100%; }
 
-div.breadcrumb {
-    background:url(../../images/nav/rule-horiz.gif) repeat-x bottom left scroll;
-    margin: 0 0 18px 125px;
-    padding-bottom: 7px;
-    color: #4D2500;
-}
-
-div.breadcrumb a { text-decoration: none; color: #898989; font-weight: bold; }
-div.breadcrumb a:hover { text-decoration: underline; color: #FF7F00; }
+div.heading { position: relative; height: 200px; }
+div.middle { margin: auto; height: 200px; width: 960px; border: 1px solid red;}
 
 div.footer { color: #898989; font-size: 11px; }
 div.footer a { text-decoration: none; color: #898989; font-size: 11px; }
 div.footer a:hover { text-decoration: underline; color: #FF7F00; }
 
-div.CallToAction {
+div.call-to-action {
     background: url(../../images/sidebar/planting.png) no-repeat scroll;
     width: 220px;
     height: 300px;
 }
 
-div.CallToAction p {
+div.call-to-action p {
     text-align:center;
     font-size: 24px;
     line-height: 26px;

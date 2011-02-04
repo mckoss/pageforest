@@ -1,41 +1,37 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Top of Page, Logo, Navigation, and Search -->
-<!-- TODO: Move all inline styles to page.css -->
-<div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/grass.png) repeat-x left bottom white;">
-    <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/bush.png) no-repeat left bottom;">
-        <div style="margin:auto;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/logo.png) no-repeat left bottom scroll;" onclick="window.location = '/';">
-            <div style="position:relative;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/flowers.png) no-repeat right bottom scroll;">
-                <!-- Signin Widget -->
-                <div class="topbar">
-                <div class="topbarLeft"></div>
-                <div class="topbarMid">
-                  <span class="if_user">
-                    Welcome, <a href="/account/"><span class="username">{{ user }}</span></a> |
-                    <a href="http://{{ WWW_DOMAIN }}/sign-out/">Sign out</a>
-                  </span>
-                  <span class="if_not_user">
-                    <a href="http://{{ WWW_DOMAIN }}/sign-in/">Sign in</a> |
-                    <a href="http://{{ WWW_DOMAIN }}/sign-up/">Join now</a>
-                  </span>
-                </div>
-                <div class="topbarRight"></div>
-                </div>
+<div class=heading>
+  <div class=grass></div>
+  <div class=bush></div>
 
-                <!-- Navigation Bar -->
-                <div style="position:absolute;left:125px;top:164px;height:30px;width:770px;">
-                    <!-- Folder Tabs -->
-                    <div class="tab selected"><a href="http://{{ WWW_DOMAIN }}/">Home</a></div>
-                    <div class="tab"><a href="http://{{ WWW_DOMAIN }}/apps/">Apps</a></div>
-                    <div class="tab"><a href="http://{{ WWW_DOMAIN }}/docs/">Docs</a></div>
-                </div>
-            </div>
-        </div>
+  <div class="middle">
+    <div class=logo onclick="window.location = '/';"></div>
+    <div class=flowers></div>
+
+    <div class=topbar>
+      <div class=topbarMid>
+        <span class=if-user>
+          Welcome, <a href="/account/"><span class=username>{{ user }}</span></a> |
+          <a href="http://{{ WWW_DOMAIN }}/sign-out/">Sign out</a>
+        </span>
+        <span class=if-not-user>
+          <a href="http://{{ WWW_DOMAIN }}/sign-in/">Sign in</a> |
+          <a href="http://{{ WWW_DOMAIN }}/sign-up/">Join now</a>
+        </span>
+      </div>
     </div>
-</div>
 
-<!-- Page Content -->
-<div class="Content" style="width:100%;background:url({{MEDIA_URL}}images/nav/body-background.png) repeat-x top left scroll;">
+    <div class=folders>
+      <!-- Folder Tabs -->
+      <div class="tab selected"><a href="http://{{ WWW_DOMAIN }}/">Home</a>|</div>
+      <div class=tab><a href="http://{{ WWW_DOMAIN }}/apps/">Apps</a>|</div>
+      <div class=tab><a href="http://{{ WWW_DOMAIN }}/docs/">Docs</a></div>
+    </div>
+
+  </div> <!-- middle -->
+</div> <!-- head -->
+
+<div style="width:100%;background:url({{MEDIA_URL}}images/nav/body-background.png) repeat-x top left scroll;">
     <div style="margin:auto;width:960px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
         <div style="float:left;margin-top:20px;margin-left:125px;width:835px;">
         {% block both-columns %}

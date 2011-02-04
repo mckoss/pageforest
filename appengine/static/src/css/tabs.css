@@ -2,6 +2,9 @@ div.tab {
     float: left;
     height: 30px;
     margin: 0px;
+    position: relative;
+    top: -10px;
+    color: #898989;
 }
 
 div.tabSelect {
@@ -10,10 +13,10 @@ div.tabSelect {
 
 div.tab a {
     text-decoration: none;
-    color: #898989;
     line-height: 31px;
     margin: 5px;
     font-weight: bold;
+    color: #898989;
 }
 
 div.tabSelect a {

@@ -1958,7 +1958,7 @@ namespace.lookup('com.pageforest.forms').define(function(ns) {
         for (var index = 0; index < fields.length; index++) {
             var name = fields[index];
             var html = errors[name];
-            if (ignoreEmpty && $("#id_" + name).val() === '') {
+            if (ignoreEmpty && $("#id-" + name).val() === '') {
                 html = '';
             } else if (html) {
                 html = '<span class="error">' + html + '</span>';
@@ -2207,6 +2207,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             }
             $(document.body).addClass('session');
             sessionKey = json.sessionKey;
+            fn();
         });
     }
 
@@ -2234,7 +2235,11 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     function onSuccess(message, status, xhr) {
         $(document.body).addClass('user');
         $('.username').text(username);
-        getSessionKey(transferSessionKey);
+        getSessionKey(function () {
+            if ($('#id_appauth').attr('checked')) {
+                transferSessionKey(closeForm);
+            }
+        });
     }
 
     function onError(xhr, status, message) {
@@ -2286,7 +2291,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         $(document.body)[username ? 'addClass' : 'removeClass']('user');
         $(document.body)[appId ? 'addClass' : 'removeClass']('app');
 
-        // If already logged in - get the sessionKey
+        // If already logged in - get the sessionKey right away.
         if (username) {
             $('.username').text(username);
             getSessionKey();

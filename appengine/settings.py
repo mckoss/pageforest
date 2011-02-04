@@ -305,7 +305,7 @@ MEDIA_FILES = {
         },
 
     'css': {
-        'default': ['main', 'home', 'form', 'top-bar', 'tabs'],
+        'default': ['main', 'heading', 'top-bar', 'tabs', 'home', 'form'],
         },
     }
 
