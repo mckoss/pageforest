@@ -10,13 +10,14 @@
                 <div class="topbar">
                 <div class="topbarLeft"></div>
                 <div class="topbarMid">
-                  {% if user %}
-                  Welcome, <a href="/account/">{{ user }}</a> |
-                  <a href="http://{{ WWW_DOMAIN }}/sign-out/">Sign out</a>
-                  {% else %}
-                  <a href="http://{{ WWW_DOMAIN }}/sign-in/">Sign in</a> |
-                  <a href="http://{{ WWW_DOMAIN }}/sign-up/">Join now</a>
-                  {% endif %}
+                  <span class="if_user">
+                    Welcome, <a href="/account/"><span class="username">{{ user }}</span></a> |
+                    <a href="http://{{ WWW_DOMAIN }}/sign-out/">Sign out</a>
+                  </span>
+                  <span class="if_not_user">
+                    <a href="http://{{ WWW_DOMAIN }}/sign-in/">Sign in</a> |
+                    <a href="http://{{ WWW_DOMAIN }}/sign-up/">Join now</a>
+                  </span>
                 </div>
                 <div class="topbarRight"></div>
                 </div>

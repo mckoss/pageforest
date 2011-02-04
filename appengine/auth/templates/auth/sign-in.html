@@ -4,9 +4,7 @@
 
 {% block extra-head %}
 <style>
-body.app .want_app, body:not(.app) .have_app { display: none; }
-body.user .want_user, body:not(.user) .have_user { display: none; }
-body.session .want_session, body:not(.session) .have_session { display: none; }
+body.session .if_not_session, body:not(.session) .if_session { display: none; }
 </style>
 <script type="text/javascript">
 var signIn = namespace.lookup("com.pageforest.auth.sign-in");
@@ -20,14 +18,14 @@ $(document).ready(function() {
 
 {% block both-columns %}
 
-  <h2 class="have_user"><span class="username"></span>, you are signed in to {{ SITE_NAME }}
-    <span style="display:none;" class="have_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
+  <h2 class="if_user"><span class="username"></span>, you are signed in to {{ SITE_NAME }}
+    <span style="display:none;" class="if_app">and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
   </h2>
-  <h2 class="want_user">Sign in to {{ SITE_NAME }}
-    <span class="have_app"> and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
+  <h2 class="if_not_user">Sign in to {{ SITE_NAME }}
+    <span class="if_app"> and {{ cross_app.title }} ({{ cross_app.get_app_id }})</span>
   </h2>
 
-  <div class="have_app">
+  <div class="if_app">
     <p>The application, <b>{{ cross_app.title }} ({{ cross_app.get_app_id }})</b>,
       uses the {{ SITE_NAME }} web application service to store your data.
     </p>
@@ -49,13 +47,13 @@ $(document).ready(function() {
         {% endifequal %}
       </ul>
     </p>
-    <input class="have_session" type="button" value="Allow Access"
+    <input class="if_session" type="button" value="Allow Access"
            onclick="signIn.transferSessionKey(signIn.closeForm)" />
   </div>
 
     <p class="error"></p>
 
-    <form id="sign-in" class="want_user" method="post" onsubmit="return signIn.onSubmit()">
+    <form id="sign-in" class="if_not_user" method="post" onsubmit="return signIn.onSubmit()">
       <table>
         <tr>
           <td><label for="id_username">Username</label>:</td>
@@ -69,7 +67,7 @@ $(document).ready(function() {
           <td class="form-message" id="validate_password"><span class="error"></span> </td>
         </tr>
 
-        <tr class="have_app">
+        <tr class="if_app">
           <td><label for="id_appauth">{{ cross_app.get_app_id }}</label>:</td>
           <td><input type="checkbox" name="appauth" id="id_appauth" />&nbsp;<label for="id_appauth">Allow access</label></td>
           <td></td>
@@ -88,7 +86,7 @@ $(document).ready(function() {
         <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
     {% endif %}
 {% endif %}
-  <p class="have_user"><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
-  <p class="want_user">Need to create account?  <a href="/sign-up">Join Now</a>.</p>
+  <p class="if_user"><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
+  <p class="if_not_user">Need to create account?  <a href="/sign-up">Join Now</a>.</p>
 
 {% endblock both-columns %}
