@@ -1,0 +1,37 @@
+div.grass {
+    position: absolute;
+    width: 100%;
+    height: 200px;
+    background: url(/static/images/nav/grass.png) repeat-x left bottom;
+}
+
+div.bush {
+    position: absolute;
+    width: 100%;
+    height: 200px;
+    background: url(/static/images/nav/bush.png) no-repeat left bottom;
+}
+
+div.logo {
+    position: absolute;
+    top: 0;
+    width: 450px;
+    height: 200px;
+    background: url(/static/images/nav/logo.png) no-repeat left bottom scroll;
+    cursor: pointer;
+}
+
+div.flowers {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    right: 0;
+    background: url(/static/images/nav/flowers.png) no-repeat right bottom scroll;
+}
+
+div.folders {
+    position: absolute;
+    left: 125px;
+    top: 164px;
+    height: 30px;
+}
