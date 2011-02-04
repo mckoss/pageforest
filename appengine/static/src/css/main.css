@@ -12,7 +12,7 @@ h1 { text-align: center; }
 h2 { padding-top: 5px; }
 
 div.heading { position: relative; height: 200px; }
-div.middle { margin: auto; height: 200px; width: 960px; border: 1px solid red;}
+div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
 
 div.footer { color: #898989; font-size: 11px; }
 div.footer a { text-decoration: none; color: #898989; font-size: 11px; }
