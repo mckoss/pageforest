@@ -2,8 +2,6 @@ div.tab {
     float: left;
     height: 30px;
     margin: 0px;
-    position: relative;
-    top: -10px;
     color: #898989;
 }
 

@@ -10,6 +10,7 @@ div.bush {
     width: 80px;
     height: 200px;
     background: url(/static/images/nav/bush.png) no-repeat left bottom;
+    cursor: pointer;
 }
 
 div.logo {
@@ -27,11 +28,12 @@ div.flowers {
     width: 60px;
     height: 200px;
     background: url(/static/images/nav/flowers.png) no-repeat right bottom scroll;
+    cursor: pointer;
 }
 
 div.folders {
     position: absolute;
     left: 125px;
-    top: 164px;
+    top: 150px;
     height: 30px;
 }
