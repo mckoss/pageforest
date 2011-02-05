@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% block content %}
-<div class=heading>
+<div class=header>
   <div class=grass></div>
-  <div class=bush></div>
+  <div class=bush onclick="window.location = 'http://blog.pageforest.com/';"></div>
 
   <div class="middle">
     <div class=logo onclick="window.location = '/';"></div>
-    <div class=flowers></div>
+    <div class=flowers onclick="window.location = 'http://code.google.com/p/pageforest/';"></div>
 
     <div class=topbar>
       <div class=topbarMid>
@@ -31,36 +31,24 @@
   </div> <!-- middle -->
 </div> <!-- head -->
 
-<div style="width:100%;background:url({{MEDIA_URL}}images/nav/body-background.png) repeat-x top left scroll;">
-    <div style="margin:auto;width:960px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
-        <div style="float:left;margin-top:20px;margin-left:125px;width:835px;">
-        {% block both-columns %}
-            <!-- Left Column -->
-            <div id="left-column" style="float:left;padding-right:15px;width:585px;background:url({{MEDIA_URL}}images/nav/rule-vert.gif) repeat-y scroll top right;">
-              {% block left-column %}{% endblock %}
-            </div>
-
-            <!-- Right Column -->
-            <div id="right-column" style="float:right;width:220px;">
-              {% block right-column %}{% endblock %}
-              <div style="clear:both" class="spacer"></div>
-            </div>
-        {% endblock %}
-        </div>
-
-        <div style="margin-left:110px;width:780px;clear:both;" class="spacer2"></div>
-
-        <div class="footer" style="margin-left:125px;width:855px;background:url({{MEDIA_URL}}images/nav/rule-horiz.gif) repeat-x top left scroll;">
-            <a href="http://blog.pageforest.com">Blog</a> |
-            <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
-            <a href="/terms-of-service">Terms of Service</a> |
-                &copy; {{SITE_NAME}} |
-                designed by<a href="http://www.moreplusone.com/">
-                <img style="border:none;position:relative;top:6px;" src="{{MEDIA_URL}}images/nav/design-credit.gif"/>
-                </a>
-        </div>
-
-        <div class="spacer"></div>
+<div class="body">
+  <div class="middle stem">
+    {% block both-columns %}
+    <div id="left-column">
+      {% block left-column %}{% endblock %}
     </div>
-</div> <!-- Content -->
+
+    <div id="right-column">
+      {% block right-column %}{% endblock %}
+    </div>
+    {% endblock %}
+
+    <div class="footer middle stem">
+      <a href="http://blog.pageforest.com">Blog</a> |
+      <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
+      <a href="/terms-of-service">Terms of Service</a> | &copy; {{SITE_NAME}} |
+         site design by <a href="http://www.moreplusone.com/">MORE+1</a>
+    </div>
+  </div>
+</div>
 {% endblock %}
