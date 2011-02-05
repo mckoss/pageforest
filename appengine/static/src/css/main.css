@@ -1,6 +1,6 @@
 body {
     font-family: Verdana, Arial, san-serif;
-    font-size: 16px;
+    font-size: 1.1em;
     color: #4D2500;
     background-color: #C7A36E;
     margin: 0;
@@ -10,8 +10,11 @@ body {
 body.app .if-not-app, body:not(.app) .if-app { display: none; }
 body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
-h1 { text-align: center; font-size: 24px; }
-h2 { text-align: center; padding-top: 5px; }
+h1 { text-align: center; margin-top: 0px; font-size: 1.7em; }
+h2 { clear: both; padding-top: 10px; text-align: center; }
+
+a { text-decoration: none; color: inherit; font-style: italic; }
+a:hover { text-decoration: underline; color: #EAD0AA; }
 
 .floaty { box-shadow:8px 10px 10px #8F754F; }
 div.video {margin:auto; width:480px; height:385px; box-shadow:8px 10px 10px #8F754F; }
@@ -54,9 +57,6 @@ div.footer {
     font-size: 14px;
     border-top: 1px solid #EBBD79;
 }
-
-a { text-decoration: none; color: inherit; font-size: inherit; }
-a:hover { text-decoration: underline; color: white; }
 
 img.favicon16 {
     width: 16px;
