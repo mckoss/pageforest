@@ -17,11 +17,17 @@ h3 { clear: both; text-align: center; font-size: 1em}
 a { text-decoration: none; color: inherit; font-style: italic; }
 a:hover { text-decoration: underline; color: #EAD0AA; }
 
-.floaty { box-shadow:8px 10px 10px #8F754F; }
+/* https://developer.mozilla.org/en/css/box-shadow */
+.floaty {
+    box-shadow:8px 10px 10px #8F754F;
+    -webkit-box-shadow:8px 10px 10px #8F754F;
+    -moz-box-shadow:8px 10px 10px #8F754F;
+}
 
 p { line-height: 22px; }
 
 div.header { position: relative; height: 200px; background-color: #CCFBFF; }
+
 div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
 
 div.body {
