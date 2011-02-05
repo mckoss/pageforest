@@ -1,11 +1,8 @@
-# Styles used only on the home page
-
-#home img.screen { float: right; border: 1px solid red; }
-
 #home ul { font-size: 16px; line-height: 22px; }
 #home li { padding-bottom: 5px; }
 
-#home img { box-shadow:8px 10px 10px #8F754F; }
+#home img { box-shadow:8px 10px 10px #8F754F; margin: auto; }
+#home img.screen { float:right; height: 240px; margin-left: 10px;}
 
 div.call-to-action {
     background: url(/static/images/sidebar/planting.png) no-repeat scroll;

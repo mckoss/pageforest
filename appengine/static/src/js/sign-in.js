@@ -95,7 +95,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         $(document.body).addClass('user');
         $('.username').text(username);
         getSessionKey(function () {
-            if ($('#id_appauth').attr('checked')) {
+            if ($('#id-appauth').attr('checked')) {
                 transferSessionKey(closeForm);
             }
         });
@@ -116,9 +116,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        username = $('#id_username').val();
+        username = $('#id-username').val();
         var lower = username.toLowerCase();
-        var password = $('#id_password').val();
+        var password = $('#id-password').val();
         var userpass = crypto.HMAC(crypto.SHA1, lower, password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
         var reply = lower + '|' + challenge + '|' + signature;
