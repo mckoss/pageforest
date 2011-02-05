@@ -1,16 +1,22 @@
 body {
     font-family: Verdana, Arial, san-serif;
     font-size: 16px;
+    color: #4D2500;
+    background-color: #C7A36E;
     margin: 0;
     padding: 0;
-    background-color: #C7A36E;
 }
 
 body.app .if-not-app, body:not(.app) .if-app { display: none; }
 body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
-h1 { text-align: center; text-decoration: underline;}
-h2 { padding-top: 5px; }
+h1 { text-align: center; font-size: 24px; }
+h2 { text-align: center; padding-top: 5px; }
+
+.floaty { box-shadow:8px 10px 10px #8F754F; }
+div.video {margin:auto; width:480px; height:385px; box-shadow:8px 10px 10px #8F754F; }
+
+p { line-height: 22px; }
 
 div.header { position: relative; height: 200px; background-color: #CCFBFF; }
 div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
@@ -45,31 +51,12 @@ div.footer {
     width: 850px;
     margin: 0 0 30px 110px;
     padding-top: 10px;
-    color: #898989;
     font-size: 14px;
-    background: url(/static/images/nav/rule-horiz.gif) repeat-x top left scroll;
+    border-top: 1px solid #EBBD79;
 }
 
-div.footer a { text-decoration: none; color: #898989; font-size: inherit; }
-div.footer a:hover { text-decoration: underline; color: #FF7F00; }
-
-div.call-to-action {
-    background: url(/static/images/sidebar/planting.png) no-repeat scroll;
-    width: 220px;
-    height: 300px;
-    cursor: pointer;
-    box-shadow:8px 10px 10px #8F754F
-}
-
-div.call-to-action p {
-    text-align:center;
-    font-size: 24px;
-    line-height: 26px;
-    font-weight: bold;
-    color: white;
-    margin: 0;
-    padding: 15px;
-}
+a { text-decoration: none; color: inherit; font-size: inherit; }
+a:hover { text-decoration: underline; color: white; }
 
 img.favicon16 {
     width: 16px;

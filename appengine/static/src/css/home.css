@@ -1,89 +1,26 @@
 # Styles used only on the home page
-#home {
-    color: #8C6239;
-    font-size: 16px;
-}
 
-#home p {
-    font-size: 16px;
-    line-height: 22px;
-    margin: 5px 0 5px 0;
-}
+#home img.screen { float: right; border: 1px solid red; }
 
-#home img.right {
-    float:right;
-    margin: 10px 0 10px 12px;
-}
+#home ul { font-size: 16px; line-height: 22px; }
+#home li { padding-bottom: 5px; }
 
-#home ul {
-    font-size: 16px;
-    line-height: 22px;
-}
+#home img { box-shadow:8px 10px 10px #8F754F; }
 
-#home li {
-    padding-bottom: 5px;
-}
-
-#home img {
+div.call-to-action {
+    background: url(/static/images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+    cursor: pointer;
     box-shadow:8px 10px 10px #8F754F
 }
 
-#home li img {
-    display:block;
-    margin: 10px auto 10px auto;
-    border: 2px solid #8C6239;
-}
-
-#home h1 {
+div.call-to-action p {
+    text-align:center;
     font-size: 24px;
-    color: #4D2500;
-    line-height: 30px;
-    font-weight: normal;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
     margin: 0;
-    position: relative;
-    top: -4px;
-}
-
-#home h2 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4D2500;
-    margin: 0;
-    clear: both;
-}
-
-#home div.homeCopy {
-    font-size:14px;
-    width:340px;
-}
-
-#home div.Left {
-    float:left;
-}
-
-#home div.Right {
-    float: right;
-}
-
-#home a {
-    text-decoration: none;
-    color: #598527;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-#home a:hover {
-    text-decoration: underline;
-    color: #FF7F00;
-    font-weight: bold;
-}
-
-img.homeScreenLeft {
-    float:left;
-    margin-right: 15px;
-}
-
-img.homeScreenRight {
-    float:right;
-    margin-left:15px;
+    padding: 15px;
 }
