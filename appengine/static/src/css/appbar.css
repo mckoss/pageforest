@@ -80,6 +80,7 @@ div.pfRight {
     border: 2px solid;
     border-color: #E7F2D7 #749B45 #749B45 #E7F2D7;
     font-size: 14px;
+    z-index: 998;
 }
 
 div.expander {
