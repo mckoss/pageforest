@@ -125,7 +125,8 @@ DOMAINS = [
 CUSTOM_DOMAINS = {
     'test.mckoss.com': 'mckoss',
     'apptest.beedesk.com': 'beedesk-test',
-    'www.beedesk.com': 'beedesk'
+    'www.beedesk.com': 'beedesk',
+    'www.quoridor.com': 'quoridor',
 }
 
 # Enable mirroring for trusted applications.
