@@ -29,6 +29,7 @@ div.flowers {
     height: 200px;
     background: url(/static/images/nav/flowers.png) no-repeat right bottom scroll;
     cursor: pointer;
+    zindex: -1;
 }
 
 div.tabs {
