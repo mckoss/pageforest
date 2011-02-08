@@ -42,7 +42,7 @@ def index(request):
     if 'tag' in request.GET:
         title = "Apps tagged " + request.GET['tag']
         query.filter('tags', request.GET['tag'])
-    apps = [app for app in query.fetch(20) if not app.is_www()]
+    apps = [app for app in query.fetch(100) if not app.is_www()]
     return render_to_response(request, 'apps/index.html', {
             'title': title, 'apps': apps})
 
