@@ -39,6 +39,8 @@ namespace.lookup('org.startpad.unit').defineOnce(function(ns) {
             if (this.ns.hasOwnProperty(name)) {
                 if (typeof this.ns[name] != 'function' ||
                     // Don't wrap ourselves!
+                    // Don't count the definition function - alread called.
+                    name == '_closure' ||
                     this.ns[name] === this.constructor) {
                     continue;
                 }

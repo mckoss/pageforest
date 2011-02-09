@@ -175,12 +175,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
             var self = this;
             this.storage.putDoc(docid, json, function(result) {
-                // TODO: The server can return the docid for cases where
-                // the server assigns the id instead of the client.
-                result.docid = docid;
-                // If we had no owner before - set it to document's
-                // creator (the current user).
-                result.owner = json.owner || this.username;
                 self.onSaveSuccess(result);
             });
         },
@@ -232,10 +226,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                                  this.getAppPanelValues());
             base.extendObject(doc, this.meta);
 
-            // Update the dialog if the changes come from the document.
-            if (fDoc) {
-                this.setAppPanelValues(this.meta);
-            }
+            this.setAppPanelValues(this.meta);
 
             return doc;
         },
@@ -264,7 +255,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
         setCleanDoc: function(docid, preserveHash) {
-            this.docid = docid;
+            this.docid = this.meta.docid = docid;
             this.changeState('clean');
 
             // Remember the clean state of the document
@@ -581,9 +572,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             function onSave() {
-                // If this is a first-save, pop open the dialog
+                // If this is a first-save or not dirty, pop open the dialog
                 // so the user can set the doc title, etc.
-                if (self.docid == undefined) {
+                if (self.docid == undefined || self.isSaved()) {
                     self.toggleAppPanel(true);
                     return;
                 }
@@ -723,6 +714,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             values.writers = format.wordList(doc.writers);
             values.publicReader = base.indexOf('public', doc.readers) != -1;
 
+            this.appDialog.enableField('docid', this.docid == undefined);
             if (this.docid == undefined) {
                 this.appDialog.enableField('message', true);
                 values.message = "Before saving, you can choose a new " +
