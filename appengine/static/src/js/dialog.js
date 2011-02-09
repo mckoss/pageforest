@@ -90,8 +90,15 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 }
 
                 if (field.onClick != undefined) {
-                    dom.bind(field.elt, 'click', function() {
-                        field.onClick();
+                    dom.bind(field.elt, 'click', function(evt) {
+                        field.onClick(evt);
+                    });
+                }
+
+                // Bind to chaning field (after it's changed - use keyUp)
+                if (field.onChange != undefined) {
+                    dom.bind(field.elt, 'keyup', function(evt) {
+                        field.onChange(evt, field.elt.value);
                     });
                 }
 

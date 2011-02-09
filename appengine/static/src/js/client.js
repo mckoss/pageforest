@@ -36,7 +36,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         "only direct storage api's can be used.";
     var autoLoadError = "Not autoloading: ";
 
-    var docProps = ['title', 'tags',
+    var docProps = ['title', 'docid', 'tags',
                     'owner', 'readers', 'writers',
                     'created', 'modified'];
 
@@ -168,11 +168,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 json = this.getDoc();
             }
 
-            docid = docid || this.docid;
-
-            if (docid == undefined) {
-                docid = format.slugify(json.title);
-            }
+            docid = this.ensureDocid(docid || this.docid || json.docid);
 
             this.stateSave = this.state;
             this.changeState('saving');
@@ -187,6 +183,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 result.owner = json.owner || this.username;
                 self.onSaveSuccess(result);
             });
+        },
+
+        ensureDocid: function(docid) {
+            if (docid) {
+                return docid;
+            }
+            return format.slugify([this.username, base.randomInt(10000)].join(' '));
         },
 
         onSaveSuccess: function(result) {
@@ -587,6 +590,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 onSaveClose();
             }
 
+            function onChangeTitle(evt, value) {
+                // If the docs not yet saves, we adjust the docid to be a slugified
+                // title.
+                if (!self.docid) {
+                    self.appDialog.setValues({docid: format.slugify(value)});
+                }
+            }
+
             function onCopy() {
                 self.detach();
                 self.toggleAppPanel();
@@ -599,7 +610,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             self.appDialog = new dialog.Dialog({
                 fields: [
                     {name: 'message', type: 'message'},
-                    {name: 'title', required: true},
+                    {name: 'title', required: true, onChange: onChangeTitle},
+                    {name: 'docid', required: true},
                     {name: 'tags'},
                     {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'owner', type: 'value'},
@@ -703,6 +715,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var values = {};
             // Turn the last-save date to a string.
             values.title = doc.title;
+            values.docid = this.ensureDocid(doc.docid);
             values.owner = doc.owner;
             values.modified = format.shortDate(
                 format.decodeClass(doc.modified));
@@ -731,6 +744,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             var dlg = this.appDialog.getValues();
 
             values.title = dlg.title;
+            values.docid = dlg.docid;
             values.owner = dlg.owner;
             values.tags = format.arrayFromWordList(dlg.tags);
             values.writers = format.arrayFromWordList(dlg.writers);
