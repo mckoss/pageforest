@@ -15,6 +15,12 @@ class Timestamped(db.Model):
     modified = db.DateTimeProperty()
     modified_ip = db.StringProperty()
 
+    @classmethod
+    def json_props(cls):
+        props = super(Timestamped, cls).json_props()
+        props.update(dict.fromkeys(('created', 'modified')))
+        return props
+
     def put(self, *args, **kwargs):
         """
         Update the timestamps before each datastore write.

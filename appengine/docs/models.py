@@ -54,6 +54,12 @@ class Doc(SuperDoc):
         return Doc(key_name=key_name, doc_id=doc_id,
                    title=title, owner=username)
 
+    @classmethod
+    def json_props(cls):
+        props = super(Doc, cls).json_props()
+        props.update({'doc_id': 'docid'})
+        return props
+
     def to_json(self, exclude=None):
         """
         Standard json formatted string for the document.
