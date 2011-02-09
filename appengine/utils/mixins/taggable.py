@@ -30,6 +30,12 @@ class Taggable(db.Model):
     """
     tags = db.StringListProperty()
 
+    @classmethod
+    def json_props(cls):
+        props = super(Taggable, cls).json_props()
+        props['tags'] = None
+        return props
+
     def update_tags(self, tags, **kwargs):
         """
         Update tags for this model instance, but don't add or remove

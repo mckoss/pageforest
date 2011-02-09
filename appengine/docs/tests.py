@@ -35,7 +35,7 @@ class DocumentTest(AppTestCase):
         self.assertEqual(response['ETag'][0], '"')
         self.assertEqual(response['ETag'][-1], '"')
         self.assertEqual(len(response['ETag']), 42)
-        self.assertContains(response, '"doc_id": "MyDoc"')
+        self.assertContains(response, '"docid": "MyDoc"')
         self.assertContains(response, '"title": "My Document"')
         self.assertContains(response, '"readers": [\n    "public"\n  ]')
         self.assertContains(response, '"writers": []')

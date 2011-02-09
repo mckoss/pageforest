@@ -150,15 +150,6 @@ LIB_VERSION = '0.6.2'
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'sy(#_hoi=$4&g%@a(azd+p%d1835z1pw@mxel+1ab%&^jlnq#@'
 
-# Don't include these properties in user-facing JSON output for Apps and Docs.
-HIDDEN_PROPERTIES = (
-    'secret',
-    'created_ip',
-    'modified_ip',
-    'schema',
-    'deleted',
-    )
-
 # Prevent account registration with some well-known usernames.
 # This must be all lowercase, because it is matched against username.lower().
 RESERVED_USERNAMES = """

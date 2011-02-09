@@ -28,20 +28,23 @@ class Serializable(db.Model):
         """
         return db.model_from_protobuf(entity_pb.EntityProto(binary))
 
+    @classmethod
+    def json_props(cls):
+        return {}
+
     def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
         Serialize a datastore entity to JSON.
         """
         if exclude is None:
             exclude = ()
-        exclude += settings.HIDDEN_PROPERTIES
         result = {}
-        for name in self.properties():
+        for name, alias in self.json_props().items():
             if exclude and name in exclude:
                 continue
             if include and name not in include:
                 continue
-            result[name] = getattr(self, name)
+            result[alias or name] = getattr(self, name)
         if extra:
             result.update(extra)
         if indent is None:
@@ -77,11 +80,13 @@ class Hashable(Serializable):
         if value is None:
             value = self.to_json(exclude=('sha1', 'size',
                                           'created', 'modified'))
+            logging.info("updating hash from: %s" % value)
         if value is None:
             self.sha1 = None
             self.size = 0
             return
         self.sha1 = sha1(value).hexdigest()
+        logging.info("new hash = %s" % self.sha1)
         self.size = len(value)
 
     def update_headers(self, response):
@@ -104,3 +109,10 @@ class Hashable(Serializable):
         if self.sha1 is None:
             self.update_hash()
         super(Hashable, self).put()
+
+    @classmethod
+    def json_props(cls):
+        props = super(Hashable, cls).json_props()
+        props.update({'sha1': 'sha1',
+                  'size': 'size'})
+        return props

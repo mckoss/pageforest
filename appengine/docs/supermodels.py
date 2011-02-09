@@ -34,6 +34,12 @@ class SuperDoc(Timestamped, Migratable, Taggable, Hashable, Cacheable):
     current_schema = 200               # Migratable schema should be
                                        # added to SuperDoc.schema
 
+    @classmethod
+    def json_props(cls):
+        props = super(SuperDoc, cls).json_props()
+        props.update(dict.fromkeys(('title', 'owner', 'writers', 'readers')))
+        return props
+
     def migrate(self):
         if self.schema < 100:
             self.deleted = False
