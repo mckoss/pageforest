@@ -3,6 +3,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     var storage = namespace.lookup('com.pageforest.storage');
     var format = namespace.lookup('org.startpad.format');
     var base = namespace.lookup('org.startpad.base');
+    var crypto = namespace.lookup('com.googlecode.crypto-js');
 
     var testBlob = {'testNum': 1,
                     'testString': "hello",
@@ -11,7 +12,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     'testArray': [1, 2, 3]
                    };
 
-    var testSha1 = "bd54309486ebe381f9d56ce69e24786799ab873a";
+    var testBlobString = storage.jsonToString(testBlob);
+    var testSha1 = crypto.SHA1(testBlobString);
 
     function TestApp(ut) {
         this.ut = ut;
