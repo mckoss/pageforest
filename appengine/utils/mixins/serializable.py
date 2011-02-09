@@ -80,7 +80,6 @@ class Hashable(Serializable):
         if value is None:
             value = self.to_json(exclude=('sha1', 'size',
                                           'created', 'modified'))
-            logging.info("updating hash from: %s" % value)
         if value is None:
             self.sha1 = None
             self.size = 0

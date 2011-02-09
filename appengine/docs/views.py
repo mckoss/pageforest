@@ -177,7 +177,9 @@ def doc_put(request, doc_id):
 
     response = HttpJSONResponse({
         'statusText': status == 200 and "Saved" or "Created",
+        'docid': request.doc.doc_id,
         'modified': request.doc.modified,
+        'owner': request.doc.owner,
         'sha1': request.doc.sha1,
         }, status=status)
 
