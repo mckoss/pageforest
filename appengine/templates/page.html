@@ -23,33 +23,27 @@
 
     <div class=tabs>
       <!-- Folder Tabs -->
-      <div class="tab selected"><a href="http://{{ WWW_DOMAIN }}/">Home</a>|</div>
-      <div class=tab><a href="http://{{ WWW_DOMAIN }}/apps/">Featured Apps</a>|</div>
-      <div class=tab><a href="http://{{ WWW_DOMAIN }}/docs/">My Documents</a>|</div>
-      <div class=tab><a href="http://wiki.pageforest.com/#pageforest-api">Pageforest API</a></div>
+      <div id=home-tab class=tab><a href="http://{{ WWW_DOMAIN }}/">Home</a>|</div>
+      <div id=apps-tab class=tab><a href="http://{{ WWW_DOMAIN }}/apps/">Featured Apps</a>|</div>
+      <div id=docs-tab class=tab><a href="http://{{ WWW_DOMAIN }}/docs/">My Documents</a>|</div>
+      <div id=api-tab class=tab><a href="http://wiki.pageforest.com/#pageforest-api">Pageforest API</a></div>
     </div>
 
-  </div> <!-- middle -->
-</div> <!-- head -->
+  </div>
+</div>
 
-<div class="body">
+<div id=content>
   <div class="middle stem">
-    {% block both-columns %}
-    <div id="left-column">
-      {% block left-column %}{% endblock %}
-    </div>
+    {% block page-content %}{% endblock %}
 
-    <div id="right-column">
-      {% block right-column %}{% endblock %}
-    </div>
-    {% endblock %}
-
-    <div class="footer middle">
+    {% block footer %}
+    <div class="footer">
       <a href="http://blog.pageforest.com">Blog</a> |
       <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
       <a href="/terms-of-service">Terms of Service</a> | &copy; {{SITE_NAME}} |
          site design by <a href="http://www.moreplusone.com/">MORE+1</a>
     </div>
+    {% endblock %}
   </div>
 </div>
 {% endblock %}

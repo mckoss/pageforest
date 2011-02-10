@@ -34,7 +34,6 @@ USE_APPSTATS = not DEBUG
 
 ADMINS = (
     ('Mike Koss', 'mckoss@pageforest.com'),
-    ('Johann C. Rocholl', 'jcrocholl@pageforest.com'),
 )
 
 MANAGERS = ADMINS
@@ -293,7 +292,7 @@ COMBINE_FILES = not DEBUG
 MEDIA_FILES = {
     'js': {
         'pageforest': ['namespace', 'base', 'vector', 'dom', 'cookies', 'random',
-                       'crypto', 'forms', 'sign-up', 'sign-in', 'profile'],
+                       'crypto', 'forms', 'main', 'sign-up', 'sign-in', 'profile'],
         },
 
     'css': {

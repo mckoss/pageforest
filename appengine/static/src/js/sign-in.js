@@ -9,6 +9,7 @@
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
+    var main = namespace.lookup('com.pageforest.main');
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
