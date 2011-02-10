@@ -46,9 +46,17 @@ class App(SuperDoc):
         props.update(dict.fromkeys(('url', 'referers', 'cloneable', 'icon')))
         return props
 
-    def get_absolute_url(self):
-        """Get the absolute URL for this model instance."""
+    def get_details_url(self):
+        """Absolute URL for the app details page."""
         return reverse('apps.views.details', args=[self.get_app_id()])
+
+    def get_app_url(self):
+        """Absolute URL of the root of the application."""
+        url = self.url
+        if not url or url == "http://%s.%s/" % (self.get_app_id(), settings.DEFAULT_DOMAIN):
+            request = RequestMiddleware.get_request()
+            url = "http://%s.%s/" % (self.get_app_id(), request.base_hostname)
+        return url
 
     def get_app_id(self):
         """Return the key name which contains the app id."""

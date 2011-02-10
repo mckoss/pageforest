@@ -2,37 +2,38 @@
 
 {% block title %}{{ app.title }}{% endblock %}
 
-{% block both-columns %}
-<h1>{{ app.title }}</h1>
+{% block page-content %}
+<div id=double-column>
+  <h1>{{ app.title }}</h1>
 
-<p><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
-class="favicon16" alt="" />
-<a href="{{ app.url }}" target="_blank">{{ app.url }}</a></p>
+  <p><img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt="" />
+    <a href="{{ app.get_app_url }}" target="_blank">{{ app.get_app_url }}</a></p>
 
-{% if app.tags %}
-<p>Tags:{% for tag in app.tags %}
-<a href="/apps?tag={{ tag }}">{{ tag }}</a>{% endfor %}</p>
-{% endif %}
+  {% if app.tags %}
+  <p>Tags:{% for tag in app.tags %}
+    <a href="/apps?tag={{ tag }}">{{ tag }}</a>{% endfor %}</p>
+  {% endif %}
 
-<p>Owner:
-<a href="/apps?writer={{ app.owner }}">{{ app.owner }}</a></p>
+  <p>Owner:
+    <a href="/apps?writer={{ app.owner }}">{{ app.owner }}</a></p>
 
-{% if app.writers %}
-<p>Writers:{% for username in app.writers %}
-<a href="/apps?writer={{ username }}">{{ username }}</a>{% endfor %}</p>
-{% endif %}
+  {% if app.writers %}
+  <p>Writers:{% for username in app.writers %}
+    <a href="/apps?writer={{ username }}">{{ username }}</a>{% endfor %}</p>
+  {% endif %}
 
-{% if app.readers %}
-<p>Readers:{% for username in app.readers %} {{ username }}{% endfor %}</p>
-{% endif %}
+  {% if app.readers %}
+  <p>Readers:{% for username in app.readers %} {{ username }}{% endfor %}</p>
+  {% endif %}
 
-{% if static_blobs %}
-<ul>{% for blob in static_blobs %}
-<li><a href="{{ app.url }}{{ blob }}">{{ blob }}</a></li>{% endfor %}
-</ul>
-{% endif %}
+  {% if static_blobs %}
+  <ul>{% for blob in static_blobs %}
+    <li><a href="{{ app.get_app_url }}{{ blob }}">{{ blob }}</a></li>{% endfor %}
+  </ul>
+  {% endif %}
 
-{% if app.cloneable and request.user %}
-<p><a href="{{ app.get_absolute_url }}clone/">Clone this app</a></p>
-{% endif %}
+  {% if app.cloneable and request.user %}
+  <p><a href="{{ app.get_details_url }}clone/">Clone this app</a></p>
+  {% endif %}
+</div>
 {% endblock %}

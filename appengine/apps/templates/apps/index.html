@@ -10,9 +10,9 @@
   <table>
     {% for app in apps %}
     <tr>
-      <td><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
-               class="favicon16" alt="" />
-        <a href="{{ app.get_absolute_url }}">{{ app.title }}</a>
+      <td>
+        <img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt=""/>
+        <a href="{{ app.get_details_url }}">{{ app.title }}</a>
         ({{ app.get_app_id }})
       </td>
       <td>by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a></td>

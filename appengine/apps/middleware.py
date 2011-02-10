@@ -48,8 +48,7 @@ class AppMiddleware(object):
             hostname = '.'.join(parts[1:])
 
         # Extract app_id from hostname.
-        app_id = settings.CUSTOM_DOMAINS.get(hostname,
-            app_id_from_trusted_domain(hostname))
+        app_id = settings.CUSTOM_DOMAINS.get(hostname, app_id_from_trusted_domain(hostname))
         if app_id is None:
             return HttpResponseNotFound(
                 ("Unknown domain (%s).  " +
@@ -67,6 +66,10 @@ class AppMiddleware(object):
         if request.app is None:
             return HttpResponseNotFound(
                 "Application not found for app: " + app_id)
+
+        # Stash part of the hostname w/o the appid - for us in generating URLs to app
+        # resource.
+        request.base_hostname = hostname.partition('.')[2];
 
         if request.app.is_www():
             # Don't allow references to internal re-written URIs.

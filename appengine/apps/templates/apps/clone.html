@@ -2,15 +2,17 @@
 
 {% block title %}Clone{% endblock %}
 
-{% block both-columns %}
-<h1>Clone the {{ app.get_app_id }} app</h1>
+{% block page-content %}
+<div id=double-column>
+  <h1>Clone the {{ app.get_app_id }} app</h1>
 
-<form method="post">
-<table>
-{{ form }}
-<tr><th></th><td>
-<input type="submit" value="Create new app" />
-</td></tr>
-</table>
-</form>
+  <form method="post">
+    <table>
+      {{ form }}
+      <tr><th></th><td>
+          <input type="submit" value="Create new app" />
+      </td></tr>
+    </table>
+  </form>
+</div>
 {% endblock %}
