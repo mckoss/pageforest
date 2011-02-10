@@ -41,6 +41,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         this.dialogClass = 'SP_Dialog';
         this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
+        this.lastValues = {};
         util.extendObject(this, options);
     }
 
@@ -136,9 +137,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             return undefined;
         },
 
+        // Compare current value with last externally set value
+        hasChanged: function(name) {
+            // REVIEW: This could be more effecient
+            var values = this.getValues();
+            return values[name] != this.lastValues[name];
+        },
+
         // Call just before displaying a dialog to set it's values.
+        // REVIEW: should have a Field class and call field.set method
         setValues: function(values) {
             var field;
+
+            base.extendObject(this.lastValues, values);
 
             this.bindFields();
             for (var name in values) {
