@@ -1,0 +1,72 @@
+body {
+    font-family: Verdana, Arial, san-serif;
+    font-size: 1.1em;
+    color: #4D2500;
+    background-color: #C7A36E;
+    margin: 0;
+    padding: 0;
+}
+
+body.app .if-not-app, body:not(.app) .if-app { display: none; }
+body.user .if-not-user, body:not(.user) .if-user { display: none; }
+
+h1 { text-align: center; margin-top: 0px; font-size: 1.7em; }
+h2 { clear: both; padding-top: 10px; text-align: center; font-size: 1.3em}
+h3 { clear: both; text-align: center; font-size: 1em}
+
+a { text-decoration: none; color: inherit; font-style: italic; }
+a:hover { text-decoration: underline; color: #EAD0AA; }
+
+/* https://developer.mozilla.org/en/css/box-shadow */
+.floaty {
+    box-shadow:8px 10px 10px #8F754F;
+    -webkit-box-shadow:8px 10px 10px #8F754F;
+    -moz-box-shadow:8px 10px 10px #8F754F;
+}
+
+p { line-height: 22px; }
+
+div.header { position: relative; height: 200px; background-color: #CCFBFF; }
+
+div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
+
+div.body {
+    position: relative;
+    width:100%;
+    background:url(/static/images/nav/body-background.png) repeat-x top left scroll;
+}
+
+div.stem {
+    position: relative;
+    background: url(/static/images/nav/logo-stem.png) repeat-y left top scroll;
+}
+
+#left-column {
+    float: left;
+    margin: 20px 0 10px 110px;
+    padding-right: 10px;
+    width: 610px;
+    background: url(/static/images/nav/rule-vert.gif) repeat-y scroll top right;
+}
+
+#right-column {
+    margin: 20px 0 10px 0;
+    float: right;
+    width: 220px;
+}
+
+div.footer {
+    clear: both;
+    width: 850px;
+    margin: 0 0 30px 110px;
+    padding-top: 10px;
+    font-size: 14px;
+    border-top: 1px solid #EBBD79;
+}
+
+img.favicon16 {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+}
+

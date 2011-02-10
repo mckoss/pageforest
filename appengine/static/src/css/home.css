@@ -1,0 +1,43 @@
+#home ul { font-size: 16px; line-height: 22px; }
+#home li { padding-bottom: 5px; }
+
+#home img { display: block; margin: auto; }
+#home img.screen { float:right; height: 240px; margin-left: 10px;}
+
+#home li img { margin:10px auto; }
+#home div.video { margin:auto; width:480px; height:385px; }
+
+div.sidebar {
+    background-color: #DCD0C3;
+    border-radius: 5px;
+    margin-top: 20px;
+    padding-bottom: 5px;
+}
+
+div.sidebar * { margin: 0; }
+
+div.sidebar h3 {
+    background-color: #A16A1A;
+    color: #DCD0C3;
+    padding: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+
+div.call-to-action {
+    background: url(/static/images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+    cursor: pointer;
+}
+
+div.call-to-action p {
+    text-align:center;
+    font-size: 24px;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    padding: 15px;
+}
