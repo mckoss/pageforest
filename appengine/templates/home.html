@@ -1,123 +1,127 @@
 {% extends "page.html" %}
 {% block full-title %}{{ SITE_NAME }} - Saving the web - One page at a time{% endblock %}
-{% block left-column %}
-<div id="home">
-  <h1>Pure JavaScript Web Apps</h1>
+{% block page-content %}
+<div id="left-column">
+  <script>main.setTab('home');</script>
+  <div id="home">
+    <h1>Pure JavaScript Web Apps</h1>
 
-  <p>
-    <a target="_blank" href="http://blocks.pageforest.com/#mckoss-1142">
-      <img class="screen floaty" src="{{MEDIA_URL}}images/home/webapp-screenshot.png" alt="Blocks application screenshot"/>
-    </a>
-    Build complete web or mobile apps <b><i>without writing any server-side code</i></b>.
-    Pageforest gives you:
+    <p>
+      <a target="_blank" href="http://blocks.pageforest.com/#mckoss-1142">
+        <img class="screen floaty" src="{{MEDIA_URL}}images/home/webapp-screenshot.png" alt="Blocks application screenshot"/>
+      </a>
+      Build complete web or mobile apps <b><i>without writing any server-side code</i></b>.
+      Pageforest gives you:
+      <ul>
+        <li><b>Storage</b></li>
+        <li><b>User Accounts</b></li>
+        <li><b>Hosting</b></li>
+        <li><b>Real-time Push</b></li>
+        <li><b>Web-based IDE</b></li>
+        <li><b>Command-line Deployment</b></li>
+      </ul>
+    </p>
+
+    <h2>What's a Pageforest App?</h2>
+    <p>
+      A Pageforest App is written completely in client-side JavaScript.
+      Your application can use any JavaScript libraries you want (e.g.,
+      <a href="http://jquery.org">jQuery</a>, or <a href="http://jquerymobile.com/">jQuery mobile</a>,
+      <a href="http://www.prototypejs.org/">prototype</a>, or
+      <a href="http://mootools.net/">MooTools</a>).
+    </p>
+    <p>
+      Because it is uses web standards, your App can target desktop browsers, mobile browsers (e.g., iPhone and
+      Android), and tablet devices (e.g., the iPad).
+    </p>
+    <p>
+      Yet, web standards lack a method of providing your users Cloud-based storage.   Pageforest provides
+      a unified document storage service, so your App has a simple way to save it's own state to the Cloud.
+    </p>
+    <h2>Getting Started</h2>
+    <p>This video will show how to create your first Pageforest App in just a few minutes.</p>
+    <div class="floaty video">
+      <object width="480" height="385">
+        <param name="movie" value="http://www.youtube.com/v/T5pfopKTnD8?fs=1&amp;hl=en_US"></param>
+        <param name="allowFullScreen" value="true"></param>
+        <param name="allowscriptaccess" value="always"></param>
+        <embed src="http://www.youtube.com/v/T5pfopKTnD8?fs=1&amp;hl=en_US"
+               type="application/x-shockwave-flash" allowscriptaccess="always"
+               allowfullscreen="true" width="480" height="385"></embed>
+      </object>
+    </div>
+    <p>Additional documentation and videos are available at the
+      <a href="http://code.google.com/p/pageforest/wiki/Introduction">Pageforest Documentation</a> site.</p>
+    <h2>What Services does Pageforest Provide?</h2>
     <ul>
-      <li><b>Storage</b></li>
-      <li><b>User Accounts</b></li>
-      <li><b>Hosting</b></li>
-      <li><b>Real-time Push</b></li>
-      <li><b>Web-based IDE</b></li>
-      <li><b>Command-line Deployment</b></li>
+      <li><b>Application Hosting</b> - All the assets for your App (HTML pages, JavaScript libraries, CSS files,
+        and images), are hosted on your own sub-domain of Pageforest.com.</li>
+      <li><b>User Accounts</b> - Each Pageforest user is authenticated by the Pageforest server.  Your application
+        does not need to implement user account management.</li>
+      <li><b>Cloud-based Document Storage</b> - Each Pageforest user is given storage for their
+        own document collection in the Cloud.  When a user authorizes your application, your App
+        can create and store documents to the user's collection.</li>
+      <li><b>Rich Permissions Model</b> - User documents can be public, private, or shared with a specific
+        group of other users; all under user-control.</li>
+      <li><b>Easy-to-Use JavaScript Libraries</b> - The Pageforest JavaScript API makes it easy to implement both a
+        standard user interface for user sign-in, as well as simple data storage and retrieval API's.  Pageforest is
+        designed to be simple to implement, so you can focus on the details of your application, and not have
+        to spend too much time on Pageforest integration.
+        z      <img class=floaty src="{{MEDIA_URL}}images/home/save-dialog-screenshot.png" alt="Save dialog screenshot"/>
+      </li>
+      <li><b>Standard REST Interfaces</b> - Pageforest data is accessed through standard HTML requests (GET,
+        PUT, and POST), enabling use from other web services, widgets, and mobile applications.</li>
+      <li><b>Web-based IDE</b> - You can use standard desktop-based editing tools to create your
+        Pageforest application.  But Pageforest also provides an online
+        <a href="http://editor.pageforest.com">application editor</a> that you can use to edit your
+        source files and upload images.
+        <img class=floaty src="{{MEDIA_URL}}images/home/editor-screenshot.png" alt="Editor screenshot"/>
+      </li>
+      <li><b>Real-time App Support</b> - Write multi-user games, and chat-like Apps using Pageforest's
+        real-time notification API's.</li>
+      <li><b>Reliability</b> - Pageforest is backed by Google's Cloud-based service, giving a high level
+        of scalability and reliability to the Pageforest service.</li>
+      <li><b>Pageforest is FREE!</b> - Pageforest is free for developers.  Our long-term goal is to help developers
+        monetize their web Apps through an online App Directory and Store.  You may also keep your Apps
+        free and use ads to monetize your App.  Pageforest users are given a generous free quota for
+        storage and usage (we will offer premium subscription plans in the future).</li>
     </ul>
-  </p>
 
-  <h2>What's a Pageforest App?</h2>
-  <p>
-    A Pageforest App is written completely in client-side JavaScript.
-    Your application can use any JavaScript libraries you want (e.g.,
-    <a href="http://jquery.org">jQuery</a>, or <a href="http://jquerymobile.com/">jQuery mobile</a>,
-    <a href="http://www.prototypejs.org/">prototype</a>, or
-    <a href="http://mootools.net/">MooTools</a>).
-  </p>
-  <p>
-    Because it is uses web standards, your App can target desktop browsers, mobile browsers (e.g., iPhone and
-    Android), and tablet devices (e.g., the iPad).
-  </p>
-  <p>
-    Yet, web standards lack a method of providing your users Cloud-based storage.   Pageforest provides
-    a unified document storage service, so your App has a simple way to save it's own state to the Cloud.
-  </p>
-  <h2>Getting Started</h2>
-  <p>This video will show how to create your first Pageforest App in just a few minutes.</p>
-  <div class="floaty video">
-    <object width="480" height="385">
-      <param name="movie" value="http://www.youtube.com/v/T5pfopKTnD8?fs=1&amp;hl=en_US"></param>
-      <param name="allowFullScreen" value="true"></param>
-      <param name="allowscriptaccess" value="always"></param>
-      <embed src="http://www.youtube.com/v/T5pfopKTnD8?fs=1&amp;hl=en_US"
-             type="application/x-shockwave-flash" allowscriptaccess="always"
-             allowfullscreen="true" width="480" height="385"></embed>
-    </object>
+    <h2>Open source, open development.</h2>
+    <p>
+      We're committed to building {{ SITE_NAME}} for the benefit of a wide
+      range of developers and users; from hobbyists to professional web
+      development teams. {{ SITE_NAME }} is
+      an <a href="http://pageforest.googlecode.com">open source</a> project
+      with an open development process and unrestrictive licensing. We
+      welcome feedback and feature requests directly from our users and
+      developers.
+    </p>
+
+    <h2>Custom solutions.</h2>
+    <p>
+      If you'd like help in building your application on the {{ SITE_NAME }}
+      platform, <a href="mailto:support@pageforest.com">email us</a>. We
+      offer both free and paid support options, and can help you get your
+      project off the ground with lower startup and ongoing maintenance
+      costs than traditional web application development.
+    </p>
+
   </div>
-  <p>Additional documentation and videos are available at the
-    <a href="http://code.google.com/p/pageforest/wiki/Introduction">Pageforest Documentation</a> site.</p>
-  <h2>What Services does Pageforest Provide?</h2>
-  <ul>
-    <li><b>Application Hosting</b> - All the assets for your App (HTML pages, JavaScript libraries, CSS files,
-      and images), are hosted on your own sub-domain of Pageforest.com.</li>
-    <li><b>User Accounts</b> - Each Pageforest user is authenticated by the Pageforest server.  Your application
-      does not need to implement user account management.</li>
-    <li><b>Cloud-based Document Storage</b> - Each Pageforest user is given storage for their
-      own document collection in the Cloud.  When a user authorizes your application, your App
-      can create and store documents to the user's collection.</li>
-    <li><b>Rich Permissions Model</b> - User documents can be public, private, or shared with a specific
-      group of other users; all under user-control.</li>
-    <li><b>Easy-to-Use JavaScript Libraries</b> - The Pageforest JavaScript API makes it easy to implement both a
-      standard user interface for user sign-in, as well as simple data storage and retrieval API's.  Pageforest is
-      designed to be simple to implement, so you can focus on the details of your application, and not have
-      to spend too much time on Pageforest integration.
-z      <img class=floaty src="{{MEDIA_URL}}images/home/save-dialog-screenshot.png" alt="Save dialog screenshot"/>
-    </li>
-    <li><b>Standard REST Interfaces</b> - Pageforest data is accessed through standard HTML requests (GET,
-      PUT, and POST), enabling use from other web services, widgets, and mobile applications.</li>
-    <li><b>Web-based IDE</b> - You can use standard desktop-based editing tools to create your
-      Pageforest application.  But Pageforest also provides an online
-      <a href="http://editor.pageforest.com">application editor</a> that you can use to edit your
-      source files and upload images.
-      <img class=floaty src="{{MEDIA_URL}}images/home/editor-screenshot.png" alt="Editor screenshot"/>
-    </li>
-    <li><b>Real-time App Support</b> - Write multi-user games, and chat-like Apps using Pageforest's
-      real-time notification API's.</li>
-    <li><b>Reliability</b> - Pageforest is backed by Google's Cloud-based service, giving a high level
-      of scalability and reliability to the Pageforest service.</li>
-    <li><b>Pageforest is FREE!</b> - Pageforest is free for developers.  Our long-term goal is to help developers
-      monetize their web Apps through an online App Directory and Store.  You may also keep your Apps
-      free and use ads to monetize your App.  Pageforest users are given a generous free quota for
-      storage and usage (we will offer premium subscription plans in the future).</li>
-  </ul>
-
-  <h2>Open source, open development.</h2>
-  <p>
-    We're committed to building {{ SITE_NAME}} for the benefit of a wide
-    range of developers and users; from hobbyists to professional web
-    development teams. {{ SITE_NAME }} is
-    an <a href="http://pageforest.googlecode.com">open source</a> project
-    with an open development process and unrestrictive licensing. We
-    welcome feedback and feature requests directly from our users and
-    developers.
-  </p>
-
-  <h2>Custom solutions.</h2>
-  <p>
-    If you'd like help in building your application on the {{ SITE_NAME }}
-    platform, <a href="mailto:support@pageforest.com">email us</a>. We
-    offer both free and paid support options, and can help you get your
-    project off the ground with lower startup and ongoing maintenance
-    costs than traditional web application development.
-  </p>
-
-</div> <!-- home -->
-{% endblock %}
-
-{% block right-column %}
-<div class="call-to-action floaty"
-     onclick="location='http://scratch.pageforest.com';return false;">
-  <p>Create Your App Now!</p>
 </div>
-<div class="sidebar floaty">
-  <h3>Featured Apps</h3>
-  <ul>
-    <li>Blocks</li>
-    <li>Scratch</li>
-  </ul>
+
+<div id="right-column">
+  <div class="call-to-action floaty"
+       onclick="location='http://scratch.pageforest.com';return false;">
+    <p>Create Your App Now!</p>
+  </div>
+  <div class="sidebar floaty">
+    <h3>Featured Apps</h3>
+    <ul>
+      <li>Blocks</li>
+      <li>Scratch</li>
+    </ul>
+  </div>
 </div>
+
 {% endblock %}

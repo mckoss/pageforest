@@ -11,7 +11,7 @@ body.app .if-not-app, body:not(.app) .if-app { display: none; }
 body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
 h1 { text-align: center; margin-top: 0px; font-size: 1.7em; }
-h2 { clear: both; padding-top: 10px; text-align: center; font-size: 1.3em}
+h2 { clear: both; margin-top: 0px; padding-top: 10px; font-size: 1.3em}
 h3 { clear: both; text-align: center; font-size: 1em}
 
 a { text-decoration: none; color: inherit; font-style: italic; }
@@ -26,11 +26,13 @@ a:hover { text-decoration: underline; color: #EAD0AA; }
 
 p { line-height: 22px; }
 
+div { margin: 0; padding: 0}
+
 div.header { position: relative; height: 200px; background-color: #CCFBFF; }
 
 div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
 
-div.body {
+#content {
     position: relative;
     width:100%;
     background:url(/static/images/nav/body-background.png) repeat-x top left scroll;
@@ -39,6 +41,12 @@ div.body {
 div.stem {
     position: relative;
     background: url(/static/images/nav/logo-stem.png) repeat-y left top scroll;
+}
+
+#double-column {
+    /* This float prevents margin-collapse with its parent */
+    float: left;
+    margin: 20px 0 10px 110px;
 }
 
 #left-column {
@@ -70,3 +78,32 @@ img.favicon16 {
     vertical-align: -2px;
 }
 
+table.bordered {
+    border-collapse: collapse;
+    border: 1px solid #36362E;
+    margin: 0 0 8px 0;
+}
+
+table.bordered th {
+    border: 1px solid #36362E;
+    padding: 5px;
+    text-style: bold;
+    color: white;
+    background-color: #69695A;
+    text-align: center;
+}
+
+table.bordered th.long {
+    text-align: left;
+}
+
+table.bordered td {
+    border: 1px solid #36362E;
+    padding: 5px;
+    background-color: #F5F5DC;
+    text-align: center;
+}
+
+table.bordered td.long {
+    text-align: left;
+}

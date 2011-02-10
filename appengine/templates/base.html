@@ -13,15 +13,16 @@
 
 {% block jquery %}
   <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-  <script type="text/javascript">
-    $(document).ready(function() { $("input.focus:last").focus(); });
-  </script>
 {% endblock %}
 
 {% block js %}
   {% for file_name in js_files.pageforest %}
     <script type="text/javascript" src="{{ file_name }}"></script>
   {% endfor %}
+  <script type="text/javascript">
+    var main = namespace.com.pageforest.main;
+    $(document).ready(main.onReady);
+  </script>
 {% endblock %}
 
 {% if refresh_seconds %}
