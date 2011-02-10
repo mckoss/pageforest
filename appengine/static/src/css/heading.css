@@ -25,8 +25,9 @@ div.logo {
 div.flowers {
     position: absolute;
     right: 0;
+    top: 120px;
+    height: 80px;
     width: 60px;
-    height: 200px;
     background: url(/static/images/nav/flowers.png) no-repeat right bottom scroll;
     cursor: pointer;
     zindex: -1;
