@@ -622,7 +622,8 @@ class ListTest(AppTestCase):
             '/docs?method=list',
             '/docs/?method=LIST',
             ]:
-            self.assertContains(self.app_client.get(url), """\
+            response = self.app_client.get(url)
+            self.assertContains(response, """\
 {
   "items": {
     "1234": {
@@ -630,8 +631,8 @@ class ListTest(AppTestCase):
         "__class__": "Date",
         "isoformat": "2010-11-12T13:14:15Z"
       },
-      "sha1": "eb7cac8b6c27e8785a0531c41ee5b82f2906c419",
-      "size": 108
+      "sha1": "d0baedbc9675887103be92606277cb46106100e0",
+      "size": 107
     },
     "MyDoc": {
       "modified": {
