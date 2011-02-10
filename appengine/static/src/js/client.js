@@ -584,7 +584,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             function onChangeTitle(evt, value) {
                 // If the docs not yet saves, we adjust the docid to be a slugified
                 // title.
-                if (!self.docid) {
+                if (!self.docid && !self.appDialog.hasChanged('docid')) {
                     self.appDialog.setValues({docid: format.slugify(value)});
                 }
             }
@@ -602,7 +602,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 fields: [
                     {name: 'message', type: 'message'},
                     {name: 'title', required: true, onChange: onChangeTitle},
-                    {name: 'docid', required: true},
+                    {name: 'docid', label: "URL ID", required: true},
                     {name: 'tags'},
                     {name: 'publicReader', label: "Public", type: 'checkbox'},
                     {name: 'owner', type: 'value'},
@@ -714,15 +714,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             values.writers = format.wordList(doc.writers);
             values.publicReader = base.indexOf('public', doc.readers) != -1;
 
-            this.appDialog.enableField('docid', this.docid == undefined);
+            this.appDialog.enableField('message', this.docid == undefined);
             if (this.docid == undefined) {
-                this.appDialog.enableField('message', true);
                 values.message = "Before saving, you can choose a new " +
                     "title for your document.";
-            } else {
-                this.appDialog.enableField('message', false);
             }
             this.appDialog.setValues(values);
+
+            this.appDialog.enableField('docid', this.docid == undefined);
             this.appDialog.enableField('copy', this.docid != undefined);
         },
 
