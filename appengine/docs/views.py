@@ -33,6 +33,13 @@ def index(request):
     """
     Show a list of documents for this user.
 
+    REVIEW: Should be all writable documents for this user (or even
+    all explicitly readable docs - how to keep other users from
+    imputing access and polluting your space?).
+
+    REVIEW: Maybe should nuke this completely and do client side view
+    using the AJAX entry below.
+
     TODO: This should be a paged result.  Actualy should convert this
     page to a cross-application app (like editor) with features like
     view by app and tag, icon view, and list views.

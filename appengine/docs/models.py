@@ -5,6 +5,7 @@ from google.appengine.ext import db
 
 from docs.supermodels import SuperDoc
 import blobs.models
+import apps.models
 
 
 class Doc(SuperDoc):
@@ -29,19 +30,10 @@ class Doc(SuperDoc):
     def get_absolute_url(self, app=None):
         """
         Get the absolute URL for this model instance.
-
-        Note: This was causing errors in ciruclar references between
-        apps and docs.  I'm passing in the app as a parameter
-        now to eliminate the circular import.  Is there a better way?
         """
         app_id = self.key().name().split('/')[0]
-        # app = App.get_by_key_name(app_id)
-        # REVIEW: Why do we have this fallback.  Note that DEFAULT_DOMAIN
-        # is not correct for the localhost case.
-        if app is None:
-            return 'http://%s.%s/#%s' % (
-                app_id, settings.DEFAULT_DOMAIN, self.doc_id)
-        return app.url + '#' + self.doc_id
+        app = apps.models.App.lookup(app_id)
+        return '%s#%s' % (app.get_app_url(), self.doc_id)
 
     @classmethod
     def create(cls, app_id, doc_id, user):
