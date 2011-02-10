@@ -40,6 +40,12 @@ class App(SuperDoc):
 
     current_schema = SuperDoc.current_schema + 1
 
+    @classmethod
+    def json_props(cls):
+        props = super(App, cls).json_props()
+        props.update(dict.fromkeys(('url', 'referers', 'cloneable', 'icon')))
+        return props
+
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])
