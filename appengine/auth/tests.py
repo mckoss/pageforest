@@ -369,9 +369,9 @@ class ChallengeVerifyTest(AppTestCase):
         self.assertEqual(response.status_code, 200)
         challenge = response.content
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'myapp|peter|12', status_code=200)
+        self.assertContains(response, 'myapp|peter|', status_code=200)
         cookie = response.cookies['reauth'].value
-        self.assertTrue(cookie.startswith('myapp|peter|12'))
+        self.assertTrue(cookie.startswith('myapp|peter|'))
 
     def test_invalid_challenge(self):
         """The challenge must have a valid HMAC."""
