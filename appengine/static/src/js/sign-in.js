@@ -139,9 +139,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    function onReady(usernameT, appIdT) {
-        appId = appIdT;
-        username = usernameT;
+    function onReady(forApp) {
+        username = cookies.getCookie('sessionuser');
+        appId = forApp;
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         }

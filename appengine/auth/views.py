@@ -240,6 +240,7 @@ def sign_out(request, app_id=None):
     kwargs = app_id and {'app_id': app_id} or None
     response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
+    response.delete_cookie(settings.SESSION_USER_NAME)
     return response
 
 
