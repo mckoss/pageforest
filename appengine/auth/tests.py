@@ -296,7 +296,7 @@ class ChallengeVerifyTest(AppTestCase):
         challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         # First login should be successful.
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'myapp|peter|12', status_code=200)
+        self.assertContains(response, 'myapp|peter|', status_code=200)
         # Replay should fail with 403 Forbidden.
         response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Already used.', status_code=403)
