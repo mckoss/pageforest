@@ -8,11 +8,9 @@ body.session .if-not-session, body:not(.session) .if-session { display: none; }
 </style>
 
 <script type="text/javascript">
-var signIn = namespace.lookup("com.pageforest.auth.sign-in");
+var signIn = namespace.com.pageforest.auth.sign_in;
 $(document).ready(function() {
-    var username = "{{ user.username }}";
-    var appId = "{{ cross_app.get_app_id }}";
-    signIn.onReady(username, appId);
+    signIn.onReady("{{ cross_app.get_app_id }}");
 });
 </script>
 
@@ -33,23 +31,23 @@ $(document).ready(function() {
     </p>
     <p>
       If you would like to sign-in to <i>{{ cross_app.title }}</i>
-      then {% if not user %}sign-in and {% endif %} <i>Allow Access</i>, below.
+      then <span class=if-not-user>sign-in and</span> <i>Allow Access</i>, below.
     </p>
     <p>
       By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
       <ul>
         <li>Access your {{ SITE_NAME }} user
-          name{% if user %} (<i><span class="username"></span></i>){% endif %}.</li>
+          name<span class=if-user> (<i><span class="username"></span></i>)</span>.</li>
         <li>Create, modify, and read documents in your {{ SITE_NAME }} account on your behalf.</li>
         {% ifequal cross_app.get_app_id "editor" %}
-        <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
+          <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
         {% else %}
         <li><i>Note that {{ cross_app.title }} will <b>not</b> have access to non-public
             documents created by any other {{ SITE_NAME }} application.</i></li>
         {% endifequal %}
       </ul>
     </p>
-    <input class="if_session" type="button" value="Allow Access"
+    <input class=if-session type="button" value="Allow Access"
            onclick="signIn.transferSessionKey(signIn.closeForm)" />
   </div>
 
@@ -83,13 +81,14 @@ $(document).ready(function() {
       </table>
     </form>
 
-{% if user %}
+<div class=if-user>
     {% if not user.email_verified %}
         <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
     {% endif %}
-{% endif %}
   <p class=if-user><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
-  <p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
+</div>
+
+<p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
 
 </div>
 {% endblock %}
