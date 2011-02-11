@@ -94,6 +94,7 @@ def sign_up(request):
         response = render_to_response(request, 'auth/sign-up.html', {
                 'form': form})
         return response
+
     # Return form errors as JSON.
     if not form.is_valid():
         return HttpResponse(form.errors_json(),

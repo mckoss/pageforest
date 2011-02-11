@@ -55,7 +55,9 @@ class App(SuperDoc):
         url = self.url
         if not url or url == "http://%s.%s/" % (self.get_app_id(), settings.DEFAULT_DOMAIN):
             request = RequestMiddleware.get_request()
-            url = "http://%s.%s/" % (self.get_app_id(), request.base_hostname)
+            # Some unit tests code have not initialized a request object
+            base_hostname = request and request.base_hostname or settings.DEFAULT_DOMAIN
+            url = "http://%s.%s/" % (self.get_app_id(), base_hostname)
         return url
 
     def get_app_id(self):

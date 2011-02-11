@@ -69,7 +69,7 @@ class AppMiddleware(object):
 
         # Stash part of the hostname w/o the appid - for us in generating URLs to app
         # resource.
-        request.base_hostname = hostname.partition('.')[2];
+        request.base_hostname = hostname.partition('.')[2]
 
         if request.app.is_www():
             # Don't allow references to internal re-written URIs.

@@ -2,9 +2,11 @@
 
 {% block title %}Welcome{% endblock %}
 
-{% block both-columns %}
-<h2>Welcome to {{SITE_NAME}}</h2>
-<p>
-Please check your inbox for an email from {{SITE_NAME}} to verify your account.
-</p>
+{% block page-content %}
+<div id=double-column>
+  <h2>Welcome to {{SITE_NAME}}</h2>
+  <p>
+    Please check your inbox for an email from {{SITE_NAME}} to verify your account.
+  </p>
+</div>
 {% endblock %}

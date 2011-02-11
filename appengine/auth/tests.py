@@ -166,73 +166,11 @@ class SignUpTest(AppTestCase):
             mail.send_mail = real_send_mail
 
 
-class SignInTest(AppTestCase):
-
-    def test_errors(self):
-        """Errors on sign-in form."""
-        cases = ({'fields': {'username': 'peter', 'password': ''},
-                  'expect': 'This field is required'},
-                 {'fields': {
-                    'username': '',
-                    'password': '1234567890123456789012345678901234567890'},
-                  'expect': 'This field is required'},
-                 {'fields': {
-                    'username': 'peter',
-                    'password': '1234567890123456789012345678901234567890'},
-                  'expect': 'Invalid password'},
-                 )
-        for case in cases:
-            response = self.www_client.post(SIGN_IN, case['fields'])
-            self.assertContains(response, case['expect'])
-
-    def test_success(self):
-        """Sign-in form success - cookie and redirect - sign-out."""
-        response = self.www_client.post(SIGN_IN, {
-                'username': 'peter',
-                'password': self.peter.password})
-        self.assertContains(response, '"status": 200')
-        self.assertContains(response, '"statusText": "Authenticated"')
-        cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('www|peter|12'))
-        self.assertEqual(cookie['max-age'], 86400)
-        self.assertTrue(cookie['httponly'])
-
-        # Simulate the redirect after POST
-        response = self.www_client.get(SIGN_IN)
-        self.assertContains(response, 'Peter, you are signed in to')
-
-        # Now sign out the user - and check his cookies
-        response = self.www_client.get(SIGN_OUT)
-        self.assertRedirects(response, WWW + SIGN_IN)
-
-        cookie = response.cookies['sessionkey']
-        self.assertEqual(cookie.value, '')
-        self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
-        self.assertTrue(cookie['httponly'])
-
-        # Simulate the redirect after GET
-        response = self.www_client.get(SIGN_IN)
-        self.assertContains(response, 'Sign in to Pageforest')
-
-
 class AppSignInTest(AppTestCase):
     """
     Signing in to and out of an application should set session keys
     on both the pageforest.com domain AND the application domain.
     """
-
-    def test_errors(self):
-        """Errors on application sign-in form."""
-        cases = ({'fields': {'username': 'p'},
-                  'expect': "Ensure this value has at least 2 characters"},
-                 {'fields': {'username': 'peter'},
-                  'expect': "This field is required"},
-                 {'fields': {'username': 'peter', 'password': '1234'},
-                  'expect': "Ensure this value has at least 40 characters"},
-                 )
-        for case in cases:
-            response = self.www_client.post(SIGN_IN + 'myapp/', case['fields'])
-            self.assertContains(response, case['expect'])
 
     def test_no_auth_on_app_domain(self):
         """Only have sign-in pages on the www.pageforest.com domain."""
@@ -250,57 +188,6 @@ class AppSignInTest(AppTestCase):
         response = self.www_client.get(SIGN_IN + 'myapp/')
         self.assertContains(response, "Sign in to Pageforest")
         self.assertContains(response, "and My Test App")
-
-        response = self.www_client.post(SIGN_IN + 'myapp/',
-                                 {'username': 'peter',
-                                  'password': self.peter.password,
-                                  'app_auth': 'checked'})
-        self.assertContains(response, '"status": 200')
-        self.assertContains(response, '"statusText": "Authenticated"')
-        # Expect a first-party session cookie to www.pageforest.com
-        cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('www|peter|12'))
-        self.assertTrue(cookie['httponly'])
-
-        # Simulate the redirect to the form
-        response = self.www_client.get(SIGN_IN + 'myapp/')
-        # We need the app-specific session cookie transferred to JavaScript
-        self.assertContains(response, 'Peter, you are signed in to')
-        match = re.search(r"transferSession\('(.*)'\)", response.content)
-        self.assertTrue(match)
-        myapp_session_key = match.group(1)
-        self.assertTrue(myapp_session_key.startswith("myapp|peter|12"))
-
-        # Should not be logged in yet
-        response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
-        self.assertEqual(response.status_code, 404)
-        self.assertTrue('sessionkey' not in response.cookies)
-
-        # Simulate the in-page javascript that does the cross-site
-        # authentication
-        old_referer = self.app_client.defaults['HTTP_REFERER']
-        self.app_client.defaults['HTTP_REFERER'] = \
-            "http://www.pageforest.com/sign-in/"
-        response = self.app_client.get(
-            APP_AUTH_PREFIX + 'set-session/' +
-            myapp_session_key + '?callback=jsonp123')
-        self.assertEqual(response.content,
-                         'jsonp123("' + myapp_session_key + '")')
-        cookie = response.cookies['sessionkey']
-        self.assertEqual(cookie.value, myapp_session_key)
-        self.app_client.defaults['HTTP_REFERER'] = old_referer
-
-        # And confirm the username api returns the user
-        response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
-        self.assertContains(response, "Peter")
-
-        # And sign out to verify that the cross-app cookie is
-        # marked 'expired'.
-        response = self.app_client.get(
-            APP_AUTH_PREFIX + 'set-session/expired/')
-        cookie = response.cookies['sessionkey']
-        self.assertEqual(cookie.value, '')
-        self.assertTrue(cookie['expires'] == 'Thu, 01-Jan-1970 00:00:00 GMT')
 
 
 class SetSessionTest(AppTestCase):
@@ -524,8 +411,6 @@ class AnonymousTest(AppTestCase):
     def test_sign_in(self):
         """Anonymous user should have access to sign-in pages."""
         self.assertContains(self.www_client.get('/sign-in'), 'Password')
-        self.assertContains(self.www_client.post('/sign-in', {'foo': 'bar'}),
-                            'This field is required.')
 
     def test_app_json(self):
         """Anonymous user should have read-only access to public app.json."""
@@ -598,7 +483,7 @@ class CookieTest(AppTestCase):
     resources = {
         '/': (200, '<html>'),
         '/index.html': (200, '<html>'),
-        '/does/not/exist.txt': (404, 'Blob not found'),
+        '/does/not/exist.txt': (404, 'Page not found'),
         '/docs/mydoc/': (200, '"title":'),
         '/docs/mydoc/myblob/': (200, '["json"]'),
         '/docs/mydoc/?method=list': (200, '"myblob":'),
