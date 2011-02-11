@@ -127,7 +127,7 @@ def blob_get(request):
         if blob is None:
             raise Http404("Blob was deleted: " + request.key_name)
         etag = blob.get_etag()
-    mimetype = guess_mimetype(request.key_name.rstrip('/'))
+    mimetype = guess_mimetype(request.key_name.rstrip('/'), blob.value)
     if mimetype == 'text/plain' and blob.valid_json:
         mimetype = settings.JSON_MIMETYPE
     if mimetype.startswith('text') or \
