@@ -27,7 +27,6 @@ class MirrorTest(AppTestCase):
             editor_client.get('/mirror/other/index.html'),
             '<html>')
         result = editor_client.get('/mirror?method=list')
-        print result
         self.assertContains(result, \
 """{
   "items": {
