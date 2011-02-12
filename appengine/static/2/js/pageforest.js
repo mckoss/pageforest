@@ -1996,6 +1996,29 @@ namespace.lookup('com.pageforest.forms').define(function(ns) {
     });
 
 }); // com.pageforest.forms
+/* Begin file: main.js */
+namespace.lookup('com.pageforest.main').define(function(ns) {
+    var selectedTab;
+    var fReadyCalled = false;
+
+    function setTab(name) {
+        selectedTab = name || selectedTab;
+        if (fReadyCalled && selectedTab) {
+            $('#' + selectedTab + '-tab').addClass('selected');
+        }
+    }
+
+    function onReady() {
+        fReadyCalled = true;
+        $("input.focus:last").focus();
+        setTab();
+    }
+
+    ns.extend({
+        'onReady': onReady,
+        'setTab': setTab
+    });
+});
 /* Begin file: sign-up.js */
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 
@@ -2150,6 +2173,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
+    var main = namespace.lookup('com.pageforest.main');
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
@@ -2236,7 +2260,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         $(document.body).addClass('user');
         $('.username').text(username);
         getSessionKey(function () {
-            if ($('#id_appauth').attr('checked')) {
+            if ($('#id-appauth').attr('checked')) {
                 transferSessionKey(closeForm);
             }
         });
@@ -2257,9 +2281,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        username = $('#id_username').val();
+        username = $('#id-username').val();
         var lower = username.toLowerCase();
-        var password = $('#id_password').val();
+        var password = $('#id-password').val();
         var userpass = crypto.HMAC(crypto.SHA1, lower, password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
         var reply = lower + '|' + challenge + '|' + signature;
@@ -2279,9 +2303,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    function onReady(usernameT, appIdT) {
-        appId = appIdT;
-        username = usernameT;
+    function onReady(forApp) {
+        username = cookies.getCookie('sessionuser');
+        appId = forApp;
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         }
