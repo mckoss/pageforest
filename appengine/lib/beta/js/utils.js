@@ -752,6 +752,7 @@ namespace.lookup("org.startpad.random").defineOnce(function(ns) {
 /*globals atob */
 
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
 
     // Thousands separator
@@ -841,18 +842,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         }
         output += string.substring(ich);
         return output;
-    }
-
-    // Replace keys in dictionary of for {key} in the text string.
-    function replaceKeys(st, keys) {
-        for (var key in keys) {
-            if (keys.hasOwnProperty(key)) {
-                st = replaceString(st, "{" + key + "}", keys[key]);
-            }
-        }
-        // remove unused keys
-        st = st.replace(/\{[^\{\}]*\}/g, "");
-        return st;
     }
 
     //------------------------------------------------------------------
@@ -1083,12 +1072,60 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
+    var reToken = /\{([^}]+)\}/g;
+
+    // Takes a dictionary or any number of positional arguments.
+    // {n} - positional arg (0 based)
+    // {key} - object property (first match)
+    // .. same as {0.key}
+    // {key1.key2.key3} - nested properties of an object
+    // keys can be numbers (0-based index into an array) or
+    // property names.
+    function format(st) {
+        st = st.toString();
+        var args = Array.prototype.slice.call(arguments, 1);
+
+        // Passing in a single array, or a single object, starts references
+        // with that object (not the arguments array).
+        if (args.length == 1 && typeof args[0] == 'object') {
+            args = args[0];
+        }
+
+        st = st.replace(reToken, function(whole, key) {
+            var value = args;
+            var keys = key.split('.');
+            for (var i = 0; i < keys.length; i++) {
+                key = keys[i];
+                var n = parseInt(key);
+                if (!isNaN(n)) {
+                    value = value[n];
+                } else {
+                    value = value[key];
+                }
+                if (value == undefined) {
+                    console.log("format error: " + keys.slice(0, i + 1).join('.'));
+                    return "";
+                }
+            }
+            // Implicit toString() on this.
+            return value;
+        });
+        return st;
+    }
+
+    String.prototype.format = function() {
+        var args = util.copyArray(arguments);
+        args.splice(0, 0, this);
+        return format.apply(undefined, args);
+    };
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
         'slugify': slugify,
         'escapeHTML': escapeHTML,
-        'replaceKeys': replaceKeys,
+        'format': format,
+        'replaceKeys': format,
         'replaceString': replaceString,
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
@@ -1974,7 +2011,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
-    var patterns = {
+    var defaultPatterns = {
         title: '<h1>{title}</h1>',
         text: '<label class="left" for="{id}">{label}:</label>' +
             '<input id="{id}" type="text"/>',
@@ -2002,7 +2039,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
     // Dialog options:
     // focus: field name for initial focus (if different from first)
-    // enter: fiend name to press for enter key
+    // enter: field name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
     //     name/type/label/value/required/shortLabel/hidden
@@ -2019,6 +2056,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         html: function() {
             var self = this;
             var stb = new base.StBuf();
+            var patterns = this.patterns || defaultPatterns;
             this.id = this.prefix + 'dialog';
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
@@ -2062,7 +2100,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function(evt) {
-                        field.onClick(evt);
+                        field.onClick(evt, field);
                     });
                 }
 

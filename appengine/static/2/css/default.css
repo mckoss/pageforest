@@ -1,7 +1,9 @@
 /* Begin file: main.css */
 body {
     font-family: Verdana, Arial, san-serif;
-    font-size: 16px;
+    font-size: 1.1em;
+    color: #4D2500;
+    background-color: #C7A36E;
     margin: 0;
     padding: 0;
 }
@@ -9,27 +11,66 @@ body {
 body.app .if-not-app, body:not(.app) .if-app { display: none; }
 body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
-h1 { text-align: center; }
-h2 { padding-top: 5px; }
+h1 { text-align: center; margin-top: 0px; font-size: 1.7em; }
+h2 { clear: both; margin-top: 0px; padding-top: 10px; font-size: 1.3em}
+h3 { clear: both; text-align: center; font-size: 1em}
 
-div.footer { color: #898989; font-size: 11px; }
-div.footer a { text-decoration: none; color: #898989; font-size: 11px; }
-div.footer a:hover { text-decoration: underline; color: #FF7F00; }
+a { text-decoration: none; color: inherit; font-style: italic; }
+a:hover { text-decoration: underline; color: #EAD0AA; }
 
-div.call-to-action {
-    background: url(../../images/sidebar/planting.png) no-repeat scroll;
-    width: 220px;
-    height: 300px;
+/* https://developer.mozilla.org/en/css/box-shadow */
+.floaty {
+    box-shadow:8px 10px 10px #8F754F;
+    -webkit-box-shadow:8px 10px 10px #8F754F;
+    -moz-box-shadow:8px 10px 10px #8F754F;
 }
 
-div.call-to-action p {
-    text-align:center;
-    font-size: 24px;
-    line-height: 26px;
-    font-weight: bold;
-    color: white;
-    margin: 0;
-    padding: 15px;
+p { line-height: 22px; }
+
+div { margin: 0; padding: 0}
+
+div.header { position: relative; height: 200px; background-color: #CCFBFF; }
+
+div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
+
+#content {
+    position: relative;
+    width:100%;
+    background:url(/static/images/nav/body-background.png) repeat-x top left scroll;
+}
+
+div.stem {
+    position: relative;
+    background: url(/static/images/nav/logo-stem.png) repeat-y left top scroll;
+}
+
+#double-column {
+    /* This float prevents margin-collapse with its parent */
+    float: left;
+    margin: 20px 0 10px 110px;
+}
+
+#left-column {
+    float: left;
+    margin: 20px 0 10px 110px;
+    padding-right: 10px;
+    width: 610px;
+    background: url(/static/images/nav/rule-vert.gif) repeat-y scroll top right;
+}
+
+#right-column {
+    margin: 20px 0 10px 0;
+    float: right;
+    width: 220px;
+}
+
+div.footer {
+    clear: both;
+    width: 850px;
+    margin: 0 0 30px 110px;
+    padding-top: 10px;
+    font-size: 14px;
+    border-top: 1px solid #EBBD79;
 }
 
 img.favicon16 {
@@ -37,103 +78,77 @@ img.favicon16 {
     height: 16px;
     vertical-align: -2px;
 }
-/* Begin file: home.css */
-# Styles used only on the home page
-#home {
-    color: #8C6239;
-    font-size: 16px;
+
+table.bordered {
+    border-collapse: collapse;
+    border: 1px solid #36362E;
+    margin: 0 0 8px 0;
 }
 
-#home p {
-    font-size: 16px;
-    line-height: 22px;
-    margin: 5px 0 5px 0;
+table.bordered th {
+    border: 1px solid #36362E;
+    padding: 5px;
+    text-style: bold;
+    color: white;
+    background-color: #69695A;
+    text-align: center;
 }
 
-#home img.right {
-    float:right;
-    margin: 10px 0 10px 12px;
+table.bordered th.long {
+    text-align: left;
 }
 
-#home ul {
-    font-size: 16px;
-    line-height: 22px;
+table.bordered td {
+    border: 1px solid #36362E;
+    padding: 5px;
+    background-color: #F5F5DC;
+    text-align: center;
 }
 
-#home li {
-    padding-bottom: 5px;
+table.bordered td.long {
+    text-align: left;
+}
+/* Begin file: heading.css */
+div.grass {
+    position: absolute;
+    width: 100%;
+    height: 200px;
+    background: url(/static/images/nav/grass.png) repeat-x left bottom;
 }
 
-#home li img {
-    display:block;
-    margin: 10px auto 10px auto;
-    border: 2px solid #8C6239;
+div.bush {
+    position: absolute;
+    width: 80px;
+    height: 200px;
+    background: url(/static/images/nav/bush.png) no-repeat left bottom;
+    cursor: pointer;
 }
 
-#home h1 {
-    font-size: 24px;
-    color: #4D2500;
-    line-height: 30px;
-    font-weight: normal;
-    margin: 0;
-    position: relative;
-    top: -4px;
+div.logo {
+    position: absolute;
+    top: 0;
+    width: 450px;
+    height: 200px;
+    background: url(/static/images/nav/logo.png) no-repeat left bottom scroll;
+    cursor: pointer;
 }
 
-#home h2 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4D2500;
-    margin: 0;
-    clear: both;
+div.flowers {
+    position: absolute;
+    right: 0;
+    top: 120px;
+    height: 80px;
+    width: 60px;
+    background: url(/static/images/nav/flowers.png) no-repeat right bottom scroll;
+    cursor: pointer;
+    zindex: -1;
 }
 
-#home div.homeCopy {
-    font-size:14px;
-    width:340px;
-}
-
-#home div.Left {
-    float:left;
-}
-
-#home div.Right {
-    float: right;
-}
-
-#home a {
-    text-decoration: none;
-    color: #598527;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-#home a:hover {
-    text-decoration: underline;
-    color: #FF7F00;
-    font-weight: bold;
-}
-
-img.homeScreenLeft {
-    float:left;
-    margin-right: 15px;
-}
-
-img.homeScreenRight {
-    float:right;
-    margin-left:15px;
-}
-/* Begin file: form.css */
-.form-message {
-font-style: italic;
-}
-
-.error {
-color: red;
-}
-
-.success {
-color: green;
+div.tabs {
+    position: absolute;
+    left: 125px;
+    top: 150px;
+    height: 30px;
 }
 /* Begin file: top-bar.css */
 div.topbar {
@@ -164,6 +179,7 @@ div.topbarRight {
 
 div.topbarMid a {
     text-decoration: none;
+    font-style: normal;
     line-height: 28px;
     margin: 5px;
     color: inherit;
@@ -174,12 +190,14 @@ div.topbarMid a:hover {
     color: #FF7F00;
 }
 /* Begin file: tabs.css */
+div.tabs .selected a {
+    color: #2BA2D9;
+}
+
 div.tab {
     float: left;
     height: 30px;
     margin: 0px;
-    position: relative;
-    top: -10px;
     color: #898989;
 }
 
@@ -189,21 +207,72 @@ div.tabSelect {
 
 div.tab a {
     text-decoration: none;
+    font-style: normal;
     line-height: 31px;
     margin: 5px;
     font-weight: bold;
     color: #898989;
 }
 
-div.tabSelect a {
-    text-decoration: none;
-    color: #4D2500;
-    line-height: 31px;
-    margin: 5px;
-    font-weight: bold;
-}
-
 div.tab a:hover {
     text-decoration: underline;
     color: #FF7F00;
+}
+/* Begin file: home.css */
+#home ul { font-size: 16px; line-height: 22px; }
+#home li { padding-bottom: 5px; }
+
+#home img { display: block; margin: auto; }
+#home img.screen { float:right; height: 240px; margin-left: 10px;}
+
+#home li img { margin:10px auto; }
+#home div.video { margin:auto; width:480px; height:385px; }
+
+#home h2 { text-align: center; }
+
+div.sidebar {
+    background-color: #DCD0C3;
+    border-radius: 5px;
+    margin-top: 20px;
+    padding-bottom: 5px;
+}
+
+div.sidebar * { margin: 0; }
+
+div.sidebar h3 {
+    background-color: #A16A1A;
+    color: #DCD0C3;
+    padding: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+
+div.call-to-action {
+    background: url(/static/images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+    cursor: pointer;
+}
+
+div.call-to-action p {
+    text-align:center;
+    font-size: 24px;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    padding: 15px;
+}
+/* Begin file: form.css */
+.form-message {
+font-style: italic;
+}
+
+.error {
+color: #7E0F09;
+}
+
+.success {
+color: #4A6427;
 }
