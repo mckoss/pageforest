@@ -44,19 +44,24 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             function testOnClick(evt, field) {
                 ut.assert(field == dlg.getField('check'));
                 ut.assert(dlg.hasChanged('check'));
+                dlg.setValues({message: "Now click the Button"});
+            }
+
+            function testOnButton(evt, field) {
+                ut.assert(field == dlg.getField('button'));
                 ut.async(false);
             }
 
             dlg = new dialog.Dialog({
                 fields: [
-                    {name: 'message', type: 'message'},
+                    {name: 'message', type: 'message', value: "Check the box to pass the test."},
                     {name: 'default'},
                     {name: 'text', type: 'text'},
                     {name: 'check', type: 'checkbox', onClick: testOnClick},
                     {name: 'value', type: 'value'},
                     {name: 'password', type: 'password'},
                     {name: 'note', type: 'note'},
-                    {name: 'button', type: 'button'}
+                    {name: 'button', type: 'button', onClick: testOnButton}
                 ]
             });
 
@@ -67,7 +72,6 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
 
             var values = {
                 'default': 'default string',
-                message: "Check the box to pass this test!",
                 text: 'text string',
                 check: true,
                 value: 'value string',
@@ -91,7 +95,10 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
                 var elt = field.elt;
                 var rcField = dom.getRect(elt);
 
-                ut.assertEq(values[name], v2[name]);
+                // Read same values out as we put in.
+                if (values[name] != undefined) {
+                    ut.assertEq(values[name], v2[name]);
+                }
 
                 redBox(rcField);
 
