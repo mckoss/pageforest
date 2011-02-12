@@ -5,16 +5,20 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
     var vector = namespace.lookup('org.startpad.vector');
     var loader = namespace.lookup('org.startpad.loader');
 
+    var debugLayout = true;
+
     ns.addTests = function (ts) {
+
+        // For layout debugging
         function redBox(rc) {
-            if (true) {
+            if (!debugLayout) {
                 return;
             }
             var box = document.createElement('div');
             box.style.backgroundColor = 'red';
-            box.style.border = '1px solid green';
-            box.style.opacity = 0.5;
+            box.style.opacity = 0.1;
             box.style.position = 'absolute';
+            box.style.zIndex = -1;
             dom.setRect(box, rc);
             document.body.appendChild(box);
         }
@@ -26,6 +30,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
 
             // Don't know how to detect if stylesheet is loaded -
             // just give it 1 second.
+            // REVIEW: use jQuery for loading stylesheet?
             function loaded() {
                 ut.assert(true);
                 ut.async(false);
@@ -33,13 +38,21 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             setTimeout(loaded, 1000);
         }).async();
 
+        var dlg;
+
         ts.addTest("Dialog fields", function(ut) {
-            var dlg = new dialog.Dialog({
+            function testOnClick(evt, field) {
+                ut.assert(field == dlg.getField('check'));
+                ut.assert(dlg.hasChanged('check'));
+                ut.async(false);
+            }
+
+            dlg = new dialog.Dialog({
                 fields: [
                     {name: 'message', type: 'message'},
                     {name: 'default'},
                     {name: 'text', type: 'text'},
-                    {name: 'check', type: 'checkbox'},
+                    {name: 'check', type: 'checkbox', onClick: testOnClick},
                     {name: 'value', type: 'value'},
                     {name: 'password', type: 'password'},
                     {name: 'note', type: 'note'},
@@ -50,19 +63,16 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             var div = document.createElement('div');
             div.innerHTML = dlg.html();
             var divDialog = div.firstChild;
-            divDialog.style.border = "2px solid black";
-            divDialog.style.margin = "5px";
-            divDialog.style.padding = "5px";
             divStage.appendChild(div);
 
             var values = {
                 'default': 'default string',
-                'message': "Hello, World!",
-                'text': 'text string',
-                'check': true,
-                'value': 'value string',
-                'password': 'secret',
-                'note': "this is a long\nnote"
+                message: "Check the box to pass this test!",
+                text: 'text string',
+                check: true,
+                value: 'value string',
+                password: 'secret',
+                note: "this is a long\nnote"
             };
 
             dlg.setValues(values);
@@ -91,7 +101,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             }
 
             ts.coverage.cover('Dialog:enableField');
-        }).require('document');
+        }).require('document').async();
 
     }; // addTests
 
