@@ -11,8 +11,25 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ut.assertEq(format.replaceKeys("{key} is replaced {key} twice",
                                            {key: "yup"}),
                         "yup is replaced yup twice");
-            ut.assertEq(format.replaceKeys("{key} and {key2}", {key: "mom"}),
+
+            ut.assertEq(format.format("{key} and {key2}", {key: "mom"}),
                         "mom and ");
+
+            ut.assertEq("format {0}".format("string"), "format string");
+            ut.assertEq("{1} reverse {0}".format('a', 'b'), "b reverse a");
+            ut.assertEq("Prop: {prop}".format({prop: "hi"}), "Prop: hi");
+            ut.assertEq("Nested: {person.name}".format({person: {name: "Mike"}}), "Nested: Mike");
+
+            var people = [{name: "Mike"}, {name: "Bobby"}];
+            people[0].friend = people[1];
+            people[0].friends = [people[0], people[1]];
+            ut.assertEq("Two people are {0.name} and {1.name}.".format(people),
+                        "Two people are Mike and Bobby.");
+            ut.assertEq("{0.name}'s friend is {0.friend.name}.".format(people),
+                        "Mike's friend is Bobby.");
+            ut.assertEq("{0.name}'s friends are {0.friends.0.name} and {0.friends.1.name}."
+                        .format(people),
+                        "Mike's friends are Mike and Bobby.");
         });
 
         ts.addTest("thousands", function (ut) {
@@ -84,6 +101,12 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
                 ut.assertEq(format.replaceString(test[0], test[1], test[2]),
                             test[3]);
             }
+        });
+
+        ts.addTest("repeat", function(ut) {
+            ut.assertEq(format.repeat('x', 10), "xxxxxxxxxx");
+            ut.assertEq(format.repeat('ab', 2), "abab");
+            ut.assertEq(format.repeat('', 100), "");
         });
 
         ts.addTest("ISO 8601 Formatting", function(ut)

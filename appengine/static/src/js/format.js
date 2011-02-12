@@ -1,6 +1,7 @@
 /*globals atob */
 
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
 
     // Thousands separator
@@ -90,18 +91,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         }
         output += string.substring(ich);
         return output;
-    }
-
-    // Replace keys in dictionary of for {key} in the text string.
-    function replaceKeys(st, keys) {
-        for (var key in keys) {
-            if (keys.hasOwnProperty(key)) {
-                st = replaceString(st, "{" + key + "}", keys[key]);
-            }
-        }
-        // remove unused keys
-        st = st.replace(/\{[^\{\}]*\}/g, "");
-        return st;
     }
 
     //------------------------------------------------------------------
@@ -332,12 +321,60 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
+    var reToken = /\{([^}]+)\}/g;
+
+    // Takes a dictionary or any number of positional arguments.
+    // {n} - positional arg (0 based)
+    // {key} - object property (first match)
+    // .. same as {0.key}
+    // {key1.key2.key3} - nested properties of an object
+    // keys can be numbers (0-based index into an array) or
+    // property names.
+    function format(st) {
+        st = st.toString();
+        var args = Array.prototype.slice.call(arguments, 1);
+
+        // Passing in a single array, or a single object, starts references
+        // with that object (not the arguments array).
+        if (args.length == 1 && typeof args[0] == 'object') {
+            args = args[0];
+        }
+
+        st = st.replace(reToken, function(whole, key) {
+            var value = args;
+            var keys = key.split('.');
+            for (var i = 0; i < keys.length; i++) {
+                key = keys[i];
+                var n = parseInt(key);
+                if (!isNaN(n)) {
+                    value = value[n];
+                } else {
+                    value = value[key];
+                }
+                if (value == undefined) {
+                    console.log("format error: " + keys.slice(0, i + 1).join('.'));
+                    return "";
+                }
+            }
+            // Implicit toString() on this.
+            return value;
+        });
+        return st;
+    }
+
+    String.prototype.format = function() {
+        var args = util.copyArray(arguments);
+        args.splice(0, 0, this);
+        return format.apply(undefined, args);
+    };
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
         'slugify': slugify,
         'escapeHTML': escapeHTML,
-        'replaceKeys': replaceKeys,
+        'format': format,
+        'replaceKeys': format,
         'replaceString': replaceString,
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
