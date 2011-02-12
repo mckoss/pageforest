@@ -165,6 +165,9 @@ def sign_in(request, app_id=None):
     """
     Present the user with a sign-in page (for www.pageforest.com
     and/or to sign in to an application).
+
+    Note that the app accomplishes sign-in completely through
+    AJAX and calling the low-level challenge/response interface.
     """
     app = None
     if app_id:
