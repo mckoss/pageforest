@@ -4,7 +4,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
-    var patterns = {
+    var defaultPatterns = {
         title: '<h1>{title}</h1>',
         text: '<label class="left" for="{id}">{label}:</label>' +
             '<input id="{id}" type="text"/>',
@@ -32,7 +32,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
     // Dialog options:
     // focus: field name for initial focus (if different from first)
-    // enter: fiend name to press for enter key
+    // enter: field name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
     //     name/type/label/value/required/shortLabel/hidden
@@ -49,6 +49,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         html: function() {
             var self = this;
             var stb = new base.StBuf();
+            var patterns = this.patterns || defaultPatterns;
             this.id = this.prefix + 'dialog';
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
@@ -92,7 +93,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function(evt) {
-                        field.onClick(evt);
+                        field.onClick(evt, field);
                     });
                 }
 
