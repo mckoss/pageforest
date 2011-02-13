@@ -373,7 +373,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     String.prototype.format = function() {
         var args = util.copyArray(arguments);
         args.unshift(reFormat);
-        return format.apply(this, args);
+        return formatImpl.apply(this, args);
     };
 
     ns.extend({
