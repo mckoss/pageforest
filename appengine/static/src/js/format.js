@@ -321,7 +321,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
-    var reToken = /\{([^}]+)\}/g;
+    var reFormat = /\{\s*([^} ]+)\s*\}/g;
 
     // Takes a dictionary or any number of positional arguments.
     // {n} - positional arg (0 based)
@@ -330,8 +330,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // {key1.key2.key3} - nested properties of an object
     // keys can be numbers (0-based index into an array) or
     // property names.
-    function format(st) {
-        st = st.toString();
+    function formatImpl(re) {
+        var st = this.toString();
         var args = Array.prototype.slice.call(arguments, 1);
 
         // Passing in a single array, or a single object, starts references
@@ -340,7 +340,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
             args = args[0];
         }
 
-        st = st.replace(reToken, function(whole, key) {
+        st = st.replace(re, function(whole, key) {
             var value = args;
             var keys = key.split('.');
             for (var i = 0; i < keys.length; i++) {
@@ -362,10 +362,18 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return st;
     }
 
+    // format(st, arg0, arg1, ...)
+    function format(st) {
+        var args = util.copyArray(arguments);
+        args.splice(0, 1, reFormat);
+        return formatImpl.apply(st, args);
+    }
+
+    // st.format(arg0, arg1, ...)
     String.prototype.format = function() {
         var args = util.copyArray(arguments);
-        args.splice(0, 0, this);
-        return format.apply(undefined, args);
+        args.unshift(reFormat);
+        return format.apply(this, args);
     };
 
     ns.extend({

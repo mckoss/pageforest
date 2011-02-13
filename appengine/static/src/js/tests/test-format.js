@@ -30,6 +30,9 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ut.assertEq("{0.name}'s friends are {0.friends.0.name} and {0.friends.1.name}."
                         .format(people),
                         "Mike's friends are Mike and Bobby.");
+
+            ut.assertEq("Allow space { 0 } around vars { 1.prop }.".format("prop", {prop: "prop2"}),
+                        "Allow space prop around vars prop2.");
         });
 
         ts.addTest("thousands", function (ut) {
