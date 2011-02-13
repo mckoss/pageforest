@@ -2076,6 +2076,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         this.fieldOptions = defaultFieldOptions;
         this.style = styles.div;
         util.extendObject(this, options);
+        util.extendObject(this, this.style);
     }
 
     Dialog.methods({
@@ -2099,13 +2100,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 var fieldPatterns = base.extendIfMissing({}, self.patterns[field.type],
                         base.project(self.style, ['label', 'content']));
                 var row = {label: fieldPatterns.label.format(field),
-                           content: fieldPatterns.conten.format(field)};
-                var rowPattern = field.useRow ? this.style[field.useRow] : this.style.row;
+                           content: fieldPatterns.content.format(field)};
+                var rowPattern = self[fieldPatterns.useRow] || self.row;
                 stb.append(rowPattern.format(row));
             });
             this.content = stb.toString();
-            var s = format.replaceKeys(sDialog, this);
-            return s;
+            return sDialog.format(this);
         },
 
         bindFields: function() {
