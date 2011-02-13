@@ -202,9 +202,7 @@ var namespace = (function() {
 
             return function() {
                 var args = copyArray(arguments).concat(_args);
-                // REVIEW: Is this intermediate self variable needed?
-                var self = this;
-                return _fn.apply(self, args);
+                return _fn.apply(this, args);
             };
         },
 
@@ -213,8 +211,7 @@ var namespace = (function() {
         fnWrap: function(fn) {
             var _fn = this;
             return function() {
-                var self = this;
-                return _fn(self, fn, arguments);
+                return _fn(this, fn, arguments);
             };
         }
     });

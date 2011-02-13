@@ -202,9 +202,7 @@ var namespace = (function() {
 
             return function() {
                 var args = copyArray(arguments).concat(_args);
-                // REVIEW: Is this intermediate self variable needed?
-                var self = this;
-                return _fn.apply(self, args);
+                return _fn.apply(this, args);
             };
         },
 
@@ -213,8 +211,7 @@ var namespace = (function() {
         fnWrap: function(fn) {
             var _fn = this;
             return function() {
-                var self = this;
-                return _fn(self, fn, arguments);
+                return _fn(this, fn, arguments);
             };
         }
     });
@@ -1072,7 +1069,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
-    var reToken = /\{([^}]+)\}/g;
+    var reFormat = /\{\s*([^} ]+)\s*\}/g;
 
     // Takes a dictionary or any number of positional arguments.
     // {n} - positional arg (0 based)
@@ -1081,8 +1078,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     // {key1.key2.key3} - nested properties of an object
     // keys can be numbers (0-based index into an array) or
     // property names.
-    function format(st) {
-        st = st.toString();
+    function formatImpl(re) {
+        var st = this.toString();
         var args = Array.prototype.slice.call(arguments, 1);
 
         // Passing in a single array, or a single object, starts references
@@ -1091,7 +1088,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
             args = args[0];
         }
 
-        st = st.replace(reToken, function(whole, key) {
+        st = st.replace(re, function(whole, key) {
             var value = args;
             var keys = key.split('.');
             for (var i = 0; i < keys.length; i++) {
@@ -1113,10 +1110,18 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return st;
     }
 
+    // format(st, arg0, arg1, ...)
+    function format(st) {
+        var args = util.copyArray(arguments);
+        args.splice(0, 1, reFormat);
+        return formatImpl.apply(st, args);
+    }
+
+    // st.format(arg0, arg1, ...)
     String.prototype.format = function() {
         var args = util.copyArray(arguments);
-        args.splice(0, 0, this);
-        return format.apply(undefined, args);
+        args.unshift(reFormat);
+        return format.apply(this, args);
     };
 
     ns.extend({
@@ -2012,28 +2017,46 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var dom = namespace.lookup('org.startpad.dom');
 
     var defaultPatterns = {
-        title: '<h1>{title}</h1>',
-        text: '<label class="left" for="{id}">{label}:</label>' +
-            '<input id="{id}" type="text"/>',
-        password: '<label class="left" for="{id}">{label}:</label>' +
-            '<input id="{id}" type="password"/>',
-        checkbox: '<label class="checkbox" for="{id}">' +
-            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
-        note: '<label class="left" for="{id}">{label}:</label>' +
-            '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<div class="message" id="{id}"></div>',
-        value: '<label class="left">{label}:</label>' +
-            '<div class="value" id="{id}"></div>',
-        button: '<input id="{id}" type="button" value="{label}"/>',
-        invalid: '<span class="error">***missing field type: {type}***</span>',
-        end: '<div style="clear: both;"></div>'
+        title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
+        text: {content: '<input id="{id}" type="text"/>'},
+        password: {content: '<input id="{id}" type="password"/>'},
+        checkbox: {label: '',
+                   content: '<label class="checkbox" for="{id}">' +
+                            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>'},
+        note: {content: '<textarea id="{id}" rows="{rows}"></textarea>'},
+        message: {useRow: 'spanRow', content: '<div class="message" id="{id}"></div>'},
+        value: {label: '<label class="left">{label}:</label>',
+                content: '<div class="value" id="{id}"></div>'},
+        button: {content: '<input id="{id}" type="button" value="{label}"/>'},
+        invalid: {useRow: 'spanRow',
+                  content: '<span class="error">***missing field type: {type}***</span>'}
     };
 
-    var defaults = {
+    var defaultFieldOptions = {
         note: {rows: 5}
     };
 
-    var sDialog = '<div class="{dialogClass}" id="{id}">{content}</div>';
+    var styles = {
+        div: {
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: '{content}\n',
+            row: "{label}{content}\n",
+            post: '<div style="clear: both;"></div>\n'
+        },
+        table: {
+            pre: "<table>\n",
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: "<tr><td columns=2>{content}</td></tr>",
+            row: "<tr><th>{label}</th><td>{content}</td></tr>\n",
+            post: "</table>\n"
+        }
+    };
+
+    var sDialog = '<div class="{dialogClass}" id="{id}">\n' +
+        '{pre}\n{content}\n{post}\n' +
+        '</div>';
 
     var cDialogs = 0;
 
@@ -2042,13 +2065,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     // enter: field name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
-    //     name/type/label/value/required/shortLabel/hidden
+    //     name/type/label/value/required/shortLabel/hidden/onClick/onChange
     function Dialog(options) {
         cDialogs++;
         this.dialogClass = 'SP_Dialog';
         this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
         this.lastValues = {};
+        this.patterns = defaultPatterns;
+        this.fieldOptions = defaultFieldOptions;
+        this.style = styles.div;
         util.extendObject(this, options);
     }
 
@@ -2056,24 +2082,27 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         html: function() {
             var self = this;
             var stb = new base.StBuf();
-            var patterns = this.patterns || defaultPatterns;
             this.id = this.prefix + 'dialog';
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
-                base.extendIfMissing(field, defaults[field.type]);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
-                if (patterns[field.type] == undefined) {
+                base.extendIfMissing(field, self.fieldOptions[field.type]);
+                if (self.patterns[field.type] == undefined) {
                     field.type = 'invalid';
                 }
                 if (field.label == undefined) {
                     field.label = field.name[0].toUpperCase() +
                         field.name.slice(1);
                 }
-                stb.append(format.replaceKeys(patterns[field.type], field));
+                var fieldPatterns = base.extendIfMissing({}, self.patterns[field.type],
+                        base.project(self.style, ['label', 'content']));
+                var row = {label: fieldPatterns.label.format(field),
+                           content: fieldPatterns.conten.format(field)};
+                var rowPattern = field.useRow ? this.style[field.useRow] : this.style.row;
+                stb.append(rowPattern.format(row));
             });
-            stb.append(patterns['end']);
             this.content = stb.toString();
             var s = format.replaceKeys(sDialog, this);
             return s;
@@ -2089,13 +2118,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
             self.dlg = document.getElementById(self.id);
             if (self.dlg == undefined) {
-                throw new Error("Dialog not available.");
+                throw new Error("Dialog not in the DOM.");
             }
+
+            var initialValues = {};
 
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
                 if (!field.elt) {
                     return;
+                }
+
+                if (field.value) {
+                    initialValues[field.name] = field.value;
                 }
 
                 if (field.onClick != undefined) {
@@ -2134,6 +2169,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     }
                 });
             }
+
+            this.setValues(initialValues);
         },
 
         getField: function(name) {
@@ -2270,7 +2307,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     });
 
     ns.extend({
-        'Dialog': Dialog
+        'Dialog': Dialog,
+        'styles': styles
     });
 });
 /* Begin file: loader.js */
