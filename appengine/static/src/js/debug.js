@@ -56,30 +56,32 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
     }
 
     // Usage: oldfunc.decorate(deprecated, "Don't use anymore.")
-    function deprecated(fn, args, state) {
+    function deprecated(fn, args, fnWrapper) {
+        if (fn == undefined) {
+            fnWrapper.deprecated = getFunctionName(this);
+            fnWrapper.warning = args[1];
+            return;
+        }
+
         ns.log("{0} is a deprecated function {1}".format(
-            state.deprecated || getFunctionName(fn),
-            state.info),
+            fnWrapper.deprecated || getFunctionName(fn),
+            fnWrapper.info),
             {level: 'info', once: true});
         return fn.apply(this, args);
     }
-
-    deprecated.init = function(args, state) {
-        state.deprecated = getFunctionName(this);
-        state.warning = args[1];
-    };
 
     // Usage: func.decorate(alias, aliasName, (opt) aliasFor)
-    function alias(fn, args, state) {
-        ns.log("{0} is deprecated - use {1}, instead.".format(state.aliasName, state.preferred),
+    function alias(fn, args, fnWrapper) {
+        if (fn == undefined)  {
+            fnWrapper.aliasName = args[1];
+            fnWrapper.preferred = args[2] || getFunctionName(this);
+            return;
+        }
+
+        ns.log("{0} is deprecated - use {1} instead.".format(fnWrapper.aliasName, fnWrapper.preferred),
             {level: 'info', once: true});
         return fn.apply(this, args);
     }
-
-    alias.init = function(args, state) {
-        state.aliasName = args[1];
-        state.preferred = args[2] || getFunctionName(this);
-    };
 
     setLogger(new Logger());
 

@@ -217,28 +217,25 @@ var namespace = (function() {
         // Wrap the (this) function with a decorator like:
         //
         // function decorator(fn, args, fnWrapper) {
+        //   if (fn == undefined) { ... init ...; return;}
         //   ...
         //   result = fn.apply(this, args);
+        //   ...
         //   return result;
-        // }.init = function(args, fnWrapper) {
-        //   ...optional initializtion...
-        //   this - function being decorated
-        //   args[0] - decorator function
         // }
         //
         // The fnWrapper function is a created for each call
         // of the decorate function.  In addition to wrapping
         // the decorated function, it can be used to save state
-        // information between calls of a particular decorated
-        // function.
+        // information between calls.
         decorate: function(decorator) {
             var fn = this;
             var fnWrapper = function() {
                 return decorator.call(this, fn, arguments, fnWrapper);
             };
-            if (decorator.init) {
-                decorator.init.call(fn, arguments, fnWrapper);
-            }
+            // Init call - pass undefined fn - but available in this
+            // if needed.
+            decorator.call(this, undefined, arguments, fnWrapper);
             return fnWrapper;
         }
     });
