@@ -3,6 +3,9 @@
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
+    var debug = namespace.lookup('org.startpad.debug');
+
+    var logger = new debug.Logger(false);
 
     // Thousands separator
     var comma = ',';
@@ -71,26 +74,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         s = s.replace(/\"/g, '&quot;');
         s = s.replace(/'/g, '&#39;');
         return s;
-    }
-
-    // Replace all instances of pattern, with replacement in string.
-    function replaceString(string, pattern, replacement) {
-        var output = "";
-        if (replacement == undefined) {
-            replacement = "";
-        }
-        else {
-            replacement = replacement.toString();
-        }
-        var ich = 0;
-        var ichFind = string.indexOf(pattern, 0);
-        while (ichFind >= 0) {
-            output += string.substring(ich, ichFind) + replacement;
-            ich = ichFind + pattern.length;
-            ichFind = string.indexOf(pattern, ich);
-        }
-        output += string.substring(ich);
-        return output;
     }
 
     //------------------------------------------------------------------
@@ -352,7 +335,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
                     value = value[key];
                 }
                 if (value == undefined) {
-                    console.log("format error: " + keys.slice(0, i + 1).join('.'));
+                    logger.log("missing key: " + keys.slice(0, i + 1).join('.'), {once: true});
                     return "";
                 }
             }
@@ -382,8 +365,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'slugify': slugify,
         'escapeHTML': escapeHTML,
         'format': format,
-        'replaceKeys': format,
-        'replaceString': replaceString,
+        'replaceKeys': format.decorate(debug.alias, 'replaceKeys'),
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
