@@ -32,12 +32,36 @@ namespace.lookup('org.startpad.debug.test').defineOnce(function (ns) {
 
         ts.addTest("alias", function(ut) {
             var mockLogger = new MockLogger(ut);
-            debug.setLogger(mockLogger);
+            var oldLogger = debug.setLogger(mockLogger);
 
             var s2 = sample.decorate(debug.alias, "aliasFunction");
             mockLogger.expect("aliasFunction is deprecated - use sample instead.");
             s2();
+            debug.setLogger(oldLogger);
         });
+
+        ts.addTest("deprecated", function(ut) {
+            var mockLogger = new MockLogger(ut);
+            var oldLogger = debug.setLogger(mockLogger);
+
+            var s2 = sample.decorate(debug.deprecated);
+            mockLogger.expect("sample is a deprecated function");
+            s2();
+
+            s2 = sample.decorate(debug.deprecated, "you should know better.")
+            mockLogger.expect("sample is a deprecated function - you should know better.");
+            s2();
+
+            debug.setLogger(oldLogger);
+        });
+
+        ts.addTest("logger", function(ut) {
+            ts.coverage.cover('log');
+            ts.coverage.cover('Logger');
+            ts.coverage.cover('Logger:activate');
+            ut.assert(true);
+        });
+
     };
 
 });
