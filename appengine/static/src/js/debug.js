@@ -26,7 +26,7 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
 
         log: function(message, options) {
 
-            if (!this.fLogging) {
+            if (!this.active) {
                 return;
             }
             if (options == undefined) {
