@@ -217,16 +217,27 @@ var namespace = (function() {
 
         // Wrap the (this) function with a decorator like:
         //
-        // function decorator(fn, args) {
+        // function decorator(fn, args, fnWrapper) {
+        //   if (fn == undefined) { ... init ...; return;}
         //   ...
         //   result = fn.apply(this, args);
+        //   ...
         //   return result;
         // }
+        //
+        // The fnWrapper function is a created for each call
+        // of the decorate function.  In addition to wrapping
+        // the decorated function, it can be used to save state
+        // information between calls.
         decorate: function(decorator) {
             var fn = this;
-            return function() {
-                return decorator.call(this, fn, arguments);
+            var fnWrapper = function() {
+                return decorator.call(this, fn, arguments, fnWrapper);
             };
+            // Init call - pass undefined fn - but available in this
+            // if needed.
+            decorator.call(this, undefined, arguments, fnWrapper);
+            return fnWrapper;
         }
     });
 
@@ -326,6 +337,107 @@ var namespace = (function() {
 
     return namespaceT;
 }());
+/* Begin file: debug.js */
+namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
+    var util = namespace.util;
+
+    var reFuncName = /^function\s+(\S+)\s*\(/;
+
+    function getFunctionName(func) {
+        if (typeof func != 'function') {
+            return "notAFunction";
+        }
+        var result = reFuncName.exec(func.toString());
+        if (result == null) {
+            return "anonymous";
+        }
+        return result[1];
+    }
+
+    function Logger(active) {
+        this.activate(active);
+        this.logged = {};
+    }
+
+    Logger.methods({
+        activate: function(f) {
+            this.active = (f == undefined) ? true : f;
+        },
+
+        log: function(message, options) {
+
+            if (!this.active) {
+                return;
+            }
+            if (options == undefined) {
+                options = {};
+            }
+            if (!options.hasOwnProperty('level')) {
+                options.level = 'log';
+            }
+            if (options.once) {
+                if (this.logged[message]) {
+                    return;
+                }
+                this.logged[message] = true;
+            }
+
+            if (options.hasOwnProperty('obj')) {
+                console[options.level](message, options.obj);
+            } else {
+                console[options.level](message);
+            }
+        }
+    });
+
+    function setLogger(logger) {
+        var oldLogger = ns.logger;
+        ns.logger = logger;
+        ns.log = logger.log.fnMethod(logger);
+        return oldLogger;
+    }
+
+    // Usage: oldfunc.decorate(deprecated, "Don't use anymore.")
+    function deprecated(fn, args, fnWrapper) {
+        if (fn == undefined) {
+            fnWrapper.deprecated = getFunctionName(this);
+            if (args[1]) {
+                fnWrapper.warning = ' - ' + args[1];
+            }
+            return;
+        }
+
+        ns.log("{0} is a deprecated function{1}".format(
+            fnWrapper.deprecated || getFunctionName(fn),
+            fnWrapper.warning),
+            {level: 'info', once: true});
+        return fn.apply(this, args);
+    }
+
+    // Usage: func.decorate(alias, aliasName, (opt) aliasFor)
+    function alias(fn, args, fnWrapper) {
+        if (fn == undefined)  {
+            fnWrapper.aliasName = args[1];
+            fnWrapper.preferred = args[2] || getFunctionName(this);
+            return;
+        }
+
+        ns.log("{0} is deprecated - use {1} instead."
+               .format(fnWrapper.aliasName, fnWrapper.preferred),
+            {level: 'info', once: true});
+        return fn.apply(this, args);
+    }
+
+    setLogger(new Logger());
+
+    ns.extend({
+        'getFunctionName': getFunctionName,
+        'Logger': Logger,
+        'setLogger': setLogger,
+        'deprecated': deprecated,
+        'alias': alias
+    });
+});
 /* Begin file: base.js */
 namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     var util = namespace.util;
@@ -765,6 +877,9 @@ namespace.lookup("org.startpad.random").defineOnce(function(ns) {
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
     var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
+    var debug = namespace.lookup('org.startpad.debug');
+
+    var logger = new debug.Logger(false);
 
     // Thousands separator
     var comma = ',';
@@ -833,26 +948,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         s = s.replace(/\"/g, '&quot;');
         s = s.replace(/'/g, '&#39;');
         return s;
-    }
-
-    // Replace all instances of pattern, with replacement in string.
-    function replaceString(string, pattern, replacement) {
-        var output = "";
-        if (replacement == undefined) {
-            replacement = "";
-        }
-        else {
-            replacement = replacement.toString();
-        }
-        var ich = 0;
-        var ichFind = string.indexOf(pattern, 0);
-        while (ichFind >= 0) {
-            output += string.substring(ich, ichFind) + replacement;
-            ich = ichFind + pattern.length;
-            ichFind = string.indexOf(pattern, ich);
-        }
-        output += string.substring(ich);
-        return output;
     }
 
     //------------------------------------------------------------------
@@ -1114,7 +1209,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
                     value = value[key];
                 }
                 if (value == undefined) {
-                    console.log("format error: " + keys.slice(0, i + 1).join('.'));
+                    logger.log("missing key: " + keys.slice(0, i + 1).join('.'), {once: true});
                     return "";
                 }
             }
@@ -1144,8 +1239,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'slugify': slugify,
         'escapeHTML': escapeHTML,
         'format': format,
-        'replaceKeys': format,
-        'replaceString': replaceString,
+        'replaceKeys': format.decorate(debug.alias, 'replaceKeys'),
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
@@ -2052,6 +2146,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
     var styles = {
         div: {
+            pre: '',
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
             spanRow: '{content}\n',
@@ -2090,10 +2185,18 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         this.fieldOptions = defaultFieldOptions;
         this.style = styles.div;
         util.extendObject(this, options);
-        util.extendObject(this, this.style);
+        this.setStyle(this.style);
+        // Make a copy in case the caller re-uses a fields list for
+        // multiple dialogs.
+        this.fields = util.copyArray(this.fields);
     }
 
     Dialog.methods({
+        setStyle: function(style) {
+            this.style = style;
+            util.extendObject(this, this.style);
+        },
+
         html: function() {
             var self = this;
             var stb = new base.StBuf();
@@ -2149,14 +2252,15 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function(evt) {
-                        field.onClick(evt, field);
+                        // REVIEW: should be field.onClick.call(field, evt, self)
+                        field.onClick(evt, field, self);
                     });
                 }
 
                 // Bind to chaning field (after it's changed - use keyUp)
                 if (field.onChange != undefined) {
                     dom.bind(field.elt, 'keyup', function(evt) {
-                        field.onChange(evt, field.elt.value);
+                        field.onChange(evt, field.elt.value, self);
                     });
                 }
 

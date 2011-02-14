@@ -26,6 +26,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
     var styles = {
         div: {
+            pre: '',
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
             spanRow: '{content}\n',
@@ -64,10 +65,18 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         this.fieldOptions = defaultFieldOptions;
         this.style = styles.div;
         util.extendObject(this, options);
-        util.extendObject(this, this.style);
+        this.setStyle(this.style);
+        // Make a copy in case the caller re-uses a fields list for
+        // multiple dialogs.
+        this.fields = util.copyArray(this.fields);
     }
 
     Dialog.methods({
+        setStyle: function(style) {
+            this.style = style;
+            util.extendObject(this, this.style);
+        },
+
         html: function() {
             var self = this;
             var stb = new base.StBuf();
@@ -123,14 +132,15 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function(evt) {
-                        field.onClick(evt, field);
+                        // REVIEW: should be field.onClick.call(field, evt, self)
+                        field.onClick(evt, field, self);
                     });
                 }
 
                 // Bind to chaning field (after it's changed - use keyUp)
                 if (field.onChange != undefined) {
                     dom.bind(field.elt, 'keyup', function(evt) {
-                        field.onChange(evt, field.elt.value);
+                        field.onChange(evt, field.elt.value, self);
                     });
                 }
 
