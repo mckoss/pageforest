@@ -50,6 +50,11 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
         }
     });
 
+    function setLogger(logger) {
+        ns.logger = logger;
+        ns.log = logger.log.fnMethod(logger);
+    }
+
     // Usage: oldfunc.decorate(deprecated, "Don't use anymore.")
     function deprecated(fn, args, state) {
         ns.log("{0} is a deprecated function {1}".format(
@@ -76,14 +81,13 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
         state.preferred = args[2] || getFunctionName(this);
     };
 
-    var logger = new Logger();
+    setLogger(new Logger());
 
     ns.extend({
         'getFunctionName': getFunctionName,
-        'deprecated': deprecated,
-        'alias': alias,
         'Logger': Logger,
-        'logger': logger,
-        'log': logger.log.fnMethod(logger)
+        'setLogger': setLogger,
+        'deprecated': deprecated,
+        'alias': alias
     });
 });

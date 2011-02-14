@@ -197,6 +197,27 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             ut.assertEq(foo.x, 7);
             foo.addOne();
             ut.assertEq(foo.x, 9);
+
+            function dummy() {
+                return true;
+            }
+
+            function callCounter(fn, args, state) {
+                state.count++;
+                return fn.apply(this, args);
+            }
+
+
+            callCounter.init = function (args, state) {
+                state.count = 0;
+            };
+
+
+            var countDummy = dummy.decorate(callCounter);
+            for (var i = 0; i < 10; i++) {
+                ut.assert(countDummy() === true);
+            }
+            ut.assertEq(countDummy.count, 10);
         });
 
     }; // addTests
