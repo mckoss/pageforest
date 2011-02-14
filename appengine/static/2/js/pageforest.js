@@ -213,6 +213,20 @@ var namespace = (function() {
             return function() {
                 return _fn(this, fn, arguments);
             };
+        },
+
+        // Wrap the (this) function with a decorator like:
+        //
+        // function decorator(fn, args) {
+        //   ...
+        //   result = fn.apply(this, args);
+        //   return result;
+        // }
+        decorate: function(decorator) {
+            var fn = this;
+            return function() {
+                return decorator.call(this, fn, arguments);
+            };
         }
     });
 

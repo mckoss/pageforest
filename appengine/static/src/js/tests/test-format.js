@@ -90,22 +90,6 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("replaceString", function(ut) {
-            var tests = [
-                ["Test string.", "string", "replace", "Test replace."],
-                ["Abcabcabc", "abc", "x", "Abcxx"],
-                ["No matches", "foo", "bar", "No matches"],
-                ["nonono", "no", "", ""]
-            ];
-
-            for (var i = 0; i < tests.length; i++) {
-                var test = tests[i];
-
-                ut.assertEq(format.replaceString(test[0], test[1], test[2]),
-                            test[3]);
-            }
-        });
-
         ts.addTest("repeat", function(ut) {
             ut.assertEq(format.repeat('x', 10), "xxxxxxxxxx");
             ut.assertEq(format.repeat('ab', 2), "abab");
