@@ -169,6 +169,9 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
 
         ts.addTest("decorator", function(ut) {
             function doubleIt(fn, args) {
+                if (fn == undefined) {
+                    return;
+                }
                 return 2 * fn.apply(this, args);
             }
 
@@ -183,6 +186,9 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             }
 
             function twice(fn, args) {
+                if (fn == undefined) {
+                    return;
+                }
                 fn.apply(this, args);
                 return fn.apply(this, args);
             }
@@ -202,16 +208,14 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
                 return true;
             }
 
-            function callCounter(fn, args, state) {
-                state.count++;
+            function callCounter(fn, args, fnWrapper) {
+                if (fn == undefined) {
+                    fnWrapper.count = 0;
+                    return;
+                }
+                fnWrapper.count++;
                 return fn.apply(this, args);
             }
-
-
-            callCounter.init = function (args, state) {
-                state.count = 0;
-            };
-
 
             var countDummy = dummy.decorate(callCounter);
             for (var i = 0; i < 10; i++) {
