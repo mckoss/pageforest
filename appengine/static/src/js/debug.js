@@ -51,21 +51,25 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
     });
 
     function setLogger(logger) {
+        var oldLogger = ns.logger;
         ns.logger = logger;
         ns.log = logger.log.fnMethod(logger);
+        return oldLogger;
     }
 
     // Usage: oldfunc.decorate(deprecated, "Don't use anymore.")
     function deprecated(fn, args, fnWrapper) {
         if (fn == undefined) {
             fnWrapper.deprecated = getFunctionName(this);
-            fnWrapper.warning = args[1];
+            if (args[1]) {
+                fnWrapper.warning = ' - ' + args[1];
+            }
             return;
         }
 
-        ns.log("{0} is a deprecated function {1}".format(
+        ns.log("{0} is a deprecated function{1}".format(
             fnWrapper.deprecated || getFunctionName(fn),
-            fnWrapper.info),
+            fnWrapper.warning),
             {level: 'info', once: true});
         return fn.apply(this, args);
     }
@@ -78,7 +82,8 @@ namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
             return;
         }
 
-        ns.log("{0} is deprecated - use {1} instead.".format(fnWrapper.aliasName, fnWrapper.preferred),
+        ns.log("{0} is deprecated - use {1} instead."
+               .format(fnWrapper.aliasName, fnWrapper.preferred),
             {level: 'info', once: true});
         return fn.apply(this, args);
     }
