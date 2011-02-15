@@ -5,8 +5,13 @@
 {% block extra-head %}
 <style>
 body.session .if-not-session, body:not(.session) .if-session { display: none; }
+
 #sign-in-dialog {
   width: 400px;
+}
+
+.access-button: {
+  margin-left: 200px;
 }
 </style>
 
@@ -36,7 +41,15 @@ $(document).ready(function() {
       If you would like to sign-in to <i>{{ cross_app.title }}</i>
       then <span class=if-not-user>sign-in and</span> <i>Allow Access</i>, below.
     </p>
-    <p>
+    <input id="access-button" class="access-button if-session" type="button" value="Allow Access"
+           onclick="signIn.transferSessionKey(signIn.closeForm)" />
+  </div>
+
+    <p class="error"></p>
+
+    <div id="sign-in-dialog" class="if-not-user"></div>
+
+    <p class=if-app>
       By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
       <ul>
         <li>Access your {{ SITE_NAME }} user
@@ -50,41 +63,6 @@ $(document).ready(function() {
         {% endifequal %}
       </ul>
     </p>
-    <input class=if-session type="button" value="Allow Access"
-           onclick="signIn.transferSessionKey(signIn.closeForm)" />
-  </div>
-
-    <p class="error"></p>
-
-    <div id="sign-in-dialog"></div>
-
-    <form id="sign-in" class=if-not-user method="post" onsubmit="return signIn.onSubmit()">
-      <table>
-        <tr>
-          <td><label for=id-username>Username</label>:</td>
-          <td><input id=id-username type="text" class="focus" name="username" maxlength="30" /></td>
-          <td class="form-message" id="validate_username"><span class="error"></span></td>
-        </tr>
-
-        <tr>
-          <td><label for=id-password>Password</label>:</td>
-          <td><input id=id-password type="password" name="password" maxlength="40" /></td>
-          <td class="form-message" id="validate_password"><span class="error"></span> </td>
-        </tr>
-
-        <tr class=if-app>
-          <td><label for=id-appauth>{{ cross_app.get_app_id }}</label>:</td>
-          <td><input type="checkbox" name="appauth" id=id-appauth />&nbsp;<label for=id-appauth>Allow access</label></td>
-          <td></td>
-        </tr>
-
-        <tr><td></td>
-          <td><input type="submit" value="Sign In"/></td>
-          <td></td>
-        </tr>
-
-      </table>
-    </form>
 
 <div class=if-user>
     {% if not user.email_verified %}

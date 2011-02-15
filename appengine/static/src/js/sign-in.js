@@ -19,8 +19,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var appId;
     var appAuthURL;
     var sessionKey;
-    var username;
-    var password;
     var dlg;
 
     // www.pageforest.com -> app.pageforest.com
@@ -97,9 +95,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     function onSuccess(message, status, xhr) {
         $(document.body).addClass('user');
-        $('.username').text(username);
+        $('.username').text(dlg.values.username);
         getSessionKey(function () {
-            if ($('#id-appauth').attr('checked')) {
+            if (dlg.values.allowAccess) {
                 transferSessionKey(closeForm);
             }
         });
@@ -120,9 +118,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        var userpass = crypto.HMAC(crypto.SHA1, username, password);
+        var userpass = crypto.HMAC(crypto.SHA1, dlg.values.username, dlg.values.password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
-        var reply = username + '|' + challenge + '|' + signature;
+        var reply = dlg.values.username + '|' + challenge + '|' + signature;
         $.ajax({
             url: '/auth/verify/' + reply,
             success: onSuccess,
@@ -131,9 +129,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSubmit() {
-        var values = dlg.getValues();
-        username = values.username.toLowerCase();
-        password = values.password;
+        dlg.values = dlg.getValues();
+        dlg.values.username = dlg.values.username.toLowerCase();
 
         $.ajax({
             url: '/auth/challenge',
@@ -144,11 +141,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onReady(forApp) {
-        username = cookies.getCookie('sessionuser');
+        var username = cookies.getCookie('sessionuser');
         appId = forApp;
-        if (appId) {
-            appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
-        }
 
         dlg = new dialog.Dialog({
             fields: [
@@ -159,6 +153,13 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             ],
             style: dialog.styles.table
         });
+
+        if (appId) {
+            appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        } else {
+            dlg.showField('allowAccess', false);
+        }
+
         $('#sign-in-dialog').html(dlg.html());
         dlg.setFocus();
 
@@ -172,20 +173,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             $(document.body).addClass('user');
             $('.username').text(username);
             getSessionKey();
-        }
-
-        if (appId) {
-            // Check (once) if we're also currently logged in @ appId
-            // without having to sign-in again.
-            // REVIEW: Isn't this insecure?
-            var url = appAuthURL + "username/";
-            getJSONP(url, function(username) {
-                // We're already logged in!
-                if (typeof(username) == 'string') {
-                    closeForm();
-                    return;
-                }
-            });
         }
     }
 
