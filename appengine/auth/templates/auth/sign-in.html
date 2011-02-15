@@ -5,6 +5,9 @@
 {% block extra-head %}
 <style>
 body.session .if-not-session, body:not(.session) .if-session { display: none; }
+#sign-in-dialog {
+  width: 400px;
+}
 </style>
 
 <script type="text/javascript">
@@ -52,6 +55,8 @@ $(document).ready(function() {
   </div>
 
     <p class="error"></p>
+
+    <div id="sign-in-dialog"></div>
 
     <form id="sign-in" class=if-not-user method="post" onsubmit="return signIn.onSubmit()">
       <table>

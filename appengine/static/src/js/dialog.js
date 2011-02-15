@@ -263,7 +263,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
                     case 'text':
                     case 'password':
-                        values[name] = field.elt.value;
+                        values[name] = base.strip(field.elt.value);
                         break;
                     default:
                         break;
@@ -271,11 +271,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     break;
 
                 case 'TEXTAREA':
-                    values[name] = field.elt.value;
+                    values[name] = base.strip(field.elt.value);
                     break;
 
                 default:
-                    values[name] = dom.getText(field.elt);
+                    values[name] = base.strip(dom.getText(field.elt));
                     break;
                 }
             }

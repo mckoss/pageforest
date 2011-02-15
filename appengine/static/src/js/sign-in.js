@@ -14,11 +14,14 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
     var dom = namespace.lookup('org.startpad.dom');
+    var dialog = namespace.lookup('org.startpad.dialog');
 
     var appId;
     var appAuthURL;
     var sessionKey;
     var username;
+    var password;
+    var dlg;
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -117,12 +120,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        username = $('#id-username').val();
-        var lower = username.toLowerCase();
-        var password = $('#id-password').val();
-        var userpass = crypto.HMAC(crypto.SHA1, lower, password);
+        var userpass = crypto.HMAC(crypto.SHA1, username, password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
-        var reply = lower + '|' + challenge + '|' + signature;
+        var reply = username + '|' + challenge + '|' + signature;
         $.ajax({
             url: '/auth/verify/' + reply,
             success: onSuccess,
@@ -131,6 +131,10 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSubmit() {
+        var values = dlg.getValues();
+        username = values.username.toLowerCase();
+        password = values.password;
+
         $.ajax({
             url: '/auth/challenge',
             success: onChallenge,
@@ -146,13 +150,26 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         }
 
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username'},
+                {name: 'password', type: 'password'},
+                {name: 'allowAccess', label: "Allow Access to " + appId, type: 'checkbox'},
+                {name: 'signIn', label: "Sign In", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
+        });
+        $('#sign-in-dialog').html(dlg.html());
+        dlg.setFocus();
+
         // Nothing to do until the user signs in - page will reload
         // on form post.
-        $(document.body)[username ? 'addClass' : 'removeClass']('user');
-        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
+        if (appId) {
+            $(document.body).addClass('app');
+        }
 
-        // If already logged in - get the sessionKey right away.
         if (username) {
+            $(document.body).addClass('user');
             $('.username').text(username);
             getSessionKey();
         }
