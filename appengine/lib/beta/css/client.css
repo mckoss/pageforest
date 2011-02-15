@@ -81,7 +81,7 @@ div.pfRight {
     border: 2px solid;
     border-color: #E7F2D7 #749B45 #749B45 #E7F2D7;
     font-size: 14px;
-    z-index: 998;
+    z-index: 997;
 }
 
 div.expander {
@@ -109,62 +109,72 @@ div.collapsed {
     background-color: #DDA8A3;
     border: 2px solid;
     border-color: #F2D5D3 #A06560 #A06560 #F2D5D3;
-    z-index: 10;
+    z-index: 998;
     font-size: 16px;
 }
 /* Begin file: dialog.css */
-div.SP_Dialog {
-    width: 350px;
-}
+/* Div style dialogs */
+div.sp-dialog-div * { font-size: inherit; }
 
-div.SP_Dialog * {
-    font-size: inherit;
-}
-
-div.SP_Dialog label.left {
+div.sp-dialog-div label.left {
     display: block;
     float: left;
     clear: left;
     text-align: right;
-    width: 94px;
+    font-weight: bold;
+    width: 30%;
     margin: 1px 0 6px 0;
     padding-right: 5px;
 }
 
-div.SP_Dialog label.checkbox, div.SP_Dialog input[type=checkbox] {
-    cursor: pointer;
-    margin-left: 0;
-}
+div.sp-dialog-div label.checkbox, div.sp-dialog-div input[type=checkbox] { cursor: pointer; }
 
-div.SP_Dialog label.checkbox {
+div.sp-dialog-div label.checkbox {
     display: block;
     clear: left;
-    margin: 0 5px 6px 100px;
+    margin: 0 5px 6px 30%;
     padding: 0;
 }
 
-div.SP_Dialog input[type=text], div.SP_Dialog input[type=password], div.SP_Dialog .value,
-div.SP_Dialog textarea
-{
+div.sp-dialog-div input[type=text],
+div.sp-dialog-div input[type=password],
+div.sp-dialog-div .value,
+div.sp-dialog-div textarea {
     float: left;
-    width: 245px;
+    width: 65%;
     margin: 0 0 6px 0;
     padding: 0;
 }
 
-div.SP_Dialog {
-    position: relative;
-}
-
-div.SP_Dialog .message {
+div.sp-dialog-div .message {
     text-align: center;
     font-style: italic;
     margin: 0 5px 6px 5px;
 }
 
-div.SP_Dialog input[type=button] {
+div.sp-dialog-div input[type=button] {
     clear: left;
     float: right;
-    margin: 3px;
+    margin: 0 10px 10px 0;
     cursor: pointer;
 }
+
+/* Table style dialogs */
+
+div.sp-dialog-table table * { font-size: inherit; }
+div.sp-dialog-table table { width: 100%; }
+div.sp-dialog-table th { text-align: right; font-weight: bold; vertical-align: top; }
+div.sp-dialog-table .message { text-align: center; font-style: italic; }
+
+div.sp-dialog-table input[type=text],
+div.sp-dialog-table input[type=password],
+div.sp-dialog-table textarea,
+div.sp-dialog-table .value {
+    width: 100%;
+}
+
+div.sp-dialog-table input[type=button] {
+    float: right;
+    cursor: pointer;
+}
+
