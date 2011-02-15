@@ -56,10 +56,10 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
                 field.alreadyClicked = true;
                 dlg.setValues({message: "Thanks!"});
                 if (dlg == dlgs[styles.length - 1]) {
+                    console.log("async called");
                     ut.async(false);
                 }
             }
-
 
             for (var j = 0; j < styles.length; j++) {
                 dlgs[j] = new dialog.Dialog({
@@ -72,12 +72,14 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
                         {name: 'value', type: 'value'},
                         {name: 'password', type: 'password'},
                         {name: 'note', type: 'note'},
-                        {name: 'button', type: 'button', onClick: testOnButton}
+                        {name: 'button', type: 'button', onClick: testOnButton},
+                        {name: 'other', type: 'button'}
                     ]
                 });
 
 
                 var div = document.createElement('div');
+                div.style.width = "350px";
                 dlgs[j].setStyle(dialog.styles[styles[j]]);
                 div.innerHTML = dlgs[j].html();
                 var divDialog = div.firstChild;
@@ -130,7 +132,7 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
             }
 
             ts.coverage.cover('Dialog:enableField');
-        }).require('document').async(30000);
+        }).require('document').async(true, 30000);
 
     }; // addTests
 

@@ -2135,7 +2135,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         message: {useRow: 'spanRow', content: '<div class="message" id="{id}"></div>'},
         value: {label: '<label class="left">{label}:</label>',
                 content: '<div class="value" id="{id}"></div>'},
-        button: {content: '<input id="{id}" type="button" value="{label}"/>'},
+        button: {useRow: 'spanRow', content: '<input id="{id}" type="button" value="{label}"/>'},
         invalid: {useRow: 'spanRow',
                   content: '<span class="error">***missing field type: {type}***</span>'}
     };
@@ -2151,15 +2151,17 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             content: '<input id="{id}" type="text"/>',
             spanRow: '{content}\n',
             row: "{label}{content}\n",
-            post: '<div style="clear: both;"></div>\n'
+            post: '<div style="clear: both;"></div>\n',
+            dialogClass: 'sp-dialog-div'
         },
         table: {
             pre: "<table>\n",
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
-            spanRow: "<tr><td columns=2>{content}</td></tr>",
+            spanRow: "<tr><td colspan=2>{content}</td></tr>",
             row: "<tr><th>{label}</th><td>{content}</td></tr>\n",
-            post: "</table>\n"
+            post: "</table>\n",
+            dialogClass: 'sp-dialog-table'
         }
     };
 
@@ -2177,7 +2179,6 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     //     name/type/label/value/required/shortLabel/hidden/onClick/onChange
     function Dialog(options) {
         cDialogs++;
-        this.dialogClass = 'SP_Dialog';
         this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
         this.lastValues = {};
