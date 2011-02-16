@@ -154,14 +154,14 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             style: dialog.styles.table
         });
 
+        $('#sign-in-dialog').html(dlg.html());
+        dlg.setFocus();
+
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
         } else {
             dlg.showField('allowAccess', false);
         }
-
-        $('#sign-in-dialog').html(dlg.html());
-        dlg.setFocus();
 
         // Nothing to do until the user signs in - page will reload
         // on form post.
