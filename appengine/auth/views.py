@@ -121,12 +121,37 @@ def sign_up(request):
     assert request.method == 'POST'
     user = form.save()
     send_email_verification(request, user)
-    response = HttpResponse('{"status": 200, "statusText": "Registered"}',
-                            mimetype=settings.JSON_MIMETYPE_CS)
+    response = HttpJSONResponse({"statusText": "Registered"})
     response.set_cookie(settings.SESSION_COOKIE_NAME,
                         user.generate_session_key(request.app),
                         max_age=settings.SESSION_COOKIE_AGE)
     return response
+
+
+@method_required('POST')
+def app_sign_up(request):
+    """
+    Allow 3rd party app to create private accounts directly.  They must
+    have user account names of the form:  appid_username
+
+    username: string
+    secret: sha1-string
+    email: string
+    verifyEmail: boolean
+    """
+    username = request.POST['username']
+    if User.lookup(username):
+        return HttpJSONResponse({'statusText': "User %s already exists."}, status=409)
+    user = User(key_name=username.lower(),
+                username=username,
+                email=request.POST['email'],
+                password=request.POST['secret'])
+    try:
+        user.put()
+    except ValueError, error:
+        return HttpJSONResponse({'statusText': error.message}, status=400)
+
+    return HttpJSONResponse({'statusText': "User %s created."}, status=201)
 
 
 @login_required
