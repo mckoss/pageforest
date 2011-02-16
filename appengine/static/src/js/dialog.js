@@ -4,6 +4,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
+    // REVIEW: Need to add a select pattern.
     var defaultPatterns = {
         title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
         text: {content: '<input id="{id}" type="text"/>'},
@@ -38,8 +39,10 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             pre: "<table>\n",
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
-            spanRow: '<tr id="{id}-row"><td colspan=2>{content}</td></tr>',
-            row: '<tr id="{id}-row"><th>{label}</th><td>{content}</td></tr>\n',
+            spanRow: '<tr id="{id}-row"><td colspan=3>{content}</td></tr>',
+            row: '<tr id="{id}-row"><th>{label}</th>' +
+                '<td>{content}</td>' +
+                '<td id="{id}-error"><span class=error>{error}</span></td></tr>\n',
             post: "</table>\n",
             dialogClass: 'sp-dialog-table'
         }
