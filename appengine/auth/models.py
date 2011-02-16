@@ -1,5 +1,6 @@
 import time
 import logging
+import re
 
 from google.appengine.ext import db
 from google.appengine.api import memcache
@@ -15,6 +16,15 @@ import settings
 
 CHALLENGE_EXPIRATION = 60  # Seconds.
 CHALLENGE_CACHE_PREFIX = 'CR1~'
+
+# From Djano forms.fields
+email_match = re.compile(
+    r"(^[-!#$%&'*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*+/=?^_`{}|~0-9A-Z]+)*"
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"'
+    r')@(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+[A-Z]{2,6}\.?$', re.IGNORECASE).match
+
+username_match = re.compile("(%s)|(%s)" %
+                            (settings.USERNAME_REGEX, settings.APP_USERNAME_REGEX)).match
 
 
 class User(db.Expando, Timestamped, Migratable, Cacheable):
@@ -39,6 +49,21 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
 
     def __unicode__(self):
         return self.username
+
+    def validate(self):
+        """
+        Validate all the values of the model - raise exception on error.
+        """
+        if not username_match(self.username):
+            raise ValueError("Invalid username: '%s'" % self.username)
+        if not email_match(self.email):
+            raise ValueError("Invalid email address: '%s'" % self.email)
+        if len(self.password) != 40:
+            raise ValueError("Invalid user secret - should be 40 character hash.")
+
+    def put(self):
+        self.validate()
+        super(User, self).put()
 
     @classmethod
     def lookup(cls, username):
