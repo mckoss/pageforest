@@ -1,6 +1,7 @@
 import logging
 import time
 import datetime
+import re
 
 from django.conf import settings
 from django.shortcuts import redirect
@@ -11,9 +12,11 @@ from django.http import \
     HttpResponse, HttpResponseForbidden, HttpResponseRedirect, Http404
 
 from google.appengine.api import mail
+from google.appengine.ext.db import BadValueError
 
 from utils.decorators import jsonp, method_required
 from utils.shortcuts import render_to_response
+from utils.forms import ValidationError
 from utils import crypto
 from utils.json import HttpJSONResponse
 
@@ -128,6 +131,9 @@ def sign_up(request):
     return response
 
 
+app_username_match = re.compile(settings.APP_USERNAME_REGEX).match
+
+
 @method_required('POST')
 def app_sign_up(request):
     """
@@ -139,19 +145,37 @@ def app_sign_up(request):
     email: string
     verifyEmail: boolean
     """
-    username = request.POST['username']
-    if User.lookup(username):
-        return HttpJSONResponse({'statusText': "User %s already exists."}, status=409)
-    user = User(key_name=username.lower(),
-                username=username,
-                email=request.POST['email'],
-                password=request.POST['secret'])
-    try:
-        user.put()
-    except ValueError, error:
-        return HttpJSONResponse({'statusText': error.message}, status=400)
+    validate_only = request.POST.get('validate', False)
+    username = request.POST.get('username', '')
 
-    return HttpJSONResponse({'statusText': "User %s created."}, status=201)
+    try:
+        if not app_username_match(username):
+            raise ValidationError().add_error('username', "Invalid username: '%s'" % username)
+        user_app_id = username.split('_')[0]
+        if user_app_id != request.app.get_app_id():
+            raise ValidationError().add_error('username',
+                "Application prefix must be '%s' (not '%s')" % (request.app.get_app_id(),
+                                                            user_app_id))
+        if User.lookup(username):
+            raise ValidationError().add_error('username', "Username %s already exists." % username)
+
+        user = User(key_name=username.lower(),
+                    username=username,
+                    email=request.POST.get('email', ''),
+                    password=request.POST.get('secret', ''))
+        if validate_only:
+            user.validate()
+        else:
+            user.put()
+    except (ValueError, BadValueError), error:
+        result = {'statusText': unicode(error)}
+        status = 200 if validate_only else 409
+        if hasattr(error, 'errors'):
+            result['errors'] = error.errors
+        return HttpJSONResponse(result, status=status)
+
+    return HttpJSONResponse({'statusText': "User %s created." % username},
+                            status=200 if validate_only else 201)
 
 
 @login_required

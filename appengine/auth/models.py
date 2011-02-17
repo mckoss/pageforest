@@ -6,6 +6,7 @@ from google.appengine.ext import db
 from google.appengine.api import memcache
 
 from utils.mixins import Timestamped, Migratable, Cacheable
+from utils.forms import ValidationError
 from utils import crypto
 from utils.shortcuts import dict_from_attrs
 
@@ -54,12 +55,16 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         """
         Validate all the values of the model - raise exception on error.
         """
+        error = ValidationError()
         if not username_match(self.username):
-            raise ValueError("Invalid username: '%s'" % self.username)
+            error.add_error('username', "Invalid username: '%s'" % self.username)
         if not email_match(self.email):
-            raise ValueError("Invalid email address: '%s'" % self.email)
+            error.add_error('email', "Invalid email address: '%s'" % self.email)
         if len(self.password) != 40:
-            raise ValueError("Invalid user secret - should be 40 character hash.")
+            error.add_error('secret', "Invalid user secret - should be 40 character hash.")
+
+        if error.has_error():
+            raise error
 
     def put(self):
         self.validate()

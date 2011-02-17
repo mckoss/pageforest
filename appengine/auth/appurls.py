@@ -9,6 +9,7 @@ urlpatterns = patterns(
     (r'^verify/(.+)/$', 'verify'),
     (r'^username/$', 'get_username'),
     (r'^set-session/(.+)/$', 'set_session_cookie'),
+    (r'^sign-up/$', 'app_sign_up'),
     # Disabled obsolete URLs:
     # (r'^reauth/$', 'reauth'),
 )
