@@ -1,8 +1,10 @@
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
-
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
+    var dialog = namespace.lookup('org.startpad.dialog');
+
+    var dlg;
 
     function validatePassword() {
         var password = $("#id_password").val();
@@ -48,36 +50,11 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         console.error(xhr);
     }
 
-    function getFormData() {
-        var username = $("#id_username").val();
-        var lower = username.toLowerCase();
-        var password = $("#id_password").val();
-        return {
-            username: username,
-            password: crypto.HMAC(crypto.SHA1, lower, password),
-            email: $("#id_email").val(),
-            tos: $("#id_tos").attr('checked') ? 'checked' : ''
-        };
-    }
-
-    function isChanged() {
-        var username = $("#id_username").val();
-        var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
-        var email = $("#id_email").val();
-        var oneline = [username, password, repeat, email].join('|');
-        if (oneline == ns.previous) {
-            return false;
-        }
-        ns.previous = oneline;
-        return true;
-    }
-
     function validateIfChanged() {
-        if (!isChanged()) {
+        if (!dlg.hasChanged(undefined, true)) {
             return;
         }
-        var data = getFormData();
+        var data = dlg.getValues();
         data.validate = true;
         forms.postFormData('/sign-up/', data,
                            null, onValidateIgnoreEmpty, onError);
@@ -88,7 +65,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         if (errors) {
             forms.showValidatorResults(['password', 'repeat'], errors);
         } else {
-            forms.postFormData('/sign-up/', getFormData(),
+            forms.postFormData('/sign-up/', dlg.getValues(),
                                onSuccess, onValidate, onError);
         }
         return false;
@@ -115,21 +92,22 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     }
 
     function onReady() {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
-
-        // Initialize ns.previous to track input changes.
-        isChanged();
-        // Validate in the background
-        setInterval(validateIfChanged, 1000);
-        $('#id_tos').click(function() {
-            $('#validate_tos').html('');
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username'},
+                {name: 'password', type: 'password'},
+                {name: 'passwordRepeat', type: 'password', label: "Repeat password"},
+                {name: 'email', label: "Email address"},
+                {name: 'tos', type: 'checkbox', label: "Terms of Service"},
+                {name: 'joinNow', label: "Join Now", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
         });
+
+        $('#sign-up-dialog').html(dlg.html());
+        dlg.setFocus();
+
+        setInterval(validateIfChanged, 1000);
     }
 
     ns.extend({

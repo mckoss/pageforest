@@ -12,8 +12,7 @@ $(document).ready(namespace.com.pageforest.auth.sign_up.onReady);
 <div id=double-column>
   <h2>Create your {{SITE_NAME}} account</h2>
 
-  {{ enablejs|safe }}
-  {{ httponly|safe }}
+  <div id="sign-up-dialog"></div>
 
   <form method="post" onsubmit="return signUp.onSubmit()">
     <table>

@@ -2124,6 +2124,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
+    // REVIEW: Need to add a select pattern.
     var defaultPatterns = {
         title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
         text: {content: '<input id="{id}" type="text"/>'},
@@ -2149,8 +2150,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             pre: '',
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
-            spanRow: '{content}\n',
-            row: "{label}{content}\n",
+            spanRow: '<div id ="{id}-row">{content}</div>\n',
+            row: '<div id="{id}-row">{label}{content}</div>\n',
             post: '<div style="clear: both;"></div>\n',
             dialogClass: 'sp-dialog-div'
         },
@@ -2158,8 +2159,10 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             pre: "<table>\n",
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
-            spanRow: "<tr><td colspan=2>{content}</td></tr>",
-            row: "<tr><th>{label}</th><td>{content}</td></tr>\n",
+            spanRow: '<tr id="{id}-row"><td colspan=3>{content}</td></tr>',
+            row: '<tr id="{id}-row"><th>{label}</th>' +
+                '<td>{content}</td>' +
+                '<td id="{id}-error"><span class=error>{error}</span></td></tr>\n',
             post: "</table>\n",
             dialogClass: 'sp-dialog-table'
         }
@@ -2217,7 +2220,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 }
                 var fieldPatterns = base.extendIfMissing({}, self.patterns[field.type],
                         base.project(self.style, ['label', 'content']));
-                var row = {label: fieldPatterns.label.format(field),
+                var row = {id: field.id,
+                           label: fieldPatterns.label.format(field),
                            content: fieldPatterns.content.format(field)};
                 var rowPattern = self[fieldPatterns.useRow] || self.row;
                 stb.append(rowPattern.format(row));
@@ -2293,6 +2297,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         getField: function(name) {
+            this.bindFields();
             for (var i = 0; i < this.fields.length; i++) {
                 if (this.fields[i].name == name) {
                     return this.fields[i];
@@ -2315,7 +2320,6 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
             base.extendObject(this.lastValues, values);
 
-            this.bindFields();
             for (var name in values) {
                 if (values.hasOwnProperty(name)) {
                     field = this.getField(name);
@@ -2383,7 +2387,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
                     case 'text':
                     case 'password':
-                        values[name] = field.elt.value;
+                        values[name] = base.strip(field.elt.value);
                         break;
                     default:
                         break;
@@ -2391,11 +2395,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     break;
 
                 case 'TEXTAREA':
-                    values[name] = field.elt.value;
+                    values[name] = base.strip(field.elt.value);
                     break;
 
                 default:
-                    values[name] = dom.getText(field.elt);
+                    values[name] = base.strip(dom.getText(field.elt));
                     break;
                 }
             }
@@ -2403,11 +2407,18 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             return values;
         },
 
+        showField: function(name, shown) {
+            if (shown == undefined) {
+                shown = true;
+            }
+            var field = this.getField(name);
+            $('#' + field.id + '-row')[shown ? 'show' : 'hide']();
+        },
+
         enableField: function(name, enabled) {
             if (enabled == undefined) {
                 enabled = true;
             }
-            this.bindFields();
             var field = this.getField(name);
             switch (field.elt.tagName) {
             case 'INPUT':

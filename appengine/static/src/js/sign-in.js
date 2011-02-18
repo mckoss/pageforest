@@ -13,7 +13,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
-    var dom = namespace.lookup('org.startpad.dom');
     var dialog = namespace.lookup('org.startpad.dialog');
 
     var appId;
