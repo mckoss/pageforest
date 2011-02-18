@@ -64,14 +64,14 @@ $(document).ready(function() {
       </ul>
     </p>
 
-<div class=if-user>
-    {% if not user.email_verified %}
-        <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
-    {% endif %}
-  <p class=if-user><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
-</div>
+    <div class=if-user>
+      {% if not user.email_verified %}
+      <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
+      {% endif %}
+      <p class=if-user><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
+    </div>
 
-<p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
+  <p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
 
 </div>
 {% endblock %}

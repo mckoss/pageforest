@@ -187,10 +187,23 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         // Compare current value with last externally set value
-        hasChanged: function(name) {
-            // REVIEW: This could be more effecient
-            var values = this.getValues();
-            return values[name] != this.lastValues[name];
+        hasChanged: function(name, fSnapshot) {
+            var result,
+                values = this.getValues();
+
+            if (name != undefined) {
+                result = values[name] != this.lastValues[name];
+                if (fSnapshot) {
+                    this.lastValues[name] = values[name];
+                }
+            } else {
+                result = !base.isEqual(values, this.lastValues);
+                if (fSnapshot) {
+                    this.lastValues = values;
+                }
+            }
+
+            return result;
         },
 
         // Call just before displaying a dialog to set it's values.

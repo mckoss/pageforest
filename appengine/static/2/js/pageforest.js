@@ -789,6 +789,387 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     });
 
 }); // startpad.base
+/* Begin file: format.js */
+/*globals atob */
+
+namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var util = namespace.util;
+    var base = namespace.lookup('org.startpad.base');
+    var debug = namespace.lookup('org.startpad.debug');
+
+    var logger = new debug.Logger(false);
+
+    // Thousands separator
+    var comma = ',';
+
+    // Return an integer as a string using a fixed number of digits,
+    // (require a sign if fSign).
+    function fixedDigits(value, digits, fSign) {
+        var s = "";
+        var fNeg = (value < 0);
+        if (digits == undefined) {
+            digits = 0;
+        }
+        if (fNeg) {
+            value = -value;
+        }
+        value = Math.floor(value);
+
+        for (; digits > 0; digits--) {
+            s = (value % 10) + s;
+            value = Math.floor(value / 10);
+        }
+
+        if (fSign || fNeg) {
+            s = (fNeg ? "-" : "+") + s;
+        }
+
+        return s;
+    }
+
+    // Return integer as string with thousand separators with optional
+    // decimal digits.
+    function thousands(value, digits) {
+        var integerPart = Math.floor(value);
+        var s = integerPart.toString();
+        var sLast = "";
+        while (s != sLast) {
+            sLast = s;
+            s = s.replace(/(\d+)(\d{3})/, "$1" + comma + "$2");
+        }
+
+        var fractionString = "";
+        if (digits && digits >= 1) {
+            digits = Math.floor(digits);
+            var fraction = value - integerPart;
+            fraction = Math.floor(fraction * Math.pow(10, digits));
+            fractionString = "." + fixedDigits(fraction, digits);
+        }
+        return s + fractionString;
+    }
+
+    // Converts to lowercase, removes non-alpha chars and converts
+    // spaces to hyphens
+    function slugify(s) {
+        s = base.strip(s).toLowerCase();
+        s = s.replace(/[^a-zA-Z0-9]/g, '-').
+              replace(/[\-]+/g, '-').
+              replace(/(^-+)|(-+$)/g, '');
+        return s;
+    }
+
+    function escapeHTML(s) {
+        s = s.toString();
+        s = s.replace(/&/g, '&amp;');
+        s = s.replace(/</g, '&lt;');
+        s = s.replace(/>/g, '&gt;');
+        s = s.replace(/\"/g, '&quot;');
+        s = s.replace(/'/g, '&#39;');
+        return s;
+    }
+
+    //------------------------------------------------------------------
+    // ISO 8601 Date Formatting YYYY-MM-DDTHH:MM:SS.sssZ (where Z
+    // could be +HH or -HH for non UTC) Note that dates are inherently
+    // stored at UTC dates internally. But we infer that they denote
+    // local times by default. If the dt.__tz exists, it is assumed to
+    // be an integer number of hours offset to the timezone for which
+    // the time is to be indicated (e.g., PST = -08). Callers should
+    // set dt.__tz = 0 to fix the date at UTC. All other times are
+    // adjusted to designate the local timezone.
+    // -----------------------------------------------------------------
+
+    // Default timezone = local timezone
+    // var tzDefault = -(new Date().getTimezoneOffset()) / 60;
+    var tzDefault = 0;
+
+    function setTimezone(tz) {
+        if (tz == undefined) {
+            tz = -(new Date().getTimezoneOffset()) / 60;
+        }
+        tzDefault = tz;
+    }
+
+    function isoFromDate(dt, fTime) {
+        var dtT = new Date();
+        dtT.setTime(dt.getTime());
+
+        var tz = dt.__tz;
+        if (tz == undefined) {
+            tz = tzDefault;
+        }
+
+        // Adjust the internal (UTC) time to be the local timezone
+        // (add tz hours) Note that setTime() and getTime() are always
+        // in (internal) UTC time.
+        if (tz != 0) {
+            dtT.setTime(dtT.getTime() + 60 * 60 * 1000 * tz);
+        }
+
+        var s = dtT.getUTCFullYear() + "-" +
+            fixedDigits(dtT.getUTCMonth() + 1, 2) + "-" +
+            fixedDigits(dtT.getUTCDate(), 2);
+        var ms = dtT % (24 * 60 * 60 * 1000);
+
+        if (ms || fTime || tz != 0) {
+            s += "T" + fixedDigits(dtT.getUTCHours(), 2) + ":" +
+                fixedDigits(dtT.getUTCMinutes(), 2);
+            ms = ms % (60 * 1000);
+            if (ms) {
+                s += ":" + fixedDigits(dtT.getUTCSeconds(), 2);
+            }
+            if (ms % 1000) {
+                s += "." + fixedDigits(dtT.getUTCMilliseconds(), 3);
+            }
+            if (tz == 0) {
+                s += "Z";
+            } else {
+                s += fixedDigits(tz, 2, true);
+            }
+        }
+        return s;
+    }
+
+    var regISO = new RegExp("^(\\d{4})-?(\\d\\d)-?(\\d\\d)" +
+                            "(T(\\d\\d):?(\\d\\d):?((\\d\\d)" +
+                            "(\\.(\\d{0,6}))?)?(Z|[\\+-]\\d\\d))?$");
+
+    //--------------------------------------------------------------------
+    // Parser is more lenient than formatter. Punctuation between date
+    // and time parts is optional. We require at the minimum,
+    // YYYY-MM-DD. If a time is given, we require at least HH:MM.
+    // YYYY-MM-DDTHH:MM:SS.sssZ as well as YYYYMMDDTHHMMSS.sssZ are
+    // both acceptable. Note that YYYY-MM-DD is ambiguous. Without a
+    // timezone indicator we don't know if this is a UTC midnight or
+    // Local midnight. We default to UTC midnight (the ISOFromDate
+    // function always writes out non-UTC times so we can append the
+    // time zone). Fractional seconds can be from 0 to 6 digits
+    // (microseconds maximum)
+    // -------------------------------------------------------------------
+    function dateFromISO(sISO) {
+        var e = new base.Enum(1, "YYYY", "MM", "DD", 5, "hh", "mm",
+                               8, "ss", 10, "sss", "tz");
+        var aParts = sISO.match(regISO);
+        if (!aParts) {
+            return undefined;
+        }
+
+        aParts[e.mm] = aParts[e.mm] || 0;
+        aParts[e.ss] = aParts[e.ss] || 0;
+        aParts[e.sss] = aParts[e.sss] || 0;
+
+        // Convert fractional seconds to milliseconds
+        aParts[e.sss] = Math.round(+('0.' + aParts[e.sss]) * 1000);
+        if (!aParts[e.tz] || aParts[e.tz] === "Z") {
+            aParts[e.tz] = 0;
+        } else {
+            aParts[e.tz] = parseInt(aParts[e.tz]);
+        }
+
+        // Out of bounds checking - we don't check days of the month is correct!
+        if (aParts[e.MM] > 59 || aParts[e.DD] > 31 ||
+            aParts[e.hh] > 23 || aParts[e.mm] > 59 || aParts[e.ss] > 59 ||
+            aParts[e.tz] < -23 || aParts[e.tz] > 23) {
+            return undefined;
+        }
+
+        var dt = new Date();
+
+        dt.setUTCFullYear(aParts[e.YYYY], aParts[e.MM] - 1, aParts[e.DD]);
+
+        if (aParts[e.hh]) {
+            dt.setUTCHours(aParts[e.hh], aParts[e.mm],
+                           aParts[e.ss], aParts[e.sss]);
+        } else {
+            dt.setUTCHours(0, 0, 0, 0);
+        }
+
+        // BUG: For best compatibility - could set tz to undefined if
+        // it is our local tz Correct time to UTC standard (utc = t -
+        // tz)
+        dt.__tz = aParts[e.tz];
+        if (aParts[e.tz]) {
+            dt.setTime(dt.getTime() - dt.__tz * (60 * 60 * 1000));
+        }
+        return dt;
+    }
+
+    // Decode objects of the form:
+    // {'__class__': XXX, ...}
+    function decodeClass(obj) {
+        if (obj == undefined || obj.__class__ == undefined) {
+            return undefined;
+        }
+
+        if (obj.__class__ == 'Date') {
+            return dateFromISO(obj.isoformat);
+        }
+        return undefined;
+    }
+
+    // A short date format, that will also parse with Date.parse().
+    // Namely, m/d/yyyy h:mm am/pm
+    // (time is optional if 12:00 am exactly)
+    function shortDate(d) {
+        if (!(d instanceof Date)) {
+            return undefined;
+        }
+        var s = (d.getMonth() + 1) + '/' +
+            (d.getDate()) + '/' +
+            (d.getFullYear());
+        var hr = d.getHours();
+        var ampm = ' am';
+        if (hr >= 12) {
+            ampm = ' pm';
+        }
+        hr = hr % 12;
+        if (hr == 0) {
+            hr = 12;
+        }
+        var sT = hr + ':' + fixedDigits(d.getMinutes(), 2) + ampm;
+        if (sT != '12:00 am') {
+            s += ' ' + sT;
+        }
+        return s;
+    }
+
+    // Turn an array of strings into a word list
+    function wordList(a) {
+        a = base.map(a, base.strip);
+        a = base.filter(a, function(s) {
+            return s != '';
+        });
+        return a.join(', ');
+    }
+
+    function arrayFromWordList(s) {
+        s = base.strip(s);
+        var a = s.split(/[ ,]+/);
+        a = base.filter(a, function(s) {
+            return s != '';
+        });
+        return a;
+    }
+
+    var base64map =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    // Convert a base-64 string to a binary-encoded string
+    function base64ToString(base64) {
+        var b;
+
+        // Use browser-native function if it exists
+        if (typeof atob == "function") {
+            return atob(base64);
+        }
+
+        // Remove non-base-64 characters
+        base64 = base64.replace(/[^A-Z0-9+\/]/ig, "");
+
+        for (var chars = [], i = 0, imod4 = 0;
+             i < base64.length;
+             imod4 = ++i % 4) {
+            if (imod4 == 0) {
+                continue;
+            }
+            b = ((base64map.indexOf(base64.charAt(i - 1)) &
+                  (Math.pow(2, -2 * imod4 + 8) - 1)) << (imod4 * 2)) |
+                (base64map.indexOf(base64.charAt(i)) >>> (6 - imod4 * 2));
+            chars.push(String.fromCharCode(b));
+        }
+
+        return chars.join('');
+
+    }
+
+    function canvasToPNG(canvas) {
+        var prefix = "data:image/png;base64,";
+        var data = canvas.toDataURL('image/png');
+        if (data.indexOf(prefix) != 0) {
+            return undefined;
+        }
+        //return base64ToString(data.substr(prefix.length));
+        return data.substr(prefix.length);
+    }
+
+    function repeat(s, times) {
+        return new Array(times + 1).join(s);
+    }
+
+    var reFormat = /\{\s*([^} ]+)\s*\}/g;
+
+    // Takes a dictionary or any number of positional arguments.
+    // {n} - positional arg (0 based)
+    // {key} - object property (first match)
+    // .. same as {0.key}
+    // {key1.key2.key3} - nested properties of an object
+    // keys can be numbers (0-based index into an array) or
+    // property names.
+    function formatImpl(re) {
+        var st = this.toString();
+        var args = Array.prototype.slice.call(arguments, 1);
+
+        // Passing in a single array, or a single object, starts references
+        // with that object (not the arguments array).
+        if (args.length == 1 && typeof args[0] == 'object') {
+            args = args[0];
+        }
+
+        st = st.replace(re, function(whole, key) {
+            var value = args;
+            var keys = key.split('.');
+            for (var i = 0; i < keys.length; i++) {
+                key = keys[i];
+                var n = parseInt(key);
+                if (!isNaN(n)) {
+                    value = value[n];
+                } else {
+                    value = value[key];
+                }
+                if (value == undefined) {
+                    logger.log("missing key: " + keys.slice(0, i + 1).join('.'), {once: true});
+                    return "";
+                }
+            }
+            // Implicit toString() on this.
+            return value;
+        });
+        return st;
+    }
+
+    // format(st, arg0, arg1, ...)
+    function format(st) {
+        var args = util.copyArray(arguments);
+        args.splice(0, 1, reFormat);
+        return formatImpl.apply(st, args);
+    }
+
+    // st.format(arg0, arg1, ...)
+    String.prototype.format = function() {
+        var args = util.copyArray(arguments);
+        args.unshift(reFormat);
+        return formatImpl.apply(this, args);
+    };
+
+    ns.extend({
+        'fixedDigits': fixedDigits,
+        'thousands': thousands,
+        'slugify': slugify,
+        'escapeHTML': escapeHTML,
+        'format': format,
+        'replaceKeys': format.decorate(debug.alias, 'replaceKeys'),
+        'base64ToString': base64ToString,
+        'canvasToPNG': canvasToPNG,
+        'dateFromISO': dateFromISO,
+        'isoFromDate': isoFromDate,
+        'setTimezone': setTimezone,
+        'decodeClass': decodeClass,
+        'shortDate': shortDate,
+        'wordList': wordList,
+        'arrayFromWordList': arrayFromWordList,
+        'repeat': repeat
+    });
+}); // org.startpad.format
 /* Begin file: vector.js */
 // --------------------------------------------------------------------------
 // Vector Functions
@@ -2119,6 +2500,330 @@ namespace.lookup('com.pageforest.forms').define(function(ns) {
     });
 
 }); // com.pageforest.forms
+/* Begin file: dialog.js */
+namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
+    var util = namespace.util;
+    var base = namespace.lookup('org.startpad.base');
+    var format = namespace.lookup('org.startpad.format');
+    var dom = namespace.lookup('org.startpad.dom');
+
+    // REVIEW: Need to add a select pattern.
+    var defaultPatterns = {
+        title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
+        text: {content: '<input id="{id}" type="text"/>'},
+        password: {content: '<input id="{id}" type="password"/>'},
+        checkbox: {label: '',
+                   content: '<label class="checkbox" for="{id}">' +
+                            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>'},
+        note: {content: '<textarea id="{id}" rows="{rows}"></textarea>'},
+        message: {useRow: 'spanRow', content: '<div class="message" id="{id}"></div>'},
+        value: {label: '<label class="left">{label}:</label>',
+                content: '<div class="value" id="{id}"></div>'},
+        button: {useRow: 'spanRow', content: '<input id="{id}" type="button" value="{label}"/>'},
+        invalid: {useRow: 'spanRow',
+                  content: '<span class="error">***missing field type: {type}***</span>'}
+    };
+
+    var defaultFieldOptions = {
+        note: {rows: 5}
+    };
+
+    var styles = {
+        div: {
+            pre: '',
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: '<div id ="{id}-row">{content}</div>\n',
+            row: '<div id="{id}-row">{label}{content}</div>\n',
+            post: '<div style="clear: both;"></div>\n',
+            dialogClass: 'sp-dialog-div'
+        },
+        table: {
+            pre: "<table>\n",
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: '<tr id="{id}-row"><td colspan=3>{content}</td></tr>',
+            row: '<tr id="{id}-row"><th>{label}</th>' +
+                '<td>{content}</td>' +
+                '<td id="{id}-error"><span class=error>{error}</span></td></tr>\n',
+            post: "</table>\n",
+            dialogClass: 'sp-dialog-table'
+        }
+    };
+
+    var sDialog = '<div class="{dialogClass}" id="{id}">\n' +
+        '{pre}\n{content}\n{post}\n' +
+        '</div>';
+
+    var cDialogs = 0;
+
+    // Dialog options:
+    // focus: field name for initial focus (if different from first)
+    // enter: field name to press for enter key
+    // message: field to use to display messages
+    // fields: array of fields with props:
+    //     name/type/label/value/required/shortLabel/hidden/onClick/onChange
+    function Dialog(options) {
+        cDialogs++;
+        this.prefix = 'SP' + cDialogs + '_';
+        this.bound = false;
+        this.lastValues = {};
+        this.patterns = defaultPatterns;
+        this.fieldOptions = defaultFieldOptions;
+        this.style = styles.div;
+        util.extendObject(this, options);
+        this.setStyle(this.style);
+        // Make a copy in case the caller re-uses a fields list for
+        // multiple dialogs.
+        this.fields = util.copyArray(this.fields);
+    }
+
+    Dialog.methods({
+        setStyle: function(style) {
+            this.style = style;
+            util.extendObject(this, this.style);
+        },
+
+        html: function() {
+            var self = this;
+            var stb = new base.StBuf();
+            this.id = this.prefix + 'dialog';
+            base.forEach(this.fields, function(field, i) {
+                field.id = self.prefix + i;
+                if (field.type == undefined) {
+                    field.type = 'text';
+                }
+                base.extendIfMissing(field, self.fieldOptions[field.type]);
+                if (self.patterns[field.type] == undefined) {
+                    field.type = 'invalid';
+                }
+                if (field.label == undefined) {
+                    field.label = field.name[0].toUpperCase() +
+                        field.name.slice(1);
+                }
+                var fieldPatterns = base.extendIfMissing({}, self.patterns[field.type],
+                        base.project(self.style, ['label', 'content']));
+                var row = {id: field.id,
+                           label: fieldPatterns.label.format(field),
+                           content: fieldPatterns.content.format(field)};
+                var rowPattern = self[fieldPatterns.useRow] || self.row;
+                stb.append(rowPattern.format(row));
+            });
+            this.content = stb.toString();
+            return sDialog.format(this);
+        },
+
+        bindFields: function() {
+            if (this.bound) {
+                return;
+            }
+            this.bound = true;
+
+            var self = this;
+
+            self.dlg = document.getElementById(self.id);
+            if (self.dlg == undefined) {
+                throw new Error("Dialog not in the DOM.");
+            }
+
+            var initialValues = {};
+
+            base.forEach(this.fields, function(field) {
+                field.elt = document.getElementById(field.id);
+                if (!field.elt) {
+                    return;
+                }
+
+                if (field.value) {
+                    initialValues[field.name] = field.value;
+                }
+
+                if (field.onClick != undefined) {
+                    dom.bind(field.elt, 'click', function(evt) {
+                        // REVIEW: should be field.onClick.call(field, evt, self)
+                        field.onClick(evt, field, self);
+                    });
+                }
+
+                // Bind to chaning field (after it's changed - use keyUp)
+                if (field.onChange != undefined) {
+                    dom.bind(field.elt, 'keyup', function(evt) {
+                        field.onChange(evt, field.elt.value, self);
+                    });
+                }
+
+                // Default focus is on the first text-entry field.
+                if (self.focus == undefined &&
+                    (field.elt.tagName == 'INPUT' ||
+                     field.elt.tagName == 'TEXTAREA')) {
+                    self.focus = field.name;
+                }
+
+                // First button defined gets the enter key
+                if (self.enter == undefined && field.type == 'button') {
+                    self.enter = field.name;
+                }
+            });
+
+            if (self.enter) {
+                dom.bind(self.dlg, 'keydown', function(evt) {
+                    if (evt.keyCode == 13) {
+                        var field = self.getField(self.enter);
+                        if (field.onClick) {
+                            field.onClick();
+                        }
+                    }
+                });
+            }
+
+            this.setValues(initialValues);
+        },
+
+        getField: function(name) {
+            this.bindFields();
+            for (var i = 0; i < this.fields.length; i++) {
+                if (this.fields[i].name == name) {
+                    return this.fields[i];
+                }
+            }
+            return undefined;
+        },
+
+        // Compare current value with last externally set value
+        hasChanged: function(name) {
+            // REVIEW: This could be more effecient
+            var values = this.getValues();
+            return values[name] != this.lastValues[name];
+        },
+
+        // Call just before displaying a dialog to set it's values.
+        // REVIEW: should have a Field class and call field.set method
+        setValues: function(values) {
+            var field;
+
+            base.extendObject(this.lastValues, values);
+
+            for (var name in values) {
+                if (values.hasOwnProperty(name)) {
+                    field = this.getField(name);
+                    if (field == undefined || field.elt == undefined) {
+                        continue;
+                    }
+                    var value = values[name];
+                    if (value == undefined) {
+                        value = '';
+                    }
+                    switch (field.elt.tagName) {
+                    case 'INPUT':
+                        switch (field.elt.type) {
+                        case 'checkbox':
+                            field.elt.checked = value;
+                            break;
+                        case 'text':
+                        case 'password':
+                            field.elt.value = value;
+                            break;
+                        default:
+                            break;
+                        }
+                        break;
+
+                    case 'TEXTAREA':
+                        field.elt.value = value;
+                        break;
+
+                    default:
+                        dom.setText(field.elt, value);
+                        break;
+                    }
+                }
+            }
+        },
+
+        setFocus: function() {
+            var field;
+            this.bindFields();
+            if (this.focus) {
+                field = this.getField(this.focus);
+                if (field) {
+                    field.elt.focus();
+                    field.elt.select();
+                }
+            }
+        },
+
+        getValues: function() {
+            var values = {};
+
+            this.bindFields();
+            for (var i = 0; i < this.fields.length; i++) {
+                var field = this.fields[i];
+                if (field.elt == undefined) {
+                    continue;
+                }
+                var name = field.name;
+                switch (field.elt.tagName) {
+                case 'INPUT':
+                    switch (field.elt.type) {
+                    case 'checkbox':
+                        values[name] = field.elt.checked;
+                        break;
+                    case 'text':
+                    case 'password':
+                        values[name] = base.strip(field.elt.value);
+                        break;
+                    default:
+                        break;
+                    }
+                    break;
+
+                case 'TEXTAREA':
+                    values[name] = base.strip(field.elt.value);
+                    break;
+
+                default:
+                    values[name] = base.strip(dom.getText(field.elt));
+                    break;
+                }
+            }
+
+            return values;
+        },
+
+        showField: function(name, shown) {
+            if (shown == undefined) {
+                shown = true;
+            }
+            var field = this.getField(name);
+            $('#' + field.id + '-row')[shown ? 'show' : 'hide']();
+        },
+
+        enableField: function(name, enabled) {
+            if (enabled == undefined) {
+                enabled = true;
+            }
+            var field = this.getField(name);
+            switch (field.elt.tagName) {
+            case 'INPUT':
+            case 'TEXTAREA':
+                field.elt.disabled = !enabled;
+                break;
+
+            case 'DIV':
+                field.elt.style.display = enabled ? 'block' : 'none';
+                break;
+
+            default:
+                throw new Error("Field " + name + " is not a form field.");
+            }
+        }
+    });
+
+    ns.extend({
+        'Dialog': Dialog,
+        'styles': styles
+    });
+});
 /* Begin file: main.js */
 namespace.lookup('com.pageforest.main').define(function(ns) {
     var selectedTab;
@@ -2144,10 +2849,12 @@ namespace.lookup('com.pageforest.main').define(function(ns) {
 });
 /* Begin file: sign-up.js */
 namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
-
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
+    var dialog = namespace.lookup('org.startpad.dialog');
+
+    var dlg;
 
     function validatePassword() {
         var password = $("#id_password").val();
@@ -2260,6 +2967,19 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     }
 
     function onReady() {
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username'},
+                {name: 'password', type: 'password'},
+                {name: 'allowAccess', label: "Allow Access to " + appId, type: 'checkbox'},
+                {name: 'signIn', label: "Sign In", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
+        });
+
+        $('#sign-up-dialog').html(dlg.html());
+        dlg.setFocus();
+
         // Hide message about missing JavaScript.
         $('#enablejs').hide();
         $('input').removeAttr('disabled');
@@ -2300,12 +3020,12 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
-    var dom = namespace.lookup('org.startpad.dom');
+    var dialog = namespace.lookup('org.startpad.dialog');
 
     var appId;
     var appAuthURL;
     var sessionKey;
-    var username;
+    var dlg;
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -2381,9 +3101,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     function onSuccess(message, status, xhr) {
         $(document.body).addClass('user');
-        $('.username').text(username);
+        $('.username').text(dlg.values.username);
         getSessionKey(function () {
-            if ($('#id-appauth').attr('checked')) {
+            if (dlg.values.allowAccess) {
                 transferSessionKey(closeForm);
             }
         });
@@ -2404,12 +3124,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onChallenge(challenge, status, xhr) {
-        username = $('#id-username').val();
-        var lower = username.toLowerCase();
-        var password = $('#id-password').val();
-        var userpass = crypto.HMAC(crypto.SHA1, lower, password);
+        var userpass = crypto.HMAC(crypto.SHA1, dlg.values.username, dlg.values.password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
-        var reply = lower + '|' + challenge + '|' + signature;
+        var reply = dlg.values.username + '|' + challenge + '|' + signature;
         $.ajax({
             url: '/auth/verify/' + reply,
             success: onSuccess,
@@ -2418,6 +3135,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSubmit() {
+        dlg.values = dlg.getValues();
+        dlg.values.username = dlg.values.username.toLowerCase();
+
         $.ajax({
             url: '/auth/challenge',
             success: onChallenge,
@@ -2427,35 +3147,38 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onReady(forApp) {
-        username = cookies.getCookie('sessionuser');
+        var username = cookies.getCookie('sessionuser');
         appId = forApp;
+
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username'},
+                {name: 'password', type: 'password'},
+                {name: 'allowAccess', label: "Allow Access to " + appId, type: 'checkbox'},
+                {name: 'signIn', label: "Sign In", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
+        });
+
+        $('#sign-in-dialog').html(dlg.html());
+        dlg.setFocus();
+
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        } else {
+            dlg.showField('allowAccess', false);
         }
 
         // Nothing to do until the user signs in - page will reload
         // on form post.
-        $(document.body)[username ? 'addClass' : 'removeClass']('user');
-        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
-
-        // If already logged in - get the sessionKey right away.
-        if (username) {
-            $('.username').text(username);
-            getSessionKey();
+        if (appId) {
+            $(document.body).addClass('app');
         }
 
-        if (appId) {
-            // Check (once) if we're also currently logged in @ appId
-            // without having to sign-in again.
-            // REVIEW: Isn't this insecure?
-            var url = appAuthURL + "username/";
-            getJSONP(url, function(username) {
-                // We're already logged in!
-                if (typeof(username) == 'string') {
-                    closeForm();
-                    return;
-                }
-            });
+        if (username) {
+            $(document.body).addClass('user');
+            $('.username').text(username);
+            getSessionKey();
         }
     }
 
