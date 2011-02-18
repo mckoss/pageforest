@@ -4,7 +4,7 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
 
     ns.addTests = function(ts) {
 
-        ts.addTest("replaceKeys", function(ut)
+        ts.addTest("format", function(ut)
         {
             ut.assertEq(format.replaceKeys("this is {wow} test", {wow: "foo"}),
                         "this is foo test");

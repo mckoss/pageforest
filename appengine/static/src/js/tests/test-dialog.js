@@ -58,6 +58,8 @@ namespace.lookup('org.startpad.dialog.test').defineOnce(function (ns) {
                 if (dlg == dlgs[styles.length - 1]) {
                     console.log("async called");
                     ut.async(false);
+                } else {
+                    dlg.showField('text', false);
                 }
             }
 
