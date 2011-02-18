@@ -27,13 +27,15 @@ class Doc(SuperDoc):
         """Return ETag for use in the HTTP header."""
         return '"%s"' % self.sha1
 
+    def get_app(self):
+        app_id = self.key().name().split('/')[0]
+        return apps.models.App.lookup(app_id)
+
     def get_absolute_url(self, app=None):
         """
         Get the absolute URL for this model instance.
         """
-        app_id = self.key().name().split('/')[0]
-        app = apps.models.App.lookup(app_id)
-        return '%s#%s' % (app.get_app_url(), self.doc_id)
+        return '%s#%s' % (self.get_app().get_app_url(), self.doc_id)
 
     @classmethod
     def create(cls, app_id, doc_id, user):

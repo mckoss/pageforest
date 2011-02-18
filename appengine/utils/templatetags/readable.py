@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta
 
+from django import template
+
+register = template.Library()
+
 
 def plural(number):
     """
@@ -70,6 +74,11 @@ def ago(delta):
 
     return "%d minute%s ago" % (minutes, plural(minutes))
 
+
+@register.filter(name='ago')
+def datetime_ago(dt):
+    delta = datetime.now() - dt
+    return ago(delta)
 
 def hexdump(bytes, row=16):
     """
