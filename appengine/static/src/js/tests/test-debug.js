@@ -48,7 +48,7 @@ namespace.lookup('org.startpad.debug.test').defineOnce(function (ns) {
             mockLogger.expect("sample is a deprecated function");
             s2();
 
-            s2 = sample.decorate(debug.deprecated, "you should know better.")
+            s2 = sample.decorate(debug.deprecated, "you should know better.");
             mockLogger.expect("sample is a deprecated function - you should know better.");
             s2();
 
