@@ -24,6 +24,7 @@ SIGN_OUT = AUTH_PREFIX + "sign-out/"
 EMAIL_VERIFY = AUTH_PREFIX + "email-verify/"
 
 APP_AUTH_PREFIX = "/auth/"
+APP_SIGN_UP = APP_AUTH_PREFIX + "sign-up/"
 
 
 class UserTest(AppTestCase):
@@ -164,6 +165,44 @@ class SignUpTest(AppTestCase):
 
         finally:
             mail.send_mail = real_send_mail
+
+
+class AppSignUpTest(AppTestCase):
+    """
+    Application-specific user sign-up.
+    """
+
+    def test_username_validate(self):
+        """App signup field validator."""
+        tests = [
+            ({'username': 'mike', 'validate': 'true', 'secret': '1' * 40},
+             "Invalid username"),
+            ({'username': 'myapp_mike', 'validate': 'true', 'secret': '1' * 40},
+             "email must not be empty"),
+            ({'username': 'yourapp_mike', 'validate': 'true',
+              'email': 'mckoss@startpad.org', 'secret': '1' * 40},
+             "\"username\": \"Application prefix"),
+            ({'username': 'myapp_mike', 'validate': 'true',
+              'email': 'mckoss@startpad.org', 'secret': '1' * 40},
+             "User myapp_mike created"),
+            ]
+        for test in tests:
+            response = self.app_client.post(APP_SIGN_UP, test[0])
+            self.assertContains(response, test[1])
+
+    def test_duplicate_user(self):
+        tests = [
+            ({'username': 'myapp_mike',
+              'email': 'mckoss@startpad.org', 'secret': '1' * 40},
+             "User myapp_mike created", 201),
+            ({'username': 'myapp_mike',
+              'email': 'mckoss@startpad.org', 'secret': '1' * 40},
+             "already exists", 409),
+            ]
+        for test in tests:
+            response = self.app_client.post(APP_SIGN_UP, test[0])
+            print "validate: %r" % response.content
+            self.assertContains(response, test[1], status_code=test[2])
 
 
 class AppSignInTest(AppTestCase):
