@@ -97,6 +97,9 @@ APP_ID_REGEX = r"[a-z][a-z0-9-]{,30}[a-z0-9]"
 DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]{,99}"
 TAG_REGEX = r"([a-z0-9]{1,20}:)?" + DOC_ID_REGEX
 
+# App-specific username
+APP_USERNAME_REGEX = "%s_%s" % (APP_ID_REGEX, USERNAME_REGEX)
+
 # Canonical second-level domain name.
 DEFAULT_DOMAIN = 'pageforest.com'
 

@@ -147,6 +147,7 @@ class AuthMiddleware(object):
         if (request.path_info == '/app/admin/auth/challenge/'
             or request.path_info.startswith('/app/admin/auth/verify/')
             or request.path_info.startswith('/app/auth/set-session/')
+            or request.path_info.startswith('/app/auth/sign-up/')
             or request.path_info.startswith('/app/auth/username/')
             or request.path_info.startswith('/app/channel')):
             return
@@ -159,7 +160,7 @@ class AuthMiddleware(object):
             and request.user is not None):
             return
 
-        # Only allow GET and HEAD for app_id.pageforest.com.
+        # Only allow GET and HEAD for app_id.pageforest.com (i.e app-static content)
         # FIXME: Should be a more elegant method than this to handle
         # reserved URL's.
         app_id_methods = ('GET', 'HEAD')
