@@ -5,6 +5,7 @@ from mock import Mock
 
 from django.conf import settings
 from django.test import Client
+from django.utils import simplejson as json
 
 from google.appengine.api import mail
 
@@ -176,19 +177,25 @@ class AppSignUpTest(AppTestCase):
         """App signup field validator."""
         tests = [
             ({'username': 'mike', 'validate': 'true', 'secret': '1' * 40},
-             "Invalid username"),
+             "Invalid username", 'username'),
             ({'username': 'myapp_mike', 'validate': 'true', 'secret': '1' * 40},
-             "email must not be empty"),
+             "Email address is required", 'email'),
             ({'username': 'yourapp_mike', 'validate': 'true',
               'email': 'mckoss@startpad.org', 'secret': '1' * 40},
-             "\"username\": \"Application prefix"),
+             "\"username\": \"Application prefix", 'username'),
             ({'username': 'myapp_mike', 'validate': 'true',
               'email': 'mckoss@startpad.org', 'secret': '1' * 40},
-             "User myapp_mike created"),
+             "User myapp_mike created", None),
             ]
         for test in tests:
             response = self.app_client.post(APP_SIGN_UP, test[0])
-            self.assertContains(response, test[1])
+            expected = 400 if test[2] else 201
+            self.assertContains(response, test[1], status_code=expected)
+            result = json.loads(response.content)
+            self.assertEqual(result['status'], expected)
+            if test[2] is not None:
+                self.assertTrue('errors' in result)
+                self.assertTrue(test[2] in result['errors'])
 
     def test_duplicate_user(self):
         tests = [
@@ -201,7 +208,6 @@ class AppSignUpTest(AppTestCase):
             ]
         for test in tests:
             response = self.app_client.post(APP_SIGN_UP, test[0])
-            print "validate: %r" % response.content
             self.assertContains(response, test[1], status_code=test[2])
 
 
