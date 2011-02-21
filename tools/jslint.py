@@ -44,6 +44,7 @@ Do not use 'new' for side effects
 Missing radix parameter
 Read only.
 is better written in dot notation
+Script URL
 """.strip().splitlines(),
 
     'strict': """
