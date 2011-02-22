@@ -19,6 +19,7 @@ from utils.shortcuts import render_to_response
 from utils.forms import ValidationError
 from utils import crypto
 from utils.json import HttpJSONResponse
+from utils.shortcuts import get_int, get_bool
 
 from auth import SignatureError
 from auth.forms import SignUpForm, SignInForm, ProfileForm
@@ -145,7 +146,7 @@ def app_sign_up(request):
     email: string
     verifyEmail: boolean
     """
-    validate_only = request.POST.get('validate', False)
+    validate_only = get_bool(request.POST, 'validate', False)
     username = request.POST.get('username', '')
 
     try:
