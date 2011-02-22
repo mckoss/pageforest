@@ -242,7 +242,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Callback function for auto-load subscribtion
         // TODO: Compare Sha1 hashes - not modified date to ignore a notify
         onAutoLoad: function (message) {
-            if (!this.autoLoad ||
+            if (!this.autoLoad || this.state != 'clean' ||
                 message.key != this.docid + '/' ||
                 message.data.modified.isoformat == this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
