@@ -1,7 +1,7 @@
 /* Begin file: main.css */
 body {
     font-family: Verdana, Arial, san-serif;
-    font-size: 1.1em;
+    font-size: 110%;
     color: #4D2500;
     background-color: #C7A36E;
     margin: 0;
@@ -11,9 +11,9 @@ body {
 body.app .if-not-app, body:not(.app) .if-app { display: none; }
 body.user .if-not-user, body:not(.user) .if-user { display: none; }
 
-h1 { text-align: center; margin-top: 0px; font-size: 1.7em; }
-h2 { clear: both; margin-top: 0px; padding-top: 10px; font-size: 1.3em}
-h3 { clear: both; text-align: center; font-size: 1em}
+h1 { text-align: center; margin-top: 0px; font-size: 170%; }
+h2 { clear: both; margin-top: 0px; padding-top: 10px; font-size: 130%}
+h3 { clear: both; text-align: center; }
 
 a { text-decoration: none; color: inherit; font-style: italic; }
 a:hover { text-decoration: underline; color: #EAD0AA; }
@@ -74,10 +74,12 @@ div.footer {
 }
 
 img.favicon16 {
-    width: 16px;
-    height: 16px;
+    width: 32px;
+    height: 32px;
     vertical-align: -2px;
 }
+
+th, td { vertical-align: top; padding: 5px; }
 
 table.bordered {
     border-collapse: collapse;
@@ -264,6 +266,12 @@ div.call-to-action p {
     margin: 0;
     padding: 15px;
 }
+/* Begin file: app.css */
+div.app-info { font-size: 75%; font-style: italic; }
+.app-title { font-weight: bold; }
+.app-id { font-style: italic; }
+
+td.col2 { width: 300px; text-align: right; }
 /* Begin file: dialog.css */
 /* Div style dialogs */
 div.sp-dialog-div * { font-size: inherit; }
