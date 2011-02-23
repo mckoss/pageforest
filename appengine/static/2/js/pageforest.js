@@ -2690,10 +2690,23 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         // Compare current value with last externally set value
-        hasChanged: function(name) {
-            // REVIEW: This could be more effecient
-            var values = this.getValues();
-            return values[name] != this.lastValues[name];
+        hasChanged: function(name, fSnapshot) {
+            var result,
+                values = this.getValues();
+
+            if (name != undefined) {
+                result = values[name] != this.lastValues[name];
+                if (fSnapshot) {
+                    this.lastValues[name] = values[name];
+                }
+            } else {
+                result = !base.isEqual(values, this.lastValues);
+                if (fSnapshot) {
+                    this.lastValues = values;
+                }
+            }
+
+            return result;
         },
 
         // Call just before displaying a dialog to set it's values.
@@ -2900,36 +2913,11 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         console.error(xhr);
     }
 
-    function getFormData() {
-        var username = $("#id_username").val();
-        var lower = username.toLowerCase();
-        var password = $("#id_password").val();
-        return {
-            username: username,
-            password: crypto.HMAC(crypto.SHA1, lower, password),
-            email: $("#id_email").val(),
-            tos: $("#id_tos").attr('checked') ? 'checked' : ''
-        };
-    }
-
-    function isChanged() {
-        var username = $("#id_username").val();
-        var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
-        var email = $("#id_email").val();
-        var oneline = [username, password, repeat, email].join('|');
-        if (oneline == ns.previous) {
-            return false;
-        }
-        ns.previous = oneline;
-        return true;
-    }
-
     function validateIfChanged() {
-        if (!isChanged()) {
+        if (!dlg.hasChanged(undefined, true)) {
             return;
         }
-        var data = getFormData();
+        var data = dlg.getValues();
         data.validate = true;
         forms.postFormData('/sign-up/', data,
                            null, onValidateIgnoreEmpty, onError);
@@ -2940,7 +2928,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         if (errors) {
             forms.showValidatorResults(['password', 'repeat'], errors);
         } else {
-            forms.postFormData('/sign-up/', getFormData(),
+            forms.postFormData('/sign-up/', dlg.getValues(),
                                onSuccess, onValidate, onError);
         }
         return false;
@@ -2971,8 +2959,10 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
             fields: [
                 {name: 'username'},
                 {name: 'password', type: 'password'},
-                {name: 'allowAccess', label: "Allow Access to " + appId, type: 'checkbox'},
-                {name: 'signIn', label: "Sign In", type: 'button', onClick: onSubmit}
+                {name: 'passwordRepeat', type: 'password', label: "Repeat password"},
+                {name: 'email', label: "Email address"},
+                {name: 'tos', type: 'checkbox', label: "Terms of Service"},
+                {name: 'joinNow', label: "Join Now", type: 'button', onClick: onSubmit}
             ],
             style: dialog.styles.table
         });
@@ -2980,21 +2970,7 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
         $('#sign-up-dialog').html(dlg.html());
         dlg.setFocus();
 
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
-
-        // Initialize ns.previous to track input changes.
-        isChanged();
-        // Validate in the background
         setInterval(validateIfChanged, 1000);
-        $('#id_tos').click(function() {
-            $('#validate_tos').html('');
-        });
     }
 
     ns.extend({
