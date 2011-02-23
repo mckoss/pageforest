@@ -51,7 +51,9 @@
   {% endif %}
 
 <p>Browse the application's files using the
-  <b><a href="http://editor.pageforest.com/#{{ app.get_app_id }}">Pageforest Application Editor</a></b>.</p>
+  <b><a href="http://editor.pageforest.com/#{{ app.get_app_id }}">{{ SITE_NAME}} Application Editor</a></b>.</p>
+<p class="note">Note: The {{ SITE_NAME }} editor is itself, a {{ SITE_NAME }} app.  So, you'll have to
+sign in (again) to use it to edit your own applications.</p>
 
 {% if app.cloneable and user %}
 <p><b><a href="{{ app.get_details_url }}clone/">Clone this app!</a></b></p>
