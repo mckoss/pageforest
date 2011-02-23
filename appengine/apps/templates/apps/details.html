@@ -13,6 +13,9 @@
     {% endif %}
     <a class="app-title" href="{{ app.get_app_url }}">{{ app.title }}</a>
     <a class="app-id" href="{{ app.get_app_url }}">({{ app.get_app_id }})</a>
+    <a href="http://editor.pageforest.com/#{{ app.get_app_id }}">
+      <img src="/static/images/pencil.png"/></a>
+
   </h1>
 
 <table><tr><td>
@@ -47,7 +50,7 @@
   </ol>
   {% endif %}
 
-<p>Browse the applications files using the
+<p>Browse the application's files using the
   <b><a href="http://editor.pageforest.com/#{{ app.get_app_id }}">Pageforest Application Editor</a></b>.</p>
 
 {% if app.cloneable and user %}
