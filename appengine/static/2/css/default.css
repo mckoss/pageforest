@@ -266,12 +266,14 @@ div.call-to-action p {
     margin: 0;
     padding: 15px;
 }
-/* Begin file: app.css */
+/* Begin file: apps.css */
 div.app-info { font-size: 75%; font-style: italic; }
 .app-title { font-weight: bold; }
 .app-id { font-style: italic; }
 
 td.col2 { width: 300px; text-align: right; }
+
+.note { font-size: 75%; font-style: italic; }
 /* Begin file: dialog.css */
 /* Div style dialogs */
 div.sp-dialog-div * { font-size: inherit; }

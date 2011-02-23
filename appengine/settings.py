@@ -299,7 +299,7 @@ MEDIA_FILES = {
         },
 
     'css': {
-        'default': ['main', 'heading', 'top-bar', 'tabs', 'home', 'app', 'dialog', 'form'],
+        'default': ['main', 'heading', 'top-bar', 'tabs', 'home', 'apps', 'dialog', 'form'],
         },
     }
 
