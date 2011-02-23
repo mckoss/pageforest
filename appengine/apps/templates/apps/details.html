@@ -1,39 +1,58 @@
 {% extends "page.html" %}
+{% load readable %}
 
 {% block title %}{{ app.title }}{% endblock %}
 
 {% block page-content %}
 <div id=double-column>
-  <h1>{{ app.title }}</h1>
+  <h1>
+    {% if app.icon %}
+      <img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt=""/>
+    {% else %}
+      <img src="/static/images/icon.png" class="favicon16" alt=""/>
+    {% endif %}
+    <a class="app-title" href="{{ app.get_app_url }}">{{ app.title }}</a>
+    <a class="app-id" href="{{ app.get_app_url }}">({{ app.get_app_id }})</a>
+  </h1>
 
-  <p><img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt="" />
-    <a href="{{ app.get_app_url }}" target="_blank">{{ app.get_app_url }}</a></p>
+<table><tr><td>
+  URL: <a href="{{ app.get_app_url }}">{{ app.get_app_url }}</a>
+  <br/>by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a>
+  {% if app.writers %}
+  ( with {% for username in app.writers %}
+    {% ifnotequal username user.username %}
+    <a href="/apps?writer={{ username }}">{{ username }}</a>{% if not forloop.last %},{% endif %}
+    {% endifnotequal %}
+   {% endfor %} )
+  {% endif %}
 
   {% if app.tags %}
-  <p>Tags:{% for tag in app.tags %}
-    <a href="/apps?tag={{ tag }}">{{ tag }}</a>{% endfor %}</p>
+  <br/>Tags:
+  {% for tag in app.tags %}
+  <a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %},{% endif %}
+  {% endfor %}
   {% endif %}
+  </td>
+<td class="col2">
+  <div>Created: {{ app.created|ago }}</div>
+  <div>Updated: {{ app.modified|ago }}</div>
+</td>
+</tr></table>
 
-  <p>Owner:
-    <a href="/apps?writer={{ app.owner }}">{{ app.owner }}</a></p>
-
-  {% if app.writers %}
-  <p>Writers:{% for username in app.writers %}
-    <a href="/apps?writer={{ username }}">{{ username }}</a>{% endfor %}</p>
-  {% endif %}
-
-  {% if app.readers %}
-  <p>Readers:{% for username in app.readers %} {{ username }}{% endfor %}</p>
-  {% endif %}
+<h2>{{ app.title }} files:</h2>
 
   {% if static_blobs %}
-  <ul>{% for blob in static_blobs %}
+  <ol>{% for blob in static_blobs %}
     <li><a href="{{ app.get_app_url }}{{ blob }}">{{ blob }}</a></li>{% endfor %}
-  </ul>
+  </ol>
   {% endif %}
 
-  {% if app.cloneable and request.user %}
-  <p><a href="{{ app.get_details_url }}clone/">Clone this app</a></p>
-  {% endif %}
+<p>Browse the applications files using the
+  <b><a href="http://editor.pageforest.com/#{{ app.get_app_id }}">Pageforest Application Editor</a></b>.</p>
+
+{% if app.cloneable and user %}
+<p><b><a href="{{ app.get_details_url }}clone/">Clone this app!</a></b></p>
+{% endif %}
+
 </div>
 {% endblock %}

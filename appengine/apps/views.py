@@ -32,7 +32,7 @@ def index(request):
     if request.method == 'LIST':
         return app_list(request)
 
-    title = "Featured apps"
+    title = "Featured Apps"
     query = App.all()
     if 'writer' in request.GET:
         title = "Apps from " + request.GET['writer']
