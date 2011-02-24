@@ -80,7 +80,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.username = undefined;
         this.fLogging = true;
         this.logged = {};
-        this.lastHash = '';
+        this.lastDocid = undefined;
         this.fFirstPoll = true;
         this.uid = random.randomString(20);
 
@@ -254,7 +254,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Set the document to the clean state.
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
-        setCleanDoc: function(docid, preserveHash) {
+        setCleanDoc: function(docid, preserveDocid) {
             this.docid = this.meta.docid = docid;
             this.changeState('clean');
 
@@ -271,17 +271,12 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
 
             // Enable polling to kick off a load().
-            if (preserveHash) {
-                this.lastHash = '';
+            if (preserveDocid) {
+                this.lastDocid = undefined;
                 return;
             }
 
-            if (docid == undefined) {
-                docid = '';
-            }
-
-            window.location.hash = docid;
-            this.lastHash = window.location.hash;
+            this.setDocid(docid);
         },
 
         // See if the document data has changed - assume this is not
@@ -455,9 +450,39 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
+        // This function called to get the current document id - when it
+        // changes, a load() will be automatically started.  Should return
+        // undefined if no current document is set.
+        // The default behavior is to read the #hash from the URL.
+        getDocid: function () {
+            var hash;
+
+            if (this.app.getDocid) {
+                return this.app.getDocid();
+            }
+
+            hash = window.location.hash.substr(1);
+            return hash == '' ? undefined : hash;
+        },
+
+        // The app can provide a setDocid function, if it want's to
+        // display (or store) the current docid.  The default implementation
+        // writes in the the URL #hash.
+        setDocid: function (docid) {
+            this.lastDocid = docid;
+
+            if (this.app.setDocid) {
+                return this.app.setDocid(docid);
+            }
+
+            window.location.hash = docid == undefined ? '' : docid;
+        },
+
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
         poll: function () {
+            var docid;
+
             // Callbacks to app are deferred until poll is called.
             if (this.state == 'init') {
                 if (this.getDoc) {
@@ -465,10 +490,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
             }
 
-            if (this.lastHash != window.location.hash) {
-                this.lastHash = window.location.hash;
-                this.load(window.location.hash.substr(1));
+            // Check for change in docid to trigger a load.
+            docid = this.getDocid();
+            if (this.lastDocid != docid) {
+                this.lastDocid = docid;
+                this.load(docid);
             }
+
             this.checkUsername();
             this.checkDoc();
             this.fFirstPoll = false;
