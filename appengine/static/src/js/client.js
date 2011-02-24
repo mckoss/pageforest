@@ -190,7 +190,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             base.extendIfChanged(this.meta, this.metaDoc,
                                  base.project(result,
                                               ['modified', 'owner', 'sha1']));
-            this.setCleanDoc(result.docid);
+
+            // If the docid is not in the result - just use the original docid.
+            // REVIEW: get rid of this.docid and use this.meta.docid always?
+            this.setCleanDoc(result.docid || this.docid || this.meta.docid);
 
             this.setAppPanelValues(this.meta);
 
