@@ -85,7 +85,6 @@ class Hashable(Serializable):
             self.size = 0
             return
         self.sha1 = sha1(value).hexdigest()
-        logging.info("new hash = %s" % self.sha1)
         self.size = len(value)
 
     def update_headers(self, response):
