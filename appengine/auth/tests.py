@@ -716,3 +716,22 @@ class EmailVerificationTest(AppTestCase):
             'paul', 'paul@example.com', expires, self.www.secret)
         self.assertContains(self.www_client.get(EMAIL_VERIFY + verification),
                             "Your email address has been verified.")
+
+
+class CrossSiteTest(AppTestCase):
+
+    def test_referers(self):
+        """Cross-site referers"""
+        self.sign_in(self.peter)
+        response = self.app_client.get('/docs/mydoc', HTTP_REFERER='http://trusted.com')
+        self.assertEqual(response.status_code, 200)
+        response = self.app_client.get('/docs/mydoc', HTTP_REFERER='http://evil.com')
+        self.assertEqual(response.status_code, 200)
+
+        response = self.app_client.get('/docs/private', HTTP_REFERER='http://trusted.com')
+        self.assertEqual(response.status_code, 200)
+        response = self.app_client.get('/docs/private', HTTP_REFERER='https://trusted.com')
+        self.assertEqual(response.status_code, 200)
+        response = self.app_client.get('/docs/private', HTTP_REFERER='http://evil.com')
+        self.assertContains(response, 'Untrusted Referer domain: evil.com',
+                            status_code=403)

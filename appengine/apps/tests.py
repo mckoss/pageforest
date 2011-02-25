@@ -71,6 +71,7 @@ class AppTestCase(TestCase):
             key_name='myapp',
             title='My Test App',
             url='http://myapp.pageforest.com/',
+            referers=['http://trusted.com'],
             owner='peter',
             readers=['public'],
             tags=['mytag', 'pf:featured'],
@@ -83,8 +84,16 @@ class AppTestCase(TestCase):
             title="My Document",
             tags='one two three'.split(),
             owner='peter',
-            readers=['public'])
+            readers=['public'],
+            )
         self.doc.put()
+        self.private_doc = Doc(
+            key_name='myapp/private',
+            doc_id='private',
+            title="My Secret Document",
+            owner='peter',
+            )
+        self.private_doc.put()
         # Create some test blobs.
         Blob(key_name='apps/myapp/index.html/', value='<html>').put()
         Blob(key_name='myapp/mydoc/', value='{"int": 123}').put()
