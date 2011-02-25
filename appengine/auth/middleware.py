@@ -56,9 +56,9 @@ def referer_is_trusted(request):
             return False
         # Trust the default domain for this app.
         return True
-    for referer in request.app.referers:
-        # TODO: Accept https: if referer starts with http:
-        if referer.startswith(referer):
+    for allowed_referer in request.app.referers:
+        if referer.startswith(allowed_referer) or \
+           referer.startswith(allowed_referer.replace('http://', 'https://')):
             # Explicitly trusted by the app developer.
             return True
     request.referer_error = "Untrusted Referer domain: " + hostname
