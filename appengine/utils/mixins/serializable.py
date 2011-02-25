@@ -35,6 +35,16 @@ class Serializable(db.Model):
     def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
         Serialize a datastore entity to JSON.
+
+        The class must support a json_props method returning:
+
+        { 'name': 'alias',
+          'name': None,
+           ...
+        }
+
+        The model property will always use 'name', but may be reperesented
+        in the json blob as 'alias' (if given).
         """
         if exclude is None:
             exclude = ()
