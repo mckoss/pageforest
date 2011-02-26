@@ -45,6 +45,7 @@ Missing radix parameter
 Read only.
 is better written in dot notation
 Script URL
+Expected '}' to have an indentation
 """.strip().splitlines(),
 
     'strict': """
