@@ -1,0 +1,79 @@
+<html>
+
+<head>
+<title>Unit Test Runner</title>
+<script src="../namespace.js"></script>
+<script src="modules.js"></script>
+<script src="../base.js"></script>
+<script src="../timer.js"></script>
+<script src="../loader.js"></script>
+<script src="../format.js"></script>
+<script src="../unit.js"></script>
+
+<style>
+#divUnit {
+clear: both;
+}
+</style>
+</head>
+
+<body onload="runner.run();">
+<h1 id="title"><script>document.write(document.title);</script></h1>
+<script>
+var base = namespace.lookup('org.startpad.base');
+var unit = namespace.lookup('org.startpad.unit');
+var modules = namespace.lookup('com.pageforest.modules');
+
+var runner = namespace.lookup('com.pageforest.test.runner.html');
+runner.define(function (ns) {
+    function testModule(module, fnCallback) {
+        var targetNamespace = modules.namespaces[module];
+
+        if (modules.locations[targetNamespace + '.test']) {
+            unit.loadAndRunTest(targetNamespace, modules.locations, fnCallback);
+        }
+        else {
+            if (fnCallback) {
+                fnCallback();
+            }
+        }
+    }
+
+    var moduleList = base.keys(modules.namespaces);
+    var i = 0;
+    function testNext() {
+        if (i >= moduleList.length) {
+            return;
+        }
+        testModule(moduleList[i++], testNext);
+    }
+
+    function run() {
+        var target = location.hash;
+        if (!target) {
+            target = 'all';
+        }
+        else {
+            target = target.substr(1);
+        }
+
+        if (target != 'all') {
+            testModule(target);
+            return;
+        }
+
+       // Run all tests (Async)
+       testNext();
+    };
+
+    ns.run = run;
+});
+</script>
+
+<div id="stage"></div>
+
+<div id="divUnit" style="font-family: Courier;">
+</div>
+
+</body>
+</html>
