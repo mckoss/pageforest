@@ -46,6 +46,25 @@ def intcomma(value):
         orig = new
 
 
+def project(d, keys):
+    """
+    Return a dictionary that is the projection of properties
+    from the keys list.
+
+    >>> project({}, ['a'])
+    {}
+    >>> project({'a': 1, 'b': 2}, ['a'])
+    {'a': 1}
+    >>> project({'a': 1, 'b': 2}, ['b', 'c'])
+    {'b': 2}
+    """
+    result = {}
+    for key in keys:
+        if key in d:
+            result[key] = d[key]
+    return result
+
+
 def as_datetime(dct):
     """
     Decode datetime objects from JSON dictionary.
@@ -163,12 +182,15 @@ def load_options():
     if os.path.exists(OPTIONS_FILENAME):
         file_options = json.loads(open(OPTIONS_FILENAME, 'r').read())
 
-    for prop in file_options:
-        if getattr(options, prop) is None:
+    for prop in ('files', 'secret', 'server', 'username'):
+        if getattr(options, prop, None) is None:
             setattr(options, prop, file_options.get(prop))
 
     if not options.server:
         options.server = "pageforest.com"
+
+    if not options.files:
+        options.files = {}
 
     if not options.local_only:
         if not options.username:
@@ -184,15 +206,20 @@ def save_options():
     """
     Save options in options file for later use.
     """
-    if options.local_only:
-        return
-
     file_options = {}
     for prop in ['username', 'secret', 'server']:
         file_options[prop] = getattr(options, prop)
 
     if options.save_app:
         file_options['application'] = options.application
+
+    if hasattr(options, 'local_listing'):
+        files = {}
+        for path in options.local_listing:
+            files[path] = project(options.local_listing[path], ['time', 'size', 'sha1'])
+        file_options['files'] = files
+    else:
+        file_options['files'] = options.files
 
     open(OPTIONS_FILENAME, 'w').write(to_json(file_options))
 
@@ -266,22 +293,30 @@ def upload_file(filename, url=None):
     """
     if url is None:
         url = url_from_filename(filename)
-    data = open(filename, 'rb').read()
-    if len(data) > MAX_FILE_SIZE:
+
+    local_info = options.local_listing[filename]
+    if local_info['size'] > MAX_FILE_SIZE:
         print "Skipping %s - file too large (%s bytes)." % \
-              (filename, intcomma(len(data)))
+              (filename, intcomma(local_info['size']))
         return
-    keyname = filename.replace(os.path.sep, '/')
-    # Check if the remote file is already up-to-date.
-    if hasattr(options, 'listing') and keyname in options.listing:
-        sha1 = sha1_file(filename, data)
-        is_equal = options.listing[keyname]['sha1'] == sha1
+
+    # Compare if remote file has same hash as local one
+    if filename in options.listing:
+        info = options.listing[filename]
+        is_equal = info['sha1'] == local_info['sha1']
         if options.verbose:
             print "SHA1 %s (local) %s %s (server) for %s" % \
-                (sha1, is_equal and "==" or "!=", options.listing[keyname]['sha1'], filename)
+                (local_info['sha1'],
+                 is_equal and "==" or "!=",
+                 info['sha1'],
+                 filename)
         if not options.force and is_equal:
             return
-    # Upload file to Pageforest backend.
+
+    file = open(filename, 'rb')
+    data = file.read()
+    file.close()
+
     or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
         print "Uploading: %s (%s bytes)%s" % (url, intcomma(len(data)), or_not)
@@ -322,21 +357,21 @@ def download_file(filename, url=None):
     """
     if url is None:
         url = url_from_filename(filename)
+
     # Check if the local file is already up-to-date.
-    info = {}
-    if hasattr(options, 'listing') and filename in options.listing:
+    if not options.force:
         info = options.listing[filename]
-        if not options.force and info['sha1'] == sha1_file(filename):
+        local_info = options.local_listing.get(filename, {})
+        if 'sha1' in local_info and info['sha1'] == local_info['sha1']:
             if options.verbose:
                 print "File hashes match: %s" % filename
             return
+
     # Download file from Pageforest backend.
     or_not = options.noop and " (Not!)" or ""
     if not options.quiet:
-        if 'size' in info:
-            print "Downloading: %s (%s bytes)%s" % (url, intcomma(info['size']), or_not)
-        else:
-            print "Downloading: %s%s" % (url, or_not)
+        print "Downloading: %s (%s bytes)%s" % (url, intcomma(info['size']), or_not)
+
     if not options.noop:
         response = urllib2.urlopen(AuthRequest(url))
         outfile = open(filename, 'wb')
@@ -360,20 +395,6 @@ def pattern_match(patterns, filename):
     for pattern in patterns:
         if fnmatch(filename, pattern):
             return True
-
-
-def upload_dir(path):
-    """
-    Upload a directory, including all files and subdirectories.
-    """
-    for dirpath, dirnames, filenames in os.walk(path):
-        for dirname in dirnames:
-            if dirname.startswith('.'):
-                dirnames.remove(dirname)
-        for filename in filenames:
-            if pattern_match(IGNORE_FILENAMES, filename):
-                continue
-            upload_file(os.path.join(dirpath, filename))
 
 
 def to_json(d, extra=None, include=None, exclude=None, indent=2):
@@ -407,6 +428,8 @@ def sha1_file(filename, data=None):
     if not os.path.exists(filename):
         return None
     if data is None:
+        if options.verbose:
+            print "Reading file for SHA1: %s" % filename
         infile = open(filename, 'rb')
         data = infile.read()
         infile.close()
@@ -441,7 +464,7 @@ def list_remote_files():
         options.listing = {}
 
 
-def list_local_files(args=None):
+def list_local_files():
     """
     Get the list of all local files, with metadata is same format as remote file
     listing.
@@ -450,8 +473,6 @@ def list_local_files(args=None):
     every file each time we generate this list.
     """
     options.local_listing = {}
-    if not args:
-        args = os.listdir('.')
     for dirpath, dirnames, filenames in os.walk('.'):
         for dirname in dirnames:
             if dirname.startswith('.'):
@@ -460,11 +481,18 @@ def list_local_files(args=None):
             if pattern_match(IGNORE_FILENAMES, filename):
                 continue
             path = os.path.relpath(os.path.join(dirpath, filename))
-            options.local_listing[path] = {
-                'sha1': sha1_file(path),
-                'modified': datetime.fromtimestamp(os.path.getmtime(path)),
-                'size': os.path.getsize(path)
-                }
+            path = path.replace(os.path.sep, '/')
+            if path in options.files and \
+                options.files[path]['time'] == int(os.path.getmtime(path)):
+                options.local_listing[path] = options.files[path]
+            else:
+                options.local_listing[path] = {
+                    'sha1': sha1_file(path),
+                    'time': int(os.path.getmtime(path)),
+                    'size': os.path.getsize(path)
+                    }
+            options.local_listing[path]['modified'] = \
+                datetime.fromtimestamp(os.path.getmtime(path))
 
 
 def get_command(args):
@@ -473,12 +501,10 @@ def get_command(args):
     up-to-date (same SHA-1 hash as remote).
     """
     list_remote_files()
-    download_file(META_FILENAME)
+    list_local_files()
     filenames = options.listing.keys()
     filenames.sort()
     for filename in filenames:
-        if filename == META_FILENAME:
-            continue
         if args and not prefix_match(args, filename):
             continue
         # Make directory if needed.
@@ -497,23 +523,18 @@ def put_command(args):
     up-to-date (same SHA-1 hash as remote).
     """
     list_remote_files()
-    if not args:
-        args = [name for name in os.listdir('.')
-                if not pattern_match(IGNORE_FILENAMES, name)]
-    # REVIEW: The following doesn't work if you use "pf put <folder>"
-    # to upload some files including META_FILENAME inside <folder>.
-    # Should we require that "pf put" is always run in the same folder
-    # where META_FILENAME lives?
-    if META_FILENAME in args:
-        upload_file(META_FILENAME)
-        args.remove(META_FILENAME)
-    if not args:
-        return
-    for path in args:
-        if os.path.isdir(path):
-            upload_dir(path)
-        elif os.path.isfile(path):
-            upload_file(path)
+    list_local_files()
+    # Ensure that application is created before uploading other files
+    upload_file(META_FILENAME)
+
+    paths = options.local_listing.keys()
+    paths.sort()
+    for path in paths:
+        if path == META_FILENAME:
+            continue
+        if args and not prefix_match(args, path):
+            continue
+        upload_file(path)
 
 
 def delete_command(args):
@@ -673,7 +694,7 @@ def dir_command(args):
     List file information for all files on the local directory (including SHA1 hashes).
     If args specified, only show files that start with one of args as a path prefix.
     """
-    list_local_files(args)
+    list_local_files()
     list_file_info(args, options.local_listing)
 
 
