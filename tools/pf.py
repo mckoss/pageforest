@@ -182,7 +182,7 @@ def load_options():
     if os.path.exists(OPTIONS_FILENAME):
         file_options = json.loads(open(OPTIONS_FILENAME, 'r').read())
 
-    for prop in ('files', 'secret', 'server', 'username'):
+    for prop in ('files', 'secret', 'server', 'username', 'application'):
         if getattr(options, prop, None) is None:
             setattr(options, prop, file_options.get(prop))
 
