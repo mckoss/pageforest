@@ -620,9 +620,6 @@ def update_manifest(explicit=False):
     if not os.path.exists(MANIFEST_FILENAME):
         return
 
-    if explicit:
-        print "%s already exists (use -f to overwrite)." % MANIFEST_FILENAME
-
     manifest_file = open(MANIFEST_FILENAME, 'r')
     parts = manifest_file.read().partition('\n' + AUTOGEN_LINE)
     manifest_file.close()
@@ -680,13 +677,18 @@ def manifest_command(args):
     """
 
     list_local_files()
+
+    if os.path.exists(MANIFEST_FILENAME) and not options.force:
+        print "%s already exists (use -f to overwrite)." % MANIFEST_FILENAME
+
     if not os.path.exists(MANIFEST_FILENAME) or options.force:
+        print "Creating file %s." % MANIFEST_FILENAME
         default_manifest = (
             "CACHE MANIFEST\n"
             "# Cache files for offline access - see http://diveintohtml5.org/offline.html\n"
             "\n"
             "NETWORK:\n"
-            "*\n"
+            "*\n\n"
             )
         manifest = open(MANIFEST_FILENAME, 'w')
         manifest.write(default_manifest + AUTOGEN_LINE)
