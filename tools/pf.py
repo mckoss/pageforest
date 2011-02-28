@@ -464,6 +464,24 @@ def list_remote_files():
         options.listing = {}
 
 
+def update_local_listing(path):
+    """
+    Update the options.local_listing[path] to the latest information.  Uses
+    the options.files cache if the file has not been more recently modified.
+    """
+    if path in options.files and \
+        options.files[path]['time'] == int(os.path.getmtime(path)):
+        options.local_listing[path] = options.files[path]
+    else:
+        options.local_listing[path] = {
+            'sha1': sha1_file(path),
+            'time': int(os.path.getmtime(path)),
+            'size': os.path.getsize(path)
+            }
+    options.local_listing[path]['modified'] = \
+        datetime.fromtimestamp(os.path.getmtime(path))
+
+
 def list_local_files():
     """
     Get the list of all local files, with metadata is same format as remote file
@@ -482,17 +500,7 @@ def list_local_files():
                 continue
             path = os.path.relpath(os.path.join(dirpath, filename))
             path = path.replace(os.path.sep, '/')
-            if path in options.files and \
-                options.files[path]['time'] == int(os.path.getmtime(path)):
-                options.local_listing[path] = options.files[path]
-            else:
-                options.local_listing[path] = {
-                    'sha1': sha1_file(path),
-                    'time': int(os.path.getmtime(path)),
-                    'size': os.path.getsize(path)
-                    }
-            options.local_listing[path]['modified'] = \
-                datetime.fromtimestamp(os.path.getmtime(path))
+            update_local_listing(path)
 
 
 def get_command(args):
@@ -524,6 +532,8 @@ def put_command(args):
     """
     list_remote_files()
     list_local_files()
+    update_manifest()
+
     # Ensure that application is created before uploading other files
     upload_file(META_FILENAME)
 
@@ -613,23 +623,33 @@ def update_manifest():
     parts = manifest_file.read().partition('\n' + AUTOGEN_LINE)
     manifest_file.close()
     if parts[1] == '':
+        print "%s has no AUTOGENERATE section" % MANIFEST_FILENAME
         return
 
-    manifest_lines = [parts[0],
-                      AUTOGEN_LINE,
-                      AUTOGEN_EXPLAIN,
-                      "CACHE:"]
+    cached_files = []
+    hash_lines = []
 
     paths = options.local_listing.keys()
     paths.sort()
     for path in paths:
-        if path == MANIFEST_FILENAME or path == META_FILENAME:
+        if path == MANIFEST_FILENAME or path == META_FILENAME or \
+            options.local_listing[path]['size'] > MAX_FILE_SIZE:
             continue
-        manifest_lines.append(path)
+        cached_files.append(path)
+        hash_lines.append("%s=%s" % (path, options.local_listing[path]['sha1']))
+
+    manifest_lines = [parts[0], AUTOGEN_LINE, AUTOGEN_EXPLAIN]
+    manifest_lines.append("# SIGNATURE: %s" % hashlib.sha1('\n'.join(hash_lines)).hexdigest())
+    manifest_lines.append("CACHE:")
+    manifest_lines.extend(cached_files)
 
     manifest_file = open(MANIFEST_FILENAME, 'w')
-    manifest_file.write('\n'.join(manifest_lines))
+    manifest_file.write('\n'.join(manifest_lines) + '\n')
     manifest_file.close()
+
+    # Make sure the listing for the manifest file is up to date
+    # so it will be uploaded if changed.
+    update_local_listing(MANIFEST_FILENAME)
 
 
 def manifest_command(args):
