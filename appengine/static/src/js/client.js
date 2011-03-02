@@ -493,6 +493,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
             }
 
+            if (this.isAppPanelOpen()) {
+                return;
+            }
+
             // Check for change in docid to trigger a load.
             docid = this.getDocid();
             if (this.lastDocid != docid) {
@@ -680,15 +684,19 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.updateAppBar();
         },
 
+        isAppPanelOpen: function() {
+            return this.appPanel && $(this.appPanel).is(':visible');
+        },
+
         toggleAppPanel: function(fOpen) {
-            if (fOpen != undefined &&
-                fOpen == $(this.appPanel).is(':visible')) {
+            if (!this.appPanel ||
+                fOpen != undefined && fOpen == this.isAppPanelOpen()) {
                 return;
             }
             var self = this;
 
             $('#pfMore').toggleClass("expanded collapsed");
-            if ($(this.appPanel).is(':visible')) {
+            if (this.isAppPanelOpen()) {
                 this.positionAppPanel('hide');
                 return false;
             } else {
@@ -700,7 +708,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         positionAppPanel: function(animation, fnCallback) {
-            if (animation == undefined && !$(this.appPanel).is(':visible')) {
+            if (animation == undefined && !this.isAppPanelOpen()) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
