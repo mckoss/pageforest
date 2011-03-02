@@ -669,7 +669,7 @@ def update_manifest(explicit=False):
     update_local_listing(MANIFEST_FILENAME)
 
 
-def manifest_command(args):
+def offline_command(args):
     """
     Build an app.manifest file to enable your application to be used offline.
     The manifest will be auto-updated on each subsequent PUT command.
@@ -686,6 +686,16 @@ def manifest_command(args):
         default_manifest = (
             "CACHE MANIFEST\n"
             "# Cache files for offline access - see http://diveintohtml5.org/offline.html\n"
+            "\n"
+            "http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js\n"
+            "/lib/beta/css/client.css\n"
+            "/lib/beta/js/json2.min.js\n"
+            "/lib/beta/js/utils.js\n"
+            "/static/images/appbar/green-left.png\n"
+            "/static/images/appbar/green-center.png\n"
+            "/static/images/appbar/green-right.png\n"
+            "/static/images/appbar/down.png\n"
+            "/static/images/appbar/logo.png\n"
             "\n"
             "NETWORK:\n"
             "*\n\n"
