@@ -522,7 +522,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return true;
     }
 
-    // Copy any values that have changed from newest to last,
+    // Copy any values that have changed from latest to last,
     // into dest (and update last as well).  This function will
     // never set a value in dest to 'undefined'.
     // Returns true iff dest was modified.
