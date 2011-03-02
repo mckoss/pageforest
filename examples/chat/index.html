@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html manifest="/app.manifest">
 <head>
 <title>Chat - Pageforest</title>
 <link rel="icon" type="image/png" href="/images/icon.png" />
@@ -23,13 +23,12 @@ $(document).ready(chat.onReady);
 
     <fieldset>
       <legend>Chat Room</legend>
-<!--
+
       <form onsubmit="chat.join(); return false">
         <label for="docid">Room:</label>
         <input type="text" id="roomid" name="docid" value="entry" />
         <input type="submit" id="join" name="join" value="Join" />
       </form>
--->
 
       <label for="messages">Messages:</label>
       <textarea id="messages" name="messages"></textarea>
