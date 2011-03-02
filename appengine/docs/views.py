@@ -10,7 +10,7 @@ from django.utils import simplejson as json
 from google.appengine.ext import db
 
 from utils.json import ModelEncoder
-from utils.decorators import jsonp, method_required
+from utils.decorators import jsonp, method_required, no_cache
 from utils.shortcuts import render_to_response
 from utils.http import http_datetime
 from utils.channel import dispatch_subscriptions
@@ -123,6 +123,7 @@ def dispatch(request, doc_id):
     return response
 
 
+@no_cache
 def doc_get(request, doc_id):
     """
     Return JSON formatted representation of a Doc.
@@ -199,6 +200,7 @@ def doc_delete(request, docid):
     return HttpJSONResponse({'statusText': "Deleted"})
 
 
+@no_cache
 def doc_list(request, doc_id):
     """
     List blobs inside the root document, using the blob list interface.
