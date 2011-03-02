@@ -522,7 +522,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return true;
     }
 
-    // Copy any values that have changed from newest to last,
+    // Copy any values that have changed from latest to last,
     // into dest (and update last as well).  This function will
     // never set a value in dest to 'undefined'.
     // Returns true iff dest was modified.
@@ -3194,8 +3194,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // REVIEW: get rid of this.docid and use this.meta.docid always?
             this.setCleanDoc(result.docid || this.docid || this.meta.docid);
 
-            this.setAppPanelValues(this.meta);
-
             if (this.app.onSaveSuccess) {
                 this.app.onSaveSuccess(result);
             }
@@ -3207,7 +3205,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.meta.modified = this.metaDoc.modified = undefined;
             this.setCleanDoc();
             this.setDirty();
-            this.setAppPanelValues(this.meta);
         },
 
         // Get document properties from client and merge with last
@@ -3224,11 +3221,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // the document.
             var fDoc = base.extendIfChanged(this.meta, this.metaDoc,
                                             base.project(doc, docProps));
+
             base.extendIfChanged(this.meta, this.metaDialog,
                                  this.getAppPanelValues());
             base.extendObject(doc, this.meta);
-
-            this.setAppPanelValues(this.meta);
 
             return doc;
         },
@@ -3236,7 +3232,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Set document - retaining meta properties for later use.
         setDoc: function(doc) {
             this.meta = base.project(doc, docProps);
-            this.setAppPanelValues(this.meta);
             this.app.setDoc(doc);
             this.setCleanDoc(doc.doc_id);
         },
@@ -3271,6 +3266,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                                            this.onAutoLoad.fnMethod(this));
                 }
             }
+
+            // Update App Panel if it's open
+            this.setAppPanelValues(this.meta);
 
             // Enable polling to kick off a load().
             if (preserveDocid) {
@@ -3601,8 +3599,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             function onSaveClose() {
-                self.save();
                 self.toggleAppPanel(false);
+                // See if anything needs to be saved.
+                if (!self.isDirty()) {
+                    self.checkDoc();
+                }
+                // Save it if it does.
+                self.save();
             }
 
             function onSave() {
@@ -3663,9 +3666,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(self.errorPanel).html(self.errorDialog.html());
 
             $('#pfMore').click(function() {
-                if (self.toggleAppPanel()) {
-                    self.setAppPanelValues(self.meta);
-                }
+                self.toggleAppPanel();
             });
 
             $('#pfUsername').click(function() {
@@ -3700,6 +3701,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return false;
             } else {
                 this.positionAppPanel('show', function() {
+                    self.setAppPanelValues(self.meta);
                     self.appDialog.setFocus();
                 });
                 return true;
@@ -3738,7 +3740,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         setAppPanelValues: function(doc) {
-            if (this.appPanel == undefined) {
+            if (this.appPanel == undefined || !this.isAppPanelOpen()) {
                 return;
             }
             var values = {};
@@ -3764,8 +3766,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         getAppPanelValues: function() {
-            if (this.appPanel == undefined ||
-                !$(this.appPanel).is(':visible')) {
+            if (this.appPanel == undefined || !this.isAppPanelOpen()) {
                 return {};
             }
 
