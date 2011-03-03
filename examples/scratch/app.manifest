@@ -1,5 +1,6 @@
 CACHE MANIFEST
 # Cache files for offline access - see http://diveintohtml5.org/offline.html
+# Version 5
 
 http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js
 /lib/beta/css/client.css
