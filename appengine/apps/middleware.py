@@ -58,7 +58,7 @@ class AppMiddleware(object):
         request.app = App.lookup(app_id)
         if request.app is None and request.path_info == '/auth/challenge/':
             # Create a dummy app with a secret for challenge authentication.
-            # Note that it has not owner.  We won't save it to the datastore
+            # Note that it has no owner.  We won't save it to the datastore
             # without an authorized owner.
             request.app = App.create(app_id)
             request.app.cache_put()
@@ -76,6 +76,15 @@ class AppMiddleware(object):
             if request.path_info.startswith('/app/'):
                 return reserved_url(request)
         else:
+            # Handle Cross-Origin resource sharing requests
+            # http://www.w3.org/TR/cors/
+
+            # Preflight request ... TBD
+            if request.method == 'OPTIONS':
+                if 'ORIGIN' not in request.META or \
+                    request.META['ORIGIN'] not in request.app.referers:
+                    pass
+
             if settings.DEBUG and DEBUG_URL_REWRITE:
                 logging.info(" original URL: http://" +
                              request.META.get('HTTP_HOST', '') +

@@ -37,13 +37,20 @@ class App(SuperDoc):
     cloneable = db.BooleanProperty(default=False)  # Opt-in to allow clones.
     secret = db.BlobProperty()          # Pseudo-random Base64 string.
     icon = db.StringProperty()          # Favicon for editor and www.
+    secure_data = db.BooleanProperty(default=False)
 
-    current_schema = SuperDoc.current_schema + 1
+    """
+    (Sub) Versions:
+    1: Original schema
+    2: 2/24/2011 - added secure_data
+    """
+    current_schema = SuperDoc.current_schema + 2
 
     @classmethod
     def json_props(cls):
         props = super(App, cls).json_props()
         props.update(dict.fromkeys(('url', 'referers', 'cloneable', 'icon')))
+        props.update({'secure_data': 'secureData'})
         return props
 
     def get_details_url(self):
@@ -72,6 +79,7 @@ class App(SuperDoc):
         return {
             'app_id': self.get_app_id(),
             'title': self.title,
+            'secureData': self.secure_data,
             'tags': ' '.join(self.tags),
             'readers': ' '.join(self.readers),
             'writers': ' '.join(self.writers),
@@ -126,6 +134,7 @@ class App(SuperDoc):
         self.update_string_property(parsed, 'icon', **kwargs)
         self.update_string_list_property(parsed, 'referers', **kwargs)
         self.update_boolean_property(parsed, 'cloneable', **kwargs)
+        self.update_boolean_property(parsed, 'secureData', pykey='secure_data')
         self.update_hash()
 
     # TODO: Remove this

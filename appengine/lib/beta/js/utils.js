@@ -645,7 +645,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return true;
     }
 
-    // Copy any values that have changed from newest to last,
+    // Copy any values that have changed from latest to last,
     // into dest (and update last as well).  This function will
     // never set a value in dest to 'undefined'.
     // Returns true iff dest was modified.
@@ -3298,7 +3298,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         this.username = undefined;
         this.fLogging = true;
         this.logged = {};
-        this.lastHash = '';
+        this.lastDocid = undefined;
         this.fFirstPoll = true;
         this.uid = random.randomString(20);
 
@@ -3408,9 +3408,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             base.extendIfChanged(this.meta, this.metaDoc,
                                  base.project(result,
                                               ['modified', 'owner', 'sha1']));
-            this.setCleanDoc(result.docid);
 
-            this.setAppPanelValues(this.meta);
+            // If the docid is not in the result - just use the original docid.
+            // REVIEW: get rid of this.docid and use this.meta.docid always?
+            this.setCleanDoc(result.docid || this.docid || this.meta.docid);
 
             if (this.app.onSaveSuccess) {
                 this.app.onSaveSuccess(result);
@@ -3423,7 +3424,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.meta.modified = this.metaDoc.modified = undefined;
             this.setCleanDoc();
             this.setDirty();
-            this.setAppPanelValues(this.meta);
         },
 
         // Get document properties from client and merge with last
@@ -3440,11 +3440,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // the document.
             var fDoc = base.extendIfChanged(this.meta, this.metaDoc,
                                             base.project(doc, docProps));
+
             base.extendIfChanged(this.meta, this.metaDialog,
                                  this.getAppPanelValues());
             base.extendObject(doc, this.meta);
-
-            this.setAppPanelValues(this.meta);
 
             return doc;
         },
@@ -3452,7 +3451,6 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Set document - retaining meta properties for later use.
         setDoc: function(doc) {
             this.meta = base.project(doc, docProps);
-            this.setAppPanelValues(this.meta);
             this.app.setDoc(doc);
             this.setCleanDoc(doc.doc_id);
         },
@@ -3460,7 +3458,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Callback function for auto-load subscribtion
         // TODO: Compare Sha1 hashes - not modified date to ignore a notify
         onAutoLoad: function (message) {
-            if (!this.autoLoad ||
+            if (!this.autoLoad || this.state != 'clean' ||
                 message.key != this.docid + '/' ||
                 message.data.modified.isoformat == this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
@@ -3472,7 +3470,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // Set the document to the clean state.
         // If docid is undefined, set to the "new" document state.
         // If preserveHash, we don't modify the URL
-        setCleanDoc: function(docid, preserveHash) {
+        setCleanDoc: function(docid, preserveDocid) {
             this.docid = this.meta.docid = docid;
             this.changeState('clean');
 
@@ -3488,18 +3486,16 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
             }
 
+            // Update App Panel if it's open
+            this.setAppPanelValues(this.meta);
+
             // Enable polling to kick off a load().
-            if (preserveHash) {
-                this.lastHash = '';
+            if (preserveDocid) {
+                this.lastDocid = undefined;
                 return;
             }
 
-            if (docid == undefined) {
-                docid = '';
-            }
-
-            window.location.hash = docid;
-            this.lastHash = window.location.hash;
+            this.setDocid(docid);
         },
 
         // See if the document data has changed - assume this is not
@@ -3673,9 +3669,39 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
         },
 
+        // This function called to get the current document id - when it
+        // changes, a load() will be automatically started.  Should return
+        // undefined if no current document is set.
+        // The default behavior is to read the #hash from the URL.
+        getDocid: function () {
+            var hash;
+
+            if (this.app.getDocid) {
+                return this.app.getDocid();
+            }
+
+            hash = window.location.hash.substr(1);
+            return hash == '' ? undefined : hash;
+        },
+
+        // The app can provide a setDocid function, if it want's to
+        // display (or store) the current docid.  The default implementation
+        // writes in the the URL #hash.
+        setDocid: function (docid) {
+            this.lastDocid = docid;
+
+            if (this.app.setDocid) {
+                return this.app.setDocid(docid);
+            }
+
+            window.location.hash = docid == undefined ? '' : docid;
+        },
+
         // Periodically poll for changes in the URL and state of user sign-in
         // Could start loading a new document
         poll: function () {
+            var docid;
+
             // Callbacks to app are deferred until poll is called.
             if (this.state == 'init') {
                 if (this.getDoc) {
@@ -3683,10 +3709,17 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 }
             }
 
-            if (this.lastHash != window.location.hash) {
-                this.lastHash = window.location.hash;
-                this.load(window.location.hash.substr(1));
+            if (this.isAppPanelOpen()) {
+                return;
             }
+
+            // Check for change in docid to trigger a load.
+            docid = this.getDocid();
+            if (this.lastDocid != docid) {
+                this.lastDocid = docid;
+                this.load(docid);
+            }
+
             this.checkUsername();
             this.checkDoc();
             this.fFirstPoll = false;
@@ -3785,8 +3818,13 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             });
 
             function onSaveClose() {
-                self.save();
                 self.toggleAppPanel(false);
+                // See if anything needs to be saved.
+                if (!self.isDirty()) {
+                    self.checkDoc();
+                }
+                // Save it if it does.
+                self.save();
             }
 
             function onSave() {
@@ -3847,9 +3885,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             $(self.errorPanel).html(self.errorDialog.html());
 
             $('#pfMore').click(function() {
-                if (self.toggleAppPanel()) {
-                    self.setAppPanelValues(self.meta);
-                }
+                self.toggleAppPanel();
             });
 
             $('#pfUsername').click(function() {
@@ -3867,19 +3903,24 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.updateAppBar();
         },
 
+        isAppPanelOpen: function() {
+            return this.appPanel && $(this.appPanel).is(':visible');
+        },
+
         toggleAppPanel: function(fOpen) {
-            if (fOpen != undefined &&
-                fOpen == $(this.appPanel).is(':visible')) {
+            if (!this.appPanel ||
+                fOpen != undefined && fOpen == this.isAppPanelOpen()) {
                 return;
             }
             var self = this;
 
             $('#pfMore').toggleClass("expanded collapsed");
-            if ($(this.appPanel).is(':visible')) {
+            if (this.isAppPanelOpen()) {
                 this.positionAppPanel('hide');
                 return false;
             } else {
                 this.positionAppPanel('show', function() {
+                    self.setAppPanelValues(self.meta);
                     self.appDialog.setFocus();
                 });
                 return true;
@@ -3887,7 +3928,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         positionAppPanel: function(animation, fnCallback) {
-            if (animation == undefined && !$(this.appPanel).is(':visible')) {
+            if (animation == undefined && !this.isAppPanelOpen()) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
@@ -3918,7 +3959,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         setAppPanelValues: function(doc) {
-            if (this.appPanel == undefined) {
+            if (this.appPanel == undefined || !this.isAppPanelOpen()) {
                 return;
             }
             var values = {};
@@ -3944,8 +3985,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         getAppPanelValues: function() {
-            if (this.appPanel == undefined ||
-                !$(this.appPanel).is(':visible')) {
+            if (this.appPanel == undefined || !this.isAppPanelOpen()) {
                 return {};
             }
 

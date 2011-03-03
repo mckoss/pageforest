@@ -19,6 +19,7 @@ from utils.shortcuts import render_to_response
 from utils.forms import ValidationError
 from utils import crypto
 from utils.json import HttpJSONResponse
+from utils.shortcuts import get_int, get_bool
 
 from auth import SignatureError
 from auth.forms import SignUpForm, ProfileForm
@@ -130,7 +131,7 @@ def app_sign_up(request):
     email: string
     verifyEmail: boolean
     """
-    validate_only = request.POST.get('validate', False)
+    validate_only = get_bool(request.POST, 'validate', False)
     username = request.POST.get('username', '')
 
     try:
@@ -141,12 +142,16 @@ def app_sign_up(request):
             raise ValidationError().add_error('username',
                 "Application prefix must be '%s' (not '%s')" % (request.app.get_app_id(),
                                                             user_app_id))
+        if request.POST.get('email', '') == '':
+            raise ValidationError().add_error('email', "Email address is required.")
+
         if User.lookup(username):
-            raise ValidationError().add_error('username', "Username %s already exists." % username)
+            raise ValidationError().add_error('username', "Username %s already exists." % username,
+                                              status=409)
 
         user = User(key_name=username.lower(),
                     username=username,
-                    email=request.POST.get('email', ''),
+                    email=request.POST['email'],
                     password=request.POST.get('secret', ''))
         if validate_only:
             user.validate()
@@ -154,13 +159,15 @@ def app_sign_up(request):
             user.put()
     except (ValueError, BadValueError), error:
         result = {'statusText': unicode(error)}
-        status = 200 if validate_only else 409
+        status = 400
+        if hasattr(error, 'status'):
+            status = error.status
         if hasattr(error, 'errors'):
             result['errors'] = error.errors
         return HttpJSONResponse(result, status=status)
 
     return HttpJSONResponse({'statusText': "User %s created." % username},
-                            status=200 if validate_only else 201)
+                            status=201)
 
 
 @login_required

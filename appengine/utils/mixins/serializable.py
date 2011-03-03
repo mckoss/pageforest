@@ -35,6 +35,16 @@ class Serializable(db.Model):
     def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
         Serialize a datastore entity to JSON.
+
+        The class must support a json_props method returning:
+
+        { 'name': 'alias',
+          'name': None,
+           ...
+        }
+
+        The model property will always use 'name', but may be reperesented
+        in the json blob as 'alias' (if given).
         """
         if exclude is None:
             exclude = ()
@@ -85,7 +95,6 @@ class Hashable(Serializable):
             self.size = 0
             return
         self.sha1 = sha1(value).hexdigest()
-        logging.info("new hash = %s" % self.sha1)
         self.size = len(value)
 
     def update_headers(self, response):
