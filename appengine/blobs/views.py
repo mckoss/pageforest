@@ -450,6 +450,7 @@ def blob_push(request):
 slice_etag_re = re.compile(r'^"(.*)\[.*\]"$')
 
 
+@no_cache
 def blob_slice(request):
     """
     SLICE method request handler.
@@ -463,6 +464,7 @@ def blob_slice(request):
     if etag_match:
         request.META['HTTP_IF_NONE_MATCH'] = '"%s"' % etag_match.group(1)
 
+    # Force blob_get to return values - not a 304 Not Modified
     request.no_cache = True
     response = blob_get(request)
 

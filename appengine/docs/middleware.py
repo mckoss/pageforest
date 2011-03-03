@@ -2,7 +2,7 @@ import re
 import logging
 
 from django.conf import settings
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseNotFound, HttpResponseForbidden
 
 from docs.models import Doc
 
@@ -35,6 +35,10 @@ class DocMiddleware(object):
         if match is None:
             # This request is not for document or blob storage.
             return
+
+        # For apps that require ssl data access - enforce the restriction here
+        if request.app.secure_data and not request.is_secure():
+            return HttpResponseForbidden("Data access requires and SSL connection.")
 
         # Try to load the document for this request.
         doc_id = match.group(1)

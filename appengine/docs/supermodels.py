@@ -177,14 +177,16 @@ class SuperDoc(Timestamped, Migratable, Taggable, Hashable, Cacheable):
         if self.delete_blobs():
             super(SuperDoc, self).delete()
 
-    def update_boolean_property(self, parsed, key, **kwargs):
+    def update_boolean_property(self, parsed, key, pykey=None):
         # TODO: Merge update_*_property methods into one and detect
         # the property type automatically.
+        if pykey is None:
+            pykey = key
         if key not in parsed:
             return
         value = parsed[key]
         assert_boolean(key, value)
-        setattr(self, key, value)
+        setattr(self, pykey, value)
 
     def update_string_property(self, parsed, key, **kwargs):
         if key not in parsed:

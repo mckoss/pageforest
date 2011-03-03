@@ -9,9 +9,11 @@ MIMETYPES = {
     '.js': 'application/javascript',
     '.json': settings.JSON_MIMETYPE,
     '.ico': 'image/vnd.microsoft.icon',
+    '.manifest': 'text/cache-manifest',
 }
 
 HTML_PREFIXES = ['<!doctype', '<html']
+CACHE_PREFIX = 'CACHE MANIFEST'
 
 
 def guess_mimetype(filename, data=None):
@@ -32,6 +34,10 @@ def guess_mimetype(filename, data=None):
     'text/html'
     >>> guess_mimetype('foo', '<!DOCTYPE html>\\n<html>\\n')
     'text/html'
+    >>> guess_mimetype('cache.manifest')
+    'text/cache-manifest'
+    >>> guess_mimetype('foo', 'CACHE MANIFEST\\n')
+    'text/cache-manifest'
     """
     (root, ext) = os.path.splitext(filename.lower())
     if ext in MIMETYPES:
@@ -42,7 +48,10 @@ def guess_mimetype(filename, data=None):
         return mimetypes.types_map[ext]
 
     if data is not None:
-        line1 = data.partition('\n')[0].lower()
+        line1 = data.partition('\n')[0]
+        if line1.startswith(CACHE_PREFIX):
+            return 'text/cache-manifest'
+        line1 = line1.lower()
         for test in HTML_PREFIXES:
             if line1.startswith(test):
                 return 'text/html'

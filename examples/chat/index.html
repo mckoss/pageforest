@@ -1,61 +1,55 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<!DOCTYPE html>
+<html manifest="/app.manifest">
 <head>
-<meta http-equiv="Content-type" content="text/html; charset=utf-8" />
 <title>Chat - Pageforest</title>
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
+<link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
 <link rel="stylesheet" type="text/css" href="style.css" />
 <script type="text/javascript"
-src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
-<script type="text/javascript" src="/lib/0.6/js/json2.min.js"></script>
+        src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/json2.min.js"></script>
 <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
-<script type="text/javascript" src="main.js"></script>
+<script type="text/javascript" src="/main.js"></script>
+
 <script type="text/javascript">
 var chat = namespace.lookup("com.pageforest.chat");
 $(document).ready(chat.onReady);
 </script>
 </head>
+
 <body>
-<div class="page">
-<h1 style="float:left"><script>document.write(document.title);</script></h1>
-<div style="text-align:right">
-  <input type="button" id="signin" onclick="chat.signInOut()" value="Sign in" />
-  <p style="margin-top:0">Current username: <span id="username"></span></p>
-</div>
+  <div class="page">
 
-<form onsubmit="chat.join(); return false">
-<p style="clear:both">
-<input type="text" id="docid" name="docid" value="chat" />
-<input type="submit" id="join" name="join" value="Join chatroom" />
-</p>
-</form>
+    <fieldset>
+      <legend>Chat Room</legend>
 
-<textarea id="messages" name="messages"></textarea>
+      <form onsubmit="chat.join(); return false">
+        <label for="docid">Room:</label>
+        <input type="text" id="roomid" name="docid" value="entry" />
+        <input type="submit" id="join" name="join" value="Join" />
+      </form>
 
-<form onsubmit="chat.submit(); return false">
-<p>
-<input type="text" id="message" name="message" value="" />
-<input type="submit" id="submit" name="submit" value="Submit message" />
-</p>
-</form>
+      <label for="messages">Messages:</label>
+      <textarea id="messages" name="messages"></textarea>
 
-<h2>API Status</h2>
-<div id="status">Loading...</div>
+      <form onsubmit="chat.submit(); return false">
+          <input type="text" id="message" name="message" value="" />
+          <input type="submit" id="submit" name="submit" value="Send" />
+      </form>
+    </fieldset>
 
-<h2>Explore</h2>
+    <fieldset>
+      <legend>API Status</legend>
+      <div id="status">Loading...</div>
+    </fieldset>
 
-<ol>
-  <li><a id="document" target="_blank">JSON data for this document</a>
-    - Examine the (JSON) data format for documents saved on Pageforest.</li>
-  <li><a id="mydocs" target="_blank" href="http://www.pageforest.com/docs/">My Pageforest documents</a>
-    - A directory of all your saved documents.</li>
-  <li><a target="_blank" href="http://code.google.com/p/pageforest/source/browse/#hg/examples/chat">Source code</a>
-    - View the code for this application.</li>
-  <li><a id="app-details" target="_blank" href="http://www.pageforest.com/apps/chat/">Application Details</a>
-    - Clone this application to start your own Pageforest application.</li>
-  <li><a target="_blank" href="http://code.google.com/p/pageforest/wiki/GettingStarted">Getting Started</a>
-    - How to get started with the Pageforest API.</li>
-</ol>
-</div>
+    <fieldset>
+      <legend>Data</legend>
+      <p><a target="_blank" id="document-data" href="#">Document Data</a></p>
+      <p><a target="_blank" id="message-data" href="#">Message Data</a></p>
+    </fieldset>
+
+  </div>
 </body>
 </html>
