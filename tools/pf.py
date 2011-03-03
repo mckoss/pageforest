@@ -290,7 +290,7 @@ def url_from_filename(filename):
 
 
 def should_encode(filename):
-    if options.raw or filename == META_FILENAME:
+    if options.raw or filename == META_FILENAME or is_doc_filename(filename):
         return False
     return True
 
@@ -429,6 +429,10 @@ def to_json(d, extra=None, include=None, exclude=None, indent=2):
                           indent=indent, separators=(',', ': ')) + '\n'
 
 
+def is_doc_filename(filename):
+    return filename.startswith('docs/') and filename.count('/') == 1
+
+
 def sha1_file(filename, data=None):
     """
     Hash the contents of the file using SHA-1.
@@ -442,7 +446,7 @@ def sha1_file(filename, data=None):
         data = infile.read()
         infile.close()
     # Normalize document for sha1 computation.
-    if filename == META_FILENAME:
+    if filename == META_FILENAME or is_doc_filename(filename):
         app = json.loads(data)
         data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application'))
     sha1 = hashlib.sha1(data).hexdigest()
@@ -461,7 +465,13 @@ def list_remote_files():
             response = urllib2.urlopen(AuthRequest(url + cursor_param))
             result = response.read()
             result = json.loads(result, object_hook=as_datetime)
-            options.listing.update(result['items'])
+            files = result['items']
+            if options.docs:
+                doc_files = {}
+                for path, info in files.items():
+                    doc_files['docs/' + path] = info
+                files = doc_files
+            options.listing.update(files)
             if 'cursor' not in result:
                 break
             cursor_param = "&cursor=%s" % result['cursor']
@@ -500,7 +510,7 @@ def list_local_files():
     every file each time we generate this list.
     """
     options.local_listing = {}
-    for dirpath, dirnames, filenames in os.walk('.'):
+    for dirpath, dirnames, filenames in os.walk(options.docs and 'docs' or '.'):
         for dirname in dirnames:
             if dirname.startswith('.'):
                 dirnames.remove(dirname)
@@ -543,8 +553,9 @@ def put_command(args):
     list_local_files()
     update_manifest()
 
-    # Ensure that application is created before uploading other files
-    upload_file(META_FILENAME)
+    # Ensure that application is created before uploading other application files
+    if not options.docs:
+        upload_file(META_FILENAME)
 
     paths = options.local_listing.keys()
     paths.sort()
