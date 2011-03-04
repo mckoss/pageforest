@@ -15,7 +15,7 @@ class Doc(SuperDoc):
     """
     doc_id = db.StringProperty()  # May contain uppercase letters.
 
-    current_schema = SuperDoc.current_schema + 3
+    current_schema = SuperDoc.current_schema + 4
 
     def blob_key_prefix(self):
         """
@@ -51,7 +51,7 @@ class Doc(SuperDoc):
     @classmethod
     def json_props(cls):
         props = super(Doc, cls).json_props()
-        props.update({'doc_id': 'docid'})
+        # We do NOT add doc_id to that hash starting version 4
         return props
 
     def to_json(self, exclude=None):
