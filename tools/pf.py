@@ -335,6 +335,8 @@ def upload_file(filename):
                  filename)
         if not options.force and is_equal:
             return
+    elif options.verbose:
+        print "Could not find %s on server." % filename
 
     file = open(filename, 'rb')
     data = file.read()
@@ -469,7 +471,7 @@ def sha1_file(filename, data=None):
     # Normalize document for sha1 computation.
     if filename == META_FILENAME or is_doc_filename(filename):
         app = json.loads(data)
-        data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application'))
+        data = to_json(app, exclude=('sha1', 'size', 'modified', 'created', 'application', 'docid'))
     sha1 = hashlib.sha1(data).hexdigest()
     return sha1
 
@@ -486,8 +488,8 @@ def list_remote_path(path):
         count += len(files)
         if path != '':
             path_files = {}
-            for path, info in files.items():
-                path_files[path] = info
+            for filename, info in files.items():
+                path_files[path + filename] = info
             files = path_files
         options.listing.update(files)
         if options.verbose:
@@ -555,6 +557,20 @@ def list_local_files():
             path = os.path.relpath(os.path.join(dirpath, filename))
             path = path.replace(os.path.sep, '/')
             update_local_listing(path)
+
+
+def check_args(args):
+    """
+    Make sure file prefix args match options.docs.  We don't
+    do both document and app file uploading in one pass.
+    """
+    for arg in args:
+        if options.docs and not is_doc_path(arg):
+            print "%s is not a document.  Conflicts with -d option." % arg
+            exit(1)
+        if not options.docs and is_doc_path(arg):
+            print "%s is a document - you must use the -d option." % arg
+            exit(1)
 
 
 def get_command(args):
@@ -831,6 +847,7 @@ def main():
     args = config()
     if not options.local_only:
         options.session_key = sign_in()
+    check_args(args)
     globals()[options.command + '_command'](args)
     save_options()
 
