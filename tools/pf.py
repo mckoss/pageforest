@@ -567,7 +567,7 @@ def update_local_listing(local_path):
     path = normalize_local_path(local_path)
 
     if path in options.files and \
-        options.files[path]['time'] == int(os.path.getmtime(path)):
+        options.files[path]['time'] == int(os.path.getmtime(local_path)):
         options.local_listing[path] = options.files[path]
     else:
         options.local_listing[path] = {
