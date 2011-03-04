@@ -1,0 +1,11 @@
+.form-message {
+font-style: italic;
+}
+
+.error {
+color: #7E0F09;
+}
+
+.success {
+color: #4A6427;
+}

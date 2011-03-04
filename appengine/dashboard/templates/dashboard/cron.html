@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}Cron - Dashboard{% endblock %}
+
+{% block content %}
+<p>{{ hour.key.name }}: {{ hour }}</p>
+<p>{{ day.key.name }}: {{ day }}</p>
+<p>{{ month.key.name }}: {{ month }}</p>
+{% endblock %}

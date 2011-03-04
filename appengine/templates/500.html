@@ -1,0 +1,10 @@
+{% extends "page.html" %}
+
+{% block title %}Server error{% endblock %}
+
+{% block page-content %}
+<div id=double-column>
+  <h1 class='error'>There was an error while handling your request.</h1>
+  <p>{{ request.exception }}</p>
+</div>
+{% endblock %}

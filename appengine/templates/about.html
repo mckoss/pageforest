@@ -1,0 +1,28 @@
+{% extends "page.html" %}
+{% block left-column %}
+<h2>About {{SITE_NAME}}</h2>
+
+<p>Created by:</p>
+
+<ul>
+{% for dev in ADMINS %}
+    <li>{{dev.0}}</li>
+{% endfor %}
+</ul>
+
+<h2>Contact Us</h2>
+
+<blockquote>
+<a href="http://blog.pageforest.com">pageforest.com</a>
+<br/>811 First Ave, Suite 480
+<br/>Seattle, WA 98004
+<br/>(206) 388-3466
+<br/><a href="mailto:info@pageforest.com">info@pageforest.com</a>
+</blockquote>
+
+<h2>Source Code</h2>
+
+<p>The source code for {{SITE_NAME}} is available at the
+<a href="http://pageforest.googlecode.com">{{SITE_NAME}} project site</a>.</p>
+
+{% endblock %}

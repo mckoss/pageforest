@@ -1,0 +1,28 @@
+div.tabs .selected a {
+    color: #2BA2D9;
+}
+
+div.tab {
+    float: left;
+    height: 30px;
+    margin: 0px;
+    color: #898989;
+}
+
+div.tabSelect {
+    font-weight: bold;
+}
+
+div.tab a {
+    text-decoration: none;
+    font-style: normal;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+    color: #898989;
+}
+
+div.tab a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}

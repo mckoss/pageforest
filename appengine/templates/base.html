@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title>{% block full-title %}{% block title %}{% endblock %} - {{ SITE_NAME }}{% endblock %}</title>
+<link rel="icon" type="image/png" href="/static/images/icon.png" />
+<link rel="apple-touch-icon" type="image/png" href="/static/images/touch.png" />
+{% block css %}
+  {% for file_name in css_files.default %}
+    <link rel="stylesheet" type="text/css" href="{{ file_name }}" />
+  {% endfor %}
+{% endblock %}
+
+{% block jquery %}
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"></script>
+{% endblock %}
+
+{% block js %}
+  {% for file_name in js_files.pageforest %}
+    <script type="text/javascript" src="{{ file_name }}"></script>
+  {% endfor %}
+  <script type="text/javascript">
+    var main = namespace.com.pageforest.main;
+    $(document).ready(main.onReady);
+  </script>
+{% endblock %}
+
+{% if refresh_seconds %}
+  <meta http-equiv="refresh" content="{{ refresh_seconds }}" />
+{% endif %}
+
+{% block extra-head %}{% endblock %}
+</head>
+
+<body{% if user %} class="user"{% endif %}>
+{% block content %}{% endblock %}
+
+{% block analytics %}
+  <script type="text/javascript">
+    var gaJsHost = (("https:" == window.location.protocol) ? "https://ssl." : "http://www.");
+    document.write(unescape("%3Cscript src='" + gaJsHost +
+    "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    try {
+    var pageTracker = _gat._getTracker("{{ANALYTICS_CODE}}");
+    pageTracker._trackPageview();
+    } catch (e) {}
+  </script>
+{% endblock %}
+</body>
+</html>
