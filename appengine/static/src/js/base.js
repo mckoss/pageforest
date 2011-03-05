@@ -90,6 +90,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
                 }
             }
         }
+        return dest;
     }
 
     function randomInt(n) {
