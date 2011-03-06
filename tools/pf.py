@@ -158,10 +158,6 @@ def load_application():
     if options.local_only:
         return
 
-    if options.command == 'test':
-        options.application = 'pfpytest'
-        options.save_app = False
-
     if options.command == 'listapps':
         options.application = 'www'
         options.save_app = False
