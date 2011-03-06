@@ -457,7 +457,7 @@ def to_json(d, extra=None, include=None, exclude=None, indent=2):
 
 
 def is_data_path(filename):
-    return filename.startswith('docs/')
+    return filename.startswith('docs')
 
 
 def is_doc_path(filename):
@@ -706,11 +706,15 @@ def delete_files(filenames):
         print "No files to delete."
         return
 
-    if not if_yes("Are you sure you want to DELETE %s files from %s" %
-                  (intcomma(len(filenames)), options.server)):
-        return
-
     filenames.sort()
+
+    if not options.noop:
+        for filename in filenames:
+            print_file_info(filename, options.listing[filename])
+
+        if not if_yes("Are you sure you want to DELETE %s files from %s" %
+                      (intcomma(len(filenames)), options.server)):
+            return
 
     for filename in filenames:
         delete_file(filename)
@@ -721,12 +725,13 @@ def vacuum_command(args):
     List remote files that no longer exist locally, then delete them.
     """
     list_remote_files()
+    list_local_files()
     filenames = options.listing.keys()
     selected = []
     for filename in filenames:
         if args and not prefix_match(args, filename):
             continue
-        if os.path.isfile(filename):
+        if filename in options.local_listing:
             continue
         print_file_info(filename, options.listing[filename])
         selected.append(filename)
