@@ -75,31 +75,32 @@ class AppMiddleware(object):
             # Don't allow references to internal re-written URIs.
             if request.path_info.startswith('/app/'):
                 return reserved_url(request)
-        else:
-            # Handle Cross-Origin resource sharing requests
-            # http://www.w3.org/TR/cors/
+            return
 
-            # Preflight request ... TBD
-            if request.method == 'OPTIONS':
-                if 'ORIGIN' not in request.META or \
-                    request.META['ORIGIN'] not in request.app.referers:
-                    pass
+        # Handle Cross-Origin resource sharing requests
+        # http://www.w3.org/TR/cors/
 
-            if settings.DEBUG and DEBUG_URL_REWRITE:
-                logging.info(" original URL: http://" +
-                             request.META.get('HTTP_HOST', '') +
-                             request.get_full_path())
-            # Prefix path with special subdomains.
-            if request.subdomain:
-                request.path_info = '/' + request.subdomain + request.path_info
-            # Prefix path with /app for matching with urls.py.
-            request.path_info = '/app' + request.path_info
-            request.META['PATH_INFO'] = request.path_info
-            request.path = request.META['SCRIPT_NAME'] + request.path_info
-            if settings.DEBUG and DEBUG_URL_REWRITE:
-                logging.info("rewritten URL: http://" +
-                             request.META.get('HTTP_HOST', '') +
-                             request.get_full_path())
+        # Preflight request ... TBD
+        if request.method == 'OPTIONS':
+            if 'ORIGIN' not in request.META or \
+                request.META['ORIGIN'] not in request.app.referers:
+                pass
+
+        if settings.DEBUG and DEBUG_URL_REWRITE:
+            logging.info(" original URL: http://" +
+                         request.META.get('HTTP_HOST', '') +
+                         request.get_full_path())
+        # Prefix path with special subdomains.
+        if request.subdomain:
+            request.path_info = '/' + request.subdomain + request.path_info
+        # Prefix path with /app for matching with urls.py.
+        request.path_info = '/app' + request.path_info
+        request.META['PATH_INFO'] = request.path_info
+        request.path = request.META['SCRIPT_NAME'] + request.path_info
+        if settings.DEBUG and DEBUG_URL_REWRITE:
+            logging.info("rewritten URL: http://" +
+                         request.META.get('HTTP_HOST', '') +
+                         request.get_full_path())
 
         # Unless AppMiddleware returned 404, request.app is always set.
         assert request.app is not None
