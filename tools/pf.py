@@ -398,10 +398,15 @@ def download_file(filename):
     filename = get_local_path(filename)
     # Make directory if needed.
     dirname = os.path.dirname(filename)
-    if dirname and not os.path.exists(dirname):
-        if options.verbose:
-            print "Making directory: %s" % dirname
-        os.makedirs(dirname)
+    if dirname:
+        if os.path.exists(dirname) and not os.path.isdir(dirname):
+            print "Converting %s to %s (directory name conflict)" % (dirname, dirname + '.blob')
+            os.rename(dirname, dirname + '.blob')
+        if not os.path.exists(dirname):
+            if options.verbose:
+                print "Making directory: %s" % dirname
+            os.makedirs(dirname)
+
     try:
         outfile = open(filename, 'wb')
         outfile.write(response.read())
@@ -466,32 +471,21 @@ def get_local_path(path):
     on paths being prefixes of other paths (unlike the filesytem, where
     a file path to a *file* cannot be a sufix of another file path - only
     *directories* can have prefix paths.
-
-    We convert paths to local paths by making directory names using the
-    _blobs suffix.
     """
-    if not path.startswith('docs/'):
-        return path
+    if os.path.isdir(path):
+        return path + '.blob'
 
-    parts = path.split('/')
-    for i in range(1, len(parts) - 1):
-        parts[i] = parts[i] + '_blobs'
-    return '/'.join(parts)
+    return path
 
 
 def normalize_local_path(path):
     """
     Inverse of get_local_path.
     """
-    if not path.startswith('docs/'):
-        return path
+    if path.endswith('.blob'):
+        return path[:-5]
 
-    parts = path.split('/')
-    for i in range(1, len(parts) - 1):
-        if not parts[i].endswith('_blobs'):
-            raise ValueError("Invalid docs directory: %s" % path)
-        parts[i] = parts[i][:-6]
-    return '/'.join(parts)
+    return path
 
 
 def sha1_file(filename, data=None):
