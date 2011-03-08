@@ -27,6 +27,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         sub_option: "Option can only be applied to a Doc, not a Blob."
     };
 
+    // Review - move to a library.
     function URL(url) {
         this.url = url;
         this.params = [];
