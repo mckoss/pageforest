@@ -229,6 +229,22 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             ts.coverage.cover('canvasToPNG');
         });
 
+        ts.addTest("parseURLParams", function(ut) {
+            var tests = [
+                ['http://pageforest.com?foo=bar', {foo: 'bar'}],
+                ['http://pageforest.com?a=1&c=true&b=hello%20there',
+                 {a: '1', b: 'hello there', c: 'true'}],
+                ['?foo=1&bar=7#anchors-away',
+                 {foo: '1', bar: '7', _anchor: 'anchors-away'}],
+                ['?foo=1#fake=value&another=fake',
+                 {foo: '1', _anchor: 'fake=value&another=fake'}]
+            ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(format.parseURLParams(test[0]), test[1]);
+            }
+        });
+
     }; // addTests
 
 });  // org.startpad.format.test

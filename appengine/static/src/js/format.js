@@ -359,6 +359,37 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return formatImpl.apply(this, args);
     };
 
+    // Parse URL parameters into a javascript object
+    function parseURLParams(url) {
+        var parts = url.match(/([^?#]*)(#.*)?$/);
+        if (!parts) {
+            return {};
+        }
+
+        var results = {};
+
+        if (parts[2]) {
+            results._anchor = decodeURIComponent(parts[2].slice(1));
+        }
+
+        parts = parts[1].split("&");
+        for (var i = 0; i < parts.length; i++) {
+            var ich = parts[i].indexOf("=");
+            var name;
+            var value;
+            if (ich === -1) {
+                name = parts[i];
+                value = "";
+            } else {
+                name = parts[i].slice(0, ich);
+                value = parts[i].slice(ich + 1);
+            }
+            results[decodeURIComponent(name)] = decodeURIComponent(value);
+        }
+
+        return results;
+    }
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
@@ -375,6 +406,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'shortDate': shortDate,
         'wordList': wordList,
         'arrayFromWordList': arrayFromWordList,
-        'repeat': repeat
+        'repeat': repeat,
+        'parseURLParams': parseURLParams
     });
 }); // org.startpad.format
