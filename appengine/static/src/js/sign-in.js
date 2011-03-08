@@ -14,6 +14,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
     var dialog = namespace.lookup('org.startpad.dialog');
+    var format = namespace.lookup('org.startpad.format');
 
     var appId;
     var appAuthURL;
@@ -98,6 +99,12 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         getSessionKey(function () {
             if (dlg.values.allowAccess) {
                 transferSessionKey(closeForm);
+                return;
+            }
+            var params = format.parseURLParams(window.location.href);
+            if (params['continue']) {
+                window.location = params['continue'];
+                return;
             }
         });
     }
