@@ -479,6 +479,7 @@ def normalize_local_path(path):
     """
     Inverse of get_local_path.
     """
+    path = path.replace(os.path.sep, '/')
     if path.endswith('.blob'):
         return path[:-5]
 
