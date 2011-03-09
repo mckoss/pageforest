@@ -3,6 +3,8 @@
 Test the Pageforest Application Uploader - pf.py.
 """
 import os
+import shlex
+import subprocess
 import shutil
 import unittest
 
@@ -11,6 +13,13 @@ import pf
 SERVER = 'pageforest.com'
 TEST_APP = 'pfpytest'
 
+try:
+    _path = os.path.dirname(__file__)
+except:
+    _path = '.'
+
+tools_dir = os.path.abspath(_path)
+pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 """
 def test_command(args):
@@ -57,47 +66,41 @@ def test_command(args):
 """
 
 
-class MockOptions(object):
-    server = SERVER
-    username = None
-    password = None
-    application = 'test-pf'
-    docs = False
-    verbose = True
-    quiet = False
-    raw = False
-    force = False
-    noop = False
-    local_only = False
-    files = {}
-
-    def __init__(self, command=None):
-        self.command = command
+def shell_command(command_line):
+    args = shlex.split(command_line)
+    print "args: %r" % args
+    proc = subprocess.Popen(args,
+                            stdout=subprocess.PIPE)
+    (out, err) = proc.communicate()
+    return (proc.returncode, out)
 
 
-class TestAuthenticate(unittest.TestCase):
-    test_dir = None
+def assert_command(test, command_line, contains="", expect_code=0):
+    (code, out) = shell_command(command_line)
 
-    def setUp(self):
-        self.test_dir = os.path.join(os.path.dirname(__file__), 'test_pf')
-        if os.path.exists(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-        os.chdir(self.test_dir)
-        print os.getcwd()
-        app_json = open('app.json', 'wb')
-        app_json.write("{}")
-        app_json.close()
-        pf.options = MockOptions()
-        pf.load_application()
+    test.assertEqual(code, expect_code,
+                     "Unexpected exit code, %d from %s" % (code, command_line))
+    if contains:
+        test.assertNotEqual(out.find(contains), -1,
+                            "Missing '%s' from %s." % (contains, command_line))
 
-    def tearDown(self):
-        pass
 
-    def test_auth(self):
-        pf.put_command(None)
-        pf.get_command(None)
+class TestLocal(unittest.TestCase):
+
+    def test_help(self):
+        assert_command(self, pf_cmd + " dir")
+        assert_command(self, pf_cmd + " --help", contains="help")
 
 
 if __name__ == '__main__':
+    # Setup a test directory for all the tests
+    test_dir = os.path.join(tools_dir, 'test_pf')
+    if os.path.exists(test_dir):
+        shutil.rmtree(test_dir)
+    os.mkdir(test_dir)
+    os.chdir(test_dir)
+
     unittest.main()
+
+    # Remove the test directory
+    # shutil.rmtree(test_dir)
