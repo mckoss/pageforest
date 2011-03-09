@@ -123,13 +123,26 @@ class TestLocal(unittest.TestCase):
                        contains="Creating file app.manifest")
 
 
+class TestAuth(unittest.TestCase):
+    def test_listapps(self):
+        assert_command(self, pf_cmd + ' listapps',
+                       contains=["Apps owned by you",
+                                 "Apps owned by others",
+                                 "scratch",
+                                 ])
+
+
 if __name__ == '__main__':
     # Setup a test directory for all the tests
     test_dir = os.path.join(tools_dir, 'test_pf')
     if os.path.exists(test_dir):
         shutil.rmtree(test_dir)
     os.mkdir(test_dir)
+
     os.chdir(test_dir)
+    # Get user authentication information from pf file in tools directory.
+    # Run pf.py listapps to initialize it there.
+    shutil.copyfile('../.pf', '.pf')
 
     unittest.main()
 
