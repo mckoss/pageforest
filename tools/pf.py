@@ -282,9 +282,6 @@ def config():
     if options.command not in commands:
         parser.error("Unsupported command: " + options.command)
 
-    load_options()
-    load_application()
-
     return args
 
 
@@ -891,6 +888,9 @@ def listapps_command(args):
 
 def main():
     args = config()
+    load_options()
+    load_application()
+
     if not options.local_only:
         options.session_key = sign_in()
     check_args(args)

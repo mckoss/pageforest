@@ -2,12 +2,15 @@
 """
 Test the Pageforest Application Uploader - pf.py.
 """
+import os
+import shutil
+import unittest
+
+import pf
 
 SERVER = 'pageforest.com'
 TEST_APP = 'pfpytest'
 
-import unittest
-import pf
 
 """
 def test_command(args):
@@ -54,10 +57,46 @@ def test_command(args):
 """
 
 
-class TestAuthenticate(unittest.TestCase):
+class MockOptions(object):
+    server = SERVER
+    username = None
+    password = None
+    application = 'test-pf'
+    docs = False
+    verbose = True
+    quiet = False
+    raw = False
+    force = False
+    noop = False
+    local_only = False
+    files = {}
 
-    def testDummy(self):
-        self.assertTrue(False)
+    def __init__(self, command=None):
+        self.command = command
+
+
+class TestAuthenticate(unittest.TestCase):
+    test_dir = None
+
+    def setUp(self):
+        self.test_dir = os.path.join(os.path.dirname(__file__), 'test_pf')
+        if os.path.exists(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+        os.chdir(self.test_dir)
+        print os.getcwd()
+        app_json = open('app.json', 'wb')
+        app_json.write("{}")
+        app_json.close()
+        pf.options = MockOptions()
+        pf.load_application()
+
+    def tearDown(self):
+        pass
+
+    def test_auth(self):
+        pf.put_command(None)
+        pf.get_command(None)
 
 
 if __name__ == '__main__':
