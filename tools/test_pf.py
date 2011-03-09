@@ -9,10 +9,8 @@ TEST_APP = 'pfpytest'
 import unittest
 import pf
 
+"""
 def test_command(args):
-    """
-    Test all commands against a live server.
-    """
     # Create temp folder.
     dirname = options.application
     if not os.path.exists(dirname):
@@ -53,10 +51,13 @@ def test_command(args):
     os.unlink(filename)
     os.chdir('..')
     os.rmdir(dirname)
+"""
 
 
 class TestAuthenticate(unittest.TestCase):
-    pass
+
+    def testDummy(self):
+        self.assertTrue(False)
 
 
 if __name__ == '__main__':
