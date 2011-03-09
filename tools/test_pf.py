@@ -68,7 +68,6 @@ def test_command(args):
 
 def shell_command(command_line):
     args = shlex.split(command_line)
-    print "args: %r" % args
     proc = subprocess.Popen(args,
                             stdout=subprocess.PIPE)
     (out, err) = proc.communicate()
@@ -86,10 +85,13 @@ def assert_command(test, command_line, contains="", expect_code=0):
 
 
 class TestLocal(unittest.TestCase):
+    commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
+                'offline', 'vacuum']
 
     def test_help(self):
-        assert_command(self, pf_cmd + " dir")
-        assert_command(self, pf_cmd + " --help", contains="help")
+        (code, out) = shell_command(pf_cmd + ' -help')
+        for cmd in self.commands:
+            self.assertNotEqual(out.find(cmd), -1, "Missing help on command: %s" % cmd)
 
 
 if __name__ == '__main__':
