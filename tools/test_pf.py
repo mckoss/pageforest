@@ -78,20 +78,49 @@ def assert_command(test, command_line, contains="", expect_code=0):
     (code, out) = shell_command(command_line)
 
     test.assertEqual(code, expect_code,
-                     "Unexpected exit code, %d from %s" % (code, command_line))
+                     "Unexpected exit code, %d from '%s'" % (code, command_line))
     if contains:
-        test.assertNotEqual(out.find(contains), -1,
-                            "Missing '%s' from %s." % (contains, command_line))
+        if type(contains) not in (list, tuple):
+            contains = (contains,)
+
+    for pattern in contains:
+        test.assertNotEqual(out.find(pattern), -1,
+                            "Missing '%s' from '%s'.\n---\n%s\n---" %
+                            (pattern, command_line, out))
+
+    return out
+
+
+def make_file(filename, contents):
+    file = open(filename, 'w')
+    file.write(contents)
+    file.close
 
 
 class TestLocal(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
                 'offline', 'vacuum']
 
+    def setUp(self):
+        make_file('app.json', "{}\n")
+
+    def tearDown(self):
+        os.remove('app.json')
+
     def test_help(self):
-        (code, out) = shell_command(pf_cmd + ' -help')
+        out = assert_command(self, pf_cmd + ' -help', contains='Usage')
         for cmd in self.commands:
             self.assertNotEqual(out.find(cmd), -1, "Missing help on command: %s" % cmd)
+
+    def test_dir(self):
+        out = assert_command(self, pf_cmd + ' dir',
+                             contains=['1 file',
+                                       '5f36b2ea290645ee34d943220a14b54ee5ea5be5'
+                                       ])
+
+    def test_offline(self):
+        assert_command(self, pf_cmd + ' offline',
+                       contains="Creating file app.manifest")
 
 
 if __name__ == '__main__':
