@@ -896,7 +896,6 @@ def info_command(args):
     """
     Display information about the current application.
     """
-    print "Server: %s" % getattr(options, 'server')
     print "Application: %s" % getattr(options, 'application')
     print "Username:  %s" % getattr(options, 'username')
 
