@@ -16,4 +16,4 @@ coverage.xml
 .DS_Store
 pferror.html
 examples/*/docs/
-tools/test_pf/
+tools/test-pf/
