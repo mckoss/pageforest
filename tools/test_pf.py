@@ -61,9 +61,10 @@ pf_cmd = os.path.join(tools_dir, 'pf.py')
 def shell_command(command_line):
     args = shlex.split(command_line)
     proc = subprocess.Popen(args,
-                            stdout=subprocess.PIPE)
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
     (out, err) = proc.communicate()
-    return (proc.returncode, out)
+    return (proc.returncode, out + err)
 
 
 def assert_command(test, command_line, contains=None, not_contains=None, expect_code=0):
@@ -102,7 +103,7 @@ def make_file(filename, contents):
 
 class TestPF(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
-                'offline', 'vacuum']
+                'offline', 'vacuum', 'info']
 
     def setUp(self):
         if os.path.exists(test_dir):
@@ -125,6 +126,11 @@ class TestLocal(TestPF):
         out = assert_command(self, pf_cmd + ' -help', contains='Usage')
         for cmd in self.commands:
             self.assertNotEqual(out.find(cmd), -1, "Missing help on command: %s" % cmd)
+
+    def test_no_arg(self):
+        assert_command(self, pf_cmd, expect_code=2,
+                       contains=["No command",
+                                 "Usage:"])
 
     def test_dir(self):
         out = assert_command(self, pf_cmd + ' dir',
