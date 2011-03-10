@@ -19,6 +19,7 @@ except:
     _path = '.'
 
 tools_dir = os.path.abspath(_path)
+test_dir = os.path.join(tools_dir, 'test_pf')
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 """
@@ -97,16 +98,27 @@ def make_file(filename, contents):
     file.close
 
 
-class TestLocal(unittest.TestCase):
+class TestPF(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
                 'offline', 'vacuum']
 
     def setUp(self):
+        if os.path.exists(test_dir):
+            shutil.rmtree(test_dir)
+        os.mkdir(test_dir)
+        os.chdir(test_dir)
+
+        # Get user authentication information from pf file in tools directory.
+        # Note: Run pf.py listapps to initialize it there.
+        shutil.copyfile('../.pf', '.pf')
         make_file('app.json', "{}\n")
 
     def tearDown(self):
-        os.remove('app.json')
+        os.chdir(tools_dir)
+        shutil.rmtree(test_dir)
 
+
+class TestLocal(TestPF):
     def test_help(self):
         out = assert_command(self, pf_cmd + ' -help', contains='Usage')
         for cmd in self.commands:
@@ -123,7 +135,7 @@ class TestLocal(unittest.TestCase):
                        contains="Creating file app.manifest")
 
 
-class TestAuth(unittest.TestCase):
+class TestAuth(TestPF):
     def test_listapps(self):
         assert_command(self, pf_cmd + ' listapps',
                        contains=["Apps owned by you",
@@ -133,18 +145,4 @@ class TestAuth(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    # Setup a test directory for all the tests
-    test_dir = os.path.join(tools_dir, 'test_pf')
-    if os.path.exists(test_dir):
-        shutil.rmtree(test_dir)
-    os.mkdir(test_dir)
-
-    os.chdir(test_dir)
-    # Get user authentication information from pf file in tools directory.
-    # Run pf.py listapps to initialize it there.
-    shutil.copyfile('../.pf', '.pf')
-
     unittest.main()
-
-    # Remove the test directory
-    # shutil.rmtree(test_dir)
