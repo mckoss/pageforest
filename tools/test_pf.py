@@ -21,9 +21,13 @@ except ImportError:
 import pf
 
 SERVER = 'pageforest.com'
+OPTIONS_FILENAME = '.pf'
+
+APP_JSON_FILENAME = 'app.json'
 TEST_APP = 'test-pf'
 APP_JSON_INIT = '{"application": "%s"}\n' % TEST_APP
-OPTIONS_FILENAME = '.pf'
+APP_JSON_SHA1 = hashlib.sha1("{}\n").hexdigest()
+
 try:
     _path = os.path.dirname(__file__)
 except:
@@ -34,18 +38,6 @@ test_dir = os.path.join(tools_dir, TEST_APP)
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 """
-    # Upload everything, then delete local files.
-    put_command([])
-    os.unlink(META_FILENAME)
-    os.unlink(filename)
-    # Show remote SHA-1 hashes.
-    list_command([])
-    # Download everything, then verify file content.
-    get_command([])
-    infile = open(filename, 'r')
-    read_data = infile.read()
-    infile.close()
-    assert read_data == write_data
     # Verify META_FILENAME content.
     infile = open(META_FILENAME, 'r')
     app_json = infile.read()
@@ -129,7 +121,7 @@ class TestPF(unittest.TestCase):
         # Get user authentication information from pf file in tools directory.
         # Note: Run pf.py listapps to initialize it there.
         shutil.copyfile('../.pf', '.pf')
-        make_file('app.json', APP_JSON_INIT)
+        make_file(APP_JSON_FILENAME, APP_JSON_INIT)
 
     def tearDown(self):
         os.chdir(tools_dir)
@@ -149,17 +141,15 @@ class TestLocal(TestPF):
 
     def test_dir(self):
         out = assert_command(self, pf_cmd + ' dir',
-                             contains=['1 file',
-                                       '5f36b2ea290645ee34d943220a14b54ee5ea5be5',  # app.json
-                                       ])
+                             contains=['1 file', APP_JSON_SHA1])
         options = read_options()
         self.assertEqual(options.get('application'), None)
-        self.assertEqual(options.get('server'), 'pageforest.com')
+        self.assertEqual(options.get('server'), SERVER)
         self.assertTrue(options.get('username') is not None, "missing username")
         self.assertTrue(options.get('secret') is not None, "missing password/secret")
         self.assertTrue(options.get('files') is not None, "Local file cache missing")
         file_info = options['files']['app.json']
-        self.assertEqual(file_info['sha1'], '5f36b2ea290645ee34d943220a14b54ee5ea5be5')
+        self.assertEqual(file_info['sha1'], APP_JSON_SHA1)
         self.assertEqual(file_info['size'], len(APP_JSON_INIT))
         self.assertTrue(file_info['time'] > 1299777982, "time looks wrong")
 
