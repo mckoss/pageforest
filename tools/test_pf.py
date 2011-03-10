@@ -11,7 +11,7 @@ import unittest
 import pf
 
 SERVER = 'pageforest.com'
-TEST_APP = 'pfpytest'
+TEST_APP = 'test-pf'
 
 try:
     _path = os.path.dirname(__file__)
@@ -19,7 +19,7 @@ except:
     _path = '.'
 
 tools_dir = os.path.abspath(_path)
-test_dir = os.path.join(tools_dir, 'test_pf')
+test_dir = os.path.join(tools_dir, TEST_APP)
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 """
@@ -111,7 +111,7 @@ class TestPF(unittest.TestCase):
         # Get user authentication information from pf file in tools directory.
         # Note: Run pf.py listapps to initialize it there.
         shutil.copyfile('../.pf', '.pf')
-        make_file('app.json', "{}\n")
+        make_file('app.json', '{"application": "%s"}\n' % TEST_APP)
 
     def tearDown(self):
         os.chdir(tools_dir)
@@ -140,9 +140,11 @@ class TestAuth(TestPF):
         assert_command(self, pf_cmd + ' listapps',
                        contains=["Apps owned by you",
                                  "Apps owned by others",
-                                 "scratch",
+                                 TEST_APP,
                                  ])
 
+class TestPut(TestPF):
+    pass
 
 if __name__ == '__main__':
     unittest.main()
