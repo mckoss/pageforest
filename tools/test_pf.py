@@ -34,14 +34,6 @@ test_dir = os.path.join(tools_dir, TEST_APP)
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 """
-    # Create test.txt with current timestamp as content.
-    write_data = datetime.now().isoformat()
-    filename = 'test.txt'
-    outfile = open(filename, 'w')
-    outfile.write(write_data)
-    outfile.close()
-    # Show local SHA-1 hashes.
-    sha1_command(['test.txt'])
     # Upload everything, then delete local files.
     put_command([])
     os.unlink(META_FILENAME)
@@ -118,7 +110,10 @@ def make_file(filename, contents):
 def read_options():
     if not os.path.exists(OPTIONS_FILENAME):
         return {}
-    return json.loads(open(OPTIONS_FILENAME, 'r').read())
+    file = open(OPTIONS_FILENAME, 'r')
+    options = json.loads(file.read())
+    file.close()
+    return options
 
 
 class TestPF(unittest.TestCase):
@@ -203,7 +198,7 @@ class TestPut(TestPF):
     def tearDown(self):
         pass
 
-    def test_dir(self):
+    def check_file_hashes(self):
         contains = ['5 files']
         for file in self.files:
             contains.append(file)
@@ -213,14 +208,39 @@ class TestPut(TestPF):
         for file in self.files:
             self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
 
+    def test_dir(self):
+        """
+        All file info cached in .pf file.
+        """
+        self.check_file_hashes()
+
     def test_put(self):
+        """
+        Put uploads unique files first, and nothin on second.
+        """
         assert_command(self, pf_cmd + ' put',
                        contains=['Uploading',
                                  'http://admin.test-pf.',
                                  'app.json',
                                  'unique.txt'])
+        # Do not upload files again
         assert_command(self, pf_cmd + ' put',
                        not_contains='unique.txt')
+
+    def test_put_get(self):
+        """
+        Put, delete, and get.  Files should be the same.
+        """
+        assert_command(self, pf_cmd + ' put')
+        for file in self.files:
+            os.remove(file)
+        assert_command(self, pf_cmd + ' dir')
+        options = read_options()
+        for file in self.files:
+            self.assertEqual(options['files'].get('file'), None, "File still listed: %s" % file)
+        assert_command(self, pf_cmd + ' get')
+        self.check_file_hashes()
+
 
 if __name__ == '__main__':
     unittest.main()
