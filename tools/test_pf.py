@@ -120,6 +120,19 @@ class TestLocal(TestPF):
         for cmd in self.commands:
             self.assertNotEqual(out.find(cmd), -1, "Missing help on command: %s" % cmd)
 
+    def test_info(self):
+        assert_command(self, pf_cmd + ' info',
+                       contains=["Application: %s" % TEST_APP,
+                                 "Server: http://admin.%s.%s" % (TEST_APP, SERVER),
+                                 "Username:",
+                                 ])
+        assert_command(self, pf_cmd + ' -v info',
+                       contains=["HTTP GET http://admin.%s.%s/auth/challenge" % (TEST_APP, SERVER),
+                                 "Challenge:",
+                                 "Response: http://admin.%s.%s/auth/verify/" % (TEST_APP, SERVER),
+                                 "Session key: admin.%s|" % TEST_APP
+                                 ])
+
     def test_no_arg(self):
         assert_command(self, pf_cmd, expect_code=2,
                        contains=["No command",
