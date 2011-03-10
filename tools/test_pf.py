@@ -9,11 +9,20 @@ import shutil
 import unittest
 from random import random
 
+try:
+    try:
+        import json  # Python 2.6
+    except ImportError:
+        from django.utils import simplejson as json  # Django
+except ImportError:
+    import simplejson as json  # Please easy_install simplejson
+
 import pf
 
 SERVER = 'pageforest.com'
 TEST_APP = 'test-pf'
-
+APP_JSON_INIT = '{"application": "%s"}\n' % TEST_APP
+OPTIONS_FILENAME = '.pf'
 try:
     _path = os.path.dirname(__file__)
 except:
@@ -96,9 +105,19 @@ def assert_command(test, command_line, contains=None, not_contains=None, expect_
 
 
 def make_file(filename, contents):
+    dirname = os.path.dirname(filename)
+    if dirname:
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
     file = open(filename, 'w')
     file.write(contents)
     file.close
+
+
+def read_options():
+    if not os.path.exists(OPTIONS_FILENAME):
+        return {}
+    return json.loads(open(OPTIONS_FILENAME, 'r').read())
 
 
 class TestPF(unittest.TestCase):
@@ -114,7 +133,7 @@ class TestPF(unittest.TestCase):
         # Get user authentication information from pf file in tools directory.
         # Note: Run pf.py listapps to initialize it there.
         shutil.copyfile('../.pf', '.pf')
-        make_file('app.json', '{"application": "%s"}\n' % TEST_APP)
+        make_file('app.json', APP_JSON_INIT)
 
     def tearDown(self):
         os.chdir(tools_dir)
@@ -135,8 +154,18 @@ class TestLocal(TestPF):
     def test_dir(self):
         out = assert_command(self, pf_cmd + ' dir',
                              contains=['1 file',
-                                       '5f36b2ea290645ee34d943220a14b54ee5ea5be5',
+                                       '5f36b2ea290645ee34d943220a14b54ee5ea5be5',  # app.json
                                        ])
+        options = read_options()
+        self.assertEqual(options.get('application'), None)
+        self.assertEqual(options.get('server'), 'pageforest.com')
+        self.assertTrue(options.get('username') is not None, "missing username")
+        self.assertTrue(options.get('secret') is not None, "missing password/secret")
+        self.assertTrue(options.get('files') is not None, "Local file cache missing")
+        file_info = options['files']['app.json']
+        self.assertEqual(file_info['sha1'], '5f36b2ea290645ee34d943220a14b54ee5ea5be5')
+        self.assertEqual(file_info['size'], len(APP_JSON_INIT))
+        self.assertTrue(file_info['time'] > 1299777982, "time looks wrong")
 
     def test_offline(self):
         assert_command(self, pf_cmd + ' offline',
@@ -155,14 +184,22 @@ class TestAuth(TestPF):
 class TestPut(TestPF):
     def setUp(self):
         super(TestPut, self).setUp()
+        make_file('index.html', "<html><body>Hello</body></html>")
+        make_file('scripts/test.js', "alert(1);")
         make_file('test.txt', "This is a text file\n")
         make_file('unique.txt', str(random()))
 
+    def tearDown(self):
+        pass
+
     def test_dir(self):
         assert_command(self, pf_cmd + ' dir',
-                       contains=['3 files',
-                                 '202712ad248cc7617ffdcc6991358bf98debcb25',
+                       contains=['5 files',
+                                 '202712ad248cc7617ffdcc6991358bf98debcb25',  # test.txt
+                                 'd96af86c21ae75a057825d36d3f4214b55274c1c',  # index.html
+                                 '55a72fae552af377887c1ea69fb5305a824f7dd4',  # test.js
                                  ])
+        options = read_options()
 
     def test_put(self):
         assert_command(self, pf_cmd + ' put',
