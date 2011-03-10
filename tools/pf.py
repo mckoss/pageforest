@@ -681,6 +681,9 @@ def delete_command(args):
 
 
 def if_yes(prompt):
+    if options.force:
+        return True
+
     answer = raw_input("%s (yes/no)? " % prompt)
     f = answer.lower().startswith('y')
     if not f:
