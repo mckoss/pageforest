@@ -21,6 +21,7 @@ except ImportError:
 import pf
 
 SERVER = 'pageforest.com'
+#SERVER = 'pageforest:8080'
 OPTIONS_FILENAME = '.pf'
 
 APP_JSON_FILENAME = 'app.json'
@@ -115,23 +116,13 @@ class TestPF(unittest.TestCase):
 
 
 class TestLocal(TestPF):
+    """
+    Test pf.py purely local commands (no server access needed)
+    """
     def test_help(self):
         out = assert_command(self, pf_cmd + ' -help', contains='Usage')
         for cmd in self.commands:
             self.assertNotEqual(out.find(cmd), -1, "Missing help on command: %s" % cmd)
-
-    def test_info(self):
-        assert_command(self, pf_cmd + ' info',
-                       contains=["Application: %s" % TEST_APP,
-                                 "Server: http://admin.%s.%s" % (TEST_APP, SERVER),
-                                 "Username:",
-                                 ])
-        assert_command(self, pf_cmd + ' -v info',
-                       contains=["HTTP GET http://admin.%s.%s/auth/challenge" % (TEST_APP, SERVER),
-                                 "Challenge:",
-                                 "Response: http://admin.%s.%s/auth/verify/" % (TEST_APP, SERVER),
-                                 "Session key: admin.%s|" % TEST_APP
-                                 ])
 
     def test_no_arg(self):
         assert_command(self, pf_cmd, expect_code=2,
@@ -142,12 +133,11 @@ class TestLocal(TestPF):
         out = assert_command(self, pf_cmd + ' dir',
                              contains=['1 file', APP_JSON_SHA1])
         options = read_json_file(OPTIONS_FILENAME)
-        self.assertEqual(options.get('application'), None)
         self.assertEqual(options.get('server'), SERVER)
         self.assertTrue(options.get('username') is not None, "missing username")
         self.assertTrue(options.get('secret') is not None, "missing password/secret")
         self.assertTrue(options.get('files') is not None, "Local file cache missing")
-        file_info = options['files']['app.json']
+        file_info = options['files'][APP_JSON_FILENAME]
         self.assertEqual(file_info['sha1'], APP_JSON_SHA1)
         self.assertEqual(file_info['size'], len(APP_JSON_INIT))
         self.assertTrue(file_info['time'] > 1299777982, "time looks wrong")
@@ -157,16 +147,10 @@ class TestLocal(TestPF):
                        contains="Creating file app.manifest")
 
 
-class TestAuth(TestPF):
-    def test_listapps(self):
-        assert_command(self, pf_cmd + ' listapps',
-                       contains=["Apps owned by you",
-                                 "Apps owned by others",
-                                 TEST_APP,
-                                 ])
-
-
 class TestServer(TestPF):
+    """
+    Test command of pf.py that interact with the server.
+    """
     files = {
         'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25',
                      'content': "This is a text file\n"},
@@ -195,11 +179,31 @@ class TestServer(TestPF):
         for file in self.files:
             self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
 
+    def test_info(self):
+        assert_command(self, pf_cmd + ' info',
+                       contains=["Application: %s" % TEST_APP,
+                                 "Server: http://admin.%s.%s" % (TEST_APP, SERVER),
+                                 "Username:",
+                                 ])
+        assert_command(self, pf_cmd + ' -v info',
+                       contains=["HTTP GET http://admin.%s.%s/auth/challenge" % (TEST_APP, SERVER),
+                                 "Challenge:",
+                                 "Response: http://admin.%s.%s/auth/verify/" % (TEST_APP, SERVER),
+                                 "Session key: admin.%s|" % TEST_APP
+                                 ])
+
     def test_dir(self):
         """
         All file info cached in .pf file.
         """
         self.check_file_hashes()
+
+    def test_listapps(self):
+        assert_command(self, pf_cmd + ' listapps',
+                       contains=["Apps owned by you",
+                                 "Apps owned by others",
+                                 TEST_APP,
+                                 ])
 
     def test_put(self):
         """
@@ -208,7 +212,7 @@ class TestServer(TestPF):
         assert_command(self, pf_cmd + ' put',
                        contains=['Uploading',
                                  'http://admin.' + TEST_APP,
-                                 'app.json',
+                                 APP_JSON_FILENAME,
                                  'unique.txt'])
         # Do not upload files again
         assert_command(self, pf_cmd + ' put',
@@ -234,13 +238,26 @@ class TestServer(TestPF):
             self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
 
+    def test_list(self):
+        assert_command(self, pf_cmd + ' put')
+        assert_command(self, pf_cmd + ' get', contains="Downloading")
+        assert_command(self, pf_cmd + ' dir')
+        options = read_json_file(OPTIONS_FILENAME)
+        contains = [APP_JSON_FILENAME,
+                    options['files'][APP_JSON_FILENAME]['sha1'],
+                    ]
+        for file, file_info in self.files.items():
+            contains.append(file_info['sha1'])
+            contains.append('(%d bytes' % len(file_info['content']))
+        assert_command(self, pf_cmd + ' list', contains=contains)
+
     def test_delete(self):
         assert_command(self, pf_cmd + ' put')
         assert_command(self, pf_cmd + ' delete no-such-file', contains="No files to delete")
         assert_command(self, pf_cmd + ' delete -f unique.txt')
         assert_command(self, pf_cmd + ' put', contains=['Uploading', 'unique.txt'])
-        assert_command(self, pf_cmd + ' delete -f', contains=["Deleting", "app.json"])
-        contains = ['Uploading', 'app.json']
+        assert_command(self, pf_cmd + ' delete -f', contains=["Deleting", APP_JSON_FILENAME])
+        contains = ['Uploading', APP_JSON_FILENAME]
         for file in self.files:
             contains.append(file + ' (%d bytes' % len(self.files[file]['content']))
         assert_command(self, pf_cmd + ' put', contains=contains)
