@@ -37,20 +37,6 @@ tools_dir = os.path.abspath(_path)
 test_dir = os.path.join(tools_dir, TEST_APP)
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
-"""
-    # Verify META_FILENAME content.
-    infile = open(META_FILENAME, 'r')
-    app_json = infile.read()
-    infile.close()
-    assert '"modified":' in app_json
-    assert '"tags": []' in app_json
-    # Clean up.
-    os.unlink(META_FILENAME)
-    os.unlink(filename)
-    os.chdir('..')
-    os.rmdir(dirname)
-"""
-
 
 def shell_command(command_line):
     args = shlex.split(command_line)
@@ -167,7 +153,7 @@ class TestAuth(TestPF):
                                  ])
 
 
-class TestPut(TestPF):
+class TestServer(TestPF):
     files = {
         'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25',
                      'content': "This is a text file\n"},
@@ -175,18 +161,16 @@ class TestPut(TestPF):
                        'content': "<html><body>Hello</body></html>"},
         'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4',
                             'content': "alert(1);"},
-        'unique.txt': {'content': str(random())},
+        'unique.txt': {},
         }
 
-    files['unique.txt']['sha1'] = hashlib.sha1(files['unique.txt']['content']).hexdigest()
-
     def setUp(self):
-        super(TestPut, self).setUp()
+        super(TestServer, self).setUp()
+        self.files['unique.txt']['content'] = str(random())
+        self.files['unique.txt']['sha1'] = \
+            hashlib.sha1(self.files['unique.txt']['content']).hexdigest()
         for file in self.files:
             make_file(file, self.files[file]['content'])
-
-    def tearDown(self):
-        pass
 
     def check_file_hashes(self):
         contains = ['5 files']
@@ -210,7 +194,7 @@ class TestPut(TestPF):
         """
         assert_command(self, pf_cmd + ' put',
                        contains=['Uploading',
-                                 'http://admin.test-pf.',
+                                 'http://admin.' + TEST_APP,
                                  'app.json',
                                  'unique.txt'])
         # Do not upload files again
@@ -233,9 +217,20 @@ class TestPut(TestPF):
         app_json = read_json_file(APP_JSON_FILENAME)
         for prop in ['application', 'created', 'modified', 'cloneable', 'owner',
                      'readers', 'writers', 'referers', 'secureData', 'sha1', 'size', 'tags',
-                     'title', 'url']:
-            self.assertTrue(app_json.get(prop) is not None,
+                     'url', 'icon', 'title']:
+            self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
+
+    def test_delete(self):
+        assert_command(self, pf_cmd + ' put')
+        assert_command(self, pf_cmd + ' delete no-such-file', contains="No files to delete")
+        assert_command(self, pf_cmd + ' delete -f unique.txt')
+        assert_command(self, pf_cmd + ' put', contains=['Uploading', 'unique.txt'])
+        assert_command(self, pf_cmd + ' delete -f', contains=["Deleting", "app.json"])
+        contains = ['Uploading', 'app.json']
+        for file in self.files:
+            contains.append(file + ' (%d bytes' % len(self.files[file]['content']))
+        assert_command(self, pf_cmd + ' put', contains=contains)
 
 
 if __name__ == '__main__':
