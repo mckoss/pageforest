@@ -155,9 +155,6 @@ def load_application():
     """
     Load application from META_FILENAME, or ask the user for it.
     """
-    if options.local_only:
-        return
-
     if options.command == 'listapps':
         options.application = 'www'
         options.save_app = False
@@ -173,6 +170,9 @@ def load_application():
             options.save_app = False
         else:
             options.application = raw_input("Application: ")
+
+    if options.local_only:
+        return
 
     if options.docs:
         options.root_url = 'http://%s.%s/' % (options.application, options.server)
@@ -222,25 +222,27 @@ def save_options():
     """
     file_options = {}
     for prop in ['username', 'secret', 'server']:
-        file_options[prop] = getattr(options, prop)
+        if getattr(options, prop) is not None:
+            file_options[prop] = getattr(options, prop)
 
-    if options.save_app:
-        file_options['application'] = options.application
+    if options.application is not None:
+        if options.save_app:
+            file_options['application'] = options.application
 
-    if hasattr(options, 'local_listing'):
-        files = {}
-        for path in options.local_listing:
-            files[path] = project(options.local_listing[path], ['time', 'size', 'sha1'])
-        file_options['files'] = files
-    else:
-        file_options['files'] = options.files
+        if hasattr(options, 'local_listing'):
+            files = {}
+            for path in options.local_listing:
+                files[path] = project(options.local_listing[path], ['time', 'size', 'sha1'])
+            file_options['files'] = files
+        else:
+            file_options['files'] = options.files
 
     open(OPTIONS_FILENAME, 'w').write(to_json(file_options))
 
 
 def config():
     """
-    Get configuration from command line, META_FILENAME and user input.
+    Get configuration from command line.
     """
     global options, commands
 
@@ -885,6 +887,15 @@ def listapps_command(args):
     for app_name, app in apps.items():
         if app['owner'] != options.username:
             print "%s (by %s)" % (app_name, app['owner'])
+
+
+def info_command(args):
+    """
+    Display information about the current application.
+    """
+    print "Server: %s" % getattr(options, 'server')
+    print "Application: %s" % getattr(options, 'application')
+    print "Username:  %s" % getattr(options, 'username')
 
 
 def main():
