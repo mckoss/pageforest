@@ -8,6 +8,7 @@ import subprocess
 import shutil
 import unittest
 from random import random
+import hashlib
 
 try:
     try:
@@ -182,30 +183,35 @@ class TestAuth(TestPF):
 
 
 class TestPut(TestPF):
+    files = {
+        'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25',
+                     'content': "This is a text file\n"},
+        'index.html': {'sha1': 'd96af86c21ae75a057825d36d3f4214b55274c1c',
+                       'content': "<html><body>Hello</body></html>"},
+        'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4',
+                            'content': "alert(1);"},
+        'unique.txt': {'content': str(random())},
+        }
+
+    files['unique.txt']['sha1'] = hashlib.sha1(files['unique.txt']['content']).hexdigest()
+
     def setUp(self):
         super(TestPut, self).setUp()
-        make_file('index.html', "<html><body>Hello</body></html>")
-        make_file('scripts/test.js', "alert(1);")
-        make_file('test.txt', "This is a text file\n")
-        make_file('unique.txt', str(random()))
+        for file in self.files:
+            make_file(file, self.files[file]['content'])
 
     def tearDown(self):
         pass
 
     def test_dir(self):
-        files = {
-            'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25'},
-            'index.html': {'sha1': 'd96af86c21ae75a057825d36d3f4214b55274c1c'},
-            'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4'},
-            }
         contains = ['5 files']
-        for file in files:
+        for file in self.files:
             contains.append(file)
-            contains.append(files[file]['sha1'])
+            contains.append(self.files[file]['sha1'])
         assert_command(self, pf_cmd + ' dir', contains=contains)
         options = read_options()
-        for file in files:
-            self.assertEqual(options['files'][file]['sha1'], files[file]['sha1'])
+        for file in self.files:
+            self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
 
     def test_put(self):
         assert_command(self, pf_cmd + ' put',
