@@ -99,10 +99,10 @@ def make_file(filename, contents):
     file.close
 
 
-def read_options():
-    if not os.path.exists(OPTIONS_FILENAME):
+def read_json_file(filename):
+    if not os.path.exists(filename):
         return {}
-    file = open(OPTIONS_FILENAME, 'r')
+    file = open(filename, 'r')
     options = json.loads(file.read())
     file.close()
     return options
@@ -142,7 +142,7 @@ class TestLocal(TestPF):
     def test_dir(self):
         out = assert_command(self, pf_cmd + ' dir',
                              contains=['1 file', APP_JSON_SHA1])
-        options = read_options()
+        options = read_json_file(OPTIONS_FILENAME)
         self.assertEqual(options.get('application'), None)
         self.assertEqual(options.get('server'), SERVER)
         self.assertTrue(options.get('username') is not None, "missing username")
@@ -194,7 +194,7 @@ class TestPut(TestPF):
             contains.append(file)
             contains.append(self.files[file]['sha1'])
         assert_command(self, pf_cmd + ' dir', contains=contains)
-        options = read_options()
+        options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
             self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
 
@@ -225,11 +225,17 @@ class TestPut(TestPF):
         for file in self.files:
             os.remove(file)
         assert_command(self, pf_cmd + ' dir')
-        options = read_options()
+        options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
             self.assertEqual(options['files'].get('file'), None, "File still listed: %s" % file)
         assert_command(self, pf_cmd + ' get')
         self.check_file_hashes()
+        app_json = read_json_file(APP_JSON_FILENAME)
+        for prop in ['application', 'created', 'modified', 'cloneable', 'owner',
+                     'readers', 'writers', 'referers', 'secureData', 'sha1', 'size', 'tags',
+                     'title', 'url']:
+            self.assertTrue(app_json.get(prop) is not None,
+                            "%s missing property: %s" % (APP_JSON_FILENAME, prop))
 
 
 if __name__ == '__main__':
