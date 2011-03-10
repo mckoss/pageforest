@@ -193,13 +193,19 @@ class TestPut(TestPF):
         pass
 
     def test_dir(self):
-        assert_command(self, pf_cmd + ' dir',
-                       contains=['5 files',
-                                 '202712ad248cc7617ffdcc6991358bf98debcb25',  # test.txt
-                                 'd96af86c21ae75a057825d36d3f4214b55274c1c',  # index.html
-                                 '55a72fae552af377887c1ea69fb5305a824f7dd4',  # test.js
-                                 ])
+        files = {
+            'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25'},
+            'index.html': {'sha1': 'd96af86c21ae75a057825d36d3f4214b55274c1c'},
+            'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4'},
+            }
+        contains = ['5 files']
+        for file in files:
+            contains.append(file)
+            contains.append(files[file]['sha1'])
+        assert_command(self, pf_cmd + ' dir', contains=contains)
         options = read_options()
+        for file in files:
+            self.assertEqual(options['files'][file]['sha1'], files[file]['sha1'])
 
     def test_put(self):
         assert_command(self, pf_cmd + ' put',
