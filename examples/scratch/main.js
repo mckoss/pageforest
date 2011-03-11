@@ -6,8 +6,25 @@
 
 // TODO: Change the namespace for your application to:
 //     'com.pageforest.your_app_name'
+/*globals applicationCache */
 namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
+
+    // We use the offline app.manifest - some Safari mobile versions
+    // do not update the cache unless we explicitly check.
+    function handleAppCache() {
+        if (applicationCache == undefined) {
+            return;
+        }
+
+        if (applicationCache.status == applicationCache.UPDATEREADY) {
+            applicationCache.swapCache();
+            location.reload();
+            return;
+        }
+
+        applicationCache.addEventListener('updateready', handleAppCache, false);
+    }
 
     // This function is called when the index.html home page
     // is loaded.  Use it to initialize your application and
@@ -30,6 +47,7 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
         // Quick call to poll - don't wait a whole second to try loading
         // the doc and logging in the user.
         ns.client.poll();
+        handleAppCache();
     }
 
     // setDoc is called whenever your document is be reloaded.
