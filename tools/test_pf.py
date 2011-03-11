@@ -282,5 +282,17 @@ class TestServer(TestPF):
         assert_command(self, pf_cmd + ' list', not_contains="unique.txt")
 
 
+class TestDocs(TestPF):
+    """
+    Test document storage and retrieval.
+    """
+    def setUp(self):
+        self.files.extend({
+                'docs/simpledoc': {'content': json.dumps({"blob": "Simple document"})},
+                'docs/complexdoc.blob': {'content': json.dumps({"blob": "Complex document"})},
+                'docs/complexdoc/sub-blob': "Any old content.\n",
+                })
+        super(TestDocs, self).setUp()
+
 if __name__ == '__main__':
     unittest.main()
