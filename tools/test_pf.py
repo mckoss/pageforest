@@ -54,7 +54,7 @@ def assert_command(test, command_line, contains=None, not_contains=None, expect_
     (code, out) = shell_command(command_line, stdin=stdin)
 
     test.assertEqual(code, expect_code,
-                     "Unexpected exit code, %d from '%s'" % (code, command_line))
+                     "Unexpected exit code, %d from '%s'\n%s" % (code, command_line, out))
 
     def list_default(param):
         if param is None:
@@ -305,8 +305,10 @@ class TestDocs(TestPF):
         Put, delete, and get.  Files should be the same.
         """
         assert_command(self, pf_cmd + ' put')
+        assert_command(self, pf_cmd + ' put -d')
         shutil.rmtree('docs')
-        assert_command(self, pf_cmd + ' dir')
+        assert_command(self, pf_cmd + ' get -d')
+        assert_command(self, pf_cmd + ' dir -d')
         options = read_json_file(OPTIONS_FILENAME)
         for file in [doc for doc in self.files if doc.startswith('docs')]:
             self.assertEqual(options['files'].get('file'), None, "File still listed: %s" % file)
