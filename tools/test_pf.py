@@ -39,17 +39,19 @@ test_dir = os.path.join(tools_dir, TEST_APP)
 pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 
-def shell_command(command_line):
+def shell_command(command_line, stdin=None):
     args = shlex.split(command_line)
     proc = subprocess.Popen(args,
+                            stdin=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
-    (out, err) = proc.communicate()
+    (out, err) = proc.communicate(stdin or "")
     return (proc.returncode, out + err)
 
 
-def assert_command(test, command_line, contains=None, not_contains=None, expect_code=0):
-    (code, out) = shell_command(command_line)
+def assert_command(test, command_line, contains=None, not_contains=None, expect_code=0,
+                   stdin=None):
+    (code, out) = shell_command(command_line, stdin=stdin)
 
     test.assertEqual(code, expect_code,
                      "Unexpected exit code, %d from '%s'" % (code, command_line))
@@ -254,6 +256,10 @@ class TestServer(TestPF):
     def test_delete(self):
         assert_command(self, pf_cmd + ' put')
         assert_command(self, pf_cmd + ' delete no-such-file', contains="No files to delete")
+        assert_command(self, pf_cmd + ' delete unique.txt', stdin="no\n",
+                       contains=["Are you sure",
+                                 "yes/no",
+                                 "I'll take that as a no"])
         assert_command(self, pf_cmd + ' delete -f unique.txt')
         assert_command(self, pf_cmd + ' put', contains=['Uploading', 'unique.txt'])
         assert_command(self, pf_cmd + ' delete -f', contains=["Deleting", APP_JSON_FILENAME])
@@ -261,6 +267,10 @@ class TestServer(TestPF):
         for file in self.files:
             contains.append(file + ' (%d bytes' % len(self.files[file]['content']))
         assert_command(self, pf_cmd + ' put', contains=contains)
+
+    def test_vacuum(self):
+        assert_command(self, pf_cmd + ' put')
+        os.remove('unique.txt')
 
 
 if __name__ == '__main__':
