@@ -13,7 +13,7 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     // We use the offline app.manifest - some Safari mobile versions
     // do not update the cache unless we explicitly check.
     function handleAppCache() {
-        if (applicationCache == undefined) {
+        if (!window.applicationCache) {
             return;
         }
 
