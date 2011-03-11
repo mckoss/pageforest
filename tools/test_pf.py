@@ -271,6 +271,10 @@ class TestServer(TestPF):
     def test_vacuum(self):
         assert_command(self, pf_cmd + ' put')
         os.remove('unique.txt')
+        assert_command(self, pf_cmd + ' vacuum', stdin="y\n",
+                       contains=["DELETE 1 files",
+                                 "Deleting: http://admin.%s.%s/unique.txt" % (TEST_APP, SERVER)])
+        assert_command(self, pf_cmd + ' list', not_contains="unique.txt")
 
 
 if __name__ == '__main__':
