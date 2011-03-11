@@ -245,6 +245,11 @@ class TestServer(TestPF):
         assert_command(self, pf_cmd + ' get')
         self.check_file_hashes()
         app_json = read_json_file(APP_JSON_FILENAME)
+        for prop in app_json:
+            self.assertTrue(app_json[prop] is not None,
+                            "Invalid %s property value %s == None" %
+                            (APP_JSON_FILENAME, prop))
+
         for prop in ['application', 'created', 'modified', 'cloneable', 'owner',
                      'readers', 'writers', 'referers', 'secureData', 'sha1', 'size', 'tags',
                      'url', 'icon', 'title']:
@@ -299,6 +304,10 @@ class TestDocs(TestPF):
                 'docs/complexdoc.blob': {'content': json.dumps({"blob": "Complex document"})},
                 'docs/complexdoc/sub-blob': {'content': "Any old content.\n"},
                 })
+
+    def test_put_noreader(self):
+        assert_command(self, pf_cmd + ' put')
+        assert_command(self, pf_cmd + ' put -d')
 
     def test_put_get(self):
         """
