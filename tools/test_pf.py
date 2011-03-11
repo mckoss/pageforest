@@ -104,15 +104,17 @@ class TestPF(unittest.TestCase):
     options = ['help', 'server', 'username', 'password', 'application',
                'docs', 'verbose', 'quiet', 'raw', 'force', 'noop']
 
-    files = {
-        'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25',
-                     'content': "This is a text file\n"},
-        'index.html': {'sha1': 'd96af86c21ae75a057825d36d3f4214b55274c1c',
-                       'content': "<html><body>Hello</body></html>"},
-        'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4',
-                            'content': "alert(1);"},
-        'unique.txt': {},
-        }
+    def __init__(self, *args, **kwargs):
+        super(TestPF, self).__init__(*args, **kwargs)
+        self.files = {
+            'test.txt': {'sha1': '202712ad248cc7617ffdcc6991358bf98debcb25',
+                         'content': "This is a text file\n"},
+            'index.html': {'sha1': 'd96af86c21ae75a057825d36d3f4214b55274c1c',
+                           'content': "<html><body>Hello</body></html>"},
+            'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4',
+                                'content': "alert(1);"},
+            'unique.txt': {},
+            }
 
     def setUp(self):
         if os.path.exists(test_dir):
@@ -139,10 +141,14 @@ class TestPF(unittest.TestCase):
         contains = ['5 files']
         for file in self.files:
             contains.append(file)
-            contains.append(self.files[file]['sha1'])
+            if 'sha1' in self.files[file]:
+                contains.append(self.files[file]['sha1'])
         assert_command(self, pf_cmd + ' dir', contains=contains)
         options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
+            if 'sha1' not in self.files[file]:
+                self.assertTrue(False, "Missing hash to compare to %s: %s" %
+                                (file, options['files'][file]['sha1']))
             self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
 
 
@@ -286,13 +292,27 @@ class TestDocs(TestPF):
     """
     Test document storage and retrieval.
     """
-    def setUp(self):
-        self.files.extend({
+    def __init__(self, *args, **kwargs):
+        super(TestDocs, self).__init__(*args, **kwargs)
+        self.files.update({
                 'docs/simpledoc': {'content': json.dumps({"blob": "Simple document"})},
                 'docs/complexdoc.blob': {'content': json.dumps({"blob": "Complex document"})},
-                'docs/complexdoc/sub-blob': "Any old content.\n",
+                'docs/complexdoc/sub-blob': {'content': "Any old content.\n"},
                 })
-        super(TestDocs, self).setUp()
+
+    def test_put_get(self):
+        """
+        Put, delete, and get.  Files should be the same.
+        """
+        assert_command(self, pf_cmd + ' put')
+        shutil.rmtree('docs')
+        assert_command(self, pf_cmd + ' dir')
+        options = read_json_file(OPTIONS_FILENAME)
+        for file in [doc for doc in self.files if doc.startswith('docs')]:
+            self.assertEqual(options['files'].get('file'), None, "File still listed: %s" % file)
+        assert_command(self, pf_cmd + ' get')
+        self.check_file_hashes()
+
 
 if __name__ == '__main__':
     unittest.main()
