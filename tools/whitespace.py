@@ -14,6 +14,7 @@ jquery-*.js
 *.gif *.png *.jpg
 *.patch
 pferror.html
+docs
 """.split()
 
 
