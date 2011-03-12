@@ -112,7 +112,9 @@ class App(SuperDoc):
 
         logging.info("Creating app %s for %s" % (app_id, username))
 
-        title = app_id.capitalize()
+        if 'title' not in kwargs:
+            kwargs['title'] = app_id.capitalize()
+
         # A new application has private read and write access by default,
         # but may be updated immediately by app.json upload.
         return App(key_name=app_id, owner=username, secret=crypto.random64(),
