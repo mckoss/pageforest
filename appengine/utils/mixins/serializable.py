@@ -54,7 +54,8 @@ class Serializable(db.Model):
                 continue
             if include and name not in include:
                 continue
-            result[alias or name] = getattr(self, name)
+            if getattr(self, name) is not None:
+                result[alias or name] = getattr(self, name)
         if extra:
             result.update(extra)
         if indent is None:

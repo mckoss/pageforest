@@ -21,7 +21,7 @@ except ImportError:
 import pf
 
 SERVER = 'pageforest.com'
-#SERVER = 'pageforest:8080'
+SERVER = 'pageforest:8080'
 OPTIONS_FILENAME = '.pf'
 
 APP_JSON_FILENAME = 'app.json'
@@ -252,7 +252,7 @@ class TestServer(TestPF):
 
         for prop in ['application', 'created', 'modified', 'cloneable', 'owner',
                      'readers', 'writers', 'referers', 'secureData', 'sha1', 'size', 'tags',
-                     'url', 'icon', 'title']:
+                     'url', 'title']:
             self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
 
