@@ -370,10 +370,10 @@ def download_file(filename):
     Convert blob paths to be: docs/docid_blobs/blob_path
     """
     url = url_from_path(filename)
+    info = options.listing[filename]
 
     # Check if the local file is already up-to-date.
     if not options.force:
-        info = options.listing[filename]
         local_info = options.local_listing.get(filename, {"sha1": "no-local-file"})
         is_equal = info['sha1'] == local_info['sha1']
         if options.verbose:
