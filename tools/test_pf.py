@@ -67,9 +67,13 @@ def assert_command(test, command_line, contains=None, not_contains=None, expect_
     not_contains = list_default(not_contains)
 
     for pattern in contains:
+        info = ''
+        if not isinstance(pattern, basestring):
+            (pattern, info) = pattern
+            info = " (%s)" % info
         test.assertNotEqual(out.find(pattern), -1,
-                            "Missing '%s' from '%s'.\n---\n%s\n---" %
-                            (pattern, command_line, out))
+                            "Missing '%s'%s from '%s'.\n---\n%s\n---" %
+                            (pattern, info, command_line, out))
 
     for pattern in not_contains:
         test.assertEqual(out.find(pattern), -1,
@@ -142,7 +146,7 @@ class TestPF(unittest.TestCase):
         for file in self.files:
             contains.append(file)
             if 'sha1' in self.files[file]:
-                contains.append(self.files[file]['sha1'])
+                contains.append((self.files[file]['sha1'], file))
         assert_command(self, pf_cmd + ' dir', contains=contains)
         options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
@@ -255,6 +259,7 @@ class TestServer(TestPF):
                      'url', 'title']:
             self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
+        assert_command(self, pf_cmd + ' get -f app.json')
 
     def test_list(self):
         assert_command(self, pf_cmd + ' put')
@@ -262,11 +267,11 @@ class TestServer(TestPF):
         assert_command(self, pf_cmd + ' dir')
         options = read_json_file(OPTIONS_FILENAME)
         contains = [APP_JSON_FILENAME,
-                    options['files'][APP_JSON_FILENAME]['sha1'],
+                    (options['files'][APP_JSON_FILENAME]['sha1'], APP_JSON_FILENAME),
                     ]
         for file, file_info in self.files.items():
-            contains.append(file_info['sha1'])
-            contains.append('(%d bytes' % len(file_info['content']))
+            contains.append((file_info['sha1'], file))
+            contains.append(('(%d bytes' % len(file_info['content']), file))
         assert_command(self, pf_cmd + ' list', contains=contains)
 
     def test_delete(self):
