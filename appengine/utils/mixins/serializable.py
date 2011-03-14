@@ -30,13 +30,9 @@ class Serializable(db.Model):
 
     @classmethod
     def json_props(cls):
-        return {}
-
-    def to_json(self, extra=None, include=None, exclude=None, indent=2):
         """
-        Serialize a datastore entity to JSON.
-
-        The class must support a json_props method returning:
+        Should be overwridden to return a dictionary of the properties
+        to serialized in the form:
 
         { 'name': 'alias',
           'name': None,
@@ -45,6 +41,12 @@ class Serializable(db.Model):
 
         The model property will always use 'name', but may be reperesented
         in the json blob as 'alias' (if given).
+        """
+        return {}
+
+    def to_json(self, extra=None, include=None, exclude=None, indent=2):
+        """
+        Serialize a datastore entity to JSON.
         """
         if exclude is None:
             exclude = ()
@@ -82,19 +84,18 @@ class Hashable(Serializable):
             return None
         return '"%s"' % self.sha1
 
+    @classmethod
+    def nohash_props(cls):
+        """
+        List of properties to EXCLUDE from the hash.
+        """
+        return ('sha1', 'size')
+
     def update_hash(self, value=None):
         """
-        Update the has value of the model.
-
-        Excludes meta-data like the sha1, size, and date properties.
+        Update the hash value of the model.
         """
-        if value is None:
-            value = self.to_json(exclude=('sha1', 'size',
-                                          'created', 'modified'))
-        if value is None:
-            self.sha1 = None
-            self.size = 0
-            return
+        value = self.to_json(exclude=self.nohash_props())
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 

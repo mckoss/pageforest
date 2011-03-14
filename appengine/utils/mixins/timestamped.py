@@ -21,6 +21,14 @@ class Timestamped(db.Model):
         props.update(dict.fromkeys(('created', 'modified')))
         return props
 
+    @classmethod
+    def nohash_props(cls):
+        """
+        Don't included timestamp properties in the hash for the model.
+        """
+        props = super(Timestamped, cls).nohash_props()
+        return props + ('created', 'modified')
+
     def put(self, *args, **kwargs):
         """
         Update the timestamps before each datastore write.
