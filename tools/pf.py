@@ -237,7 +237,9 @@ def save_options():
         else:
             file_options['files'] = options.files
 
-    open(OPTIONS_FILENAME, 'w').write(to_json(file_options))
+    options_file = open(OPTIONS_FILENAME, 'w')
+    options_file.write(to_json(file_options))
+    options_file.close()
 
 
 def config():
@@ -569,10 +571,14 @@ def update_local_listing(local_path):
 
     REVIEW: We don't allow for any blob key to be a prefix of any other
     (i.e, a blob can't be both a directory and a file).
+
+    Note: The force flag will force all file signatures to be computed regardless of
+    file time in cache.
     """
     path = normalize_local_path(local_path)
 
     if path in options.files and \
+        not options.force and \
         options.files[path]['time'] == int(os.path.getmtime(local_path)):
         options.local_listing[path] = options.files[path]
     else:
