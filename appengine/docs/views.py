@@ -81,10 +81,6 @@ def app_docs(request):
         query.with_cursor(request.GET['cursor'])
 
     docs = query.fetch(limit)
-    if not keys_only:
-        blob_keys = [db.Key.from_path('Blob', doc.key().name() + '/')
-                     for doc in docs]
-        blobs = db.get(blob_keys)
     items = {}
     for doc in docs:
         if keys_only:
