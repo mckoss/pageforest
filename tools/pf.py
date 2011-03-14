@@ -395,7 +395,12 @@ def download_file(filename):
     if options.noop:
         return
 
-    response = urllib2.urlopen(AuthRequest(url))
+    try:
+        response = urllib2.urlopen(AuthRequest(url))
+    except IOError, e:
+        print "Could not download file, %s (%s)." % (url, str(e))
+        return
+
     filename = get_local_path(filename)
     # Make directory if needed.
     dirname = os.path.dirname(filename)
@@ -413,7 +418,7 @@ def download_file(filename):
         outfile.write(response.read())
         outfile.close()
     except IOError, e:
-        print "Could not write file, %s (%s)." % (filename, e.strerror)
+        print "Could not write file, %s (%s)." % (filename, str(e))
 
 
 def prefix_match(args, filename):
