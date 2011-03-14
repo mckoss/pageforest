@@ -10,6 +10,9 @@ from google.appengine.datastore import entity_pb
 
 from utils.mixins.serializable import Serializable
 
+COMMIT_INTERVAL = 1.0     # seconds
+JIGGLE_INTERVAL = 0.25
+
 
 class CacheHistory(object):
     """
@@ -95,7 +98,7 @@ class Cacheable(Serializable):
         value = self.to_protobuf()
         return memcache.set(key, value)
 
-    def put(self, commit_interval=2.0, fake_time=None, write_through=False):
+    def put(self, commit_interval=COMMIT_INTERVAL, fake_time=None, write_through=False):
         """
         Save this entity to datastore and memcache.
 
@@ -116,7 +119,7 @@ class Cacheable(Serializable):
         # Use current time and jiggle, unless fake_time was specified.
         if fake_time is None:
             now = time.time()
-            jiggle = 0.5 * random.random()
+            jiggle = JIGGLE_INTERVAL * random.random()
         # Read commit history for this entity from memcache.
         history = CacheHistory(self)
         history.memcache_puts.append(now)
@@ -136,6 +139,8 @@ class Cacheable(Serializable):
         # Save entity to datastore, if necessary.
         if commit or write_through:
             return super(Cacheable, self).put()
+        else:
+            logging.warning("Hot write - memcache only: %s" % self.get_cache_key())
 
     def cache_delete(self):
         """Remove this entity from memcache."""
@@ -163,6 +168,7 @@ class Cacheable(Serializable):
         """
         TODO: Use memcache here.
         """
+        logging.error("Entity get() not going through cache: %r" % keys)
         return super(Cacheable, cls).get(keys)
 
     @classmethod
