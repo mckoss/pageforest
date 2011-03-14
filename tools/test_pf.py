@@ -22,7 +22,6 @@ except ImportError:
 import pf
 
 SERVER = 'pageforest.com'
-SERVER = 'pageforest:8080'
 OPTIONS_FILENAME = '.pf'
 
 APP_JSON_FILENAME = 'app.json'
@@ -127,6 +126,8 @@ class TestPF(unittest.TestCase):
         make_file('unique.txt', content)
 
     def setUp(self):
+        global SERVER
+
         if os.path.exists(test_dir):
             shutil.rmtree(test_dir)
         os.mkdir(test_dir)
@@ -134,7 +135,10 @@ class TestPF(unittest.TestCase):
 
         # Get user authentication information from pf file in tools directory.
         # Note: Run pf.py listapps to initialize it there.
-        shutil.copyfile('../.pf', '.pf')
+        shutil.copyfile('../' + OPTIONS_FILENAME, OPTIONS_FILENAME)
+        options = read_json_file(OPTIONS_FILENAME)
+        if 'server' in options:
+            SERVER = options['server']
         make_file(APP_JSON_FILENAME, APP_JSON_INIT)
 
         for file in self.files:
@@ -147,9 +151,12 @@ class TestPF(unittest.TestCase):
         shutil.rmtree(test_dir)
 
     def check_file_hashes(self):
-        contains = ['5 files']
+        contains = []
         for file in self.files:
-            contains.append(file)
+            if file.endswith('.blob'):
+                contains.append(file[:-5])
+            else:
+                contains.append(file)
             if 'sha1' in self.files[file]:
                 contains.append((self.files[file]['sha1'], file))
         assert_command(self, pf_cmd + ' dir -f', contains=contains)
@@ -321,6 +328,9 @@ class TestDocs(TestPF):
     """
     Test document storage and retrieval.
     """
+    def tearDown(self):
+        pass
+
     def __init__(self, *args, **kwargs):
         super(TestDocs, self).__init__(*args, **kwargs)
         self.files.update({
@@ -332,6 +342,15 @@ class TestDocs(TestPF):
     def test_put_noreader(self):
         assert_command(self, pf_cmd + ' put')
         assert_command(self, pf_cmd + ' put -d')
+
+    def test_double_get(self):
+        """
+        Make sure second get -d downloads nothing.
+        """
+        assert_command(self, pf_cmd + ' put')
+        assert_command(self, pf_cmd + ' put -d')
+        assert_command(self, pf_cmd + ' get -d')
+        assert_command(self, pf_cmd + ' get -d', not_contains="Downloading")
 
     def test_put_get(self):
         """
