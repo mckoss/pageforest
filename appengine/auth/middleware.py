@@ -142,12 +142,14 @@ class AuthMiddleware(object):
                 return AccessDenied(request)
 
         # Allow authentication attempts and channel api.
-        if (request.path_info == '/app/admin/auth/challenge/'
-            or request.path_info.startswith('/app/admin/auth/verify/')
-            or request.path_info.startswith('/app/auth/set-session/')
-            or request.path_info.startswith('/app/auth/sign-up/')
-            or request.path_info.startswith('/app/auth/username/')
-            or request.path_info.startswith('/app/channel')):
+        if (request.path_info == '/app/admin/auth/challenge/' or
+            request.path_info == '/app/auth/challenge/' or
+            request.path_info.startswith('/app/admin/auth/verify/') or
+            request.path_info.startswith('/app/auth/verify/') or
+            request.path_info.startswith('/app/auth/set-session/') or
+            request.path_info.startswith('/app/auth/sign-up/') or
+            request.path_info.startswith('/app/auth/username/') or
+            request.path_info.startswith('/app/channel')):
             return
 
         # Let authenticated user create an app by uploading app.json.
