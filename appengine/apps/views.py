@@ -144,7 +144,7 @@ def app_json_get(request):
     """
     if not request.app.is_readable(request.user):
         return AccessDenied(request)
-    content = request.app.to_json(extra={"application": request.app.get_app_id()})
+    content = request.app.to_json()
     return HttpResponse(content, mimetype=settings.JSON_MIMETYPE_CS)
 
 

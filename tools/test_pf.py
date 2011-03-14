@@ -162,10 +162,14 @@ class TestPF(unittest.TestCase):
         assert_command(self, pf_cmd + ' dir -f', contains=contains)
         options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
+            if file.endswith('.blob'):
+                options_file = file[:-5]
+            else:
+                options_file = file
             if 'sha1' not in self.files[file]:
                 self.assertTrue(False, "Missing hash to compare to %s: %s" %
-                                (file, options['files'][file]['sha1']))
-            self.assertEqual(options['files'][file]['sha1'], self.files[file]['sha1'])
+                                (file, options['files'][options_file]['sha1']))
+            self.assertEqual(options['files'][options_file]['sha1'], self.files[file]['sha1'])
 
 
 class TestLocal(TestPF):
@@ -334,9 +338,12 @@ class TestDocs(TestPF):
     def __init__(self, *args, **kwargs):
         super(TestDocs, self).__init__(*args, **kwargs)
         self.files.update({
-                'docs/simpledoc': {'content': json.dumps({"blob": "Simple document"})},
-                'docs/complexdoc.blob': {'content': json.dumps({"blob": "Complex document"})},
-                'docs/complexdoc/sub-blob': {'content': "Any old content.\n"},
+                'docs/simpledoc': {'content': json.dumps({"blob": "Simple document"}),
+                                   'sha1': 'ac71698ddb176ba75410fa4bc945b5750509c4d4'},
+                'docs/complexdoc.blob': {'content': json.dumps({"blob": "Complex document"}),
+                                         'sha1': '1cdcacdd13c15f626dc2b75fee06ad20d6a7bb67'},
+                'docs/complexdoc/sub-blob': {'content': "Any old content.\n",
+                                             'sha1': 'cbf686ad2feab1eb454e9c15ec1b38a2e5659c84'},
                 })
 
     def test_put_noreader(self):

@@ -53,6 +53,10 @@ class App(SuperDoc):
         props.update({'secure_data': 'secureData'})
         return props
 
+    def to_json(self, *args, **kwargs):
+        kwargs['extra'] = {"application": self.get_app_id()}
+        return super(App, self).to_json(*args, **kwargs)
+
     def get_absolute_url(self):
         """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])

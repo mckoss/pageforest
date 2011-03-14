@@ -60,6 +60,14 @@ class Doc(SuperDoc):
         props.update({'doc_id': 'docid'})
         return props
 
+    @classmethod
+    def nohash_props(cls):
+        """
+        Don't included docid in the hash for the model.
+        """
+        props = super(Doc, cls).nohash_props()
+        return props + ('doc_id',)
+
     def to_json(self, exclude=None):
         """
         Standard json formatted string for the document.
