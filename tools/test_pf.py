@@ -3,6 +3,7 @@
 Test the Pageforest Application Uploader - pf.py.
 """
 import os
+import time
 import shlex
 import subprocess
 import shutil
@@ -117,8 +118,13 @@ class TestPF(unittest.TestCase):
                            'content': "<html><body>Hello</body></html>"},
             'scripts/test.js': {'sha1': '55a72fae552af377887c1ea69fb5305a824f7dd4',
                                 'content': "alert(1);"},
-            'unique.txt': {},
             }
+
+    def make_unique(self):
+        content = str(random())
+        sha1 = hashlib.sha1(content).hexdigest()
+        self.files['unique.txt'] = {'content': content, 'sha1': sha1}
+        make_file('unique.txt', content)
 
     def setUp(self):
         if os.path.exists(test_dir):
@@ -131,11 +137,10 @@ class TestPF(unittest.TestCase):
         shutil.copyfile('../.pf', '.pf')
         make_file(APP_JSON_FILENAME, APP_JSON_INIT)
 
-        self.files['unique.txt']['content'] = str(random())
-        self.files['unique.txt']['sha1'] = \
-            hashlib.sha1(self.files['unique.txt']['content']).hexdigest()
         for file in self.files:
             make_file(file, self.files[file]['content'])
+
+        self.make_unique()
 
     def tearDown(self):
         os.chdir(tools_dir)
@@ -147,7 +152,7 @@ class TestPF(unittest.TestCase):
             contains.append(file)
             if 'sha1' in self.files[file]:
                 contains.append((self.files[file]['sha1'], file))
-        assert_command(self, pf_cmd + ' dir', contains=contains)
+        assert_command(self, pf_cmd + ' dir -f', contains=contains)
         options = read_json_file(OPTIONS_FILENAME)
         for file in self.files:
             if 'sha1' not in self.files[file]:
@@ -216,11 +221,26 @@ class TestServer(TestPF):
                                  ])
 
     def test_listapps(self):
+        assert_command(self, pf_cmd + ' put')
         assert_command(self, pf_cmd + ' listapps',
                        contains=["Apps owned by you",
                                  "Apps owned by others",
                                  TEST_APP,
                                  ])
+
+    def test_put_multi(self):
+        """
+        Overwrite the same file rapidly in succession, ensuring that the
+        server-reported hash is the same as we compute locally.
+        """
+        for i in range(5):
+            self.make_unique()
+            assert_command(self, pf_cmd + ' put -f unique.txt',
+                           contains=[("unique.txt", i)])
+            assert_command(self, pf_cmd + ' list unique.txt',
+                           contains=[(self.files['unique.txt']['sha1'], i)])
+            # Avoid the hot-write cache on server
+            time.sleep(1)
 
     def test_put(self):
         """
@@ -259,19 +279,18 @@ class TestServer(TestPF):
                      'url', 'title']:
             self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
-        assert_command(self, pf_cmd + ' get -f app.json')
 
     def test_list(self):
         assert_command(self, pf_cmd + ' put')
         assert_command(self, pf_cmd + ' get', contains="Downloading")
-        assert_command(self, pf_cmd + ' dir')
+        assert_command(self, pf_cmd + ' dir -f')
         options = read_json_file(OPTIONS_FILENAME)
         contains = [APP_JSON_FILENAME,
                     (options['files'][APP_JSON_FILENAME]['sha1'], APP_JSON_FILENAME),
                     ]
         for file, file_info in self.files.items():
-            contains.append((file_info['sha1'], file))
             contains.append(('(%d bytes' % len(file_info['content']), file))
+            contains.append((file_info['sha1'], file))
         assert_command(self, pf_cmd + ' list', contains=contains)
 
     def test_delete(self):
