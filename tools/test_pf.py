@@ -332,9 +332,6 @@ class TestDocs(TestPF):
     """
     Test document storage and retrieval.
     """
-    def tearDown(self):
-        pass
-
     def __init__(self, *args, **kwargs):
         super(TestDocs, self).__init__(*args, **kwargs)
         self.files.update({
