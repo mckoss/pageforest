@@ -238,7 +238,7 @@ class SignInTest(AppTestCase):
         self.assertContains(response, '"status": 200')
         self.assertContains(response, '"statusText": "Authenticated"')
         cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('www|peter|12'))
+        self.assertTrue(cookie.value.startswith('www|peter|1'))
         self.assertEqual(cookie['max-age'], 86400)
         self.assertTrue(cookie['httponly'])
 
@@ -304,7 +304,7 @@ class AppSignInTest(AppTestCase):
         self.assertContains(response, '"statusText": "Authenticated"')
         # Expect a first-party session cookie to www.pageforest.com
         cookie = response.cookies['sessionkey']
-        self.assertTrue(cookie.value.startswith('www|peter|12'))
+        self.assertTrue(cookie.value.startswith('www|peter|1'))
         self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect to the form
@@ -314,7 +314,7 @@ class AppSignInTest(AppTestCase):
         match = re.search(r"transferSession\('(.*)'\)", response.content)
         self.assertTrue(match)
         myapp_session_key = match.group(1)
-        self.assertTrue(myapp_session_key.startswith("myapp|peter|12"))
+        self.assertTrue(myapp_session_key.startswith("myapp|peter|1"))
 
         # Should not be logged in yet
         response = self.app_client.get(APP_AUTH_PREFIX + 'username/')
@@ -454,7 +454,7 @@ class ChallengeVerifyTest(AppTestCase):
         challenge = self.app_client.get(APP_AUTH_PREFIX + 'challenge/').content
         # First login should be successful.
         response = self.sign_and_verify(challenge)
-        self.assertContains(response, 'myapp|peter|12', status_code=200)
+        self.assertContains(response, 'myapp|peter|1', status_code=200)
         # Replay should fail with 403 Forbidden.
         response = self.sign_and_verify(challenge)
         self.assertContains(response, 'Already used.', status_code=403)
