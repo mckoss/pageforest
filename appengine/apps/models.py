@@ -53,8 +53,20 @@ class App(SuperDoc):
         props.update({'secure_data': 'secureData'})
         return props
 
-    def get_details_url(self):
-        """Absolute URL for the app details page."""
+    @classmethod
+    def nohash_props(cls):
+        """
+        Don't included docid in the hash for the model.
+        """
+        props = super(App, cls).nohash_props()
+        return props + ('application',)
+
+    def to_json(self, *args, **kwargs):
+        kwargs['extra'] = {"application": self.get_app_id()}
+        return super(App, self).to_json(*args, **kwargs)
+
+    def get_absolute_url(self):
+        """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])
 
     def get_app_url(self):
@@ -122,7 +134,9 @@ class App(SuperDoc):
 
         logging.info("Creating app %s for %s" % (app_id, username))
 
-        title = app_id.capitalize()
+        if 'title' not in kwargs:
+            kwargs['title'] = app_id.capitalize()
+
         # A new application has private read and write access by default,
         # but may be updated immediately by app.json upload.
         return App(key_name=app_id, owner=username, secret=crypto.random64(),

@@ -215,4 +215,4 @@ class SuperDoc(Timestamped, Migratable, Taggable, Hashable, Cacheable):
         for key in ('tags', 'readers', 'writers'):
             self.update_string_list_property(parsed, key, **kwargs)
         self.normalize_lists()
-        self.update_hash()
+        self.invalidate_hash()
