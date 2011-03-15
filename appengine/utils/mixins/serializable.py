@@ -100,7 +100,7 @@ class Hashable(Serializable):
         """
         Update the hash value of the model.
         """
-        exclude=self.nohash_props()
+        exclude = self.nohash_props()
         if value is None:
             value = self.to_json(exclude=exclude)
         self.sha1 = sha1(value).hexdigest()

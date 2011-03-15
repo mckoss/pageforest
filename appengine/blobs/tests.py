@@ -631,8 +631,8 @@ class ListTest(AppTestCase):
         "__class__": "Date",
         "isoformat": "2010-11-12T13:14:15Z"
       },
-      "sha1": "d0baedbc9675887103be92606277cb46106100e0",
-      "size": 107
+      "sha1": "bf71fc45d339c3af14ff8634ba0419c3582556e2",
+      "size": 71
     },
     "MyDoc": {
       "modified": {
