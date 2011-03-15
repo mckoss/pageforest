@@ -62,7 +62,7 @@ class Serializable(db.Model):
             # stored in model directly, but still not part of the hash when called
             # from Hashable.
             for prop, value in extra.items():
-                if exclude and name in exclude:
+                if exclude and prop in exclude:
                     continue
                 result[prop] = value
         if indent is None:
@@ -103,7 +103,6 @@ class Hashable(Serializable):
         exclude=self.nohash_props()
         if value is None:
             value = self.to_json(exclude=exclude)
-            logging.info("Computing hash from '%s'" % value)
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 
