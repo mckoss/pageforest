@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.utils import simplejson as json
 
@@ -14,6 +16,11 @@ class Doc(SuperDoc):
     Entity key name format: app_id/doc_id (all lower case).
     """
     doc_id = db.StringProperty()  # May contain uppercase letters.
+
+    """
+    Versions:
+    4 - doc_id not included in hash
+    """
 
     current_schema = SuperDoc.current_schema + 4
 
@@ -51,8 +58,16 @@ class Doc(SuperDoc):
     @classmethod
     def json_props(cls):
         props = super(Doc, cls).json_props()
-        # We do NOT add doc_id to that hash starting version 4
+        props.update({'doc_id': 'docid'})
         return props
+
+    @classmethod
+    def nohash_props(cls):
+        """
+        Don't included docid in the hash for the model.
+        """
+        props = super(Doc, cls).nohash_props()
+        return props + ('doc_id',)
 
     def to_json(self, exclude=None):
         """

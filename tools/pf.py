@@ -237,7 +237,9 @@ def save_options():
         else:
             file_options['files'] = options.files
 
-    open(OPTIONS_FILENAME, 'w').write(to_json(file_options))
+    options_file = open(OPTIONS_FILENAME, 'w')
+    options_file.write(to_json(file_options))
+    options_file.close()
 
 
 def config():
@@ -262,6 +264,7 @@ def config():
     parser.add_option('-d', '--docs', action='store_true')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
+    parser.add_option('-g', '--debug', action='store_true')
     parser.add_option('-r', '--raw', action='store_true',
                       help="Default is to upload all files using base64 encoding.  "
                       "This option overrides and sends raw binary files.")
@@ -370,10 +373,10 @@ def download_file(filename):
     Convert blob paths to be: docs/docid_blobs/blob_path
     """
     url = url_from_path(filename)
+    info = options.listing[filename]
 
     # Check if the local file is already up-to-date.
     if not options.force:
-        info = options.listing[filename]
         local_info = options.local_listing.get(filename, {"sha1": "no-local-file"})
         is_equal = info['sha1'] == local_info['sha1']
         if options.verbose:
@@ -393,7 +396,12 @@ def download_file(filename):
     if options.noop:
         return
 
-    response = urllib2.urlopen(AuthRequest(url))
+    try:
+        response = urllib2.urlopen(AuthRequest(url))
+    except IOError, e:
+        print "Could not download file, %s (%s)." % (url, str(e))
+        return
+
     filename = get_local_path(filename)
     # Make directory if needed.
     dirname = os.path.dirname(filename)
@@ -411,7 +419,7 @@ def download_file(filename):
         outfile.write(response.read())
         outfile.close()
     except IOError, e:
-        print "Could not write file, %s (%s)." % (filename, e.strerror)
+        print "Could not write file, %s (%s)." % (filename, str(e))
 
 
 def prefix_match(args, filename):
@@ -503,9 +511,12 @@ def sha1_file(filename, data=None):
     # Normalize document for sha1 computation.
     if filename == META_FILENAME or is_doc_path(filename):
         try:
-            app = json.loads(data)
-            data = to_json(app, exclude=('sha1', 'size', 'modified',
-                                         'created', 'application', 'docid'))
+            data = json.loads(data)
+            data = to_json(data, exclude=('sha1', 'size',
+                                          'modified', 'created',
+                                          'application', 'docid'))
+            if options.debug:
+                print "Computing sha1 hash from:\n---\n%s\n---" % data
         except ValueError, e:
             print "Invalid document format in file %s - not JSON" % filename
             return None
@@ -569,10 +580,14 @@ def update_local_listing(local_path):
 
     REVIEW: We don't allow for any blob key to be a prefix of any other
     (i.e, a blob can't be both a directory and a file).
+
+    Note: The force flag will force all file signatures to be computed regardless of
+    file time in cache.
     """
     path = normalize_local_path(local_path)
 
     if path in options.files and \
+        not options.force and \
         options.files[path]['time'] == int(os.path.getmtime(local_path)):
         options.local_listing[path] = options.files[path]
     else:
