@@ -53,6 +53,14 @@ class App(SuperDoc):
         props.update({'secure_data': 'secureData'})
         return props
 
+    @classmethod
+    def nohash_props(cls):
+        """
+        Don't included docid in the hash for the model.
+        """
+        props = super(App, cls).nohash_props()
+        return props + ('application',)
+
     def to_json(self, *args, **kwargs):
         kwargs['extra'] = {"application": self.get_app_id()}
         return super(App, self).to_json(*args, **kwargs)
