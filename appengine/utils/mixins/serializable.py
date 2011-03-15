@@ -1,6 +1,5 @@
 import logging
 import traceback
-import pprint
 
 from  hashlib import sha1
 
@@ -59,7 +58,13 @@ class Serializable(db.Model):
             if getattr(self, name) is not None:
                 result[alias or name] = getattr(self, name)
         if extra:
-            result.update(extra)
+            # Need to exclude even extra properties - may be computed and not
+            # stored in model directly, but still not part of the hash when called
+            # from Hashable.
+            for prop, value in extra.items():
+                if exclude and name in exclude:
+                    continue
+                result[prop] = value
         if indent is None:
             return json.dumps(result, sort_keys=True,
                               separators=(',', ':'), cls=ModelEncoder)
@@ -95,7 +100,10 @@ class Hashable(Serializable):
         """
         Update the hash value of the model.
         """
-        value = self.to_json(exclude=self.nohash_props())
+        exclude=self.nohash_props()
+        if value is None:
+            value = self.to_json(exclude=exclude)
+            logging.info("Computing hash from '%s'" % value)
         self.sha1 = sha1(value).hexdigest()
         self.size = len(value)
 

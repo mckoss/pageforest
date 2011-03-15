@@ -14,7 +14,12 @@ class Doc(SuperDoc):
     """
     doc_id = db.StringProperty()  # May contain uppercase letters.
 
-    current_schema = SuperDoc.current_schema + 3
+    """
+    Versions:
+    4 - doc_id not included in hash
+    """
+
+    current_schema = SuperDoc.current_schema + 4
 
     def blob_key_prefix(self):
         """

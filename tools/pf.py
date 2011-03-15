@@ -264,6 +264,7 @@ def config():
     parser.add_option('-d', '--docs', action='store_true')
     parser.add_option('-v', '--verbose', action='store_true')
     parser.add_option('-q', '--quiet', action='store_true')
+    parser.add_option('-g', '--debug', action='store_true')
     parser.add_option('-r', '--raw', action='store_true',
                       help="Default is to upload all files using base64 encoding.  "
                       "This option overrides and sends raw binary files.")
@@ -510,9 +511,12 @@ def sha1_file(filename, data=None):
     # Normalize document for sha1 computation.
     if filename == META_FILENAME or is_doc_path(filename):
         try:
-            app = json.loads(data)
-            data = to_json(app, exclude=('sha1', 'size', 'modified',
-                                         'created', 'application', 'docid'))
+            data = json.loads(data)
+            data = to_json(data, exclude=('sha1', 'size',
+                                          'modified', 'created',
+                                          'application', 'docid'))
+            if options.debug:
+                print "Computing sha1 hash from:\n---\n%s\n---" % data
         except ValueError, e:
             print "Invalid document format in file %s - not JSON" % filename
             return None
