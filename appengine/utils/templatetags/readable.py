@@ -80,6 +80,7 @@ def datetime_ago(dt):
     delta = datetime.now() - dt
     return ago(delta)
 
+
 def hexdump(bytes, row=16):
     """
     >>> hexdump('123456789', 6)
