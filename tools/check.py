@@ -124,10 +124,10 @@ def main():
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.root_dir, 'examples'))),
 
-        ('pfpy', os.path.join(pftool.tools_dir, 'test_pf.py')),
-
         ('unittest', "python2.5 %s%s test %s" %
          (debug_options, os.path.join(pftool.app_dir, 'manage.py'), unit_level)),
+
+        ('pfpy', os.path.join(pftool.tools_dir, 'test_pf.py')),
 
         ('jstest',
          "python %s -q -a" % pftool.tool_path('jstest.py')),

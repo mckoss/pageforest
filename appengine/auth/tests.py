@@ -449,13 +449,12 @@ class AnonymousTest(AppTestCase):
                             status_code=405)
 
     def test_docs(self):
-        """Anonymous user should not have access to /docs/."""
-        self.assertContains(self.www_client.get('/docs/'),
-                            'Access denied.', status_code=403)
+        """Anonymous user should be redirected to sign in to /docs/."""
+        self.assertEquals(self.www_client.get('/docs/').status_code, 302)
 
     def test_sign_in(self):
         """Anonymous user should have access to sign-in pages."""
-        self.assertContains(self.www_client.get('/sign-in'), 'Password')
+        self.assertEquals(self.www_client.get('/sign-in').status_code, 200)
 
     def test_app_json(self):
         """Anonymous user should have read-only access to public app.json."""
