@@ -46,6 +46,7 @@ Read only.
 is better written in dot notation
 Script URL
 Expected '}' to have an indentation
+The body of a for in should be wrapped
 """.strip().splitlines(),
 
     'strict': """
