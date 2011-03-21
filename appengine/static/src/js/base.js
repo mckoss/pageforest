@@ -132,11 +132,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     /* Sort elements and remove duplicates from array (modified in place) */
-    function uniqueArray(a) {
+    function unique(a) {
         if (!(a instanceof Array)) {
             return;
         }
         a.sort();
+        // REVIEW: This could be very slow for large arrays and many dups
+        // O(N^2).  But pretty cheap if few duplicates.  Alternative is to
+        // copy the unique elements to a new array O(N).
         for (var i = 1; i < a.length; i++) {
             if (a[i - 1] == a[i]) {
                 a.splice(i, 1);
@@ -194,7 +197,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
 
         var allKeys = [].concat(keys(a), keys(b));
-        uniqueArray(allKeys);
+        unique(allKeys);
 
         for (var i = 0; i < allKeys.length; i++) {
             var prop = allKeys[i];
@@ -239,6 +242,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return a;
     }
 
+    // REVIEW: Remove - in all browser versions?
     function indexOf(value, a) {
         a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
@@ -336,7 +340,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'randomInt': randomInt,
         'strip': strip,
         'project': project,
-        'uniqueArray': uniqueArray,
+        'uniqueArray': unique,  // Deprecated
+        'unique': unique,
         'indexOf': indexOf,
         'map': map,
         'filter': filter,
