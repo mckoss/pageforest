@@ -47,6 +47,7 @@ is better written in dot notation
 Script URL
 Expected '}' to have an indentation
 The body of a for in should be wrapped
+is not defined
 """.strip().splitlines(),
 
     'strict': """
