@@ -750,6 +750,8 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
         }).async(true, 30000);
 
         ts.addTest("Anonymous public", function (ut) {
+            client.ignore = undefined;
+
             function cont() {
                 ut.nextFn();
             }
