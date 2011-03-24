@@ -124,8 +124,6 @@ def main():
          (pftool.tool_path('jslint.py'),
           os.path.join(pftool.root_dir, 'examples'))),
 
-        ('pfpy', os.path.join(pftool.tools_dir, 'test_pf.py')),
-
         ('unittest', "python2.5 %s%s test %s" %
          (debug_options, os.path.join(pftool.app_dir, 'manage.py'), unit_level)),
 
@@ -137,6 +135,9 @@ def main():
 
         ('whitespace', "python %s %s" %
          (pftool.tool_path('whitespace.py'), pftool.root_dir)),
+
+        ('pfpy', os.path.join(pftool.tools_dir, 'test_pf.py')),
+
         ]
 
     if not hasattr(options, 'checks'):
