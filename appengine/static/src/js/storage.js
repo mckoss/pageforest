@@ -9,7 +9,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var loader = namespace.lookup('org.startpad.loader');
 
     var errorMessages = {
-        no_username: "You must sign in to save a document.",
         bad_options: "API Call invalid",
         bad_callback: "API Call invalid",
         slice_range: "Invalid slice range (start or end value invalid).",
@@ -306,7 +305,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             // will be reported.
             var validations = {
                 // Data writing methods need to provide signin and data!
-                no_username: !isPutMethod || this.client.username != undefined,
                 missing_object: !isPutMethod || json != undefined,
 
                 bad_options: typeof options != 'function',
