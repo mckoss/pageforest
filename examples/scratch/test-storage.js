@@ -51,7 +51,11 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 delete this.waitingFor;
                 this.ut.nextFn();
             }
-        }
+        },
+
+        setDocid: function() {},
+
+        getDocid: function () { return 'test-1'; }
     });
 
     // Anonymous app in this test.
@@ -602,7 +606,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 // since these requests seem to be serialized on both
                 // the dev appserver and the production server!
             ]);
-        }).async(true, 15000);
+        }).async(true, 15000).enable(false);
 
         ts.addTest("channel", function(ut) {
             client.app.ut = ut;
@@ -744,6 +748,55 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 }
             ]);
         }).async(true, 30000);
+
+        ts.addTest("Anonymous public", function (ut) {
+            function cont() {
+                ut.nextFn();
+            }
+
+            ut.asyncSequence([
+                function (ut) {
+                    client.storage.putDoc('test-public',
+                                          {title: "Public storage document.",
+                                           blob: testBlob,
+                                           readers: ['public'],
+                                           writers: ['public']
+                                          },
+                                          cont);
+                },
+
+                function (ut) {
+                    client.storage.putBlob('test-public', 'test-blob',
+                                           testBlob, undefined,
+                        function (result, status, xmlhttp) {
+                            etag = result.sha1;
+                            ut.assertEq(result.status, 200);
+                            ut.nextFn();
+                        });
+                },
+
+                function (ut) {
+                    client.app.onUserChange = function(username) {
+                        client.app.onUserChange = undefined;
+                        ut.assertEq(username, undefined);
+                        ut.nextFn();
+                    };
+                    client.signOut();
+                    client.poll();
+                },
+
+                function (ut) {
+                    client.storage.putBlob('test-public', 'test-blob',
+                                           testBlob, undefined,
+                        function (result, status, xmlhttp) {
+                            etag = result.sha1;
+                            ut.assertEq(result.status, 200);
+                            ut.nextFn();
+                        });
+                }
+
+            ]);
+        }).async();
 
     } // addTests
 
