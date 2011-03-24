@@ -15,6 +15,7 @@ jquery-*.js
 *.patch
 pferror.html
 docs
+test-pf
 """.split()
 
 
