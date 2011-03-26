@@ -136,7 +136,7 @@ def main():
         ('whitespace', "python %s %s" %
          (pftool.tool_path('whitespace.py'), pftool.root_dir)),
 
-        ('pfpy', os.path.join(pftool.tools_dir, 'test_pf.py')),
+        ('pf', os.path.join(pftool.tools_dir, 'test_pf.py')),
 
         ]
 
