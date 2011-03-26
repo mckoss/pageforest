@@ -22,9 +22,6 @@ from datetime import datetime
 from fnmatch import fnmatch
 from optparse import OptionParser
 
-# Swag at max content that can fit in a Blob
-MAX_FILE_SIZE = 1024 * 1024 - 200
-
 try:
     try:
         import json  # Python 2.6
@@ -32,6 +29,11 @@ try:
         from django.utils import simplejson as json  # Django
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
+
+VERSION = '1.6.0'
+
+# Swag at max content that can fit in a Blob
+MAX_FILE_SIZE = 1024 * 1024 - 200
 
 ADMIN = 'admin'
 META_FILENAME = 'app.json'
@@ -44,7 +46,7 @@ DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]{,99}"
 ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ('pf.py', OPTIONS_FILENAME, ERROR_FILENAME, '.*', '*~', '#*#',
                     '*.bak', '*.rej', '*.orig')
-LOCAL_COMMANDS = ['dir', 'offline']
+LOCAL_COMMANDS = ['dir', 'offline', 'info']
 
 commands = None
 
@@ -168,7 +170,7 @@ def load_application():
         if 'application' in parsed:
             options.application = parsed['application']
             options.save_app = False
-        else:
+        elif not options.local_only:
             options.application = raw_input("Application: ")
 
     if options.local_only:
@@ -741,7 +743,6 @@ def vacuum_command(args):
             continue
         if filename in options.local_listing:
             continue
-        print_file_info(filename, options.listing[filename])
         selected.append(filename)
 
     delete_files(selected)
@@ -768,6 +769,8 @@ def update_manifest(explicit=False):
     excludes = []
     for command in commands:
         match = re.match(r'#!\s*EXCLUDE:\s*(.*)\s*$', command)
+        if options.verbose:
+            print "Excluding paths beginning with '%s'" % match.group(1)
         if match:
             excludes.extend(re.split(r",\s*", match.group(1)))
 
@@ -912,7 +915,9 @@ def info_command(args):
     Display information about the current application.
     """
     print "Application: %s" % getattr(options, 'application')
+    print "Server: %s" % getattr(options, 'server')
     print "Username:  %s" % getattr(options, 'username')
+    print "pf.py version: %s" % VERSION
 
 
 def main():
