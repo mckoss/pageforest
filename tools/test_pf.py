@@ -103,7 +103,7 @@ def read_json_file(filename):
 
 class TestPF(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
-                'offline', 'vacuum', 'info']
+                'offline', 'vacuum', 'info', 'compile', 'make']
 
     options = ['help', 'server', 'username', 'password', 'application',
                'docs', 'verbose', 'quiet', 'raw', 'force', 'noop']
@@ -223,7 +223,7 @@ class TestServer(TestPF):
                        contains=["Application: %s" % TEST_APP,
                                  "Server: %s" % SERVER,
                                  "Username:",
-                                 "pf version: 1.7",
+                                 "pf version: 1.8",
                                  ])
 
     def test_info_verbose(self):
