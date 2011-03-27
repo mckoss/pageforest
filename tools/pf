@@ -982,9 +982,13 @@ def do_make():
     if not os.path.exists(MAKE_FILENAME):
         return
 
-    make_file = open(MAKE_FILENAME, 'r')
-    make_info = json.loads(make_file.read())
-    make_file.close()
+    try:
+        make_file = open(MAKE_FILENAME, 'r')
+        make_info = json.loads(make_file.read())
+        make_file.close()
+    except ValueError, e:
+        print "Invalid %s file (%s)." % (MAKE_FILENAME, str(e))
+        exit(1)
 
     for combination, files in make_info['files'].items():
         (combined, minified) = closure_compiler(files)
