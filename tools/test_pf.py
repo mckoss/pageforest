@@ -223,8 +223,13 @@ class TestServer(TestPF):
                        contains=["Application: %s" % TEST_APP,
                                  "Server: %s" % SERVER,
                                  "Username:",
-                                 "pf version: 1.6",
+                                 "pf version: 1.7",
                                  ])
+
+    def test_info_verbose(self):
+        assert_command(self, pf_cmd + ' -v info',
+                       contains="Checking for updated pf version")
+
 
     def test_listapps(self):
         assert_command(self, pf_cmd + ' put')
