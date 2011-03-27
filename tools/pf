@@ -703,6 +703,7 @@ def put_command(args):
     """
     list_remote_files()
     list_local_files()
+    do_make()
     update_manifest()
 
     # Ensure that application is created before uploading other application files
@@ -891,6 +892,7 @@ def offline_command(args):
         manifest = open(MANIFEST_FILENAME, 'w')
         manifest.write(default_manifest + AUTOGEN_LINE)
         manifest.close()
+        print default_manifest + AUTOGEN_LINE
 
     update_manifest(True)
 
@@ -941,7 +943,7 @@ def print_closure_messages(json, prop, file_names):
                                 message['error'])
 
 
-def closure_compiler(args):
+def closure_compiler(file_names):
     params = [
         ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
         ('output_info', 'compiled_code'),
@@ -950,33 +952,58 @@ def closure_compiler(args):
         ('output_info', 'statistics'),
         ('output_format', 'json'),
     ]
-    file_names = []
 
-    paths = options.local_listing.keys()
-    paths.sort()
-    for path in paths:
-        if path == META_FILENAME:
-            continue
-        if (not options.docs) is is_data_path(path):
-            continue
-        if args and not prefix_match(args, path):
-            continue
-        file = open(get_local_path(path), 'rb')
-        params.append(('js_code', file.read()))
-        file_names.append(path)
+    combined = ""
+
+    for file_name in file_names:
+        file = open(get_local_path(file_name), 'r')
+        data = file.read()
         file.close()
+        combined += data
+        params.append(('js_code', data))
 
     data = urllib.urlencode(params)
     output = urllib2.urlopen(CLOSURE_API, data).read()
     output = json.loads(output)
+
     print_closure_messages(output, 'errors', file_names)
     print_closure_messages(output, 'warnings', file_names)
-    print output['compiledCode']
+
+    return (combined, output['compiledCode'])
+
+
+def do_make():
+    """
+    Make combined JavaScript files as indicated in the .pfmake file.
+
+    Also ensures any created files are added to the local file list with updated
+    hashes.
+    """
+    if not os.path.exists(MAKE_FILENAME):
+        return
+
+    make_file = open(MAKE_FILENAME, 'r')
+    make_info = json.loads(make_file.read())
+    make_file.close()
+
+    for combination, files in make_info['files'].items():
+        (combined, minified) = closure_compiler(files)
+        file_name = get_local_path(combination)
+        print "Making combined file: %s" % file_name
+        file = open(file_name, 'w')
+        file.write(combined)
+        file.close()
+        file_name = file_name.replace('.js', '.min.js')
+        print "Making compiled file: %s" % file_name
+        file = open(file_name, 'w')
+        file.write(minified)
+        file.close()
 
 
 def compile_command(args):
     """
-    Use the Google Closure Compiler to minify and combine one or more JavaScript files.
+    Run closure compiled on individual files for the purpose of generating error messages
+    (compressed file output is ignored).
     """
     list_local_files()
     closure_compiler(args)
@@ -1006,8 +1033,15 @@ def make_command(args):
 
         print "Creating file %s." % MAKE_FILENAME
         make_file = open(MAKE_FILENAME, 'w')
-        make_file.write(to_json({"combined.js": file_names}))
+        contents = to_json({
+                    "uploadIndividualFiles": False,
+                    "files": {"combined.js": file_names}
+                    })
+        make_file.write(contents)
         make_file.close()
+        print contents
+
+    do_make()
 
 
 def dir_command(args):
