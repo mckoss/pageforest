@@ -1,24 +1,14 @@
 {
   "application": "dist",
   "cloneable": false,
-  "created": {
-    "__class__": "Date",
-    "isoformat": "2011-03-26T20:33:00.478258Z"
-  },
-  "modified": {
-    "__class__": "Date",
-    "isoformat": "2011-03-26T23:20:33.508364Z"
-  },
   "owner": "mckoss",
   "readers": [
     "public"
   ],
   "referers": [],
   "secureData": false,
-  "sha1": "1c3e917dc62f375d55f752672ec402ded9f3120b",
-  "size": 210,
   "tags": [],
-  "title": "Dist",
+  "title": "Pageforest File Distribution Site",
   "url": "http://dist.pageforest.com/",
   "writers": []
 }
