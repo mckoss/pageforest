@@ -31,10 +31,13 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.7.0'
+VERSION = '1.8.0'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf'
+
+# See http://code.google.com/closure/compiler/docs/gettingstarted_api.html
+CLOSURE_API = 'http://closure-compiler.appspot.com/compile'
 
 # Swag at max content that can fit in a Blob
 MAX_FILE_SIZE = 1024 * 1024 - 200
@@ -50,7 +53,7 @@ DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]{,99}"
 ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ('pf.py', PF_FILENAME, OPTIONS_FILENAME, ERROR_FILENAME, '.*', '*~', '#*#',
                     '*.bak', '*.rej', '*.orig')
-LOCAL_COMMANDS = ['dir', 'offline', 'info']
+LOCAL_COMMANDS = ['dir', 'offline', 'info', 'compile']
 
 commands = None
 
@@ -924,6 +927,43 @@ def list_command(args):
     # REVIEW: Can optimize by doing prefix queries of remote files.
     list_remote_files()
     list_file_info(args, options.listing)
+
+
+def closure_compiler(args):
+    params = [
+        ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
+        ('output_info', 'compiled_code'),
+        ('output_info', 'errors'),
+        ('output_info', 'warnings'),
+        ('output_info', 'statistics'),
+        ('output_format', 'json'),
+    ]
+
+    paths = options.local_listing.keys()
+    paths.sort()
+    for path in paths:
+        if path == META_FILENAME:
+            continue
+        if (not options.docs) is is_data_path(path):
+            continue
+        if args and not prefix_match(args, path):
+            continue
+        file = open(get_local_path(path), 'rb')
+        params.append(('js_code', file.read()))
+        file.close()
+
+    data = urllib.urlencode(params)
+    output = urllib2.urlopen(CLOSURE_API, data).read()
+    output = json.loads(output)
+    print to_json(output)
+
+
+def compile_command(args):
+    """
+    Use the Google Closure Compiler to minify and combine one or more JavaScript files.
+    """
+    list_local_files()
+    closure_compiler(args)
 
 
 def dir_command(args):
