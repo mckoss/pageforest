@@ -929,6 +929,17 @@ def list_command(args):
     list_file_info(args, options.listing)
 
 
+def print_closure_messages(json, prop, file_names):
+    if prop not in json:
+        return
+
+    print "Closure %s:" % prop
+    for message in json[prop]:
+        index = int(message['file'][6:])
+        print "%s:%d:%d: %s" % (file_names[index], message['lineno'], message['charno'],
+                                message['error'])
+
+
 def closure_compiler(args):
     params = [
         ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
@@ -938,6 +949,7 @@ def closure_compiler(args):
         ('output_info', 'statistics'),
         ('output_format', 'json'),
     ]
+    file_names = []
 
     paths = options.local_listing.keys()
     paths.sort()
@@ -950,12 +962,15 @@ def closure_compiler(args):
             continue
         file = open(get_local_path(path), 'rb')
         params.append(('js_code', file.read()))
+        file_names.append(path)
         file.close()
 
     data = urllib.urlencode(params)
     output = urllib2.urlopen(CLOSURE_API, data).read()
     output = json.loads(output)
-    print to_json(output)
+    print_closure_messages(output, 'errors', file_names)
+    print_closure_messages(output, 'warnings', file_names)
+    print output['compiledCode']
 
 
 def compile_command(args):
