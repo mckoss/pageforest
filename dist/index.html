@@ -8,8 +8,17 @@
 <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
 
 <script type="text/javascript">
-$.ready(function () {
-    alert(1);
+$(document).ready(function () {
+  $.ajax({
+    url: '/directory.json',
+    success: function (directory) {
+      for (var prop in directory) {
+        var fileInfo = directory[prop];
+        $('#file-list').append('<li><a href="/' + fileInfo.path + '">' +
+                               prop + ' (version ' + fileInfo.version + ')</a></li>');
+      }
+      alert(result.pf.version);
+    }})
 });
 </script>
 
