@@ -103,7 +103,7 @@ def read_json_file(filename):
 
 class TestPF(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
-                'offline', 'vacuum', 'info', 'compile', 'make']
+                'offline', 'vacuum', 'info', 'compile', 'make', 'config']
 
     options = ['help', 'server', 'username', 'password', 'application',
                'docs', 'verbose', 'quiet', 'raw', 'force', 'noop']

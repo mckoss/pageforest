@@ -13,7 +13,7 @@ code { font-family: "Courier New", Courier, monospace; }
 a { color: #444; }
 a:visited { color: #888; }
 a:hover { color: #000; }
-li { line-height: 120%; margin-bottom: 8px; }
+li { line-height: 140%; margin-bottom: 8px; }
 
 #page { width: 90%; margin: auto; }
 #page:not(.edit) .if_edit { display: none; }
