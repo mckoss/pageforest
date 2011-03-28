@@ -12,6 +12,7 @@ IGNORE_FILES = """
 jquery-*.js
 *.xml *.zip
 *.gif *.png *.jpg
+*.min.js
 *.patch
 pferror.html
 docs
