@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.9.1'
+VERSION = '1.9.2'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
@@ -218,9 +218,10 @@ def check_pf():
             (local_version, PF_FILENAME, remote_version)
             return
         if  local_version < remote_version:
+            print "New version of %s (%s) available - Changes: %s" % \
+                (PF_FILENAME, remote_version, file_info['versions'][str(remote_version)]['summary'])
             if str(local_version) in file_info['obsolete'] or \
-                if_yes("New version (%s) of %s available (you have %s).  Download now?" %
-                       (local_version, PF_FILENAME, VERSION)):
+                if_yes("Download %s now?" % PF_FILENAME):
                 pf = get_dist_file(PF_FILENAME, file_info, True)
     except Exception, e:
         print "Version check for %s failed: %s" % (PF_FILENAME, str(e))
@@ -1117,7 +1118,7 @@ def info_command(args):
     print "Application: %s" % getattr(options, 'application')
     print "Server: %s" % getattr(options, 'server')
     print "Username:  %s" % getattr(options, 'username')
-    print "pf version: %s" % VERSION
+    print "%s version: %s" % (PF_FILENAME, VERSION)
     check_pf()
 
 
