@@ -23,6 +23,7 @@ except:
 tools_dir = os.path.abspath(_path)
 root_dir = os.path.abspath(os.path.join(_path, '..'))
 app_dir = os.path.join(root_dir, 'appengine')
+dist_dir = os.path.join(root_dir, 'dist')
 js_src_dir = os.path.join(app_dir, 'static', 'src', 'js')
 js_test_dir = os.path.join(js_src_dir, 'tests')
 
