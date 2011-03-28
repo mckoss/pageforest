@@ -3583,6 +3583,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.appBar = document.getElementById('pfAppBar');
             if (!this.appBar) {
                 document.body.style.marginTop = "39px";
+                document.body.style.position = "relative";
                 this.appBar = document.createElement('div');
                 this.appBar.setAttribute('id', 'pfAppBar');
                 document.body.appendChild(this.appBar);
@@ -3711,7 +3712,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            dom.slide(this.appPanel, vector.lr(rcAppBox), animation,
+            dom.slide(this.appPanel, [rcAppBox[2], 0], animation,
                       fnCallback);
         },
 
