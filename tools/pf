@@ -1100,6 +1100,7 @@ def config_command(args):
         make_file = open(MAKE_FILENAME, 'w')
         contents = to_json({
                     "uploadIndividualFiles": False,
+                    "minify": True,
                     "files": {"combined.js": file_names}
                     })
         make_file.write(contents)
