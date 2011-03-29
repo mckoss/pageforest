@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.9.3'
+VERSION = '1.9.2'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
@@ -974,12 +974,7 @@ def print_closure_messages(json, prop, file_names):
                                 message.get('error', '') + message.get('warning', ''))
 
 
-def closure_compiler(file_names, last_match=None):
-    """
-    Use Google Closure compiler on given file names.  If last_match
-    matches the hash of the previous combined files, then we don't
-    recompile them.
-    """
+def closure_compiler(file_names):
     params = [
         ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
         ('output_info', 'compiled_code'),
@@ -998,21 +993,12 @@ def closure_compiler(file_names, last_match=None):
         combined += data
         params.append(('js_code', data))
 
-    # Short circuit if we've already compiled these files
-    signature = hashlib.sha1(data).hexdigest()
-    print "Compare signatures %s ~ %s" % (signature, last_match)
-    if last_match and last_match == signature:
-        return (None, None)
-
     data = urllib.urlencode(params)
     output = urllib2.urlopen(CLOSURE_API, data).read()
     output = json.loads(output)
 
     print_closure_messages(output, 'errors', file_names)
     print_closure_messages(output, 'warnings', file_names)
-
-    if 'errors' in output:
-        combined += "\n/* Minified Version has errors! */"
 
     return (combined, output['compiledCode'])
 
@@ -1039,18 +1025,15 @@ def do_make(explicit=False):
         exit(1)
 
     for combination, files in make_info['files'].items():
+        (combined, minified) = closure_compiler(files)
         file_name = get_local_path(combination)
-        combined_info = options.local_listing.get(file_name, {"sha1": "no-local-file"})
-        (combined, minified) = closure_compiler(files, combined_info['sha1'])
-        if combined is None:
-            continue
         print "Making combined file: %s" % file_name
-        file = open(file_name, 'wb')
+        file = open(file_name, 'w')
         file.write(combined)
         file.close()
         file_name = file_name.replace('.js', '.min.js')
         print "Making compiled file: %s" % file_name
-        file = open(file_name, 'wb')
+        file = open(file_name, 'w')
         file.write(minified)
         file.close()
 

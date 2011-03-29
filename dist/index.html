@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html manifest="/app.manifest">
 <head>
 <title>Pageforest File Distribution</title>
 <link rel="stylesheet" type="text/css" href="/main.css" />
@@ -8,16 +9,29 @@
 <script type="text/javascript" src="/lib/beta/js/utils.js"></script>
 
 <script type="text/javascript">
+function fileHTML(file, version, meta) {
+    var html = '<li><a href="/' + meta.path + '">' + file +
+               ' (version ' + version + ')</a> <i>created ' + meta.created + '</i>' +
+               '<br/><i>' + meta.summary + '</i></li>';
+    return html;
+}
+
 $(document).ready(function () {
   $.ajax({
     url: '/directory.json',
+    error: function (result, status) { alert(status); },
     success: function (directory) {
-      for (var prop in directory) {
-        var fileInfo = directory[prop];
-        $('#file-list').append('<li><a href="/' + fileInfo.path + '">' +
-                               prop + ' (version ' + fileInfo.version + ')</a></li>');
+      for (var fileName in directory) {
+        var fileInfo = directory[fileName];
+        var version = fileInfo['version'];
+        $('#file-list').append(fileHTML(fileName, version, fileInfo.versions[version]));
+
+        for (var oldVersion in fileInfo.versions) {
+          if (oldVersion != version) {
+              $('#historical-list').append(fileHTML(fileName, oldVersion, fileInfo.versions[oldVersion]));
+          }
+        }
       }
-      alert(result.pf.version);
     }})
 });
 </script>
@@ -31,10 +45,16 @@ $(document).ready(function () {
     </h1>
 
     <div>
-      <p>Get the latest versions of utility files used with <a href="http://pageforest.com">Pageforest.com</a>
-      here.  Note that the pf command utility is auto-updating.  It will detect updated version automatically
-      and download them for you.
+      <p>
+        Get the latest versions of utility files used with <a href="http://pageforest.com">Pageforest.com</a>
+        here.  Note that the pf command utility is auto-updating.  It will detect updated version automatically
+        and download them for you.
+      </p>
+      <h2>Current Version</h2>
       <ul id="file-list">
+      </ul>
+      <h2>Older Versions</h2>
+      <ul id="historical-list">
       </ul>
       <p>More information about the
         <a href="http://wiki.pageforest.com/#pageforest-api/pf.py">Pageforest Application Uploader</a>.
