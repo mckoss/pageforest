@@ -999,9 +999,8 @@ def closure_compiler(file_names, last_match=None):
         params.append(('js_code', data))
 
     # Short circuit if we've already compiled these files
-    signature = hashlib.sha1(data).hexdigest()
-    print "Compare signatures %s ~ %s" % (signature, last_match)
-    if last_match and last_match == signature:
+    signature = hashlib.sha1(combined).hexdigest()
+    if not options.force and last_match and last_match == signature:
         return (None, None)
 
     data = urllib.urlencode(params)
