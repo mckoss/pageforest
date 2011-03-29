@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.9.3'
+VERSION = '1.9.4'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
