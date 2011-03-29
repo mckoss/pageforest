@@ -6,7 +6,7 @@
         "versions": {
             "1.9.4": {
                 "path": "pf.py.1.9.4",
-                "created": "March 28, 2011",
+                "created": "March 29, 2011",
                 "summary": "Optional minify setting."
             },
             "1.9.3": {
