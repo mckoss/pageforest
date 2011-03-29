@@ -1,0 +1,35 @@
+{
+  "application": "chat",
+  "cloneable": false,
+  "created": {
+    "__class__": "Date",
+    "isoformat": "2010-05-27T20:20:34.016433Z"
+  },
+  "icon": "favicon.ico",
+  "modified": {
+    "__class__": "Date",
+    "isoformat": "2011-03-01T00:00:25.273437Z"
+  },
+  "owner": "jcrocholl",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "secureData": false,
+  "sha1": "e1f02cee3aeaf1dfac22c9ee689dd2c03642f09e",
+  "size": 356,
+  "tags": [
+    "demo",
+    "sample",
+    "chat",
+    "multiplayer"
+  ],
+  "title": "Chat",
+  "url": "http://chat.pageforest.com/",
+  "writers": [
+    "mike",
+    "mckoss",
+    "johann",
+    "jcrocholl"
+  ]
+}
