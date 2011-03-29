@@ -1,9 +1,14 @@
 {
     "pf.py": {
-        "path": "pf.py.1.9.3",
-        "version": "1.9.3",
+        "path": "pf.py.1.9.4",
+        "version": "1.9.4",
         "obsolete": ["1.6.0", "1.7.0", "1.8.0", "1.9.0"],
         "versions": {
+            "1.9.4": {
+                "path": "pf.py.1.9.4",
+                "created": "March 28, 2011",
+                "summary": "Optional minify setting."
+            },
             "1.9.3": {
                 "path": "pf.py.1.9.3",
                 "created": "March 28, 2011",
@@ -48,19 +53,6 @@
                 "path": "pf.py.0.7.0",
                 "created": "March 15, 2011",
                 "summary": "Last version hosted on pageforest.googlecode.com"
-            }
-        }
-    },
-
-    "pf": {
-        "path": "pf.py.1.9.1",
-        "version": "1.9.1",
-        "obsolete": ["1.6.0", "1.7.0", "1.8.0", "1.9.0"],
-        "versions": {
-            "1.9.1": {
-                "path": "pf.py.1.9.1",
-                "created": "March 28, 2011",
-                "summary": "OBSOLETE - Changed pf to pf.py."
             }
         }
     }
