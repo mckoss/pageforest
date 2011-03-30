@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.9.4'
+VERSION = '1.9.5'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
@@ -1072,7 +1072,7 @@ def compile_command(args):
     closure_compiler(args)
 
 
-def config_command(args):
+def configure_command(args):
     """
     Build a .pfmake file to indicate how to combine and minify JavaScript files.  You
     may edit the .pfmake file to include a subset of your JavaScript files, or to build
