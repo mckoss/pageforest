@@ -84,7 +84,16 @@ def combine_files(output_root, version, file_dict):
                 input_file.close()
                 if file_type == 'js':
                     raw_output_file.write(comment + content)
-                    content = jsmin.jsmin(content) + '\n'
+
+                    # Check if minimized version already in library
+                    minimized_file = os.path.join(input_dir, "%s.min.js" % filename)
+                    if os.path.exists(minimized_file):
+                        minimized_file = open(minimized_file, 'r')
+                        content = minimized_file.read()
+                        minimized_file.close()
+                    else:
+                        content = jsmin.jsmin(content) + '\n'
+
                 output_file.write(comment + content)
 
             output_file.close()

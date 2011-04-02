@@ -16,7 +16,7 @@ DEBUG_MODULE = "pdb"
 
 # Remove these when they pass strong jslint
 IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'events', 'json2',
-                  'save-dialog']
+                  'save-dialog', 'jquery-1.5']
 
 
 def show_summary(nick):

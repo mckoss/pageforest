@@ -1,9 +1,14 @@
 {
     "pf.py": {
-        "path": "pf.py.1.9.4",
-        "version": "1.9.4",
+        "path": "pf.py.1.9.5",
+        "version": "1.9.5",
         "obsolete": ["1.6.0", "1.7.0", "1.8.0", "1.9.0"],
         "versions": {
+            "1.9.5": {
+                "path": "pf.py.1.9.5",
+                "created": "April 1, 2011",
+                "summary": "World peace - just kidding - don't rely on google jquery."
+            },
             "1.9.4": {
                 "path": "pf.py.1.9.4",
                 "created": "March 29, 2011",
