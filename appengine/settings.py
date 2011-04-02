@@ -308,6 +308,11 @@ MEDIA_FILES = {
 LIB_FILES = {
     'js': {
         'json2': ['json2'],
+        'jquery-1.5': ['jquery-1.5'],
+        'pf-client': ['json2', 'jquery-1.5', 'namespace', 'base', 'cookies', 'random',
+                        'format', 'vector', 'dom', 'dialog', 'loader',
+                        'storage', 'client',
+                  ],
         'utils': ['namespace', 'base', 'cookies', 'random',
                   'format', 'vector', 'dom', 'dialog', 'loader',
                   'storage', 'client',
