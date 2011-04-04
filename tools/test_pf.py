@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Test the Pageforest Application Uploader - pf.py.
+Test the Pageforest Application Uploader - pf.
 """
 import os
 import time
@@ -36,7 +36,7 @@ except:
 
 tools_dir = os.path.abspath(_path)
 test_dir = os.path.join(tools_dir, TEST_APP)
-pf_cmd = os.path.join(tools_dir, 'pf.py')
+pf_cmd = os.path.join(tools_dir, 'pf')
 
 
 def shell_command(command_line, stdin=None):
@@ -103,7 +103,7 @@ def read_json_file(filename):
 
 class TestPF(unittest.TestCase):
     commands = ['dir', 'list', 'put', 'get', 'delete', 'listapps',
-                'offline', 'vacuum', 'info']
+                'offline', 'vacuum', 'info', 'compile', 'make', 'config']
 
     options = ['help', 'server', 'username', 'password', 'application',
                'docs', 'verbose', 'quiet', 'raw', 'force', 'noop']
@@ -134,7 +134,7 @@ class TestPF(unittest.TestCase):
         os.chdir(test_dir)
 
         # Get user authentication information from pf file in tools directory.
-        # Note: Run pf.py listapps to initialize it there.
+        # Note: Run pf listapps to initialize it there.
         shutil.copyfile('../' + OPTIONS_FILENAME, OPTIONS_FILENAME)
         options = read_json_file(OPTIONS_FILENAME)
         if 'server' in options:
@@ -174,7 +174,7 @@ class TestPF(unittest.TestCase):
 
 class TestLocal(TestPF):
     """
-    Test pf.py purely local commands (no server access needed)
+    Test pf purely local commands (no server access needed)
     """
     def test_help(self):
         out = assert_command(self, pf_cmd + ' --help', contains='Usage')
@@ -216,20 +216,19 @@ class TestLocal(TestPF):
 
 class TestServer(TestPF):
     """
-    Test command of pf.py that interact with the server.
+    Test command of pf that interact with the server.
     """
     def test_info(self):
         assert_command(self, pf_cmd + ' info',
                        contains=["Application: %s" % TEST_APP,
-                                 "Server: http://admin.%s.%s" % (TEST_APP, SERVER),
+                                 "Server: %s" % SERVER,
                                  "Username:",
+                                 "pf.py version: 1.9",
                                  ])
+
+    def test_info_verbose(self):
         assert_command(self, pf_cmd + ' -v info',
-                       contains=["HTTP GET http://admin.%s.%s/auth/challenge" % (TEST_APP, SERVER),
-                                 "Challenge:",
-                                 "Response: http://admin.%s.%s/auth/verify/" % (TEST_APP, SERVER),
-                                 "Session key: admin.%s|" % TEST_APP
-                                 ])
+                       contains="Checking for updated pf.py version")
 
     def test_listapps(self):
         assert_command(self, pf_cmd + ' put')
