@@ -12569,9 +12569,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (animation == undefined && !this.isAppPanelOpen()) {
                 return;
             }
-            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            dom.slide(this.appPanel, [rcAppBox[2], 0], animation,
-                      fnCallback);
+            var ptUR = [dom.getRect($('#pfAppBarBox')[0])[2], -4];
+            dom.slide(this.appPanel, ptUR, animation, fnCallback);
         },
 
         showError: function(message) {
@@ -12579,15 +12578,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return;
             }
 
-            var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
+            var ptUR = [dom.getRect($('#pfAppBarBox')[0])[2], -4];
 
             if (message == undefined) {
-                dom.slide(this.errorPanel, vector.lr(rcAppBox), 'hide');
+                dom.slide(this.errorPanel, ptUR, 'hide');
                 return;
             }
 
             this.errorDialog.setValues({'error': message});
-            dom.slide(this.errorPanel, vector.lr(rcAppBox), 'show');
+            dom.slide(this.errorPanel, ptUR, 'show');
 
             var self = this;
             function retract() {

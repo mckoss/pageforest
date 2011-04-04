@@ -1,5 +1,6 @@
 CACHE MANIFEST
 # Cache files for offline access - see http://diveintohtml5.org/offline.html
+# VERSION 4
 
 /lib/beta/js/pf-client.min.js
 /lib/beta/css/client.css
