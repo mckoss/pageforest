@@ -531,6 +531,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
                 }
             }
         }
+        return dest;
     }
 
     function randomInt(n) {
@@ -572,11 +573,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     /* Sort elements and remove duplicates from array (modified in place) */
-    function uniqueArray(a) {
+    function unique(a) {
         if (!(a instanceof Array)) {
             return;
         }
         a.sort();
+        // REVIEW: This could be very slow for large arrays and many dups
+        // O(N^2).  But pretty cheap if few duplicates.  Alternative is to
+        // copy the unique elements to a new array O(N).
         for (var i = 1; i < a.length; i++) {
             if (a[i - 1] == a[i]) {
                 a.splice(i, 1);
@@ -634,7 +638,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
 
         var allKeys = [].concat(keys(a), keys(b));
-        uniqueArray(allKeys);
+        unique(allKeys);
 
         for (var i = 0; i < allKeys.length; i++) {
             var prop = allKeys[i];
@@ -679,6 +683,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return a;
     }
 
+    // REVIEW: Remove - in all browser versions?
     function indexOf(value, a) {
         a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
@@ -776,7 +781,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'randomInt': randomInt,
         'strip': strip,
         'project': project,
-        'uniqueArray': uniqueArray,
+        'uniqueArray': unique,  // Deprecated
+        'unique': unique,
         'indexOf': indexOf,
         'map': map,
         'filter': filter,
@@ -1151,6 +1157,37 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return formatImpl.apply(this, args);
     };
 
+    // Parse URL parameters into a javascript object
+    function parseURLParams(url) {
+        var parts = url.match(/([^?#]*)(#.*)?$/);
+        if (!parts) {
+            return {};
+        }
+
+        var results = {};
+
+        if (parts[2]) {
+            results._anchor = decodeURIComponent(parts[2].slice(1));
+        }
+
+        parts = parts[1].split("&");
+        for (var i = 0; i < parts.length; i++) {
+            var ich = parts[i].indexOf("=");
+            var name;
+            var value;
+            if (ich === -1) {
+                name = parts[i];
+                value = "";
+            } else {
+                name = parts[i].slice(0, ich);
+                value = parts[i].slice(ich + 1);
+            }
+            results[decodeURIComponent(name)] = decodeURIComponent(value);
+        }
+
+        return results;
+    }
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
@@ -1167,7 +1204,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'shortDate': shortDate,
         'wordList': wordList,
         'arrayFromWordList': arrayFromWordList,
-        'repeat': repeat
+        'repeat': repeat,
+        'parseURLParams': parseURLParams
     });
 }); // org.startpad.format
 /* Begin file: vector.js */
@@ -2997,6 +3035,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
     var dialog = namespace.lookup('org.startpad.dialog');
+    var format = namespace.lookup('org.startpad.format');
 
     var appId;
     var appAuthURL;
@@ -3081,6 +3120,12 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         getSessionKey(function () {
             if (dlg.values.allowAccess) {
                 transferSessionKey(closeForm);
+                return;
+            }
+            var params = format.parseURLParams(window.location.href);
+            if (params['continue']) {
+                window.location = params['continue'];
+                return;
             }
         });
     }

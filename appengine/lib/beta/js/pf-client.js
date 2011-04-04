@@ -9060,9 +9060,7 @@ var namespace = (function() {
 
             return function() {
                 var args = copyArray(arguments).concat(_args);
-                // REVIEW: Is this intermediate self variable needed?
-                var self = this;
-                return _fn.apply(self, args);
+                return _fn.apply(this, args);
             };
         },
 
@@ -9071,9 +9069,33 @@ var namespace = (function() {
         fnWrap: function(fn) {
             var _fn = this;
             return function() {
-                var self = this;
-                return _fn(self, fn, arguments);
+                return _fn(this, fn, arguments);
             };
+        },
+
+        // Wrap the (this) function with a decorator like:
+        //
+        // function decorator(fn, args, fnWrapper) {
+        //   if (fn == undefined) { ... init ...; return;}
+        //   ...
+        //   result = fn.apply(this, args);
+        //   ...
+        //   return result;
+        // }
+        //
+        // The fnWrapper function is a created for each call
+        // of the decorate function.  In addition to wrapping
+        // the decorated function, it can be used to save state
+        // information between calls.
+        decorate: function(decorator) {
+            var fn = this;
+            var fnWrapper = function() {
+                return decorator.call(this, fn, arguments, fnWrapper);
+            };
+            // Init call - pass undefined fn - but available in this
+            // if needed.
+            decorator.call(this, undefined, arguments, fnWrapper);
+            return fnWrapper;
         }
     });
 
@@ -9173,6 +9195,107 @@ var namespace = (function() {
 
     return namespaceT;
 }());
+/* Begin file: debug.js */
+namespace.lookup('org.startpad.debug').defineOnce(function(ns) {
+    var util = namespace.util;
+
+    var reFuncName = /^function\s+(\S+)\s*\(/;
+
+    function getFunctionName(func) {
+        if (typeof func != 'function') {
+            return "notAFunction";
+        }
+        var result = reFuncName.exec(func.toString());
+        if (result == null) {
+            return "anonymous";
+        }
+        return result[1];
+    }
+
+    function Logger(active) {
+        this.activate(active);
+        this.logged = {};
+    }
+
+    Logger.methods({
+        activate: function(f) {
+            this.active = (f == undefined) ? true : f;
+        },
+
+        log: function(message, options) {
+
+            if (!this.active) {
+                return;
+            }
+            if (options == undefined) {
+                options = {};
+            }
+            if (!options.hasOwnProperty('level')) {
+                options.level = 'log';
+            }
+            if (options.once) {
+                if (this.logged[message]) {
+                    return;
+                }
+                this.logged[message] = true;
+            }
+
+            if (options.hasOwnProperty('obj')) {
+                console[options.level](message, options.obj);
+            } else {
+                console[options.level](message);
+            }
+        }
+    });
+
+    function setLogger(logger) {
+        var oldLogger = ns.logger;
+        ns.logger = logger;
+        ns.log = logger.log.fnMethod(logger);
+        return oldLogger;
+    }
+
+    // Usage: oldfunc.decorate(deprecated, "Don't use anymore.")
+    function deprecated(fn, args, fnWrapper) {
+        if (fn == undefined) {
+            fnWrapper.deprecated = getFunctionName(this);
+            if (args[1]) {
+                fnWrapper.warning = ' - ' + args[1];
+            }
+            return;
+        }
+
+        ns.log("{0} is a deprecated function{1}".format(
+            fnWrapper.deprecated || getFunctionName(fn),
+            fnWrapper.warning),
+            {level: 'info', once: true});
+        return fn.apply(this, args);
+    }
+
+    // Usage: func.decorate(alias, aliasName, (opt) aliasFor)
+    function alias(fn, args, fnWrapper) {
+        if (fn == undefined)  {
+            fnWrapper.aliasName = args[1];
+            fnWrapper.preferred = args[2] || getFunctionName(this);
+            return;
+        }
+
+        ns.log("{0} is deprecated - use {1} instead."
+               .format(fnWrapper.aliasName, fnWrapper.preferred),
+            {level: 'info', once: true});
+        return fn.apply(this, args);
+    }
+
+    setLogger(new Logger());
+
+    ns.extend({
+        'getFunctionName': getFunctionName,
+        'Logger': Logger,
+        'setLogger': setLogger,
+        'deprecated': deprecated,
+        'alias': alias
+    });
+});
 /* Begin file: base.js */
 namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     var util = namespace.util;
@@ -9266,6 +9389,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
                 }
             }
         }
+        return dest;
     }
 
     function randomInt(n) {
@@ -9307,11 +9431,14 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
     }
 
     /* Sort elements and remove duplicates from array (modified in place) */
-    function uniqueArray(a) {
+    function unique(a) {
         if (!(a instanceof Array)) {
             return;
         }
         a.sort();
+        // REVIEW: This could be very slow for large arrays and many dups
+        // O(N^2).  But pretty cheap if few duplicates.  Alternative is to
+        // copy the unique elements to a new array O(N).
         for (var i = 1; i < a.length; i++) {
             if (a[i - 1] == a[i]) {
                 a.splice(i, 1);
@@ -9369,7 +9496,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         }
 
         var allKeys = [].concat(keys(a), keys(b));
-        uniqueArray(allKeys);
+        unique(allKeys);
 
         for (var i = 0; i < allKeys.length; i++) {
             var prop = allKeys[i];
@@ -9414,6 +9541,7 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         return a;
     }
 
+    // REVIEW: Remove - in all browser versions?
     function indexOf(value, a) {
         a = ensureArray(a);
         for (var i = 0; i < a.length; i++) {
@@ -9511,7 +9639,8 @@ namespace.lookup('org.startpad.base').defineOnce(function(ns) {
         'randomInt': randomInt,
         'strip': strip,
         'project': project,
-        'uniqueArray': uniqueArray,
+        'uniqueArray': unique,  // Deprecated
+        'unique': unique,
         'indexOf': indexOf,
         'map': map,
         'filter': filter,
@@ -9610,7 +9739,11 @@ namespace.lookup("org.startpad.random").defineOnce(function(ns) {
 /*globals atob */
 
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
+    var debug = namespace.lookup('org.startpad.debug');
+
+    var logger = new debug.Logger(false);
 
     // Thousands separator
     var comma = ',';
@@ -9679,38 +9812,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         s = s.replace(/\"/g, '&quot;');
         s = s.replace(/'/g, '&#39;');
         return s;
-    }
-
-    // Replace all instances of pattern, with replacement in string.
-    function replaceString(string, pattern, replacement) {
-        var output = "";
-        if (replacement == undefined) {
-            replacement = "";
-        }
-        else {
-            replacement = replacement.toString();
-        }
-        var ich = 0;
-        var ichFind = string.indexOf(pattern, 0);
-        while (ichFind >= 0) {
-            output += string.substring(ich, ichFind) + replacement;
-            ich = ichFind + pattern.length;
-            ichFind = string.indexOf(pattern, ich);
-        }
-        output += string.substring(ich);
-        return output;
-    }
-
-    // Replace keys in dictionary of for {key} in the text string.
-    function replaceKeys(st, keys) {
-        for (var key in keys) {
-            if (keys.hasOwnProperty(key)) {
-                st = replaceString(st, "{" + key + "}", keys[key]);
-            }
-        }
-        // remove unused keys
-        st = st.replace(/\{[^\{\}]*\}/g, "");
-        return st;
     }
 
     //------------------------------------------------------------------
@@ -9941,13 +10042,99 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
+    var reFormat = /\{\s*([^} ]+)\s*\}/g;
+
+    // Takes a dictionary or any number of positional arguments.
+    // {n} - positional arg (0 based)
+    // {key} - object property (first match)
+    // .. same as {0.key}
+    // {key1.key2.key3} - nested properties of an object
+    // keys can be numbers (0-based index into an array) or
+    // property names.
+    function formatImpl(re) {
+        var st = this.toString();
+        var args = Array.prototype.slice.call(arguments, 1);
+
+        // Passing in a single array, or a single object, starts references
+        // with that object (not the arguments array).
+        if (args.length == 1 && typeof args[0] == 'object') {
+            args = args[0];
+        }
+
+        st = st.replace(re, function(whole, key) {
+            var value = args;
+            var keys = key.split('.');
+            for (var i = 0; i < keys.length; i++) {
+                key = keys[i];
+                var n = parseInt(key);
+                if (!isNaN(n)) {
+                    value = value[n];
+                } else {
+                    value = value[key];
+                }
+                if (value == undefined) {
+                    logger.log("missing key: " + keys.slice(0, i + 1).join('.'), {once: true});
+                    return "";
+                }
+            }
+            // Implicit toString() on this.
+            return value;
+        });
+        return st;
+    }
+
+    // format(st, arg0, arg1, ...)
+    function format(st) {
+        var args = util.copyArray(arguments);
+        args.splice(0, 1, reFormat);
+        return formatImpl.apply(st, args);
+    }
+
+    // st.format(arg0, arg1, ...)
+    String.prototype.format = function() {
+        var args = util.copyArray(arguments);
+        args.unshift(reFormat);
+        return formatImpl.apply(this, args);
+    };
+
+    // Parse URL parameters into a javascript object
+    function parseURLParams(url) {
+        var parts = url.match(/([^?#]*)(#.*)?$/);
+        if (!parts) {
+            return {};
+        }
+
+        var results = {};
+
+        if (parts[2]) {
+            results._anchor = decodeURIComponent(parts[2].slice(1));
+        }
+
+        parts = parts[1].split("&");
+        for (var i = 0; i < parts.length; i++) {
+            var ich = parts[i].indexOf("=");
+            var name;
+            var value;
+            if (ich === -1) {
+                name = parts[i];
+                value = "";
+            } else {
+                name = parts[i].slice(0, ich);
+                value = parts[i].slice(ich + 1);
+            }
+            results[decodeURIComponent(name)] = decodeURIComponent(value);
+        }
+
+        return results;
+    }
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
         'slugify': slugify,
         'escapeHTML': escapeHTML,
-        'replaceKeys': replaceKeys,
-        'replaceString': replaceString,
+        'format': format,
+        'replaceKeys': format.decorate(debug.alias, 'replaceKeys'),
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
@@ -9957,7 +10144,8 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'shortDate': shortDate,
         'wordList': wordList,
         'arrayFromWordList': arrayFromWordList,
-        'repeat': repeat
+        'repeat': repeat,
+        'parseURLParams': parseURLParams
     });
 }); // org.startpad.format
 /* Begin file: vector.js */
@@ -10832,71 +11020,110 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
-    var patterns = {
-        title: '<h1>{title}</h1>',
-        text: '<label class="left" for="{id}">{label}:</label>' +
-            '<input id="{id}" type="text"/>',
-        password: '<label class="left" for="{id}">{label}:</label>' +
-            '<input id="{id}" type="password"/>',
-        checkbox: '<label class="checkbox" for="{id}">' +
-            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>',
-        note: '<label class="left" for="{id}">{label}:</label>' +
-            '<textarea id="{id}" rows="{rows}"></textarea>',
-        message: '<div class="message" id="{id}"></div>',
-        value: '<label class="left">{label}:</label>' +
-            '<div class="value" id="{id}"></div>',
-        button: '<input id="{id}" type="button" value="{label}"/>',
-        invalid: '<span class="error">***missing field type: {type}***</span>',
-        end: '<div style="clear: both;"></div>'
+    // REVIEW: Need to add a select pattern.
+    var defaultPatterns = {
+        title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
+        text: {content: '<input id="{id}" type="text"/>'},
+        password: {content: '<input id="{id}" type="password"/>'},
+        checkbox: {label: '',
+                   content: '<label class="checkbox" for="{id}">' +
+                            '<input id="{id}" type="checkbox"/>&nbsp;{label}</label>'},
+        note: {content: '<textarea id="{id}" rows="{rows}"></textarea>'},
+        message: {useRow: 'spanRow', content: '<div class="message" id="{id}"></div>'},
+        value: {label: '<label class="left">{label}:</label>',
+                content: '<div class="value" id="{id}"></div>'},
+        button: {useRow: 'spanRow', content: '<input id="{id}" type="button" value="{label}"/>'},
+        invalid: {useRow: 'spanRow',
+                  content: '<span class="error">***missing field type: {type}***</span>'}
     };
 
-    var defaults = {
+    var defaultFieldOptions = {
         note: {rows: 5}
     };
 
-    var sDialog = '<div class="{dialogClass}" id="{id}">{content}</div>';
+    var styles = {
+        div: {
+            pre: '',
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: '<div id ="{id}-row">{content}</div>\n',
+            row: '<div id="{id}-row">{label}{content}</div>\n',
+            post: '<div style="clear: both;"></div>\n',
+            dialogClass: 'sp-dialog-div'
+        },
+        table: {
+            pre: "<table>\n",
+            label: '<label class="left" for="{id}">{label}:</label>',
+            content: '<input id="{id}" type="text"/>',
+            spanRow: '<tr id="{id}-row"><td colspan=3>{content}</td></tr>',
+            row: '<tr id="{id}-row"><th>{label}</th>' +
+                '<td>{content}</td>' +
+                '<td id="{id}-error"><span class=error>{error}</span></td></tr>\n',
+            post: "</table>\n",
+            dialogClass: 'sp-dialog-table'
+        }
+    };
+
+    var sDialog = '<div class="{dialogClass}" id="{id}">\n' +
+        '{pre}\n{content}\n{post}\n' +
+        '</div>';
 
     var cDialogs = 0;
 
     // Dialog options:
     // focus: field name for initial focus (if different from first)
-    // enter: fiend name to press for enter key
+    // enter: field name to press for enter key
     // message: field to use to display messages
     // fields: array of fields with props:
-    //     name/type/label/value/required/shortLabel/hidden
+    //     name/type/label/value/required/shortLabel/hidden/onClick/onChange
     function Dialog(options) {
         cDialogs++;
-        this.dialogClass = 'SP_Dialog';
         this.prefix = 'SP' + cDialogs + '_';
         this.bound = false;
         this.lastValues = {};
+        this.patterns = defaultPatterns;
+        this.fieldOptions = defaultFieldOptions;
+        this.style = styles.div;
         util.extendObject(this, options);
+        this.setStyle(this.style);
+        // Make a copy in case the caller re-uses a fields list for
+        // multiple dialogs.
+        this.fields = util.copyArray(this.fields);
     }
 
     Dialog.methods({
+        setStyle: function(style) {
+            this.style = style;
+            util.extendObject(this, this.style);
+        },
+
         html: function() {
             var self = this;
             var stb = new base.StBuf();
             this.id = this.prefix + 'dialog';
             base.forEach(this.fields, function(field, i) {
                 field.id = self.prefix + i;
-                base.extendIfMissing(field, defaults[field.type]);
                 if (field.type == undefined) {
                     field.type = 'text';
                 }
-                if (patterns[field.type] == undefined) {
+                base.extendIfMissing(field, self.fieldOptions[field.type]);
+                if (self.patterns[field.type] == undefined) {
                     field.type = 'invalid';
                 }
                 if (field.label == undefined) {
                     field.label = field.name[0].toUpperCase() +
                         field.name.slice(1);
                 }
-                stb.append(format.replaceKeys(patterns[field.type], field));
+                var fieldPatterns = base.extendIfMissing({}, self.patterns[field.type],
+                        base.project(self.style, ['label', 'content']));
+                var row = {id: field.id,
+                           label: fieldPatterns.label.format(field),
+                           content: fieldPatterns.content.format(field)};
+                var rowPattern = self[fieldPatterns.useRow] || self.row;
+                stb.append(rowPattern.format(row));
             });
-            stb.append(patterns['end']);
             this.content = stb.toString();
-            var s = format.replaceKeys(sDialog, this);
-            return s;
+            return sDialog.format(this);
         },
 
         bindFields: function() {
@@ -10909,8 +11136,10 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
             self.dlg = document.getElementById(self.id);
             if (self.dlg == undefined) {
-                throw new Error("Dialog not available.");
+                throw new Error("Dialog not in the DOM.");
             }
+
+            var initialValues = {};
 
             base.forEach(this.fields, function(field) {
                 field.elt = document.getElementById(field.id);
@@ -10918,16 +11147,21 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     return;
                 }
 
+                if (field.value) {
+                    initialValues[field.name] = field.value;
+                }
+
                 if (field.onClick != undefined) {
                     dom.bind(field.elt, 'click', function(evt) {
-                        field.onClick(evt);
+                        // REVIEW: should be field.onClick.call(field, evt, self)
+                        field.onClick(evt, field, self);
                     });
                 }
 
                 // Bind to chaning field (after it's changed - use keyUp)
                 if (field.onChange != undefined) {
                     dom.bind(field.elt, 'keyup', function(evt) {
-                        field.onChange(evt, field.elt.value);
+                        field.onChange(evt, field.elt.value, self);
                     });
                 }
 
@@ -10954,9 +11188,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     }
                 });
             }
+
+            this.setValues(initialValues);
         },
 
         getField: function(name) {
+            this.bindFields();
             for (var i = 0; i < this.fields.length; i++) {
                 if (this.fields[i].name == name) {
                     return this.fields[i];
@@ -10966,10 +11203,23 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         // Compare current value with last externally set value
-        hasChanged: function(name) {
-            // REVIEW: This could be more effecient
-            var values = this.getValues();
-            return values[name] != this.lastValues[name];
+        hasChanged: function(name, fSnapshot) {
+            var result,
+                values = this.getValues();
+
+            if (name != undefined) {
+                result = values[name] != this.lastValues[name];
+                if (fSnapshot) {
+                    this.lastValues[name] = values[name];
+                }
+            } else {
+                result = !base.isEqual(values, this.lastValues);
+                if (fSnapshot) {
+                    this.lastValues = values;
+                }
+            }
+
+            return result;
         },
 
         // Call just before displaying a dialog to set it's values.
@@ -10979,7 +11229,6 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
 
             base.extendObject(this.lastValues, values);
 
-            this.bindFields();
             for (var name in values) {
                 if (values.hasOwnProperty(name)) {
                     field = this.getField(name);
@@ -11047,7 +11296,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
                     case 'text':
                     case 'password':
-                        values[name] = field.elt.value;
+                        values[name] = base.strip(field.elt.value);
                         break;
                     default:
                         break;
@@ -11055,11 +11304,11 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                     break;
 
                 case 'TEXTAREA':
-                    values[name] = field.elt.value;
+                    values[name] = base.strip(field.elt.value);
                     break;
 
                 default:
-                    values[name] = dom.getText(field.elt);
+                    values[name] = base.strip(dom.getText(field.elt));
                     break;
                 }
             }
@@ -11067,11 +11316,18 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             return values;
         },
 
+        showField: function(name, shown) {
+            if (shown == undefined) {
+                shown = true;
+            }
+            var field = this.getField(name);
+            $('#' + field.id + '-row')[shown ? 'show' : 'hide']();
+        },
+
         enableField: function(name, enabled) {
             if (enabled == undefined) {
                 enabled = true;
             }
-            this.bindFields();
             var field = this.getField(name);
             switch (field.elt.tagName) {
             case 'INPUT':
@@ -11090,7 +11346,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     });
 
     ns.extend({
-        'Dialog': Dialog
+        'Dialog': Dialog,
+        'styles': styles
     });
 });
 /* Begin file: loader.js */
@@ -11256,6 +11513,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         sub_option: "Option can only be applied to a Doc, not a Blob."
     };
 
+    // Review - move to a library.
     function URL(url) {
         this.url = url;
         this.params = [];
