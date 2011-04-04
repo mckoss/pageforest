@@ -133,7 +133,7 @@ CUSTOM_DOMAINS = {
 }
 
 # Enable mirroring for trusted applications.
-APPS_WITH_MIRROR = ['editor']
+APPS_WITH_MIRROR = ['editor', 'editor-dev', 'my', 'my-dev']
 
 ANALYTICS_CODE = "UA-2072869-2"
 
