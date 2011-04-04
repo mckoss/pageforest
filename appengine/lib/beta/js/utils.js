@@ -2725,6 +2725,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
         // Save a document to the Pageforest store
         // TODO: Add Tags support here.
+        // TODO: Want options here - so we can have error handler
         putDoc: function(docid, json, fnSuccess) {
             if (!this.validateArgs('putDoc', docid, undefined, json,
                                    undefined, fnSuccess)) {
@@ -2817,7 +2818,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
                 processData: false,
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2853,7 +2854,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // BUG: Shouldn't this be type text sometimes?
                 dataType: 'json',
                 processData: false,
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2888,7 +2889,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 // REVIEW: Is this the right default - note that 200 return
                 // codes can return error because the data is NOT json!
                 dataType: options.dataType || 'json',
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2902,6 +2903,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            options = options || {};
             fnSuccess = fnSuccess || function () {};
 
             var url = new URL(this.getDocURL(docid, blobid));
@@ -2914,7 +2916,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
@@ -2980,7 +2982,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             $.ajax({
                 url: url.toString(),
                 dataType: 'json',
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }

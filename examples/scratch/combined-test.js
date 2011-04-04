@@ -933,6 +933,19 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
             ]);
         }).async();
 
+        ts.addTest("Error callback", function(ut) {
+            function onError() {
+                ut.assert(true);
+                ut.async(false);
+            }
+
+            client.storage.getBlob('test-storage', 'does-not-exists', {error: onError}, function (result) {
+                ut.assert(false);
+                ut.async(false);
+            });
+
+        }).async(true);
+
     } // addTests
 
     // TODO: Test HEAD
