@@ -2,6 +2,7 @@
 
 import os
 import sys
+import re
 from optparse import OptionParser
 import subprocess
 import shutil
@@ -16,6 +17,8 @@ import settings
 MEDIA_DIR = os.path.join(pftool.app_dir, 'static')
 SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src')
 LIB_DIR = os.path.join(pftool.app_dir, 'lib')
+
+PF_FILENAME = 'pf'
 
 
 def ensure_dir(dirname):
@@ -75,15 +78,22 @@ def combine_files(output_root, version, file_dict):
                 raw_output_file = open(raw_output_path, 'w')
 
             for filename in file_list:
-                input_file = open(
-                    os.path.join(input_dir, "%s.%s" % (filename, file_type)),
-                    'r')
+                input_file = open(os.path.join(input_dir, "%s.%s" % (filename, file_type)), 'r')
                 comment = "/* Begin file: %s.%s */\n" % (filename, file_type)
                 content = input_file.read()
                 input_file.close()
                 if file_type == 'js':
                     raw_output_file.write(comment + content)
-                    content = jsmin.jsmin(content) + '\n'
+
+                    # Check if minimized version already in library
+                    minimized_file = os.path.join(input_dir, "%s.min.js" % filename)
+                    if os.path.exists(minimized_file):
+                        minimized_file = open(minimized_file, 'r')
+                        content = minimized_file.read()
+                        minimized_file.close()
+                    else:
+                        content = jsmin.jsmin(content) + '\n'
+
                 output_file.write(comment + content)
 
             output_file.close()
@@ -142,6 +152,36 @@ def trim(docstring):
     return '\n'.join(trimmed)
 
 
+def build_pfpy():
+    pf = open(os.path.join(pftool.tools_dir, PF_FILENAME), 'r').read()
+    version = re.search("VERSION\s*=\s*'([^']+)'", pf)
+    if not version:
+        print "Could not find version string in %s" % PF_FILENAME
+        exit(1)
+    version = version.group(1)
+    dist_file = os.path.join(pftool.dist_dir, 'pf.py.%s' % version)
+    if os.path.exists(dist_file):
+        pf_dist = open(dist_file, 'r').read()
+        if pf == pf_dist or not if_yes("%s already exists.  Overwrite?" % dist_file):
+            return
+    print "Creating new pf.py distribution: %s" % dist_file
+    print "Be sure to update the directory and push when ready."
+    file = open(dist_file, 'w')
+    file.write(pf)
+    file.close
+
+
+def if_yes(prompt):
+    if options.force:
+        return True
+
+    answer = raw_input("%s (yes/no)? " % prompt)
+    f = answer.lower().startswith('y')
+    if not f:
+        print "I'll take that as a no."
+    return f
+
+
 def main():
     """
     Builds deployment files for pageforest.com.
@@ -171,6 +211,8 @@ def main():
     combine_files(LIB_DIR, 'beta', settings.LIB_FILES)
     if options.release:
         copy_files(LIB_DIR, 'beta', settings.LIB_VERSION)
+
+    build_pfpy()
 
 
 if __name__ == '__main__':

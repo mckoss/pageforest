@@ -1,0 +1,64 @@
+{
+    "pf.py": {
+        "path": "pf.py.1.9.5",
+        "version": "1.9.5",
+        "obsolete": ["1.6.0", "1.7.0", "1.8.0", "1.9.0"],
+        "versions": {
+            "1.9.5": {
+                "path": "pf.py.1.9.5",
+                "created": "April 1, 2011",
+                "summary": "World peace - just kidding - don't rely on google jquery."
+            },
+            "1.9.4": {
+                "path": "pf.py.1.9.4",
+                "created": "March 29, 2011",
+                "summary": "Optional minify setting."
+            },
+            "1.9.3": {
+                "path": "pf.py.1.9.3",
+                "created": "March 28, 2011",
+                "summary": "Only call Closure Compiler on changes."
+            },
+            "1.9.2": {
+                "path": "pf.py.1.9.2",
+                "created": "March 28, 2011",
+                "summary": "Display summary info for new downloads."
+            },
+            "1.9.1": {
+                "path": "pf.py.1.9.1",
+                "created": "March 28, 2011",
+                "summary": "Changed pf to pf.py."
+            },
+            "1.9.0": {
+                "path": "pf.py.1.9.0",
+                "created": "March 28, 2011",
+                "summary": "Added separate config and make commands."
+            },
+            "1.8.1": {
+                "path": "pf.py.1.8.1",
+                "created": "March 26, 2011",
+                "summary": "Trap .pfmake file errors and report."
+            },
+            "1.8.0": {
+                "path": "pf.py.1.8.0",
+                "created": "March 26, 2011",
+                "summary": "Added make command to use Google Closure minification."
+            },
+            "1.7.0": {
+                "path": "pf.py.1.7.0",
+                "created": "March 26, 2011",
+                "summary": "First auto-updating version."
+            },
+            "1.6.0": {
+                "path": "pf.py.1.6.0",
+                "created": "March 26, 2011",
+                "summary": "Added explicit version numbers."
+            },
+            "0.7.0": {
+                "path": "pf.py.0.7.0",
+                "created": "March 15, 2011",
+                "summary": "Last version hosted on pageforest.googlecode.com"
+            }
+        }
+    }
+}

@@ -47,6 +47,10 @@ is better written in dot notation
 Don't make functions within a loop
 Script URL
 Expected '}' to have an indentation
+The body of a for in should be wrapped
+is not defined
+to have an indentation at
+Bad escapement
 """.strip().splitlines(),
 
     'strict': """

@@ -2600,7 +2600,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
     var loader = namespace.lookup('org.startpad.loader');
 
     var errorMessages = {
-        no_username: "You must sign in to save a document.",
         bad_options: "API Call invalid",
         bad_callback: "API Call invalid",
         slice_range: "Invalid slice range (start or end value invalid).",
@@ -2897,7 +2896,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             // will be reported.
             var validations = {
                 // Data writing methods need to provide signin and data!
-                no_username: !isPutMethod || this.client.username != undefined,
                 missing_object: !isPutMethod || json != undefined,
 
                 bad_options: typeof options != 'function',
@@ -3804,6 +3802,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             this.appBar = document.getElementById('pfAppBar');
             if (!this.appBar) {
                 document.body.style.marginTop = "39px";
+                document.body.style.position = "relative";
                 this.appBar = document.createElement('div');
                 this.appBar.setAttribute('id', 'pfAppBar');
                 document.body.appendChild(this.appBar);
@@ -3932,7 +3931,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return;
             }
             var rcAppBox = dom.getRect($('#pfAppBarBox')[0]);
-            dom.slide(this.appPanel, vector.lr(rcAppBox), animation,
+            dom.slide(this.appPanel, [rcAppBox[2], 0], animation,
                       fnCallback);
         },
 

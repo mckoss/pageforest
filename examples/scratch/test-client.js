@@ -30,7 +30,11 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                 this.expectedState = undefined;
                 this.ut.nextFn();
             }
-        }
+        },
+
+        getDocid: function() { return 'test-1'; },
+
+        setDocid: function() {}
     });
 
     var app = new TestApp();
@@ -64,14 +68,14 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
                     app.onUserChange = function(username) {
                         app.onUserChange = undefined;
                         ut.assertType(username, 'string');
-                        ut.assertEq(client.state, 'clean');
+                        ut.assertEq(client.state, 'loading');
                         ut.nextFn();
                     };
                     client.poll();
                 },
 
                 function (ut) {
-                    ut.assertEq(client.getDocURL(), undefined);
+                    ut.assertEq(client.getDocURL(), '/docs/test-1/');
                     app.expectedState = 'saving';
                     client.save({'title': "A testing document.",
                                  'blob': testBlob}, 'test-1');

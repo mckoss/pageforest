@@ -1,7 +1,6 @@
 // Scratch - a sample Pageforest Application
 //
 // Modify this app as a starting point for own.
-/*globals applicationCache */
 namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
 

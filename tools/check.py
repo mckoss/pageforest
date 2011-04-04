@@ -16,7 +16,7 @@ DEBUG_MODULE = "pdb"
 
 # Remove these when they pass strong jslint
 IGNORED_JSLINT = ['crypto', 'data', 'dateutil', 'events', 'json2',
-                  'save-dialog']
+                  'save-dialog', 'jquery-1.5']
 
 
 def show_summary(nick):
@@ -137,6 +137,9 @@ def main():
 
         ('whitespace', "python %s %s" %
          (pftool.tool_path('whitespace.py'), pftool.root_dir)),
+
+        ('pf', os.path.join(pftool.tools_dir, 'test_pf.py')),
+
         ]
 
     if not hasattr(options, 'checks'):

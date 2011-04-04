@@ -10,11 +10,14 @@ import pftool
 IGNORE_FILES = """
 .* *~
 jquery-*.js
+pf-client.js
 *.xml *.zip
 *.gif *.png *.jpg
+*.min.js
 *.patch
 pferror.html
 docs
+test-pf
 """.split()
 
 
