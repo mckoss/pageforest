@@ -146,7 +146,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    function onReady(forApp) {
+    function onReady(forApp, verified) {
         var username = cookies.getCookie('sessionuser');
         appId = forApp;
 
@@ -161,6 +161,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
 
         $('#sign-in-dialog').html(dlg.html());
+        dlg.bindFields();
 
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
@@ -178,6 +179,10 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             $(document.body).addClass('user');
             $('.username').text(username);
             getSessionKey();
+        }
+
+        if (verified) {
+            $(document.body).addClass('verified');
         }
     }
 
