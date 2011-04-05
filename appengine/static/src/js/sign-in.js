@@ -161,7 +161,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
 
         $('#sign-in-dialog').html(dlg.html());
-        dlg.setFocus();
 
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
