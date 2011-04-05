@@ -5,20 +5,23 @@
 {% block extra-head %}
 <style>
 body.session .if-not-session, body:not(.session) .if-session { display: none; }
+body.verified .if-not-verified { display: none; }
 
 #sign-in-dialog {
   width: 600px;
 }
 
-.access-button: {
+#access-button {
   margin-left: 200px;
+  font-size: inherit;
+  font-family: inherit;
 }
 </style>
 
 <script type="text/javascript">
 var signIn = namespace.com.pageforest.auth.sign_in;
 $(document).ready(function() {
-    signIn.onReady("{{ cross_app.get_app_id }}");
+    signIn.onReady("{{ cross_app.get_app_id }}", "{{ user.email_verified }}");
 });
 </script>
 
@@ -41,7 +44,7 @@ $(document).ready(function() {
       If you would like to sign-in to <i>{{ cross_app.title }}</i>
       then <span class=if-not-user>sign-in and</span> <i>Allow Access</i>, below.
     </p>
-    <input id="access-button" class="access-button if-session" type="button" value="Allow Access"
+    <input id="access-button" class="if-session" type="button" value="Allow Access"
            onclick="signIn.transferSessionKey(signIn.closeForm)" />
   </div>
 
@@ -65,10 +68,12 @@ $(document).ready(function() {
     </div>
 
     <div class=if-user>
-      {% if not user.email_verified %}
-      <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
-      {% endif %}
-      <p class=if-user><a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a></p>
+      <div class=if-not-verified>
+        <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
+      </div>
+      <div class=if-user>
+        <a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a>
+      </div>
     </div>
 
   <p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
