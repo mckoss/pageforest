@@ -2,57 +2,64 @@
 div.sp-dialog-div * { font-size: inherit; }
 
 div.sp-dialog-div label.left {
-    display: block;
-    float: left;
-    clear: left;
-    text-align: right;
-    font-weight: bold;
-    width: 30%;
-    margin: 1px 0 6px 0;
-    padding-right: 5px;
+  display: block;
+  float: left;
+  clear: left;
+  text-align: right;
+  font-weight: bold;
+  width: 30%;
+  margin: 1px 0 6px 0;
+  padding-right: 5px;
 }
 
 div.sp-dialog-div label.checkbox, div.sp-dialog-div input[type=checkbox] { cursor: pointer; }
 
 div.sp-dialog-div label.checkbox {
-    display: block;
-    clear: left;
-    margin: 0 5px 6px 30%;
-    padding: 0;
+  display: block;
+  clear: left;
+  margin: 0 5px 6px 30%;
+  padding: 0;
 }
 
 div.sp-dialog-div input[type=text],
 div.sp-dialog-div input[type=password],
 div.sp-dialog-div .value,
 div.sp-dialog-div textarea {
-    float: left;
-    width: 65%;
-    margin: 0 0 6px 0;
-    padding: 0;
+  float: left;
+  width: 65%;
+  margin: 0 0 6px 0;
+  padding: 0;
 }
 
 div.sp-dialog-div .message {
-    text-align: center;
-    font-style: italic;
-    margin: 0 5px 6px 5px;
+  text-align: center;
+  font-style: italic;
+  margin: 0 5px 6px 5px;
 }
 
 div.sp-dialog-div input[type=button] {
-    clear: left;
-    float: right;
-    margin: 0 10px 10px 0;
-    cursor: pointer;
+  clear: left;
+  float: right;
+  margin: 0 10px 10px 0;
+  cursor: pointer;
 }
 
 /* Table style dialogs */
 
 div.sp-dialog-table table * { font-size: inherit; font-name: inherit; }
-div.sp-dialog-table table { width: 100%; }
+div.sp-dialog-table, div.sp-dialog-table table { width: 100%; }
 div.sp-dialog-table th {
-    text-align: right;
-    font-weight: bold;
-    vertical-align: top;
-    padding-top: 5px;
+  text-align: right;
+  font-weight: bold;
+  vertical-align: top;
+  padding-top: 8px;
+}
+
+div.sp-dialog-table td.error {
+  color: yellow;
+  width: 200px;
+  font-style: italic;
+  padding-top: 8px;
 }
 
 div.sp-dialog-table .message { text-align: center; font-style: italic; margin-left: 5px; }

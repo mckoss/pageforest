@@ -7,7 +7,7 @@
 body.session .if-not-session, body:not(.session) .if-session { display: none; }
 
 #sign-in-dialog {
-  width: 400px;
+  width: 600px;
 }
 
 .access-button: {
@@ -49,7 +49,7 @@ $(document).ready(function() {
 
     <div id="sign-in-dialog" class="if-not-user"></div>
 
-    <p class=if-app>
+    <div class=if-app>
       By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
       <ul>
         <li>Access your {{ SITE_NAME }} user
@@ -62,7 +62,7 @@ $(document).ready(function() {
             documents created by any other {{ SITE_NAME }} application.</i></li>
         {% endifequal %}
       </ul>
-    </p>
+    </div>
 
     <div class=if-user>
       {% if not user.email_verified %}

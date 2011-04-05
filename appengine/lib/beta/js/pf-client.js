@@ -11055,10 +11055,10 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             pre: "<table>\n",
             label: '<label class="left" for="{id}">{label}:</label>',
             content: '<input id="{id}" type="text"/>',
-            spanRow: '<tr id="{id}-row"><td colspan=3>{content}</td></tr>',
+            spanRow: '<tr id="{id}-row"><td colspan=2>{content}</td><td></td></tr>',
             row: '<tr id="{id}-row"><th>{label}</th>' +
                 '<td>{content}</td>' +
-                '<td id="{id}-error"><span class=error>{error}</span></td></tr>\n',
+                '<td class=error id="{id}-error"></td></tr>\n',
             post: "</table>\n",
             dialogClass: 'sp-dialog-table'
         }
@@ -11146,6 +11146,8 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                 if (!field.elt) {
                     return;
                 }
+
+                field.error = document.getElementById(field.id + '-error');
 
                 if (field.value) {
                     initialValues[field.name] = field.value;
@@ -11263,6 +11265,16 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
                         break;
                     }
                 }
+            }
+        },
+
+        setErrors: function(errors) {
+            for (var i = 0; i < this.fields.length; i++) {
+                var field = this.fields[i];
+                if (!field.error) {
+                    continue;
+                }
+                dom.setText(field.error, errors[field.name] || '');
             }
         },
 
