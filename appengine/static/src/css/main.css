@@ -47,6 +47,7 @@ div.stem {
     /* This float prevents margin-collapse with its parent */
     float: left;
     margin: 20px 0 10px 110px;
+    width: 100%;
 }
 
 #left-column {

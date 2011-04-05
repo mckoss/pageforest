@@ -114,12 +114,10 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         if (text.substr(0, 19) == 'Invalid signature: ') {
             text = text.substr(19);
         }
-        if (/(user|account)/i.test(text)) {
-            forms.showValidatorResults(
-                ['username', 'password'], {username: text, password: ' '});
+        if (/user/i.test(text)) {
+            dlg.setErrors({username: text});
         } else {
-            forms.showValidatorResults(
-                ['username', 'password'], {password: text});
+            dlg.setErrors({password: text});
         }
     }
 
