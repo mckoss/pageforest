@@ -105,6 +105,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             if (params['continue']) {
                 window.location = params['continue'];
                 return;
+            } else {
+                window.location.reload();
             }
         });
     }
@@ -168,7 +170,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         }
 
         // Nothing to do until the user signs in - page will reload
-        // on form post.
+        // on successful post.
         if (appId) {
             $(document.body).addClass('app');
         }
