@@ -2717,6 +2717,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
 
             this.setValues(initialValues);
+            this.setFocus();
         },
 
         getField: function(name) {
@@ -2794,13 +2795,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         setErrors: function(errors) {
+            this.focus = undefined;
             for (var i = 0; i < this.fields.length; i++) {
                 var field = this.fields[i];
                 if (!field.error) {
                     continue;
                 }
-                dom.setText(field.error, errors[field.name] || '');
+                var error = errors[field.name] || '';
+                dom.setText(field.error, error);
+                if (error && !this.focus) {
+                    this.focus = field.name;
+                }
             }
+            this.setFocus();
         },
 
         setFocus: function() {
@@ -3138,6 +3145,8 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             if (params['continue']) {
                 window.location = params['continue'];
                 return;
+            } else {
+                window.location.reload();
             }
         });
     }
@@ -3177,7 +3186,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    function onReady(forApp) {
+    function onReady(forApp, verified) {
         var username = cookies.getCookie('sessionuser');
         appId = forApp;
 
@@ -3192,7 +3201,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         });
 
         $('#sign-in-dialog').html(dlg.html());
-        dlg.setFocus();
+        dlg.bindFields();
 
         if (appId) {
             appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
@@ -3201,7 +3210,7 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         }
 
         // Nothing to do until the user signs in - page will reload
-        // on form post.
+        // on successful post.
         if (appId) {
             $(document.body).addClass('app');
         }
@@ -3210,6 +3219,10 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
             $(document.body).addClass('user');
             $('.username').text(username);
             getSessionKey();
+        }
+
+        if (verified) {
+            $(document.body).addClass('verified');
         }
     }
 
