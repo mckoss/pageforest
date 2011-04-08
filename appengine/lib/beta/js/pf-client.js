@@ -11192,6 +11192,7 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
 
             this.setValues(initialValues);
+            this.setFocus();
         },
 
         getField: function(name) {
@@ -11269,13 +11270,19 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
         },
 
         setErrors: function(errors) {
+            this.focus = undefined;
             for (var i = 0; i < this.fields.length; i++) {
                 var field = this.fields[i];
                 if (!field.error) {
                     continue;
                 }
-                dom.setText(field.error, errors[field.name] || '');
+                var error = errors[field.name] || '';
+                dom.setText(field.error, error);
+                if (error && !this.focus) {
+                    this.focus = field.name;
+                }
             }
+            this.setFocus();
         },
 
         setFocus: function() {

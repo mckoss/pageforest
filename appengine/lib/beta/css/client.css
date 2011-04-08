@@ -162,7 +162,7 @@ div.sp-dialog-div input[type=button] {
 
 /* Table style dialogs */
 
-div.sp-dialog-table table * { font-size: inherit; font-name: inherit; }
+div.sp-dialog-table table * { font-size: inherit; font-family: inherit; }
 div.sp-dialog-table, div.sp-dialog-table table { width: 100%; }
 div.sp-dialog-table th {
   text-align: right;
