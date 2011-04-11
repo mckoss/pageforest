@@ -1582,15 +1582,10 @@ namespace.lookup('org.startpad.dom').define(function(ns) {
     var iy2 = 3;
 
     // Get absolute position on the page for the upper left of the element.
+    // Rely on jQuery - see: http://stackoverflow.com/questions/5601659
     function getPos(elt) {
-        var pt = [0, 0];
-
-        while (elt.offsetParent !== null) {
-            pt[ix] += elt.offsetLeft;
-            pt[iy] += elt.offsetTop;
-            elt = elt.offsetParent;
-        }
-        return pt;
+        var offset = jQuery(elt).offset();
+        return [offset.left, offset.top];
     }
 
     // Return size of a DOM element in a Point - includes borders, and
