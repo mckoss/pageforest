@@ -5,9 +5,6 @@ namespace.lookup('com.pageforest.blocks').define(function (ns) {
     var base = namespace.lookup('org.startpad.base');
     var util = namespace.util;
 
-    // HACK: dom.getPos return wrong value when body is relative positioned.
-    var bodyMargin = [0, 39];
-
     function Board() {
         this.init(20, 50);
     }
@@ -136,7 +133,7 @@ namespace.lookup('com.pageforest.blocks').define(function (ns) {
 
         resizeWindow: function(evt) {
             this.divBoard.style.width = this.tbl.offsetWidth + "px";
-            this.ptTable = vector.add(bodyMargin, dom.getPos(this.tbl));
+            this.ptTable = dom.getPos(this.tbl);
         },
 
         click: function(evt) {

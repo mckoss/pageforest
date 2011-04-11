@@ -7,13 +7,13 @@
     "public"
   ],
   "referers": [],
+  "secureData": false,
   "tags": [
     "sample"
   ],
   "title": "1,000 Blocks",
   "url": "http://blocks.pageforest.com/",
   "writers": [
-    "mckoss",
-    "jcrocholl"
+    "mckoss"
   ]
 }
