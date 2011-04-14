@@ -159,7 +159,7 @@ def app_json_put(request):
         try:
             request.user.assert_authorized(App.create)
         except Exception, error:
-            return HttpJSONResponse({'textStatus': unicode(error)}, status=403)
+            return HttpJSONResponse({'statusText': unicode(error)}, status=403)
         status = 201
         request.app.owner = request.user.get_username()
 

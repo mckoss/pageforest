@@ -12,7 +12,6 @@ class ModelEncoder(json.JSONEncoder):
     """
     Encode some common datastore property types to JSON.
     """
-
     def default(self, obj):
         if isinstance(obj, datetime):
             return {"__class__": "Date",
@@ -21,6 +20,9 @@ class ModelEncoder(json.JSONEncoder):
 
 
 def update_jsonp_response(request, response):
+    """
+    Force a JSON formatted response if callback is used
+    """
     if 'callback' not in request.GET:
         return response
 
