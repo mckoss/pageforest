@@ -429,13 +429,18 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
             var message;
+            var skipError = false;
 
             if (this.state == 'loading'  && this.emptyDoc) {
                 this.app.setDoc(this.emptyDoc);
+                skipError = this.oneDocPerUser;
             }
             if (this.stateSave) {
                 this.changeState(this.stateSave);
                 this.stateSave = undefined;
+            }
+            if (skipError) {
+                return;
             }
             var code = 'ajax_error/' + xmlhttp.status;
             message = xmlhttp.responseText;
