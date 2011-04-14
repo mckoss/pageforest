@@ -69,6 +69,16 @@ class App(SuperDoc):
         """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])
 
+    def get_app_url(self):
+        """Absolute URL of the root of the application."""
+        url = self.url
+        if not url or url == "http://%s.%s/" % (self.get_app_id(), settings.DEFAULT_DOMAIN):
+            request = RequestMiddleware.get_request()
+            # Some unit tests code have not initialized a request object
+            base_hostname = request and request.base_hostname or settings.DEFAULT_DOMAIN
+            url = "http://%s.%s/" % (self.get_app_id(), base_hostname)
+        return url
+
     def get_app_id(self):
         """Return the key name which contains the app id."""
         return self.key().name()
@@ -146,7 +156,7 @@ class App(SuperDoc):
         query = self.all_blobs()
         return query.fetch(limit)
 
-    def all_docs(self, owner=None, keys_only=False):
+    def all_docs(self, owner=None, writer=None, keys_only=False):
         """
         Similar to all_blobs() - generate a query object for all the Docs
         belonging to this appliction.
@@ -157,6 +167,8 @@ class App(SuperDoc):
         query = Doc.all(keys_only=keys_only)
         if owner:
             query.filter('owner', owner)
+        if writer:
+            query.filter('writers', writer)
         appid = self.get_app_id()
         query.filter('__key__ >=', db.Key.from_path('Doc', appid + '/'))
         query.filter('__key__ <', db.Key.from_path('Doc', appid + '0'))

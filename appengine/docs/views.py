@@ -33,6 +33,13 @@ def index(request):
     """
     Show a list of documents for this user.
 
+    REVIEW: Should be all writable documents for this user (or even
+    all explicitly readable docs - how to keep other users from
+    imputing access and polluting your space?).
+
+    REVIEW: Maybe should nuke this completely and do client side view
+    using the AJAX entry below.
+
     TODO: This should be a paged result.  Actualy should convert this
     page to a cross-application app (like editor) with features like
     view by app and tag, icon view, and list views.
@@ -50,15 +57,22 @@ def index(request):
 @method_required('LIST')
 def app_docs(request):
     """
-    List the current user's OWNED documents within the current app.
+    List the current user's OWNED and WRITABLE documents within the current
+    app.
 
     TODO: Add flexible filters as query string arguments.
     ?prefix=abc
     ?tag=demo
     ?readers=public
     ?writers=username
+    ?since=
+    ?orderby=
 
     See blob_list for similar code...
+
+    REVIEW: Will return duplicates if users and both writers and owners -
+    we should be sure to disallow that (or enforce that owner is ALWAYS
+    in writers).
 
     REVIEW: Is this safe to add @jsonp - would need to only
     return to approved domains or public documents?
@@ -75,30 +89,48 @@ def app_docs(request):
     except ValueError, error:
         return HttpJSONResponse({'statusText': error.message}, status=400)
 
-    query = request.app.all_docs(owner=request.user.get_username(), keys_only=keys_only)
-
-    if 'cursor' in request.GET:
-        query.with_cursor(request.GET['cursor'])
-
-    docs = query.fetch(limit)
     items = {}
-    for doc in docs:
-        if keys_only:
-            # WARNING: Document tombstones WILL show up in the
-            # keys_only form of the list command.
-            doc_id = doc.name().split('/')[1]
-            items[doc_id] = {}
-            continue
-        if doc.deleted:
-            continue
-        info = {'modified': doc.modified,
-                'sha1': doc.sha1,
-                'size': doc.size
-                }
-        items[doc.doc_id] = info
     result = {'items': items}
-    if (len(docs) == limit):
-        result['cursor'] = query.cursor()
+
+    cursor_part = None
+    if 'cursor' in request.GET:
+        # We assume that App Engine cursors do NOT contain commas
+        (cursor_part, cursor) = request.GET['cursor'].split(',')
+
+    for query_part in ('owner', 'writer'):
+        if cursor_part and cursor_part != query_part:
+            continue
+        kwargs = {'keys_only': keys_only}
+        kwargs[query_part] = request.user.get_username()
+        query = request.app.all_docs(**kwargs)
+
+        ## Pick up where the cursor left off
+        if cursor_part == query_part:
+            query.with_cursor(cursor)
+
+        asked_for = limit - len(items)
+        docs = query.fetch(limit - len(items))
+        for doc in docs:
+            if keys_only:
+                # WARNING: Document tombstones WILL show up in the
+                # keys_only form of the list command.
+                doc_id = doc.name().split('/')[1]
+                items[doc_id] = {}
+                continue
+            if doc.deleted:
+                continue
+            info = {'modified': doc.modified,
+                    'owner': doc.owner,
+                    'sha1': doc.sha1,
+                    'size': doc.size
+                    }
+            items[doc.doc_id] = info
+
+        ## If we hit our query limit - set the cursor and return result
+        if (len(docs) == asked_for):
+            result['cursor'] = ','.join((query_part, query.cursor()))
+            break
+
     return HttpJSONResponse(result, status=None)
 
 

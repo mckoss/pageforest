@@ -79,6 +79,7 @@ div.pfRight {
     background-color: #C6DDA3;
     border: 2px solid;
     border-color: #E7F2D7 #749B45 #749B45 #E7F2D7;
+    font-family: Verdana, Arial, san-serif;
     font-size: 14px;
     z-index: 997;
 }

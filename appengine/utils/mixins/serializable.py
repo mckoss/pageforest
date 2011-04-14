@@ -114,6 +114,10 @@ class Hashable(Serializable):
         self.sha1 = None
         self.size = None
 
+    def migrate(self):
+        super(Hashable, self).migrate()
+        self.update_hash()
+
     def put(self):
         """
         If we've not calculated a hash for this object, be sure

@@ -22,25 +22,12 @@ from utils.json import HttpJSONResponse
 from utils.shortcuts import get_int, get_bool
 
 from auth import SignatureError
-from auth.forms import SignUpForm, SignInForm, ProfileForm
+from auth.forms import SignUpForm, ProfileForm
 from auth.models import User, CHALLENGE_EXPIRATION
-from auth.middleware import AccessDenied
+from auth.middleware import AccessDenied, referer_is_trusted
 from auth.decorators import login_required
 
 from apps.models import App
-
-ENABLEJS = """
-<p id="enablejs" class="error">
-Please enable JavaScript in your browser settings and then
-<a href="#">reload this page</a>.<p>
-"""
-
-HTTPONLY = """
-<p id="httponly" class="error" style="display:none">
-Security warning: Your browser does not support
-<a href="http://code.google.com/p/pageforest/wiki/HttpOnly">HttpOnly</a>
-cookies.</p>
-"""
 
 
 def send_email_verification(request, user):
@@ -109,11 +96,9 @@ def sign_up(request):
             # The user is already signed in.
             return redirect(reverse(sign_in))
         response = render_to_response(request, 'auth/sign-up.html', {
-                'form': form,
-                'enablejs': ENABLEJS,
-                'httponly': HTTPONLY})
-        response.set_cookie('httponly', 'test')
+                'form': form})
         return response
+
     # Return form errors as JSON.
     if not form.is_valid():
         return HttpResponse(form.errors_json(),
@@ -211,10 +196,7 @@ def account(request, username):
     # Return HTML form for GET requests.
     if request.method == 'GET':
         response = render_to_response(request, 'auth/account.html', {
-                'form': form,
-                'enablejs': ENABLEJS,
-                'httponly': HTTPONLY})
-        response.set_cookie('httponly', 'test')
+                'form': form})
         return response
 
     # Return form errors as JSON.
@@ -234,78 +216,38 @@ def account(request, username):
     return HttpJSONResponse({'statusText': "Updated."})
 
 
-@method_required('GET', 'POST')
+@method_required('GET')
 def sign_in(request, app_id=None):
     """
-    Check credentials and generate session key(s).
+    Present the user with a sign-in page (for www.pageforest.com
+    and/or to sign in to an application).
 
-    Sign in to:
-
-    - www.pageforest.com
-    - app_id.pageforest.com (if given)
-
-    Note: return the application session key to the client via
-    ajax, so they can request the cookie on the proper domain.
-
-    This form should only ever be displayed on www.pageforest.com.
-
-    TODO: Generate long-term reauthorization cookies on
-    path=/auth/reauth so clients can upate their shorter
-    session keys.
+    Note that the app accomplishes sign-in completely through
+    AJAX and calling the low-level challenge/response interface.
     """
-    form = SignInForm(request.POST or None)
     app = None
     if app_id:
         app = App.lookup(app_id)
         if app is None or app.is_www():
             return HttpResponseRedirect(reverse(sign_in))
-    if app is None:
-        del form.fields['appauth']
-    else:
-        form.fields['appauth'].label = app_id.title()
 
-    if request.method == 'GET':
-        app_session_key = None
-        if app and request.user:
-            app_session_key = request.user.generate_session_key(app)
-        response = render_to_response(request, 'auth/sign-in.html',
-                {
-                'form': form,
-                'cross_app': app,
-                'session_key': app_session_key,
-                'enablejs': ENABLEJS
-                })
-        response.set_cookie('httponly', 'test')
-        return response
-
-    assert request.method == 'POST'
-    assert request.app.is_www(), \
-        "Sign-in is only allowed on www.%s." % settings.DEFAULT_DOMAIN
-
-    # Return form errors as JSON.
-    if not form.is_valid():
-        if '__all__' in form.errors:
-            form.errors['password'] = form.errors['__all__']
-            del form.errors['__all__']
-        return HttpResponse(form.errors_json(),
-                            mimetype=settings.JSON_MIMETYPE_CS)
-
-    user = form.cleaned_data['user']
-    json_dict = {'status': 200,
-                 'statusText': "Authenticated",
-                }
-    # If we've authorized the cross-app, set the app session key cookie.
-    if app and 'appauth' in form.cleaned_data and \
-            form.cleaned_data['appauth']:
-        json_dict['sessionKey'] = user.generate_session_key(app)
-
-    response = HttpJSONResponse(json_dict)
-
-    # Whenever we sign in - generate a fresh www session key
-    session_key = user.generate_session_key(request.app)
-    response.set_cookie(settings.SESSION_COOKIE_NAME, session_key,
-                        max_age=settings.SESSION_COOKIE_AGE)
+    response = render_to_response(request, 'auth/sign-in.html',
+        {
+        'cross_app': app,
+        })
     return response
+
+
+@method_required('GET')
+def get_app_session_key(request, app_id=None):
+    if not referer_is_trusted(request):
+        return AccessDenied(request)
+    app = App.lookup(app_id)
+    if app is None:
+        return HttpJSONResponse({'statusText': "Invalid application."}, status=400)
+    if request.user is None:
+        return HttpJSONResponse({'statusText': "User not signed in."}, status=400)
+    return HttpJSONResponse({'sessionKey': request.user.generate_session_key(app)})
 
 
 @jsonp
@@ -358,6 +300,7 @@ def sign_out(request, app_id=None):
     kwargs = app_id and {'app_id': app_id} or None
     response = HttpResponseRedirect(reverse(sign_in, kwargs=kwargs))
     response.delete_cookie(settings.SESSION_COOKIE_NAME)
+    response.delete_cookie(settings.SESSION_USER_NAME)
     return response
 
 
