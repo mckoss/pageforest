@@ -48,33 +48,33 @@ $(document).ready(function() {
            onclick="signIn.transferSessionKey(signIn.closeForm)" />
   </div>
 
-    <p class="error"></p>
+  <p class="error"></p>
 
-    <div id="sign-in-dialog" class="if-not-user"></div>
+  <div id="sign-in-dialog" class="if-not-user"></div>
 
-    <div class=if-app>
-      By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
-      <ul>
-        <li>Access your {{ SITE_NAME }} user
-          name<span class=if-user> (<i><span class="username"></span></i>)</span>.</li>
-        <li>Create, modify, and read documents in your {{ SITE_NAME }} account on your behalf.</li>
-        {% ifequal cross_app.get_app_id "editor" %}
-          <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
-        {% else %}
-        <li><i>Note that {{ cross_app.title }} will <b>not</b> have access to non-public
-            documents created by any other {{ SITE_NAME }} application.</i></li>
-        {% endifequal %}
-      </ul>
+  <div class=if-app>
+    By <i>Allowing Access</i>, you are permitting <i>{{ cross_app.title }}</i> to:
+    <ul>
+      <li>Access your {{ SITE_NAME }} user
+        name<span class=if-user> (<i><span class="username"></span></i>)</span>.</li>
+      <li>Create, modify, and read documents in your {{ SITE_NAME }} account on your behalf.</li>
+      {% ifequal cross_app.get_app_id "editor" %}
+      <li>Create, modify, and read other application files that you are developing with {{ SITE_NAME }}.</li>
+      {% else %}
+      <li><i>Note that {{ cross_app.title }} will <b>not</b> have access to non-public
+          documents created by any other {{ SITE_NAME }} application.</i></li>
+      {% endifequal %}
+    </ul>
+  </div>
+
+  <div class=if-user>
+    <div class=if-not-verified>
+      <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
     </div>
-
     <div class=if-user>
-      <div class=if-not-verified>
-        <p class="error">Check your email for an <a href="/email-verify">email verification</a> message.</p>
-      </div>
-      <div class=if-user>
-        <a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a>
-      </div>
+      <a href="/sign-out/" onclick="signIn.signOut();return false;">Sign Out</a>
     </div>
+  </div>
 
   <p class=if-not-user>Don't have a {{ SITE_NAME}} account?  <a href="/sign-up">Join Now</a>.</p>
 

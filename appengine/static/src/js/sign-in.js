@@ -8,13 +8,21 @@
   the application access to his pageforest account.
 */
 
-namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-    var main = namespace.lookup('com.pageforest.main');
-    var cookies = namespace.lookup('org.startpad.cookies');
-    var crypto = namespace.lookup('com.googlecode.crypto-js');
-    var forms = namespace.lookup('com.pageforest.forms');
-    var dialog = namespace.lookup('org.startpad.dialog');
-    var format = namespace.lookup('org.startpad.format');
+namespace.lookup('com.pageforest.auth.sign-in').define(function(exports) {
+    var require = namespace.lookup;
+    var main = require('com.pageforest.main');
+    var cookies = require('org.startpad.cookies');
+    var crypto = require('com.googlecode.crypto-js');
+    var dialog = require('org.startpad.dialog');
+    var format = require('org.startpad.format');
+
+    exports.extend({
+        'onReady': onReady,
+        'onSubmit': onSubmit,
+        'transferSessionKey': transferSessionKey,
+        'signOut': signOut,
+        'closeForm': closeForm
+    });
 
     var appId;
     var appAuthURL;
@@ -196,13 +204,5 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         }
         window.location = '/sign-out/';
     }
-
-    ns.extend({
-        'onReady': onReady,
-        'onSubmit': onSubmit,
-        'transferSessionKey': transferSessionKey,
-        'signOut': signOut,
-        'closeForm': closeForm
-    });
 
 }); // com.pageforest.auth.sign-in
