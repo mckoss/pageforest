@@ -1,13 +1,9 @@
 // Scratch - a sample Pageforest Application
-//
-// Modify this app as a starting point for own.
 namespace.lookup('com.pageforest.scratch').defineOnce(function (exports) {
     var require = namespace.lookup;
     var clientLib = require('com.pageforest.client');
 
-    exports.extend({
-        'onReady': onReady
-    });
+    exports['main'] = main;
 
     var client;
     var app;
@@ -46,14 +42,13 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (exports) {
 
     });
 
-    function onReady() {
+    function main() {
         handleAppCache();
-        $('#blob').focus();
         app = new Scratch();
         client = new clientLib.Client(app,
                                       {
-                                          autoLoad: true,
-                                          oneDocPerUser: true
+                                          autoLoad: true
+                                          //, oneDocPerUser: true
                                       });
         client.addAppBar();
     }

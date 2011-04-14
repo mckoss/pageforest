@@ -24,7 +24,10 @@
 <script type="text/javascript">
   // Call the onReady function of the application when the page is loaded.
   var scratch = namespace.lookup("com.pageforest.scratch");
-  $(document).ready(scratch.onReady);
+  $(document).ready(function () {
+    $('#blob').focus();
+    scratch.main();
+  });
 </script>
 
 </head>
