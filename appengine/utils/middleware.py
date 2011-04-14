@@ -20,16 +20,13 @@ class ResponseNotFoundMiddleware(object):
     """
 
     def process_response(self, request, response):
-        logging.info("RNFM: %d" % response.status_code)
         if response.status_code == 404 and '<html' not in response.content:
-            logging.info("RNFM2");
             request.exception = response.content
             try:
                 if response['Content-Type'] == settings.JSON_MIMETYPE_CS:
                     request.exception = json.loads(response.content)['statusText']
             except:
                 pass
-            logging.info("RNFM3: %r" % request.META)
             if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
                 response = HttpJSONResponse({'statusText': request.exception}, status=404)
             else:
