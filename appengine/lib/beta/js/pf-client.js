@@ -11853,27 +11853,27 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 /*
   client.js - Pageforest client api for sign in, save, load, and url
   management.
-
-  Requires jQuery.
-
-  TODO: This client assumes the app is hosted at appid.pageforest.com.
-  It needs to be modified to support remote hosting and local filesystem
-  testing.
  */
 
 /*global jQuery $ */
-namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
-    var storage = namespace.lookup('com.pageforest.storage');
+namespace.lookup('com.pageforest.client').define(function (exports) {
+    var require = namespace.lookup;
+    var util = namespace.util;
+    var storage = require('com.pageforest.storage');
+    var cookies = require('org.startpad.cookies');
+    var base = require('org.startpad.base');
+    var format = require('org.startpad.format');
+    var dom = require('org.startpad.dom');
+    var dialog = require('org.startpad.dialog');
+    var vector = require('org.startpad.vector');
+    var random = require('org.startpad.random');
 
-    var cookies = namespace.lookup('org.startpad.cookies');
-    var base = namespace.lookup('org.startpad.base');
-    var format = namespace.lookup('org.startpad.format');
-    var dom = namespace.lookup('org.startpad.dom');
-    var dialog = namespace.lookup('org.startpad.dialog');
-    var vector = namespace.lookup('org.startpad.vector');
-    var random = namespace.lookup('org.startpad.random');
+    // Exports
+    exports.extend({
+        VERSION: "0.7.0",
+        Client: Client
+    });
 
-    ns.pollInterval = 1000;
 
     // Error messages
     var discardMessage = "You will lose your document changes if you continue.";
@@ -11902,7 +11902,14 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
     // app.onStateChange(new, old) - Notify app about current state changes.
     // app.onInfo(code, message) - Informational messages about the client
     //     status.
-    function Client(app) {
+    // app.getDocid() - Override to change behavior of getting document id from url.
+    // app.setDocid() - "
+    function Client(app, options) {
+        if (typeof jQuery != 'function') {
+            this.onError('jQuery_required', jQueryMessage);
+            return;
+        }
+
         // Make a dummy app if none given - but warn the developer.
         if (app == undefined) {
             this.log(noAppMessage, {level: 'warn'});
@@ -11910,18 +11917,22 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         }
 
         this.app = app;
-        // Bind this method to errorHandler
         this.errorHandler = this.errorHandler.fnMethod(this);
+        this.poll = this.poll.fnMethod(this);
         this.storage = new storage.Storage(this);
+
+        var defaultOptions = {
+            oneDocPerUser: false,
+            fLogging: true,
+            saveInterval: 60,
+            autoLoad: false,
+            pollInterval: 1000
+        };
+        util.extendObject(this, defaultOptions, options);
 
         this.meta = {};
         this.metaDoc = {};
         this.metaDialog = {};
-
-        if (typeof $ != 'function' || $ != jQuery) {
-            this.onError('jQuery_required', jQueryMessage);
-            return;
-        }
 
         this.appHost = window.location.host;
         var dot = this.appHost.indexOf('.');
@@ -11930,26 +11941,22 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
 
         this.state = 'init';
         this.username = undefined;
-        this.fLogging = true;
         this.logged = {};
         this.lastDocid = undefined;
         this.fFirstPoll = true;
         this.uid = random.randomString(20);
 
         // Auto save every 60 seconds
-        this.saveInterval = 60;
-        this.autoLoad = false;
 
         if (typeof app.getDoc == 'function') {
             this.emptyDoc = app.getDoc();
         }
 
-        // REVIEW: When we support multiple clients per page, we can
-        // combine all the poll functions into a shared one.
         // Note that we cannot kick off a poll() until this constructor
         // returns as the app's callbacks likely depend on completing their
         // initialization.
-        setInterval(this.poll.fnMethod(this), ns.pollInterval);
+        setInterval(this.poll, this.pollInterval);
+        setTimeout(this.poll, 0);
 
         // Note that jquery.unload happens too late?
         window.onbeforeunload = this.beforeUnload.fnMethod(this);
@@ -12225,10 +12232,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 // Only disable the save button if the doc is already saved
                 // by the current user.
                 if (this.isSaved() && this.canSave()) {
-                    $('#pfSave').addClass('disabled');
+                    jQuery('#pfSave').addClass('disabled');
                 }
                 else {
-                    $('#pfSave').removeClass('disabled');
+                    jQuery('#pfSave').removeClass('disabled');
                 }
             }
         },
@@ -12273,6 +12280,8 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         errorHandler: function (xmlhttp, textStatus, errorThrown) {
+            var message;
+
             if (this.state == 'loading'  && this.emptyDoc) {
                 this.app.setDoc(this.emptyDoc);
             }
@@ -12281,10 +12290,18 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 this.stateSave = undefined;
             }
             var code = 'ajax_error/' + xmlhttp.status;
-            var message = xmlhttp.responseText;
-            if (message.length > 100) {
-                message = xmlhttp.statusText;
+            message = xmlhttp.responseText;
+            try {
+                var json = JSON.parse(message);
+                if (json.statusText) {
+                    message = json.statusText;
+                }
+            } catch (e) {
+                if (message.length > 100) {
+                    message = xmlhttp.statusText;
+                }
             }
+
             this.onError(code, message);
         },
 
@@ -12309,6 +12326,9 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // The default behavior is to read the #hash from the URL.
         getDocid: function () {
             var hash;
+            if (this.oneDocPerUser) {
+                return this.username;
+            }
 
             if (this.app.getDocid) {
                 return this.app.getDocid();
@@ -12323,6 +12343,10 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         // writes in the the URL #hash.
         setDocid: function (docid) {
             this.lastDocid = docid;
+
+            if (this.oneDocPerUser) {
+                return;
+            }
 
             if (this.app.setDocid) {
                 return this.app.setDocid(docid);
@@ -12393,15 +12417,15 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (this.appBar) {
                 var isSignedIn = this.username != undefined;
                 if (isSignedIn) {
-                    $('#pfWelcome').show();
-                    $('#pfUsername')
+                    jQuery('#pfWelcome').show();
+                    jQuery('#pfUsername')
                         .text(isSignedIn ? this.username : 'anonymous')
                         .show();
                 } else {
-                    $('#pfWelcome').hide();
-                    $('#pfUsername').hide();
+                    jQuery('#pfWelcome').hide();
+                    jQuery('#pfUsername').hide();
                 }
-                $('#pfSignIn').text(isSignedIn ? 'Sign Out' : 'Sign In');
+                jQuery('#pfSignIn').text(isSignedIn ? 'Sign Out' : 'Sign In');
             }
         },
 
@@ -12448,7 +12472,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             // For use in closures, below.
             var self = this;
 
-            $('#pfSignIn').click(function () {
+            jQuery('#pfSignIn').click(function () {
                 self.signInOut();
             });
 
@@ -12485,7 +12509,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 self.toggleAppPanel();
             }
 
-            $('#pfSave').click(onSave);
+            jQuery('#pfSave').click(onSave);
 
             self.appPanel = document.createElement('div');
             self.appPanel.setAttribute('id', 'pfAppPanel');
@@ -12506,7 +12530,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 ]
             });
             document.body.appendChild(self.appPanel);
-            $(self.appPanel).html(self.appDialog.html());
+            jQuery(self.appPanel).html(self.appDialog.html());
 
             // TODO: Make this available to apps not using the appPanel?
             self.errorPanel = document.createElement('div');
@@ -12517,21 +12541,21 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 ]
             });
             document.body.appendChild(self.errorPanel);
-            $(self.errorPanel).html(self.errorDialog.html());
+            jQuery(self.errorPanel).html(self.errorDialog.html());
 
-            $('#pfMore').click(function() {
+            jQuery('#pfMore').click(function() {
                 self.toggleAppPanel();
             });
 
-            $('#pfUsername').click(function() {
+            jQuery('#pfUsername').click(function() {
                 window.open('http://' + self.wwwHost + '/docs/');
             });
 
-            $('#pfLogo').click(function() {
+            jQuery('#pfLogo').click(function() {
                 window.open('http://' + self.wwwHost);
             });
 
-            $(window).resize(function() {
+            jQuery(window).resize(function() {
                 self.positionAppPanel();
             });
 
@@ -12539,7 +12563,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         },
 
         isAppPanelOpen: function() {
-            return this.appPanel && $(this.appPanel).is(':visible');
+            return this.appPanel && jQuery(this.appPanel).is(':visible');
         },
 
         toggleAppPanel: function(fOpen) {
@@ -12549,7 +12573,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             }
             var self = this;
 
-            $('#pfMore').toggleClass("expanded collapsed");
+            jQuery('#pfMore').toggleClass("expanded collapsed");
             if (this.isAppPanelOpen()) {
                 this.positionAppPanel('hide');
                 return false;
@@ -12566,7 +12590,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
             if (animation == undefined && !this.isAppPanelOpen()) {
                 return;
             }
-            var ptUR = [dom.getRect($('#pfAppBarBox')[0])[2], -4];
+            var ptUR = [dom.getRect(jQuery('#pfAppBarBox')[0])[2], -4];
             dom.slide(this.appPanel, ptUR, animation, fnCallback);
         },
 
@@ -12575,7 +12599,7 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
                 return;
             }
 
-            var ptUR = [dom.getRect($('#pfAppBarBox')[0])[2], -4];
+            var ptUR = [dom.getRect(jQuery('#pfAppBarBox')[0])[2], -4];
 
             if (message == undefined) {
                 dom.slide(this.errorPanel, ptUR, 'hide');
@@ -12672,10 +12696,5 @@ namespace.lookup('com.pageforest.client').defineOnce(function (ns) {
         }
 
     }); // Client.methods
-
-    // Exports
-    ns.extend({
-        Client: Client
-    });
 
 });

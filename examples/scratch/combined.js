@@ -1,34 +1,61 @@
 // Scratch - a sample Pageforest Application
 //
 // Modify this app as a starting point for own.
-namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
-    var clientLib = namespace.lookup('com.pageforest.client');
+namespace.lookup('com.pageforest.scratch').defineOnce(function (exports) {
+    var require = namespace.lookup;
+    var clientLib = require('com.pageforest.client');
 
-    ns.extend({
-        'onReady': onReady,
-        'getDoc': getDoc,
-        'setDoc': setDoc,
-        'onStateChange': onStateChange
+    exports.extend({
+        'onReady': onReady
+    });
+
+    var client;
+    var app;
+
+    function Scratch() {
+    }
+
+    // Implement Pageforest Application inferface
+    Scratch.methods({
+        // Loading a document
+        setDoc: function(json) {
+            $('#blob').val(json.blob);
+        },
+
+        // Saving a document
+        getDoc: function() {
+            return {
+                "blob": $('#blob').val()
+            };
+        },
+
+        // Refresh links on the page
+        onStateChange: function(newState, oldState) {
+            var url = client.getDocURL();
+            var link = $('#document');
+            if (url) {
+                link.attr('href', url + '?callback=document').show();
+            }
+            else {
+                link.hide();
+            }
+            $('#mydocs').attr('href', 'http://' + client.wwwHost + '/docs/');
+            $('#app-details').attr('href', 'http://' + client.wwwHost +
+                                   '/apps/' + client.appid);
+        }
+
     });
 
     function onReady() {
         handleAppCache();
         $('#blob').focus();
-        ns.client = new clientLib.Client(ns);
-        ns.client.addAppBar();
-        ns.client.autoLoad = true;
-    }
-
-    // Loading a document
-    function setDoc(json) {
-        $('#blob').val(json.blob);
-    }
-
-    // Saving a document
-    function getDoc() {
-        return {
-            "blob": $('#blob').val()
-        };
+        app = new Scratch();
+        client = new clientLib.Client(app,
+                                      {
+                                          autoLoad: true,
+                                          oneDocPerUser: true
+                                      });
+        client.addAppBar();
     }
 
     // For offline - capable applications
@@ -44,21 +71,6 @@ namespace.lookup('com.pageforest.scratch').defineOnce(function (ns) {
         }
 
         applicationCache.addEventListener('updateready', handleAppCache, false);
-    }
-
-    // Refresh links on the page
-    function onStateChange(newState, oldState) {
-        var url = ns.client.getDocURL();
-        var link = $('#document');
-        if (url) {
-            link.attr('href', url + '?callback=document').show();
-        }
-        else {
-            link.hide();
-        }
-        $('#mydocs').attr('href', 'http://' + ns.client.wwwHost + '/docs/');
-        $('#app-details').attr('href', 'http://' + ns.client.wwwHost +
-                               '/apps/' + ns.client.appid);
     }
 
 });
