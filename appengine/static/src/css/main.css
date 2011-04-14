@@ -1,79 +1,112 @@
 body {
     font-family: Verdana, Arial, san-serif;
-    font-size: 14px;
+    font-size: 110%;
+    color: #4D2500;
+    background-color: #C7A36E;
     margin: 0;
     padding: 0;
 }
 
-h1 {
-text-align: center;
+body.app .if-not-app, body:not(.app) .if-app { display: none; }
+body.user .if-not-user, body:not(.user) .if-user { display: none; }
+
+h1 { text-align: center; margin-top: 0px; font-size: 170%; }
+h2 { clear: both; margin-top: 0px; padding-top: 10px; font-size: 130%}
+h3 { clear: both; text-align: center; }
+
+a { text-decoration: none; color: inherit; font-style: italic; }
+a:hover { text-decoration: underline; color: #EAD0AA; }
+
+/* https://developer.mozilla.org/en/css/box-shadow */
+.floaty {
+    box-shadow:8px 10px 10px #8F754F;
+    -webkit-box-shadow:8px 10px 10px #8F754F;
+    -moz-box-shadow:8px 10px 10px #8F754F;
 }
 
-h2 {
-padding-top: 5px;
+p { line-height: 22px; }
+
+div { margin: 0; padding: 0}
+
+div.header { position: relative; height: 200px; background-color: #CCFBFF; }
+
+div.middle { position: relative; margin: auto; height: 100%; width: 960px; }
+
+#content {
+    position: relative;
+    width:100%;
+    background:url(/static/images/nav/body-background.png) repeat-x top left scroll;
 }
 
-div.spacer {
-    height: 10px;
+div.stem {
+    position: relative;
+    background: url(/static/images/nav/logo-stem.png) repeat-y left top scroll;
 }
 
-div.spacer2 {
-    height: 20px;
+#double-column {
+    /* This float prevents margin-collapse with its parent */
+    float: left;
+    margin: 20px 0 10px 110px;
     width: 100%;
 }
 
-div.breadcrumb {
-    margin: 0 0 18px 125px;
-    background:url(../../images/nav/rule-horiz.gif) repeat-x bottom left scroll;
-    padding-bottom: 7px;
-    color: #4D2500;
+#left-column {
+    float: left;
+    margin: 20px 0 10px 110px;
+    padding-right: 10px;
+    width: 610px;
+    background: url(/static/images/nav/rule-vert.gif) repeat-y scroll top right;
 }
 
-div.breadcrumb a {
-    text-decoration: none;
-    color: #898989;
-    font-weight: bold;
-}
-
-div.breadcrumb a:hover {
-    text-decoration: underline;
-    color: #FF7F00;
+#right-column {
+    margin: 20px 0 10px 0;
+    float: right;
+    width: 220px;
 }
 
 div.footer {
-    color: #898989;
-    font-size: 11px;
-}
-
-div.footer a {
-    text-decoration: none;
-    color: #898989;
-    font-size: 11px;
-}
-
-div.footer a:hover {
-    text-decoration: underline;
-    color: #FF7F00;
-}
-
-div.CallToAction {
-    background: url(../../images/sidebar/planting.png) no-repeat scroll;
-    width: 220px;
-    height: 300px;
-}
-
-div.CallToAction p {
-    text-align:center;
-    font-size: 24px;
-    line-height: 26px;
-    font-weight: bold;
-    color: white;
-    margin: 0;
-    padding: 15px;
+    clear: both;
+    width: 850px;
+    margin: 0 0 30px 110px;
+    padding-top: 10px;
+    font-size: 14px;
+    border-top: 1px solid #EBBD79;
 }
 
 img.favicon16 {
-    width: 16px;
-    height: 16px;
+    width: 32px;
+    height: 32px;
     vertical-align: -2px;
+}
+
+th, td { vertical-align: top; padding: 5px; }
+
+table.bordered {
+    border-collapse: collapse;
+    border: 1px solid #36362E;
+    margin: 0 0 8px 0;
+}
+
+table.bordered th {
+    border: 1px solid #36362E;
+    padding: 5px;
+    text-style: bold;
+    color: white;
+    background-color: #69695A;
+    text-align: center;
+}
+
+table.bordered th.long {
+    text-align: left;
+}
+
+table.bordered td {
+    border: 1px solid #36362E;
+    padding: 5px;
+    background-color: #F5F5DC;
+    text-align: center;
+}
+
+table.bordered td.long {
+    text-align: left;
 }

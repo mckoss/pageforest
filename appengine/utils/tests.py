@@ -119,20 +119,26 @@ class DocTest(TestCase):
                 return False
         return True
 
-    def test_utils(self):
-        """Run doctest on utils modules that support it."""
-        dir = os.path.dirname(__file__)
-        for filename in os.listdir(dir):
+    def dir_test(self, direct):
+        for filename in os.listdir(direct):
             if not filename.endswith('.py'):
                 continue
-            full_path = os.path.join(dir, filename)
+            full_path = os.path.join(direct, filename)
             if self.ignore_file(full_path):
                 continue
             (base, ext) = os.path.splitext(filename)
-            (file, pathname, desc) = imp.find_module(base, [dir])
+            (file, pathname, desc) = imp.find_module(base, [direct])
             mod = imp.load_module('utils.' + base, file, pathname, desc)
             (failures, tests) = doctest.testmod(mod)
             self.assertEqual(failures, 0)
+
+    def test_templatetags(self):
+        """Doctests for util template tags"""
+        self.dir_test(os.path.join(os.path.dirname(__file__), 'templatetags'))
+
+    def test_utils(self):
+        """Run doctest on utils modules that support it."""
+        self.dir_test(os.path.dirname(__file__))
 
 
 class ApiProxyErrorTest(TestCase):

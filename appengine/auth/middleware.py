@@ -65,6 +65,7 @@ def referer_is_trusted(request):
     return False
 
 
+# REVIEW: Why is this not a super-doc method?
 def check_permissions(request, resource, method_override=None):
     """
     Check read or write permissions for the current user.
@@ -142,6 +143,7 @@ class AuthMiddleware(object):
                 return AccessDenied(request)
 
         # Allow authentication attempts and channel api.
+        # REVIEW: why done in middleware instead of the view function?
         if (request.path_info == '/app/admin/auth/challenge/' or
             request.path_info == '/app/auth/challenge/' or
             request.path_info.startswith('/app/admin/auth/verify/') or
@@ -185,6 +187,7 @@ class AuthMiddleware(object):
                 return check_permissions(request, request.doc)
 
         # Redirect http://app_id.pageforest.com/ to sign-in if not public.
+        # REVIEW: Link to any but index.html won't redirect?
         if (request.path_info == '/app/'
             and 'public' not in request.app.readers
             and request.user is None

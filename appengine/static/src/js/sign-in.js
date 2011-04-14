@@ -2,17 +2,24 @@
   Handle logging a user into Pageforest and optionally also log them
   in to a Pageforest application.
 
-  A logged in use will get a session key on www.pageforest.com. This
+  A logged in user will get a cookie on www.pageforest.com. This
   script makes requests to appid.pageforest.com in order to get a
   cookie set on the application domain when the user wants to allow
-  the application access to his store.
+  the application access to his pageforest account.
 */
 
 namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-
+    var main = namespace.lookup('com.pageforest.main');
     var cookies = namespace.lookup('org.startpad.cookies');
     var crypto = namespace.lookup('com.googlecode.crypto-js');
     var forms = namespace.lookup('com.pageforest.forms');
+    var dialog = namespace.lookup('org.startpad.dialog');
+    var format = namespace.lookup('org.startpad.format');
+
+    var appId;
+    var appAuthURL;
+    var sessionKey;
+    var dlg;
 
     // www.pageforest.com -> app.pageforest.com
     // pageforest.com -> app.pageforest.com
@@ -44,42 +51,64 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
 
     // Display success, and close window in 2 seconds.
     function closeForm() {
-        if (ns.appId) {
-            $(".have_app").show();
-        }
-        $(".want_app").hide();
+        $(document.body)[appId ? 'addClass' : 'removeClass']('app');
         setTimeout(window.close, 2000);
+    }
+
+    function getSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appId || sessionKey) {
+            fn();
+            return;
+        }
+        $.getJSON('/get-session-key/' + appId, function (json) {
+            if (json.status != 200) {
+                $('#error').text = json.statusText;
+                return;
+            }
+            $(document.body).addClass('session');
+            sessionKey = json.sessionKey;
+            fn();
+        });
     }
 
     // Send a valid appId sessionKey to the app domain
     // to get it installed on a cookie.
-    function transferSession(sessionKey, fn) {
-        var url = ns.appAuthURL + "set-session/" + sessionKey;
+    function transferSessionKey(fn) {
+        fn = fn || function () {};
+        if (!appAuthURL) {
+            fn();
+            return;
+        }
+        var url = appAuthURL + "set-session/" + sessionKey;
         getJSONP(url, function(message) {
             if (typeof(message) != 'string') {
                 return;
             }
+            $(document.body).removeClass('session');
             if (fn) {
                 fn();
-            }
-
-            // Close the window if this was used to
-            // sign in to the app.
-            if (sessionKey) {
-                closeForm();
             }
         });
         return false;
     }
 
     function onSuccess(message, status, xhr) {
-        if (message.sessionKey) {
-            transferSession(message.sessionKey, function() {
+        $(document.body).addClass('user');
+        $('.username').text(dlg.values.username);
+        getSessionKey(function () {
+            if (dlg.values.allowAccess) {
+                transferSessionKey(closeForm);
+                return;
+            }
+            var params = format.parseURLParams(window.location.href);
+            if (params['continue']) {
+                window.location = params['continue'];
+                return;
+            } else {
                 window.location.reload();
-            });
-            return;
-        }
-        window.location.reload();
+            }
+        });
     }
 
     function onError(xhr, status, message) {
@@ -87,22 +116,17 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         if (text.substr(0, 19) == 'Invalid signature: ') {
             text = text.substr(19);
         }
-        if (/(user|account)/i.test(text)) {
-            forms.showValidatorResults(
-                ['username', 'password'], {username: text, password: ' '});
+        if (/user/i.test(text)) {
+            dlg.setErrors({username: text});
         } else {
-            forms.showValidatorResults(
-                ['username', 'password'], {password: text});
+            dlg.setErrors({password: text});
         }
     }
 
     function onChallenge(challenge, status, xhr) {
-        var username = $('#id_username').val();
-        var lower = username.toLowerCase();
-        var password = $('#id_password').val();
-        var userpass = crypto.HMAC(crypto.SHA1, lower, password);
+        var userpass = crypto.HMAC(crypto.SHA1, dlg.values.username, dlg.values.password);
         var signature = crypto.HMAC(crypto.SHA1, challenge, userpass);
-        var reply = lower + '|' + challenge + '|' + signature;
+        var reply = dlg.values.username + '|' + challenge + '|' + signature;
         $.ajax({
             url: '/auth/verify/' + reply,
             success: onSuccess,
@@ -111,6 +135,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     }
 
     function onSubmit() {
+        dlg.values = dlg.getValues();
+        dlg.values.username = dlg.values.username.toLowerCase();
+
         $.ajax({
             url: '/auth/challenge',
             success: onChallenge,
@@ -119,42 +146,51 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         return false;
     }
 
-    // Check if user is already logged in.
-    function onReady(username, appId) {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
+    function onReady(forApp, verified) {
+        var username = cookies.getCookie('sessionuser');
+        appId = forApp;
 
-        ns.appId = appId;
-        ns.appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username'},
+                {name: 'password', type: 'password'},
+                {name: 'allowAccess', label: "Allow Access to " + appId, type: 'checkbox'},
+                {name: 'signIn', label: "Sign In", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
+        });
+
+        $('#sign-in-dialog').html(dlg.html());
+        dlg.bindFields();
+
+        if (appId) {
+            appAuthURL = 'http://' + getAppDomain(appId) + '/auth/';
+        } else {
+            dlg.showField('allowAccess', false);
+        }
 
         // Nothing to do until the user signs in - page will reload
-        // on form post.
-        if (!username) {
-            return;
+        // on successful post.
+        if (appId) {
+            $(document.body).addClass('app');
         }
 
-        // Check (once) if we're also currently logged in @ appId
-        // without having to sign-in again.
-        // REVIEW: Isn't this insecure?
-        var url = ns.appAuthURL + "username/";
-        getJSONP(url, function(username) {
-            // We're already logged in!
-            if (typeof(username) == 'string') {
-                closeForm();
-                return;
-            }
-        });
+        if (username) {
+            $(document.body).addClass('user');
+            $('.username').text(username);
+            getSessionKey();
+        }
+
+        if (verified) {
+            $(document.body).addClass('verified');
+        }
     }
 
     function signOut() {
-        if (ns.appId) {
-            transferSession('expired', function() {
-                window.location = '/sign-out/' + ns.appId;
+        if (appId) {
+            sessionKey = 'expired';
+            transferSessionKey(function() {
+                window.location = '/sign-out/' + appId;
             });
             return;
         }
@@ -164,8 +200,9 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
     ns.extend({
         'onReady': onReady,
         'onSubmit': onSubmit,
-        'transferSession': transferSession,
-        'signOut': signOut
+        'transferSessionKey': transferSessionKey,
+        'signOut': signOut,
+        'closeForm': closeForm
     });
 
 }); // com.pageforest.auth.sign-in

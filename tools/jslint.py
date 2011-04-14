@@ -44,6 +44,7 @@ Do not use 'new' for side effects
 Missing radix parameter
 Read only.
 is better written in dot notation
+Don't make functions within a loop
 Script URL
 Expected '}' to have an indentation
 The body of a for in should be wrapped

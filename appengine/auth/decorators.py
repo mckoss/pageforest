@@ -1,4 +1,6 @@
-from django.http import HttpResponseForbidden
+import urllib
+
+from django.http import HttpResponseForbidden, HttpResponseRedirect
 
 from auth.middleware import AccessDenied
 
@@ -10,6 +12,7 @@ def login_required(func):
     """
     def wrapper(request, *args, **kwargs):
         if request.user is None:
-            return AccessDenied(request)
+            return HttpResponseRedirect(
+                '/sign-in/?continue=' + urllib.quote_plus(request.path))
         return func(request, *args, **kwargs)
     return wrapper

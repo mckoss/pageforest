@@ -1,7 +1,12 @@
+div.tabs .selected a {
+    color: #2BA2D9;
+}
+
 div.tab {
     float: left;
     height: 30px;
     margin: 0px;
+    color: #898989;
 }
 
 div.tabSelect {
@@ -10,18 +15,11 @@ div.tabSelect {
 
 div.tab a {
     text-decoration: none;
+    font-style: normal;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
     color: #898989;
-    line-height: 31px;
-    margin: 5px;
-    font-weight: bold;
-}
-
-div.tabSelect a {
-    text-decoration: none;
-    color: #4D2500;
-    line-height: 31px;
-    margin: 5px;
-    font-weight: bold;
 }
 
 div.tab a:hover {

@@ -4,15 +4,35 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
 
     ns.addTests = function(ts) {
 
-        ts.addTest("replaceKeys", function(ut)
+        ts.addTest("format", function(ut)
         {
             ut.assertEq(format.replaceKeys("this is {wow} test", {wow: "foo"}),
                         "this is foo test");
             ut.assertEq(format.replaceKeys("{key} is replaced {key} twice",
                                            {key: "yup"}),
                         "yup is replaced yup twice");
-            ut.assertEq(format.replaceKeys("{key} and {key2}", {key: "mom"}),
+
+            ut.assertEq(format.format("{key} and {key2}", {key: "mom"}),
                         "mom and ");
+
+            ut.assertEq("format {0}".format("string"), "format string");
+            ut.assertEq("{1} reverse {0}".format('a', 'b'), "b reverse a");
+            ut.assertEq("Prop: {prop}".format({prop: "hi"}), "Prop: hi");
+            ut.assertEq("Nested: {person.name}".format({person: {name: "Mike"}}), "Nested: Mike");
+
+            var people = [{name: "Mike"}, {name: "Bobby"}];
+            people[0].friend = people[1];
+            people[0].friends = [people[0], people[1]];
+            ut.assertEq("Two people are {0.name} and {1.name}.".format(people),
+                        "Two people are Mike and Bobby.");
+            ut.assertEq("{0.name}'s friend is {0.friend.name}.".format(people),
+                        "Mike's friend is Bobby.");
+            ut.assertEq("{0.name}'s friends are {0.friends.0.name} and {0.friends.1.name}."
+                        .format(people),
+                        "Mike's friends are Mike and Bobby.");
+
+            ut.assertEq("Allow space { 0 } around vars { 1.prop }.".format("prop", {prop: "prop2"}),
+                        "Allow space prop around vars prop2.");
         });
 
         ts.addTest("thousands", function (ut) {
@@ -70,20 +90,10 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             }
         });
 
-        ts.addTest("replaceString", function(ut) {
-            var tests = [
-                ["Test string.", "string", "replace", "Test replace."],
-                ["Abcabcabc", "abc", "x", "Abcxx"],
-                ["No matches", "foo", "bar", "No matches"],
-                ["nonono", "no", "", ""]
-            ];
-
-            for (var i = 0; i < tests.length; i++) {
-                var test = tests[i];
-
-                ut.assertEq(format.replaceString(test[0], test[1], test[2]),
-                            test[3]);
-            }
+        ts.addTest("repeat", function(ut) {
+            ut.assertEq(format.repeat('x', 10), "xxxxxxxxxx");
+            ut.assertEq(format.repeat('ab', 2), "abab");
+            ut.assertEq(format.repeat('', 100), "");
         });
 
         ts.addTest("ISO 8601 Formatting", function(ut)
@@ -217,6 +227,22 @@ namespace.lookup('org.startpad.format.test').defineOnce(function (ns) {
             }
         }).require('document').require('canvas').fallback(function (ut) {
             ts.coverage.cover('canvasToPNG');
+        });
+
+        ts.addTest("parseURLParams", function(ut) {
+            var tests = [
+                ['http://pageforest.com?foo=bar', {foo: 'bar'}],
+                ['http://pageforest.com?a=1&c=true&b=hello%20there',
+                 {a: '1', b: 'hello there', c: 'true'}],
+                ['?foo=1&bar=7#anchors-away',
+                 {foo: '1', bar: '7', _anchor: 'anchors-away'}],
+                ['?foo=1#fake=value&another=fake',
+                 {foo: '1', _anchor: 'fake=value&another=fake'}]
+            ];
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                ut.assertEq(format.parseURLParams(test[0]), test[1]);
+            }
         });
 
     }; // addTests
