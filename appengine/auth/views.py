@@ -99,13 +99,13 @@ def sign_up(request):
                 'form': form})
         return response
 
+    validate = request.POST.get('validate', False)
     # Return form errors as JSON.
     if not form.is_valid():
-        return HttpResponse(form.errors_json(),
-                            mimetype=settings.JSON_MIMETYPE_CS)
+        return HttpJSONResponse(form.errors_dict(), status=400)
     # Return empty errors object for validate.
-    if 'validate' in request.POST:
-        return HttpResponse('{}', mimetype=settings.JSON_MIMETYPE_CS)
+    if validate:
+        return HttpJSONResponse({})
     # Create a new user, generate a session key, return success.
     assert request.method == 'POST'
     user = form.save()

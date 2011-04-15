@@ -4,6 +4,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
+    var ERROR_STRINGS = {
+        minSize: "{label} must have at least {minSize} characters.",
+        maxSize: "{label} must have no more than {maxSize} characters.",
+        required: "{label} is required."
+    };
+
     // REVIEW: Need to add a select pattern.
     var defaultPatterns = {
         title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
@@ -253,20 +259,69 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
         },
 
-        setErrors: function(errors) {
+        clearErrors: function() {
+            base.forEach(this.fields, function(field, i) {
+                if (field.error) {
+                    dom.setText(field.error, '');
+                }
+            });
+        },
+
+        setErrors: function(errors, options) {
+            options = options || {};
             this.focus = undefined;
+            // Loop in field order so we set focus on first error
             for (var i = 0; i < this.fields.length; i++) {
                 var field = this.fields[i];
-                if (!field.error) {
+                var error = errors[field.name];
+                if (!field.error || error == undefined) {
                     continue;
                 }
-                var error = errors[field.name] || '';
+                if (options.ignoreBlanks) {
+                    var value = options.values[field.name];
+                    if (typeof value == 'string' && value.length == 0 ||
+                        field.type == 'checkbox') {
+                        error = '';
+                    }
+                }
                 dom.setText(field.error, error);
                 if (error && !this.focus) {
                     this.focus = field.name;
                 }
             }
             this.setFocus();
+        },
+
+        validate: function(ignoreBlanks) {
+            var self = this;
+            var values = this.getValues();
+            var errors = {};
+            this.isValid = true;
+            base.forEach(values, function (value, name) {
+                var field = self.getField(name);
+                if (!field.error) {
+                    return;
+                }
+                if (field.required) {
+                    if (field.type == 'checkbox' && !value || value.length == 0) {
+                        self.isValid = false;
+                        errors[name] = ERROR_STRINGS.required.format(field);
+                    }
+                }
+                if (field.minSize && value.length < field.minSize) {
+                    self.isValid = false;
+                    errors[name] = ERROR_STRINGS.minSize.format(field);
+                }
+                if (field.maxSize && value.length > field.maxSize) {
+                    self.isValid = false;
+                    errors[name] = ERROR_STRINGS.maxSize.format(field);
+                }
+            });
+            this.setErrors(errors, {
+                ignoreBlanks: ignoreBlanks,
+                values: values
+            });
+            return values;
         },
 
         setFocus: function() {
@@ -345,7 +400,37 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             default:
                 throw new Error("Field " + name + " is not a form field.");
             }
+        },
+
+        postValues: function (url, options) {
+            var self = this;
+            var values = this.getValues();
+            options = options || {};
+            options.values = values;
+            util.extendObject(options.values, options.extra);
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: values,
+                dataType: "json",
+                success: function(message, status, xhr) {
+                    if (options.onSuccess) {
+                        options.onSuccess(message);
+                    }
+                },
+                error: function(message, status, xhr) {
+                    if (message.status == 400) {
+                        try {
+                            message = JSON.parse(message.response);
+                        } catch (e) {
+                            return;
+                        }
+                        self.setErrors(message, options);
+                    }
+                }
+            });
         }
+
     });
 
     ns.extend({

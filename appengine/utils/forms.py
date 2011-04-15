@@ -15,10 +15,6 @@ class AjaxForm(forms.Form):
             errors[key] = [unicode(msg) for msg in val]
         return errors
 
-    # REVIEW: Probably don't need this
-    def errors_json(self):
-        return json.dumps(self.errors_dict())
-
 
 class ValidationError(ValueError):
     """

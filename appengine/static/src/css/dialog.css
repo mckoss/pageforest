@@ -57,9 +57,9 @@ div.sp-dialog-table th {
 
 div.sp-dialog-table td.error {
   color: yellow;
-  width: 200px;
   font-style: italic;
   padding-top: 8px;
+  width: 40%;
 }
 
 div.sp-dialog-table .message { text-align: center; font-style: italic; margin-left: 5px; }
