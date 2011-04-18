@@ -18,7 +18,7 @@ MEDIA_DIR = os.path.join(pftool.app_dir, 'static')
 SRC_DIR = os.path.join(pftool.app_dir, 'static', 'src')
 LIB_DIR = os.path.join(pftool.app_dir, 'lib')
 
-PF_FILENAME = 'pf'
+PF_FILENAME = 'pf.py'
 
 
 def ensure_dir(dirname):
@@ -159,12 +159,12 @@ def build_pfpy():
         print "Could not find version string in %s" % PF_FILENAME
         exit(1)
     version = version.group(1)
-    dist_file = os.path.join(pftool.dist_dir, 'pf.py.%s' % version)
+    dist_file = os.path.join(pftool.dist_dir, '%s.%s' % (PF_FILENAME, version))
     if os.path.exists(dist_file):
         pf_dist = open(dist_file, 'r').read()
         if pf == pf_dist or not if_yes("%s already exists.  Overwrite?" % dist_file):
             return
-    print "Creating new pf.py distribution: %s" % dist_file
+    print "Creating new %s distribution: %s" % (PF_FILENAME, dist_file)
     print "Be sure to update the directory and push when ready."
     file = open(dist_file, 'w')
     file.write(pf)
