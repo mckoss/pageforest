@@ -39,6 +39,8 @@ PF_FILENAME = 'pf.py'
 # See http://code.google.com/closure/compiler/docs/gettingstarted_api.html
 CLOSURE_API = 'http://closure-compiler.appspot.com/compile'
 
+NAMESPACE_PATTERN = "namespace.module('%s', function (exports, require) {\n%s\n});"
+
 # Swag at max content that can fit in a Blob
 MAX_FILE_SIZE = 1024 * 1024 - 200
 
@@ -989,11 +991,21 @@ def closure_compiler(file_names, last_match=None, minify=True):
 
     combined = ""
 
+    sep = ''
     for file_name in file_names:
+        namespace = None
+        if not isinstance(file_name, basestring):
+            (file_name, namespace) = (file_name['path'], file_name['namespace'])
+
         file = open(get_local_path(file_name), 'r')
         data = file.read()
         file.close()
-        combined += "\n/* %s */\n" % file_name + data
+        combined += "%s/* Source: %s */\n" % (sep, file_name)
+        sep = '\n'
+        if namespace:
+            combined += NAMESPACE_PATTERN % (namespace, data)
+        else:
+            combined += data
         params.append(('js_code', data))
 
     # Short circuit if we've already compiled these files
