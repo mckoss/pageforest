@@ -50,6 +50,7 @@ The body of a for in should be wrapped
 is not defined
 to have an indentation at
 Bad escapement
+used before it was defined
 """.strip().splitlines(),
 
     'strict': """
