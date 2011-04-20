@@ -39,7 +39,7 @@ PF_FILENAME = 'pf.py'
 # See http://code.google.com/closure/compiler/docs/gettingstarted_api.html
 CLOSURE_API = 'http://closure-compiler.appspot.com/compile'
 
-NAMESPACE_PATTERN = "namespace.module('%s', function (exports, require) {\n%s\n});"
+NAMESPACE_PATTERN = "namespace.module('%s', function (exports, require) {\n%s\n});\n"
 
 # Swag at max content that can fit in a Blob
 MAX_FILE_SIZE = 1024 * 1024 - 200
