@@ -1,0 +1,85 @@
+# Styles used only on the home page
+#home {
+    color: #8C6239;
+    font-size: 16px;
+}
+
+#home p {
+    font-size: 16px;
+    line-height: 22px;
+    margin: 5px 0 5px 0;
+}
+
+#home img.right {
+    float:right;
+    margin: 10px 0 10px 12px;
+}
+
+#home ul {
+    font-size: 16px;
+    line-height: 22px;
+}
+
+#home li {
+    padding-bottom: 5px;
+}
+
+#home li img {
+    display:block;
+    margin: 10px auto 10px auto;
+    border: 2px solid #8C6239;
+}
+
+#home h1 {
+    font-size: 24px;
+    color: #4D2500;
+    line-height: 30px;
+    font-weight: normal;
+    margin: 0;
+    position: relative;
+    top: -4px;
+}
+
+#home h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4D2500;
+    margin: 0;
+    clear: both;
+}
+
+#home div.homeCopy {
+    font-size:14px;
+    width:340px;
+}
+
+#home div.Left {
+    float:left;
+}
+
+#home div.Right {
+    float: right;
+}
+
+#home a {
+    text-decoration: none;
+    color: #598527;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+#home a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+    font-weight: bold;
+}
+
+img.homeScreenLeft {
+    float:left;
+    margin-right: 15px;
+}
+
+img.homeScreenRight {
+    float:right;
+    margin-left:15px;
+}

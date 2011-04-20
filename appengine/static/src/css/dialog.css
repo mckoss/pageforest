@@ -1,0 +1,55 @@
+div.SP_Dialog {
+    width: 350px;
+}
+
+div.SP_Dialog * {
+    font-size: inherit;
+}
+
+div.SP_Dialog label.left {
+    display: block;
+    float: left;
+    clear: left;
+    text-align: right;
+    width: 94px;
+    margin: 1px 0 6px 0;
+    padding-right: 5px;
+}
+
+div.SP_Dialog label.checkbox, div.SP_Dialog input[type=checkbox] {
+    cursor: pointer;
+    margin-left: 0;
+}
+
+div.SP_Dialog label.checkbox {
+    display: block;
+    clear: left;
+    margin: 0 5px 6px 100px;
+    padding: 0;
+}
+
+div.SP_Dialog input[type=text], div.SP_Dialog input[type=password], div.SP_Dialog .value,
+div.SP_Dialog textarea
+{
+    float: left;
+    width: 245px;
+    margin: 0 0 6px 0;
+    padding: 0;
+}
+
+div.SP_Dialog {
+    position: relative;
+}
+
+div.SP_Dialog .message {
+    text-align: center;
+    font-style: italic;
+    margin: 0 5px 6px 5px;
+}
+
+div.SP_Dialog input[type=button] {
+    clear: left;
+    float: right;
+    margin: 3px;
+    cursor: pointer;
+}
