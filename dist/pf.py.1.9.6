@@ -998,7 +998,7 @@ def closure_compiler(file_names, last_match=None, minify=True):
             (file_name, namespace) = (file_name['path'], file_name['namespace'])
 
         file = open(get_local_path(file_name), 'r')
-        data = file.read()
+        data = '\n'.join([line.rstrip() for line in file.readlines()])
         file.close()
         combined += "%s/* Source: %s */\n" % (sep, file_name)
         sep = '\n'
