@@ -6,7 +6,13 @@ import re
 from fnmatch import fnmatch
 import unittest
 
-from django.utils import simplejson as json
+try:
+    try:
+        import json  # Python 2.6
+    except ImportError:
+        from django.utils import simplejson as json  # Django
+except ImportError:
+    import simplejson as json  # Please easy_install simplejson
 
 IGNORE = """
 .hg .git .bzr .svn .hgignore
