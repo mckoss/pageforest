@@ -36,7 +36,7 @@ except:
 
 tools_dir = os.path.abspath(_path)
 test_dir = os.path.join(tools_dir, TEST_APP)
-pf_cmd = os.path.join(tools_dir, 'pf')
+pf_cmd = os.path.join(tools_dir, 'pf.py')
 
 
 def shell_command(command_line, stdin=None):
