@@ -22,6 +22,7 @@ except ImportError:
 import pf
 
 SERVER = 'pageforest.com'
+#SERVER = 'pageforest.appspot.com'
 OPTIONS_FILENAME = '.pf'
 
 APP_JSON_FILENAME = 'app.json'
