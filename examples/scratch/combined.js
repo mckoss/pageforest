@@ -1,3 +1,4 @@
+/* Source: main.js */
 // Scratch - a sample Pageforest Application
 namespace.lookup('com.pageforest.scratch').defineOnce(function (exports) {
     var require = namespace.lookup;

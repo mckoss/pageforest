@@ -1,3 +1,4 @@
+/* Source: test-client.js */
 namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
 
@@ -119,6 +120,7 @@ namespace.lookup('com.pageforest.client.test').defineOnce(function (ns) {
 
     ns.addTests = addTests;
 });
+/* Source: test-scratch.js */
 namespace.lookup('com.pageforest.scratch.test').defineOnce(function (ns) {
     function addTests(ts) {
 
@@ -131,6 +133,7 @@ namespace.lookup('com.pageforest.scratch.test').defineOnce(function (ns) {
         'addTests': addTests
     });
 });
+/* Source: test-storage.js */
 namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var storage = namespace.lookup('com.pageforest.storage');
