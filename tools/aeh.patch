@@ -1,0 +1,37 @@
+diff -crbB appengine_helper_for_django/appengine_django/__init__.py appengine_helper_for_django_patched/appengine_django/__init__.py
+*** appengine_helper_for_django/appengine_django/__init__.py	2010-02-11 14:24:22.000000000 -0800
+--- appengine_helper_for_django_patched/appengine_django/__init__.py	2010-10-29 13:23:27.756156001 -0700
+***************
+*** 51,58 ****
+    # Check for appengine_django itself being in a zipfile.
+    PARENT_DIR = os.path.dirname(PARENT_DIR)
+  
+  # Add this project to the start of sys path to enable direct imports.
+! sys.path = [PARENT_DIR,] + sys.path
+  
+  # Look for a zipped copy of Django.
+  have_django_zip = False
+--- 51,60 ----
+    # Check for appengine_django itself being in a zipfile.
+    PARENT_DIR = os.path.dirname(PARENT_DIR)
+  
++ # This does not work when appengine_django is not installed directly
++ # in the appengine app. - mckoss 10-29-2010
+  # Add this project to the start of sys path to enable direct imports.
+! # sys.path = [PARENT_DIR,] + sys.path
+  
+  # Look for a zipped copy of Django.
+  have_django_zip = False
+***************
+*** 132,137 ****
+--- 134,140 ----
+          os.path.join(SDK_PATH, 'lib', 'ipaddr'),
+          os.path.join(SDK_PATH, 'lib', 'webob'),
+          os.path.join(SDK_PATH, 'lib', 'yaml', 'lib'),
++         os.path.join(SDK_PATH, 'lib', 'fancy_urllib'),
+      ]
+      # Add SDK paths at the start of sys.path, but after the local directory which
+      # was added to the start of sys.path on line 50 above. The local directory
+Only in appengine_helper_for_django/appengine_django/tests: commands_test.py
+Only in appengine_helper_for_django/appengine_django/tests: integration_test.py
+Only in appengine_helper_for_django/appengine_django/tests: serialization_test.py

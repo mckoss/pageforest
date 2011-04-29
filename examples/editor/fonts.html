@@ -1,0 +1,71 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" xml:lang="en" lang="en">
+<head>
+  <link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+  <link href='http://fonts.googleapis.com/css?family=Inconsolata' rel='stylesheet' type='text/css'>
+  <title>Fonts test page</title>
+</head>
+<body>
+  <script type="text/javascript">
+    function fontbox(title, fonts) {
+      document.write('<div style="float:left">');
+      document.write('<h2>' + title + '</h2>');
+      for (var index in fonts) {
+        var font = fonts[index];
+        document.write(
+          '<p style="font: 16px ' + "'" + font + "'" + ',cursive">' +
+          font + '</p>')
+      }
+      document.write('</div>');
+    }
+    fontbox("Windows", [
+      "Courier New",
+      "Lucida Console",
+      "Consolas",
+      "OCR A Extended",
+      "Lucida Sans Typewriter",
+      "Bitstream Vera Sans Mono",
+      "Andale Mono IPA",
+      "Andale Mono",
+      "OCRB",
+      "Monaco",
+      "Terminal"]);
+    fontbox("Mac", [
+      "Monaco",
+      "Courier",
+      "Courier New",
+      "Andale Mono",
+      "Lucida Sans Typewriter",
+      "Menlo",
+      "Bitstream Vera Sans Mono",
+      "Consolas"]);
+    fontbox("Linux", [
+      "Nimbus Mono L",
+      "DejaVu Sans Mono",
+      "Courier 10 Pitch",
+      "Bitstream Vera Sans Mono",
+      "Lucida Sans Typewriter",
+      "FreeMono",
+      "Liberation Mono",
+      "Courier New",
+      "Andale Mono",
+      "Courier",
+      "Luxi Mono",
+      "Fixed",
+      "Lucida Typewriter",
+      "Terminal",
+      "DejaVu LGC Sans Mono",
+      "Vera Sans Mono",
+      "Monaco"]);
+    fontbox("Other", [
+      "Droid Sans Mono",
+      "Inconsolata",
+      "monospace",
+      "Wingdings",
+      "Wingdings 2",
+      "Wingdings 3",
+      "Webdings"]);
+  </script>
+</body>
+</html>

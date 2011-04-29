@@ -1,0 +1,31 @@
+{% extends "page.html" %}
+
+{% block extra-head %}
+<script type="text/javascript">
+var signUp = namespace.lookup("com.pageforest.auth.sign-up");
+$(document).ready(signUp.onReady);
+</script>
+{% endblock %}
+
+{% block title %}Sign Up{% endblock %}
+
+{% block both-columns %}
+<h2>Create your {{SITE_NAME}} account</h2>
+
+{{ enablejs|safe }}
+{{ httponly|safe }}
+
+<form method="post" onsubmit="return signUp.onSubmit()">
+<table>
+{% for field in form %}
+<tr>
+<td>{{ field.label_tag }}:</td>
+<td>{{ field }}</td>
+<td class="form-message" id="validate_{{ field.html_name }}"><span class="error">{{ field.errors.0 }}</span></td>
+</tr>
+{% endfor %}
+<tr><td></td><td><input type="submit" value="Join Now" disabled="disabled" /></td></tr>
+</table>
+</form>
+<p>Already have an account?  <a href="/sign-in">Sign In</a>.</p>
+{% endblock %}

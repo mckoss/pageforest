@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html manifest="/app.manifest">
+<head>
+<title>Pageforest File Distribution</title>
+<link rel="stylesheet" type="text/css" href="/main.css" />
+<script type="text/javascript"
+        src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+
+<script type="text/javascript">
+function fileHTML(file, version, meta) {
+    var html = '<li><a href="/' + meta.path + '">' + file +
+               ' (version ' + version + ')</a> <i>created ' + meta.created + '</i>' +
+               '<br/><i>' + meta.summary + '</i></li>';
+    return html;
+}
+
+$(document).ready(function () {
+  $.ajax({
+    url: '/directory.json',
+    error: function (result, status) { alert(status); },
+    success: function (directory) {
+      for (var fileName in directory) {
+        var fileInfo = directory[fileName];
+        var version = fileInfo['version'];
+        $('#file-list').append(fileHTML(fileName, version, fileInfo.versions[version]));
+
+        for (var oldVersion in fileInfo.versions) {
+          if (oldVersion != version) {
+              $('#historical-list').append(fileHTML(fileName, oldVersion, fileInfo.versions[oldVersion]));
+          }
+        }
+      }
+    }})
+});
+</script>
+
+</head>
+
+<body>
+  <div id="page">
+    <h1 id="page-heading">
+      <span id="title">Pageforest File Distribution Site</span>
+    </h1>
+
+    <div>
+      <p>
+        Get the latest versions of utility files used with <a href="http://pageforest.com">Pageforest.com</a>
+        here.  Note that the pf command utility is auto-updating.  It will detect updated version automatically
+        and download them for you.
+      </p>
+      <h2>Current Version</h2>
+      <ul id="file-list">
+      </ul>
+      <h2>Older Versions</h2>
+      <ul id="historical-list">
+      </ul>
+      <p>More information about the
+        <a href="http://wiki.pageforest.com/#pageforest-api/pf.py">Pageforest Application Uploader</a>.
+      </p>
+    </div>
+
+    <div id="footer">
+      <hr/>
+      <a href="http://scrath.pageforest.com">Scratch Sample App</a> |
+      <a href="http://www.pageforest.com">Pageforest.com</a>
+    </div> <!-- footer -->
+
+  </div> <!-- page -->
+
+  <script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-2072869-7']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') +
+    '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+</body>
+</html>
