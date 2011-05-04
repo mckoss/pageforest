@@ -13,8 +13,6 @@ from utils.json import ModelEncoder, HttpJSONResponse
 from utils.shortcuts import project
 from utils import crypto
 
-from auth.decorators import login_required
-
 CHANNEL_LIFETIME = 60 * 60 * 2
 MAX_SUBSCRIBERS = 30
 

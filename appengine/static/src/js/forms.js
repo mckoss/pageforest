@@ -5,7 +5,7 @@ namespace.lookup('com.pageforest.forms').define(function(ns) {
         for (var index = 0; index < fields.length; index++) {
             var name = fields[index];
             var html = errors[name];
-            if (ignoreEmpty && $("#id_" + name).val() === '') {
+            if (ignoreEmpty && $("#id-" + name).val() === '') {
                 html = '';
             } else if (html) {
                 html = '<span class="error">' + html + '</span>';

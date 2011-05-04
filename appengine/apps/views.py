@@ -32,7 +32,7 @@ def index(request):
     if request.method == 'LIST':
         return app_list(request)
 
-    title = "Featured apps"
+    title = "Featured Apps"
     query = App.all()
     if 'writer' in request.GET:
         title = "Apps from " + request.GET['writer']
@@ -115,7 +115,7 @@ def clone(request, app_id):
             # round-trip. We can't simply use db.put(entity_list)
             # because that ignores the overriden model.put() methods
             # in the Cacheable and Timestamped mixins.
-            return redirect(new_app.get_absolute_url())
+            return redirect(new_app.get_details_url())
     else:
         form = AppForm(initial=app.get_form_dict())
     return render_to_response(request, 'apps/clone.html', {

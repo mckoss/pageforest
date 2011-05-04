@@ -1,22 +1,51 @@
 {% extends "page.html" %}
+{% load readable %}
 
 {% block title %}{{ title }}{% endblock %}
 
-{% block both-columns %}
-<h1>{{ title }}</h1>
+{% block page-content %}
+<div id=double-column>
+  <script>main.setTab('apps');</script>
+  <h1>{{ title }}</h1>
+  {% if user %}
+  <p>
+    See also:
+    <a href="/apps/?writer={{ user.username }}">All applications developed by you, {{ user.username }}.</a>
+  </p>
+  {% endif %}
 
-<table>
-{% for app in apps %}
-<tr>
-<td><img src="http://{{ app.get_app_id }}.pageforest.com/favicon.png"
-class="favicon16" alt="" />
-<a href="{{ app.get_absolute_url }}">{{ app.title }}</a>
-({{ app.get_app_id }})
-</td>
-<td>by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a></td>
-<td>tagged {% for tag in app.tags %}
-<a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% endfor %}</td>
-</tr>
-{% endfor %}
-</table>
+  <table>
+    {% for app in apps %}
+    <tr>
+      <td>
+        {% if app.icon %}
+          <img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt=""/>
+        {% else %}
+          <img src="/static/images/icon.png" class="favicon16" alt=""/>
+        {% endif %}
+      </td>
+      <td>
+          <a class="app-title" href="{{ app.get_details_url }}">{{ app.title }}</a>
+          <a class="app-id" href="{{ app.get_details_url }}">({{ app.get_app_id }})</a>
+          <div class="app-info">
+            <table><tr><td>
+                  by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a>
+                  {% if app.tags %}
+                  <br/>Tags:
+                  {% for tag in app.tags %}
+                  <a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %},{% endif %}
+                  {% endfor %}
+                  {% endif %}
+                  </td>
+                <td class="col2">
+                  <div>Created: {{ app.created|ago }}</div>
+                  <div>Updated: {{ app.modified|ago }}</div>
+                </td>
+            </tr></table>
+          </div>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
 {% endblock %}
