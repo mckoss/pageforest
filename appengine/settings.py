@@ -130,6 +130,7 @@ CUSTOM_DOMAINS = {
     'apptest.beedesk.com': 'beedesk-test',
     'www.beedesk.com': 'beedesk',
     'www.quoridor.com': 'quoridor',
+    'www.pandatask.com': 'pandatask',
 }
 
 # Enable mirroring for trusted applications.
