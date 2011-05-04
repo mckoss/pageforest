@@ -2540,6 +2540,12 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
     var format = namespace.lookup('org.startpad.format');
     var dom = namespace.lookup('org.startpad.dom');
 
+    var ERROR_STRINGS = {
+        minSize: "{label} must have at least {minSize} characters.",
+        maxSize: "{label} must have no more than {maxSize} characters.",
+        required: "{label} is required."
+    };
+
     // REVIEW: Need to add a select pattern.
     var defaultPatterns = {
         title: {useRow: 'spanRow', content: '<h1>{title}</h1>'},
@@ -2789,20 +2795,69 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             }
         },
 
-        setErrors: function(errors) {
+        clearErrors: function() {
+            base.forEach(this.fields, function(field, i) {
+                if (field.error) {
+                    dom.setText(field.error, '');
+                }
+            });
+        },
+
+        setErrors: function(errors, options) {
+            options = options || {};
             this.focus = undefined;
+            // Loop in field order so we set focus on first error
             for (var i = 0; i < this.fields.length; i++) {
                 var field = this.fields[i];
-                if (!field.error) {
+                var error = errors[field.name];
+                if (!field.error || error == undefined) {
                     continue;
                 }
-                var error = errors[field.name] || '';
+                if (options.ignoreBlanks) {
+                    var value = options.values[field.name];
+                    if (typeof value == 'string' && value.length == 0 ||
+                        field.type == 'checkbox') {
+                        error = '';
+                    }
+                }
                 dom.setText(field.error, error);
                 if (error && !this.focus) {
                     this.focus = field.name;
                 }
             }
             this.setFocus();
+        },
+
+        validate: function(ignoreBlanks) {
+            var self = this;
+            var values = this.getValues();
+            var errors = {};
+            this.isValid = true;
+            base.forEach(values, function (value, name) {
+                var field = self.getField(name);
+                if (!field.error) {
+                    return;
+                }
+                if (field.required) {
+                    if (field.type == 'checkbox' && !value || value.length == 0) {
+                        self.isValid = false;
+                        errors[name] = ERROR_STRINGS.required.format(field);
+                    }
+                }
+                if (field.minSize && value.length < field.minSize) {
+                    self.isValid = false;
+                    errors[name] = ERROR_STRINGS.minSize.format(field);
+                }
+                if (field.maxSize && value.length > field.maxSize) {
+                    self.isValid = false;
+                    errors[name] = ERROR_STRINGS.maxSize.format(field);
+                }
+            });
+            this.setErrors(errors, {
+                ignoreBlanks: ignoreBlanks,
+                values: values
+            });
+            return values;
         },
 
         setFocus: function() {
@@ -2881,7 +2936,37 @@ namespace.lookup('org.startpad.dialog').defineOnce(function(ns) {
             default:
                 throw new Error("Field " + name + " is not a form field.");
             }
+        },
+
+        postValues: function (url, options) {
+            var self = this;
+            var values = this.getValues();
+            options = options || {};
+            options.values = values;
+            util.extendObject(options.values, options.extra);
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: values,
+                dataType: "json",
+                success: function(message, status, xhr) {
+                    if (options.onSuccess) {
+                        options.onSuccess(message);
+                    }
+                },
+                error: function(message, status, xhr) {
+                    if (message.status == 400) {
+                        try {
+                            message = JSON.parse(message.response);
+                        } catch (e) {
+                            return;
+                        }
+                        self.setErrors(message, options);
+                    }
+                }
+            });
         }
+
     });
 
     ns.extend({
@@ -2913,77 +2998,61 @@ namespace.lookup('com.pageforest.main').define(function(ns) {
     });
 });
 /* Begin file: sign-up.js */
-namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
-    var cookies = namespace.lookup('org.startpad.cookies');
-    var crypto = namespace.lookup('com.googlecode.crypto-js');
-    var forms = namespace.lookup('com.pageforest.forms');
-    var dialog = namespace.lookup('org.startpad.dialog');
+namespace.lookup('com.pageforest.auth.sign-up').define(function(exports) {
+    var require = namespace.lookup;
+    var util = namespace.util;
+    var cookies = require('org.startpad.cookies');
+    var crypto = require('com.googlecode.crypto-js');
+    var forms = require('com.pageforest.forms');
+    var dialog = require('org.startpad.dialog');
+
+    exports.extend({
+        'onReady': onReady,
+        'onSubmit': onSubmit,
+        'resend': resend
+    });
 
     var dlg;
+    var keyTime;
 
-    function validatePassword() {
-        var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
-        if (!password.length) {
-            return {password: "This field is required."};
-        }
-        if (password.length < 6) {
-            return {password:
-                    "Ensure this value has at least 6 characters (it has " +
-                    password.length + ")."};
-        }
-        if (password != repeat) {
-            return {repeat: "Password and repeat are not the same."};
-        }
-        return false;
-    }
-
-    function onValidate(message, status, xhr, options) {
-        // Validate password fields on the client side.
-        var passwordErrors = validatePassword();
-        for (var error in passwordErrors) {
-            if (passwordErrors.hasOwnProperty(error)) {
-                message[error] = passwordErrors[error];
+    function validate(ignoreBlanks) {
+        dlg.clearErrors();
+        var values = dlg.validate(ignoreBlanks);
+        if (values.password != values.repeat) {
+            dlg.isValid = false;
+            if (!(ignoreBlanks && values.repeat.length == 0)) {
+                dlg.setErrors({repeat: "Passwords do not match"});
             }
         }
-        var fields = ['username', 'password', 'repeat', 'email'];
-        if (!options || !options.ignoreEmpty) {
-            fields.push('tos');
+        if (ignoreBlanks) {
+            dlg.postValues('/sign-up/', {
+                ignoreBlanks: true,
+                extra: {validate: true}
+            });
         }
-        forms.showValidatorResults(fields, message, options);
-    }
-
-    function onValidateIgnoreEmpty(message, status, xhr) {
-        onValidate(message, status, xhr, {ignoreEmpty: true});
-    }
-
-    function onSuccess(message, status, xhr) {
-        window.location = '/sign-in/';
-    }
-
-    function onError(xhr, status, message) {
-        console.error(xhr);
     }
 
     function validateIfChanged() {
+        var time = new Date().getTime();
+        // Don't validate while user is actively typing
+        if (keyTime == undefined || time - keyTime < 1000) {
+            return;
+        }
         if (!dlg.hasChanged(undefined, true)) {
             return;
         }
-        var data = dlg.getValues();
-        data.validate = true;
-        forms.postFormData('/sign-up/', data,
-                           null, onValidateIgnoreEmpty, onError);
+        validate(true);
     }
 
     function onSubmit() {
-        var errors = validatePassword();
-        if (errors) {
-            forms.showValidatorResults(['password', 'repeat'], errors);
-        } else {
-            forms.postFormData('/sign-up/', dlg.getValues(),
-                               onSuccess, onValidate, onError);
+        validate();
+        if (dlg.isValid) {
+            dlg.postValues('/sign-up/', {
+                onSucess: function () {
+                    window.location = '/sign-in/';
+                }
+            });
         }
-        return false;
     }
 
     // Request a new email verification for the signed in user.
@@ -3009,29 +3078,26 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     function onReady() {
         dlg = new dialog.Dialog({
             fields: [
-                {name: 'username'},
-                {name: 'password', type: 'password'},
-                {name: 'passwordRepeat', type: 'password', label: "Repeat password"},
-                {name: 'email', label: "Email address"},
-                {name: 'tos', type: 'checkbox', label: "Terms of Service"},
+                {name: 'username', minSize: 2, required: true},
+                {name: 'password', type: 'password', minSize: 6},
+                {name: 'repeat', type: 'password', label: "Repeat password"},
+                {name: 'email', label: "Email address", required: true},
+                {name: 'tos', type: 'checkbox', label: "Terms of Service", required: true},
                 {name: 'joinNow', label: "Join Now", type: 'button', onClick: onSubmit}
             ],
             style: dialog.styles.table
         });
 
         $('#sign-up-dialog').html(dlg.html());
-        dlg.setFocus();
+        dlg.bindFields();
 
         setInterval(validateIfChanged, 1000);
+        $(dlg.dlg).keyup(function () {
+            keyTime = new Date().getTime();
+        });
     }
 
-    ns.extend({
-        onReady: onReady,
-        onSubmit: onSubmit,
-        resend: resend
-    });
-
-}); // com.pageforest.auth.sign-up
+});
 /* Begin file: sign-in.js */
 /*
   Handle logging a user into Pageforest and optionally also log them
@@ -3043,13 +3109,21 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
   the application access to his pageforest account.
 */
 
-namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
-    var main = namespace.lookup('com.pageforest.main');
-    var cookies = namespace.lookup('org.startpad.cookies');
-    var crypto = namespace.lookup('com.googlecode.crypto-js');
-    var forms = namespace.lookup('com.pageforest.forms');
-    var dialog = namespace.lookup('org.startpad.dialog');
-    var format = namespace.lookup('org.startpad.format');
+namespace.lookup('com.pageforest.auth.sign-in').define(function(exports) {
+    var require = namespace.lookup;
+    var main = require('com.pageforest.main');
+    var cookies = require('org.startpad.cookies');
+    var crypto = require('com.googlecode.crypto-js');
+    var dialog = require('org.startpad.dialog');
+    var format = require('org.startpad.format');
+
+    exports.extend({
+        'onReady': onReady,
+        'onSubmit': onSubmit,
+        'transferSessionKey': transferSessionKey,
+        'signOut': signOut,
+        'closeForm': closeForm
+    });
 
     var appId;
     var appAuthURL;
@@ -3231,14 +3305,6 @@ namespace.lookup('com.pageforest.auth.sign-in').define(function(ns) {
         }
         window.location = '/sign-out/';
     }
-
-    ns.extend({
-        'onReady': onReady,
-        'onSubmit': onSubmit,
-        'transferSessionKey': transferSessionKey,
-        'signOut': signOut,
-        'closeForm': closeForm
-    });
 
 }); // com.pageforest.auth.sign-in
 /* Begin file: profile.js */
