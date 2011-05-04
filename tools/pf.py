@@ -991,7 +991,6 @@ def closure_compiler(file_names, last_match=None, minify=True):
     ]
 
     combined = ""
-
     sep = ''
     for file_name in file_names:
         namespace = None
@@ -1008,6 +1007,7 @@ def closure_compiler(file_names, last_match=None, minify=True):
         else:
             combined += data
         params.append(('js_code', data))
+    combined += '\n'
 
     # Short circuit if we've already compiled these files
     signature = hashlib.sha1(combined).hexdigest()
