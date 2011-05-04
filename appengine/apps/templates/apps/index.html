@@ -26,7 +26,7 @@
       </td>
       <td>
           <a class="app-title" href="{{ app.get_details_url }}">{{ app.title }}</a>
-          <a class="app-id" href="{{ app.get_details_url }}">({{ app.get_app_id }})</a>
+          (<a class="app-id" href="{{ app.get_details_url }}">{{ app.get_app_id }}</a>)
           <div class="app-info">
             <table><tr><td>
                   by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a>

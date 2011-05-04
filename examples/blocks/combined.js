@@ -1,3 +1,4 @@
+/* Source: main.js */
 namespace.lookup('com.pageforest.blocks').define(function (ns) {
     var clientLib = namespace.lookup('com.pageforest.client');
     var dom = namespace.lookup('org.startpad.dom');
