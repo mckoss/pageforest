@@ -65,7 +65,7 @@ class App(SuperDoc):
         kwargs['extra'] = {"application": self.get_app_id()}
         return super(App, self).to_json(*args, **kwargs)
 
-    def get_absolute_url(self):
+    def get_details_url(self):
         """Get the absolute URL for this model instance."""
         return reverse('apps.views.details', args=[self.get_app_id()])
 

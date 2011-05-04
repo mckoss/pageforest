@@ -3,6 +3,15 @@
 
 {% block title %}{{ title }}{% endblock %}
 
+{% block extra-head %}
+<script type="text/javascript">
+  var launcher = "http://{{ LAUNCHER_DOMAIN }}/";
+  function installApp(appid) {
+  window.open(launcher + "#installapp=" + appid, "my.pageforest");
+  }
+</script>
+{% endblock %}
+
 {% block page-content %}
 <div id=double-column>
   <script>main.setTab('apps');</script>
@@ -19,30 +28,35 @@
     <tr>
       <td>
         {% if app.icon %}
-          <img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt=""/>
+        <img src="{{ app.get_app_url }}{{ app.icon }}" class="favicon16" alt=""/>
         {% else %}
-          <img src="/static/images/icon.png" class="favicon16" alt=""/>
+        <img src="/static/images/icon.png" class="favicon16" alt=""/>
         {% endif %}
       </td>
       <td>
-          <a class="app-title" href="{{ app.get_details_url }}">{{ app.title }}</a>
-          (<a class="app-id" href="{{ app.get_details_url }}">{{ app.get_app_id }}</a>)
-          <div class="app-info">
-            <table><tr><td>
-                  by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a>
-                  {% if app.tags %}
-                  <br/>Tags:
-                  {% for tag in app.tags %}
-                  <a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %},{% endif %}
-                  {% endfor %}
-                  {% endif %}
-                  </td>
-                <td class="col2">
-                  <div>Created: {{ app.created|ago }}</div>
-                  <div>Updated: {{ app.modified|ago }}</div>
-                </td>
-            </tr></table>
-          </div>
+        <a class="app-title" href="{{ app.get_details_url }}">{{ app.title }}</a>
+        (<a class="app-id" href="{{ app.get_details_url }}">{{ app.get_app_id }}</a>)
+        <div class="app-info">
+          <table style="width: 500px;"><tr><td>
+                by <a href="/apps/?writer={{ app.owner }}">{{ app.owner }}</a>
+                {% if app.tags %}
+                <br/>Tags:
+                {% for tag in app.tags %}
+                <a href="/apps/?tag={{ tag }}">{{ tag }}</a>{% if not forloop.last %},{% endif %}
+                {% endfor %}
+                {% endif %}
+              </td>
+              <td class="col2">
+                <div>Created: {{ app.created|ago }}</div>
+                <div>Updated: {{ app.modified|ago }}</div>
+              </td>
+            </tr>
+            <tr>
+              <td><button onclick="installApp('{{ app.get_app_id }}');">Install</button></td>
+              <td></td>
+            </tr>
+          </table>
+        </div>
       </td>
     </tr>
     {% endfor %}
