@@ -1,9 +1,14 @@
 {
     "pf.py": {
-        "path": "pf.py.1.9.7",
-        "version": "1.9.7",
+        "path": "pf.py.1.9.8",
+        "version": "1.9.8",
         "obsolete": ["1.6.0", "1.7.0", "1.8.0", "1.9.0"],
         "versions": {
+            "1.9.8": {
+                "path": "pf.py.1.9.8",
+                "created": "May 4, 2011",
+                "summary": "Ensure newline ending combined files"
+            },
             "1.9.7": {
                 "path": "pf.py.1.9.7",
                 "created": "April 29, 2011",
