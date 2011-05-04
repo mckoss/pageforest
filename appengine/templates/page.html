@@ -1,69 +1,51 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Top of Page, Logo, Navigation, and Search -->
-<!-- TODO: Move all inline styles to page.css -->
-<div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/grass.png) repeat-x left bottom white;">
-    <div style="width:100%;height:200px;background:url({{MEDIA_URL}}images/nav/bush.png) no-repeat left bottom;">
-        <div style="margin:auto;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/logo.png) no-repeat left bottom scroll;" onclick="window.location = '/';">
-            <div style="position:relative;width:960px;height:200px;background:url({{MEDIA_URL}}images/nav/flowers.png) no-repeat right bottom scroll;">
-                <!-- Signin Widget -->
-                <div class="topbar">
-                <div class="topbarLeft"></div>
-                <div class="topbarMid">
-                  {% if user %}
-                  Welcome, <a href="/account/">{{ user }}</a> |
-                  <a href="http://{{ WWW_DOMAIN }}/sign-out/">Sign out</a>
-                  {% else %}
-                  <a href="http://{{ WWW_DOMAIN }}/sign-in/">Sign in</a> |
-                  <a href="http://{{ WWW_DOMAIN }}/sign-up/">Join now</a>
-                  {% endif %}
-                </div>
-                <div class="topbarRight"></div>
-                </div>
+<div class=header>
+  <div class=grass></div>
+  <div class=bush onclick="window.location = 'http://blog.pageforest.com/';"></div>
 
-                <!-- Navigation Bar -->
-                <div style="position:absolute;left:125px;top:164px;height:30px;width:770px;">
-                    <!-- Folder Tabs -->
-                    <div class="tab selected"><a href="http://{{ WWW_DOMAIN }}/">Home</a></div>
-                    <div class="tab"><a href="http://{{ WWW_DOMAIN }}/apps/">Apps</a></div>
-                    <div class="tab"><a href="http://{{ WWW_DOMAIN }}/docs/">Docs</a></div>
-                </div>
-            </div>
-        </div>
+  <div class="middle">
+    <div class=logo onclick="window.location = '/';"></div>
+    <div class=flowers onclick="window.location = 'http://code.google.com/p/pageforest/';"></div>
+
+    <div class=topbar>
+      <div class=topbarMid>
+        <span class=if-user>
+          Welcome, <a href="/account/"><span class=username>{{ user }}</span></a> |
+          <a href="/sign-out/">Sign out</a>
+        </span>
+        <span class=if-not-user>
+          <a href="/sign-in/">Sign in</a> |
+          <a href="/sign-up/">Join now</a>
+        </span>
+      </div>
     </div>
+
+    <div class=tabs>
+      <!-- Folder Tabs -->
+      <div id=home-tab class=tab><a href="/">Home</a>|</div>
+      <div id=apps-tab class=tab><a href="/apps/">Featured Apps</a>|</div>
+      <div id=docs-tab class=tab><a href="/docs/">My Documents</a>|</div>
+      <div id=api-tab class=tab>
+        <a target="_blank" href="http://wiki.pageforest.com/#pageforest-api">Pageforest API</a>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<!-- Page Content -->
-<div class="Content" style="width:100%;background:url({{MEDIA_URL}}images/nav/body-background.png) repeat-x top left scroll;">
-    <div style="margin:auto;width:960px;background:url({{MEDIA_URL}}images/nav/logo-stem.png) repeat-y left top scroll;">
-        <div style="float:left;margin-top:20px;margin-left:125px;width:835px;">
-        {% block both-columns %}
-            <!-- Left Column -->
-            <div id="left-column" style="float:left;padding-right:15px;width:585px;background:url({{MEDIA_URL}}images/nav/rule-vert.gif) repeat-y scroll top right;">
-              {% block left-column %}{% endblock %}
-            </div>
+<div id=content>
+  <div class="middle stem">
+    {% block page-content %}{% endblock %}
 
-            <!-- Right Column -->
-            <div id="right-column" style="float:right;width:220px;">
-              {% block right-column %}{% endblock %}
-              <div style="clear:both" class="spacer"></div>
-            </div>
-        {% endblock %}
-        </div>
-
-        <div style="margin-left:110px;width:780px;clear:both;" class="spacer2"></div>
-
-        <div class="footer" style="margin-left:125px;width:855px;background:url({{MEDIA_URL}}images/nav/rule-horiz.gif) repeat-x top left scroll;">
-            <a href="http://blog.pageforest.com">Blog</a> |
-            <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
-            <a href="/terms-of-service">Terms of Service</a> |
-                &copy; {{SITE_NAME}} |
-                designed by<a href="http://www.moreplusone.com/">
-                <img style="border:none;position:relative;top:6px;" src="{{MEDIA_URL}}images/nav/design-credit.gif"/>
-                </a>
-        </div>
-
-        <div class="spacer"></div>
+    {% block footer %}
+    <div class="footer">
+      <a href="http://blog.pageforest.com">Blog</a> |
+      <a href="http://code.google.com/p/pageforest/">Open Source Project</a> |
+      <a href="http://www.{{ request.base_hostname }}/terms-of-service">Terms of Service</a> | &copy; {{SITE_NAME}} |
+         site design by <a href="http://www.moreplusone.com/">MORE+1</a>
     </div>
-</div> <!-- Content -->
+    {% endblock %}
+  </div>
+</div>
 {% endblock %}

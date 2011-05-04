@@ -1,7 +1,11 @@
 /*globals atob */
 
 namespace.lookup('org.startpad.format').defineOnce(function(ns) {
+    var util = namespace.util;
     var base = namespace.lookup('org.startpad.base');
+    var debug = namespace.lookup('org.startpad.debug');
+
+    var logger = new debug.Logger(false);
 
     // Thousands separator
     var comma = ',';
@@ -70,38 +74,6 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         s = s.replace(/\"/g, '&quot;');
         s = s.replace(/'/g, '&#39;');
         return s;
-    }
-
-    // Replace all instances of pattern, with replacement in string.
-    function replaceString(string, pattern, replacement) {
-        var output = "";
-        if (replacement == undefined) {
-            replacement = "";
-        }
-        else {
-            replacement = replacement.toString();
-        }
-        var ich = 0;
-        var ichFind = string.indexOf(pattern, 0);
-        while (ichFind >= 0) {
-            output += string.substring(ich, ichFind) + replacement;
-            ich = ichFind + pattern.length;
-            ichFind = string.indexOf(pattern, ich);
-        }
-        output += string.substring(ich);
-        return output;
-    }
-
-    // Replace keys in dictionary of for {key} in the text string.
-    function replaceKeys(st, keys) {
-        for (var key in keys) {
-            if (keys.hasOwnProperty(key)) {
-                st = replaceString(st, "{" + key + "}", keys[key]);
-            }
-        }
-        // remove unused keys
-        st = st.replace(/\{[^\{\}]*\}/g, "");
-        return st;
     }
 
     //------------------------------------------------------------------
@@ -332,13 +304,99 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         return new Array(times + 1).join(s);
     }
 
+    var reFormat = /\{\s*([^} ]+)\s*\}/g;
+
+    // Takes a dictionary or any number of positional arguments.
+    // {n} - positional arg (0 based)
+    // {key} - object property (first match)
+    // .. same as {0.key}
+    // {key1.key2.key3} - nested properties of an object
+    // keys can be numbers (0-based index into an array) or
+    // property names.
+    function formatImpl(re) {
+        var st = this.toString();
+        var args = Array.prototype.slice.call(arguments, 1);
+
+        // Passing in a single array, or a single object, starts references
+        // with that object (not the arguments array).
+        if (args.length == 1 && typeof args[0] == 'object') {
+            args = args[0];
+        }
+
+        st = st.replace(re, function(whole, key) {
+            var value = args;
+            var keys = key.split('.');
+            for (var i = 0; i < keys.length; i++) {
+                key = keys[i];
+                var n = parseInt(key);
+                if (!isNaN(n)) {
+                    value = value[n];
+                } else {
+                    value = value[key];
+                }
+                if (value == undefined) {
+                    logger.log("missing key: " + keys.slice(0, i + 1).join('.'), {once: true});
+                    return "";
+                }
+            }
+            // Implicit toString() on this.
+            return value;
+        });
+        return st;
+    }
+
+    // format(st, arg0, arg1, ...)
+    function format(st) {
+        var args = util.copyArray(arguments);
+        args.splice(0, 1, reFormat);
+        return formatImpl.apply(st, args);
+    }
+
+    // st.format(arg0, arg1, ...)
+    String.prototype.format = function() {
+        var args = util.copyArray(arguments);
+        args.unshift(reFormat);
+        return formatImpl.apply(this, args);
+    };
+
+    // Parse URL parameters into a javascript object
+    function parseURLParams(url) {
+        var parts = url.match(/([^?#]*)(#.*)?$/);
+        if (!parts) {
+            return {};
+        }
+
+        var results = {};
+
+        if (parts[2]) {
+            results._anchor = decodeURIComponent(parts[2].slice(1));
+        }
+
+        parts = parts[1].split("&");
+        for (var i = 0; i < parts.length; i++) {
+            var ich = parts[i].indexOf("=");
+            var name;
+            var value;
+            if (ich === -1) {
+                name = parts[i];
+                value = "";
+            } else {
+                name = parts[i].slice(0, ich);
+                value = parts[i].slice(ich + 1);
+            }
+            results[decodeURIComponent(name)] = decodeURIComponent(value);
+        }
+
+        return results;
+    }
+
     ns.extend({
         'fixedDigits': fixedDigits,
         'thousands': thousands,
         'slugify': slugify,
         'escapeHTML': escapeHTML,
-        'replaceKeys': replaceKeys,
-        'replaceString': replaceString,
+        'format': format,
+        'replaceKeys': format.decorate(debug.alias, 'replaceKeys'),
         'base64ToString': base64ToString,
         'canvasToPNG': canvasToPNG,
         'dateFromISO': dateFromISO,
@@ -348,6 +406,7 @@ namespace.lookup('org.startpad.format').defineOnce(function(ns) {
         'shortDate': shortDate,
         'wordList': wordList,
         'arrayFromWordList': arrayFromWordList,
-        'repeat': repeat
+        'repeat': repeat,
+        'parseURLParams': parseURLParams
     });
 }); // org.startpad.format

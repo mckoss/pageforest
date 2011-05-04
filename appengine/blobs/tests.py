@@ -623,6 +623,7 @@ class ListTest(AppTestCase):
             '/docs/?method=LIST',
             ]:
             response = self.app_client.get(url)
+            print response.content
             self.assertContains(response, """\
 {
   "items": {
@@ -631,6 +632,7 @@ class ListTest(AppTestCase):
         "__class__": "Date",
         "isoformat": "2010-11-12T13:14:15Z"
       },
+      "owner": "peter",
       "sha1": "bf71fc45d339c3af14ff8634ba0419c3582556e2",
       "size": 71
     },

@@ -1,85 +1,45 @@
-# Styles used only on the home page
-#home {
-    color: #8C6239;
-    font-size: 16px;
-}
+#home ul { font-size: 16px; line-height: 22px; }
+#home li { padding-bottom: 5px; }
 
-#home p {
-    font-size: 16px;
-    line-height: 22px;
-    margin: 5px 0 5px 0;
-}
+#home img { display: block; margin: auto; }
+#home img.screen { float:right; height: 240px; margin-left: 10px;}
 
-#home img.right {
-    float:right;
-    margin: 10px 0 10px 12px;
-}
+#home li img { margin:10px auto; }
+#home div.video { margin:auto; width:480px; height:385px; }
 
-#home ul {
-    font-size: 16px;
-    line-height: 22px;
-}
+#home h2 { text-align: center; }
 
-#home li {
+div.sidebar {
+    background-color: #DCD0C3;
+    border-radius: 5px;
+    margin-top: 20px;
     padding-bottom: 5px;
 }
 
-#home li img {
-    display:block;
-    margin: 10px auto 10px auto;
-    border: 2px solid #8C6239;
+div.sidebar * { margin: 0; }
+
+div.sidebar h3 {
+    background-color: #A16A1A;
+    color: #DCD0C3;
+    padding: 5px;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
 }
 
-#home h1 {
+
+div.call-to-action {
+    background: url(/static/images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+    cursor: pointer;
+}
+
+div.call-to-action p {
+    text-align:center;
     font-size: 24px;
-    color: #4D2500;
-    line-height: 30px;
-    font-weight: normal;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
     margin: 0;
-    position: relative;
-    top: -4px;
-}
-
-#home h2 {
-    font-size: 16px;
-    font-weight: bold;
-    color: #4D2500;
-    margin: 0;
-    clear: both;
-}
-
-#home div.homeCopy {
-    font-size:14px;
-    width:340px;
-}
-
-#home div.Left {
-    float:left;
-}
-
-#home div.Right {
-    float: right;
-}
-
-#home a {
-    text-decoration: none;
-    color: #598527;
-    font-weight: bold;
-    font-size: 12px;
-}
-
-#home a:hover {
-    text-decoration: underline;
-    color: #FF7F00;
-    font-weight: bold;
-}
-
-img.homeScreenLeft {
-    float:left;
-    margin-right: 15px;
-}
-
-img.homeScreenRight {
-    float:right;
-    margin-left:15px;
+    padding: 15px;
 }

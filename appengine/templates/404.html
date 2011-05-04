@@ -2,7 +2,9 @@
 
 {% block title %}Page not found{% endblock %}
 
-{% block both-columns %}
-<h1 class='error'>The page you requested could not be found.</h1>
-<p>{{ request.exception }}</p>
+{% block page-content %}
+<div id=double-column>
+  <h1 class='error'>The page you requested could not be found.</h1>
+  <p>{{ request.exception }}</p>
+</div>
 {% endblock %}

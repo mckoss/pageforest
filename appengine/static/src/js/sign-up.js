@@ -1,97 +1,58 @@
-namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
+namespace.lookup('com.pageforest.auth.sign-up').define(function(exports) {
+    var require = namespace.lookup;
+    var util = namespace.util;
+    var cookies = require('org.startpad.cookies');
+    var crypto = require('com.googlecode.crypto-js');
+    var forms = require('com.pageforest.forms');
+    var dialog = require('org.startpad.dialog');
 
-    var cookies = namespace.lookup('org.startpad.cookies');
-    var crypto = namespace.lookup('com.googlecode.crypto-js');
-    var forms = namespace.lookup('com.pageforest.forms');
+    exports.extend({
+        'onReady': onReady,
+        'onSubmit': onSubmit,
+        'resend': resend
+    });
 
-    function validatePassword() {
-        var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
-        if (!password.length) {
-            return {password: "This field is required."};
-        }
-        if (password.length < 6) {
-            return {password:
-                    "Ensure this value has at least 6 characters (it has " +
-                    password.length + ")."};
-        }
-        if (password != repeat) {
-            return {repeat: "Password and repeat are not the same."};
-        }
-        return false;
-    }
+    var dlg;
+    var keyTime;
 
-    function onValidate(message, status, xhr, options) {
-        // Validate password fields on the client side.
-        var passwordErrors = validatePassword();
-        for (var error in passwordErrors) {
-            if (passwordErrors.hasOwnProperty(error)) {
-                message[error] = passwordErrors[error];
+    function validate(ignoreBlanks) {
+        dlg.clearErrors();
+        var values = dlg.validate(ignoreBlanks);
+        if (values.password != values.repeat) {
+            dlg.isValid = false;
+            if (!(ignoreBlanks && values.repeat.length == 0)) {
+                dlg.setErrors({repeat: "Passwords do not match"});
             }
         }
-        var fields = ['username', 'password', 'repeat', 'email'];
-        if (!options || !options.ignoreEmpty) {
-            fields.push('tos');
+        if (ignoreBlanks) {
+            dlg.postValues('/sign-up/', {
+                ignoreBlanks: true,
+                extra: {validate: true}
+            });
         }
-        forms.showValidatorResults(fields, message, options);
-    }
-
-    function onValidateIgnoreEmpty(message, status, xhr) {
-        onValidate(message, status, xhr, {ignoreEmpty: true});
-    }
-
-    function onSuccess(message, status, xhr) {
-        window.location = '/sign-in/';
-    }
-
-    function onError(xhr, status, message) {
-        console.error(xhr);
-    }
-
-    function getFormData() {
-        var username = $("#id_username").val();
-        var lower = username.toLowerCase();
-        var password = $("#id_password").val();
-        return {
-            username: username,
-            password: crypto.HMAC(crypto.SHA1, lower, password),
-            email: $("#id_email").val(),
-            tos: $("#id_tos").attr('checked') ? 'checked' : ''
-        };
-    }
-
-    function isChanged() {
-        var username = $("#id_username").val();
-        var password = $("#id_password").val();
-        var repeat = $("#id_repeat").val();
-        var email = $("#id_email").val();
-        var oneline = [username, password, repeat, email].join('|');
-        if (oneline == ns.previous) {
-            return false;
-        }
-        ns.previous = oneline;
-        return true;
     }
 
     function validateIfChanged() {
-        if (!isChanged()) {
+        var time = new Date().getTime();
+        // Don't validate while user is actively typing
+        if (keyTime == undefined || time - keyTime < 1000) {
             return;
         }
-        var data = getFormData();
-        data.validate = true;
-        forms.postFormData('/sign-up/', data,
-                           null, onValidateIgnoreEmpty, onError);
+        if (!dlg.hasChanged(undefined, true)) {
+            return;
+        }
+        validate(true);
     }
 
     function onSubmit() {
-        var errors = validatePassword();
-        if (errors) {
-            forms.showValidatorResults(['password', 'repeat'], errors);
-        } else {
-            forms.postFormData('/sign-up/', getFormData(),
-                               onSuccess, onValidate, onError);
+        validate();
+        if (dlg.isValid) {
+            dlg.postValues('/sign-up/', {
+                onSucess: function () {
+                    window.location = '/sign-in/';
+                }
+            });
         }
-        return false;
     }
 
     // Request a new email verification for the signed in user.
@@ -115,27 +76,25 @@ namespace.lookup('com.pageforest.auth.sign-up').define(function(ns) {
     }
 
     function onReady() {
-        // Hide message about missing JavaScript.
-        $('#enablejs').hide();
-        $('input').removeAttr('disabled');
-        // Show message about missing HttpOnly support.
-        if (cookies.getCookie('httponly')) {
-            $('#httponly').show();
-        }
+        dlg = new dialog.Dialog({
+            fields: [
+                {name: 'username', minSize: 2, required: true},
+                {name: 'password', type: 'password', minSize: 6},
+                {name: 'repeat', type: 'password', label: "Repeat password"},
+                {name: 'email', label: "Email address", required: true},
+                {name: 'tos', type: 'checkbox', label: "Terms of Service", required: true},
+                {name: 'joinNow', label: "Join Now", type: 'button', onClick: onSubmit}
+            ],
+            style: dialog.styles.table
+        });
 
-        // Initialize ns.previous to track input changes.
-        isChanged();
-        // Validate in the background
+        $('#sign-up-dialog').html(dlg.html());
+        dlg.bindFields();
+
         setInterval(validateIfChanged, 1000);
-        $('#id_tos').click(function() {
-            $('#validate_tos').html('');
+        $(dlg.dlg).keyup(function () {
+            keyTime = new Date().getTime();
         });
     }
 
-    ns.extend({
-        onReady: onReady,
-        onSubmit: onSubmit,
-        resend: resend
-    });
-
-}); // com.pageforest.auth.sign-up
+});

@@ -201,9 +201,7 @@ var namespace = (function() {
 
             return function() {
                 var args = copyArray(arguments).concat(_args);
-                // REVIEW: Is this intermediate self variable needed?
-                var self = this;
-                return _fn.apply(self, args);
+                return _fn.apply(this, args);
             };
         },
 
@@ -212,9 +210,33 @@ var namespace = (function() {
         fnWrap: function(fn) {
             var _fn = this;
             return function() {
-                var self = this;
-                return _fn(self, fn, arguments);
+                return _fn(this, fn, arguments);
             };
+        },
+
+        // Wrap the (this) function with a decorator like:
+        //
+        // function decorator(fn, args, fnWrapper) {
+        //   if (fn == undefined) { ... init ...; return;}
+        //   ...
+        //   result = fn.apply(this, args);
+        //   ...
+        //   return result;
+        // }
+        //
+        // The fnWrapper function is a created for each call
+        // of the decorate function.  In addition to wrapping
+        // the decorated function, it can be used to save state
+        // information between calls.
+        decorate: function(decorator) {
+            var fn = this;
+            var fnWrapper = function() {
+                return decorator.call(this, fn, arguments, fnWrapper);
+            };
+            // Init call - pass undefined fn - but available in this
+            // if needed.
+            decorator.call(this, undefined, arguments, fnWrapper);
+            return fnWrapper;
         }
     });
 

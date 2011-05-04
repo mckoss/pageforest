@@ -167,6 +167,63 @@ namespace.lookup('org.startpad.namespace.test').defineOnce(function(ns) {
             fn8(1);
         });
 
+        ts.addTest("decorator", function(ut) {
+            function doubleIt(fn, args) {
+                if (fn == undefined) {
+                    return;
+                }
+                return 2 * fn.apply(this, args);
+            }
+
+            var plusOneTimes2 = function(x) {
+                return x + 1;
+            }.decorate(doubleIt);
+
+            ut.assertEq(plusOneTimes2(1), 4);
+
+            function Foo(x) {
+                this.x = x;
+            }
+
+            function twice(fn, args) {
+                if (fn == undefined) {
+                    return;
+                }
+                fn.apply(this, args);
+                return fn.apply(this, args);
+            }
+
+            Foo.methods({
+                addOne: function() {
+                    this.x++;
+                }.decorate(twice)
+            });
+
+            var foo = new Foo(7);
+            ut.assertEq(foo.x, 7);
+            foo.addOne();
+            ut.assertEq(foo.x, 9);
+
+            function dummy() {
+                return true;
+            }
+
+            function callCounter(fn, args, fnWrapper) {
+                if (fn == undefined) {
+                    fnWrapper.count = 0;
+                    return;
+                }
+                fnWrapper.count++;
+                return fn.apply(this, args);
+            }
+
+            var countDummy = dummy.decorate(callCounter);
+            for (var i = 0; i < 10; i++) {
+                ut.assert(countDummy() === true);
+            }
+            ut.assertEq(countDummy.count, 10);
+        });
+
     }; // addTests
 
     ns.extend({

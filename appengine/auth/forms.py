@@ -73,7 +73,7 @@ class UsernamePasswordForm(AjaxForm):
     """
     username = forms.CharField(min_length=2, max_length=30,
         widget=forms.TextInput(attrs={'class': 'focus'}))
-    password = forms.CharField(min_length=40, max_length=40,
+    secret = forms.CharField(min_length=40, max_length=40,
         widget=forms.PasswordInput(render_value=False))
 
     def clean_username(self):
@@ -100,8 +100,6 @@ class SignUpForm(UsernamePasswordForm):
     """
     Account registration form for new users, with helpful error messages.
     """
-    repeat = forms.CharField(max_length=40, label="Repeat password",
-        widget=forms.PasswordInput(render_value=False), required=False)
     email = forms.EmailField(max_length=75, label="Email address")
     tos = forms.BooleanField(
         label="Terms of Service",
@@ -128,7 +126,7 @@ class SignUpForm(UsernamePasswordForm):
         user = User(key_name=username.lower(),
                     username=username,
                     email=self.cleaned_data['email'],
-                    password=self.cleaned_data['password'])
+                    secret=self.cleaned_data['secret'])
         user.put()
         return user
 
@@ -141,10 +139,8 @@ class ProfileForm(AjaxForm):
                                widget=Static)
     email = forms.EmailField(max_length=75, label="Email address",
                              widget=Static)
-    password = forms.CharField(min_length=40, max_length=40,
+    secret = forms.CharField(min_length=40, max_length=40,
                                widget=forms.PasswordInput(render_value=False))
-    repeat = forms.CharField(max_length=40, label="Repeat password",
-                             widget=forms.PasswordInput(render_value=False), required=False)
     is_admin = forms.BooleanField(label="Admin",
                                   widget=ReadonlyCheckboxInput)
     max_apps = forms.IntegerField(label="Max Apps",
@@ -162,34 +158,3 @@ class ProfileForm(AjaxForm):
         user.max_apps = self.cleaned_data['max_apps']
         user.is_admin = self.cleaned_data['is_admin']
         user.put()
-
-
-class SignInForm(UsernamePasswordForm):
-    """
-    User authentication form.
-    """
-    appauth = forms.BooleanField(
-        required=False,
-        label="Application",
-        widget=LabeledCheckbox(label="Allow access", field_id='appauth'))
-
-    def clean_username(self):
-        """
-        Check that the user exists.
-        """
-        username = super(SignInForm, self).clean_username()
-        user = User.lookup(username)
-        if user is None:
-            raise forms.ValidationError("No account for %s." % username)
-        self.cleaned_data['user'] = user
-        return username
-
-    def clean(self):
-        """
-        Raise an error if the password does not match.
-        """
-        user = self.cleaned_data.get('user', None)
-        password = self.cleaned_data.get('password', None)
-        if user and password and password.lower() != user.password:
-            raise forms.ValidationError("Invalid password.")
-        return self.cleaned_data
