@@ -1,27 +1,17 @@
 {
   "application": "editor",
   "cloneable": false,
-  "created": {
-    "__class__": "Date",
-    "isoformat": "2010-06-07T18:47:14.357255Z"
-  },
   "icon": "images/icon.png",
-  "modified": {
-    "__class__": "Date",
-    "isoformat": "2010-12-22T23:55:40.147184Z"
-  },
   "owner": "jcrocholl",
   "readers": [
     "public"
   ],
   "referers": [],
-  "sha1": "439c0097479958a0c35a3b7865fc7c111ccea55f",
-  "size": 307,
   "tags": [
     "meta",
     "editor"
   ],
-  "title": "Pageforest Application Editor",
+  "title": "App Editor",
   "url": "http://editor.pageforest.com/",
   "writers": [
     "mckoss",
