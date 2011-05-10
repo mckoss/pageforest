@@ -3,6 +3,9 @@ version: dev
 runtime: python
 api_version: 1
 default_expiration: 10s
+builtins:
+- datastore_admin: on
+- remote_api: on
 
 derived_file_type:
 - python_precompiled
@@ -36,7 +39,7 @@ handlers:
 
 - url: /.*
   script: main.py
-
+  
 skip_files:
 - ^local/
 - ^app\.yaml$
