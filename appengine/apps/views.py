@@ -42,30 +42,43 @@ def index(request):
     if 'tag' in request.GET:
         title = "Apps tagged " + request.GET['tag']
         query.filter('tags', request.GET['tag'])
-    apps = [app for app in query.fetch(100) if not app.is_www()]
+    apps = [app for app in query.fetch(500) if not app.is_www()]
     return render_to_response(request, 'apps/index.html', {
             'title': title, 'apps': apps})
 
 
-@login_required
 @method_required('LIST')
 def app_list(request):
     """
     List the current user's owned and writable apps.
+
+    TODO: all param should be the default behavior w/o all
+    need to update editor to add "mine" param (or better yet,
+    writer=username - and normalize all owned apps to have the
+    writers property.
     """
-    # Get apps owned by the current user.
-    query = App.all(keys_only=True)
-    query.filter('owner', request.user.get_username())
-    owner_apps = [key.name() for key in query]
-    # Get apps with write permission for the current user.
-    query = App.all(keys_only=True)
-    query.filter('writers', request.user.get_username())
-    writer_apps = [key.name() for key in query]
-    # Combine and load apps from the datastore.
-    app_names = set(owner_apps + writer_apps)
-    apps = App.get_by_key_name(app_names)
+    # Get all apps visible in "app directory"
+    if 'all' in request.GET:
+        query = App.all().filter('readers', 'public')
+        if 'tag' in request.GET:
+            query.filter('tags', request.GET['tag'])
+        apps = query.fetch(500)
+    else:
+        # Get apps owned by the current user.
+        query = App.all(keys_only=True)
+        query.filter('owner', request.user.get_username())
+        owner_apps = [key.name() for key in query]
+        # Get apps with write permission for the current user.
+        query = App.all(keys_only=True)
+        query.filter('writers', request.user.get_username())
+        writer_apps = [key.name() for key in query]
+        # Combine and load apps from the datastore.
+        app_names = set(owner_apps + writer_apps)
+        apps = App.get_by_key_name(app_names)
     items = {}
     for app in apps:
+        if not app.owner:
+            continue
         info = {
             'cloneable': app.cloneable,
             'modified': app.modified,

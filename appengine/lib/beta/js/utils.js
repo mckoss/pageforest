@@ -2421,6 +2421,11 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         // TODO: Map Date properties here?
         // How to unmap Dates on callbacks?
         function mapper(key, value) {
+            // Ignore internal properties of objects
+            if (key && key[0] == '_') {
+                return undefined;
+            }
+
             if (badProperty) {
                 return value;
             }
