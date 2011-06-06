@@ -1,31 +1,18 @@
 {
   "application": "scratch",
   "cloneable": true,
-  "created": {
-    "__class__": "Date",
-    "isoformat": "2011-01-14T06:21:31.551843Z"
-  },
   "icon": "images/icon.png",
-  "modified": {
-    "__class__": "Date",
-    "isoformat": "2011-02-25T01:58:13.592916Z"
-  },
   "owner": "mckoss",
   "readers": [
     "public"
   ],
   "referers": [],
   "secureData": false,
-  "sha1": "e6b3a519fceb0d7b45215321ae67b96d56e92168",
-  "size": 327,
   "tags": [
     "demo",
     "sample"
   ],
   "title": "Scratch",
   "url": "http://scratch.pageforest.com/",
-  "writers": [
-    "mckoss",
-    "jcrocholl"
-  ]
+  "writers": []
 }
