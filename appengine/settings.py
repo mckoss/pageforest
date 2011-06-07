@@ -95,7 +95,7 @@ JSON_MIMETYPE_CS = JSON_MIMETYPE + '; charset=utf-8'
 # Allowed formats for pageforest identifiers:
 USERNAME_REGEX = r"[a-zA-Z][a-zA-Z0-9-]{,30}[a-zA-Z0-9]"
 APP_ID_REGEX = r"[a-z][a-z0-9-]{,30}[a-z0-9]"
-DOC_ID_REGEX = r"[a-zA-Z0-9_-][a-zA-Z0-9\._-]{,99}"
+DOC_ID_REGEX = r"[a-zA-Z0-9_][a-zA-Z0-9\._-]{,99}"
 TAG_REGEX = r"([a-z0-9]{1,20}:)?" + DOC_ID_REGEX
 
 # App-specific username
