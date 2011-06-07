@@ -126,7 +126,8 @@ class AuthRequest(urllib2.Request):
             self.add_header('Cookie', 'sessionkey=' + options.session_key)
         if options.verbose:
             print "HTTP %s %s" % (self.get_method(), url)
-            print "Data: %s" % self.get_data()
+            if self.get_data():
+                print "Data: %s" % self.get_data()
 
 
 class PutRequest(AuthRequest):
@@ -242,6 +243,9 @@ def load_application():
         options.application = 'www'
         options.save_app = False
         options.root_url = 'http://www.%s/' % options.server
+
+    if options.command == 'feature':
+        options.save_app = False
 
     if options.application is None:
         ensure_meta()
@@ -748,6 +752,41 @@ def put_command(args):
         upload_file(path)
 
 
+def feature_command(args):
+    """
+    Feature the current application in the application director.
+
+    This command is only availailable to Pageforest administrators.
+    """
+    url = url_from_path(META_FILENAME)
+    if len(args) >= 1 and args[0] not in ('on', 'off'):
+        print "Bad arument - expect 'on' or 'off'"
+        return
+    featured = len(args) >= 1 and args[0] == 'on'
+
+    try:
+        response = urllib2.urlopen(AuthRequest(url))
+    except IOError, e:
+        print "Could not download file, %s (%s)." % (url, str(e))
+        return
+
+    data = json.loads(response.read())
+    tag = 'pf:featured'
+    is_featured = tag in data['tags']
+    print "Application %s is currently %sfeatured." % (options.application,
+                                                       "" if  is_featured else "not ")
+    if len(args) < 1:
+        return
+
+    if not featured:
+        data['tags'].remove(tag)
+        tag = '-' + tag
+    data['tags'] = list(set(data['tags'] + [tag]))
+    print "Tagging %s as %s" % (options.application, tag)
+    data = to_json(data)
+    response = urllib2.urlopen(PutRequest(url), data)
+
+
 def make_command(args):
     """
     If you have a .pfmake file (see config command), build the combined and minified
@@ -1135,6 +1174,14 @@ def listapps_command(args):
     """
     Display a list of apps that the user is allowed to write to.
     """
+    def print_app(app_name, app):
+        line = app_name
+        if app['owner'] != options.username:
+            line += ' (by %s)' % app['owner']
+        if 'pf:featured' in app['tags']:
+            line += " [featured]"
+        print line
+
     url = options.root_url + 'apps?method=list'
     response = urllib2.urlopen(AuthRequest(url))
     result = json.loads(response.read(), object_hook=as_datetime)
@@ -1142,12 +1189,12 @@ def listapps_command(args):
     print "Apps owned by you:"
     for app_name, app in apps.items():
         if app['owner'] == options.username:
-            print app_name
+            print_app(app_name, app)
 
     print "\nApps owned by others:"
     for app_name, app in apps.items():
         if app['owner'] != options.username:
-            print "%s (by %s)" % (app_name, app['owner'])
+            print_app(app_name, app)
 
 
 def info_command(args):
