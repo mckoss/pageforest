@@ -233,6 +233,9 @@ class User(db.Expando, Timestamped, Migratable, Cacheable):
         if self.is_admin:
             return True
 
+        if action == App.add_reserved:
+            return False
+
         if action == App.create:
             # Each user must complete email verification before creating apps.
             if self.email_verified is None:

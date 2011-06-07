@@ -1,8 +1,9 @@
 import re
+import logging
 
 from django.conf import settings
-
 from google.appengine.ext import db
+from utils.middleware import RequestMiddleware
 
 TAG_REGEX_COMPILED = re.compile('^%s$' % settings.TAG_REGEX)
 
@@ -38,18 +39,32 @@ class Taggable(db.Model):
 
     def update_tags(self, tags, **kwargs):
         """
-        Update tags for this model instance, but don't add or remove
+        Overwrite tags for this model instance, but don't add or remove
         tags that don't match TAG_REGEX or are reserved for internal
-        use.
+        use (unless admin).
+
+        Reserved tags prefixed with '-pf:' will remove reserved tags (if is_admin)
         """
+        request = RequestMiddleware.get_request()
+        is_admin = request.user and request.user.is_admin
         # Keep all tags that start with pf: because they are reserved.
-        preserved = [tag for tag in self.tags
-                     if tag.startswith('pf:')]
+        preserved = [tag for tag in self.tags if tag.startswith('pf:')]
+        if is_admin:
+            remove = [tag[1:] for tag in tags if tag.startswith('-pf:')]
+            preserved = [tag for tag in preserved if tag not in remove]
+
         # Filter out new tags that are invalid or reserved.
         accepted = [tag for tag in tags
                     if TAG_REGEX_COMPILED.match(tag)
-                    and not tag.startswith('pf:')]
+                    and (is_admin or not tag.startswith('pf:'))]
         # Limit the number of tags per entity.
         if len(accepted + preserved) > settings.MAX_TAGS_PER_ENTITY:
             accepted = accepted[:settings.MAX_TAGS_PER_ENTITY - len(preserved)]
-        self.tags = accepted + preserved
+        self.tags = list(set(accepted + preserved))
+
+    def add_reserved(self, tag):
+        self.tags = list(set(self.tags + ['pf:' + tag]))
+
+    def remove_reserved(self, tag):
+        if 'pf:' + tag in self.tags:
+            self.tags.remove('pf:' + tag)

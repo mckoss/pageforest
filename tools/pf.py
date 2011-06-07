@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.9.8'
+VERSION = '1.9.9'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
@@ -57,6 +57,8 @@ ERROR_FILENAME = 'pferror.html'
 IGNORE_FILENAMES = ('pf.py', 'pf', PF_FILENAME, OPTIONS_FILENAME, ERROR_FILENAME, MAKE_FILENAME,
                     '.*', '*~', '#*#', '*.bak', '*.rej', '*.orig')
 LOCAL_COMMANDS = ['dir', 'offline', 'info', 'compile', 'make', 'config']
+METAFILE_REMOVE = ('sha1', 'size', 'modified', 'created', 'docid')
+SHA_EXCLUDED = METAFILE_REMOVE + ('application',)
 
 commands = None
 
@@ -490,7 +492,10 @@ def download_file(filename):
 
     try:
         outfile = open(filename, 'wb')
-        outfile.write(response.read())
+        data = response.read()
+        if filename == META_FILENAME:
+            data = to_json(json.loads(data), exclude=METAFILE_REMOVE)
+        outfile.write(data)
         outfile.close()
     except IOError, e:
         print "Could not write file, %s (%s)." % (filename, str(e))
@@ -585,10 +590,7 @@ def sha1_file(filename, data=None):
     # Normalize document for sha1 computation.
     if filename == META_FILENAME or is_doc_path(filename):
         try:
-            data = json.loads(data)
-            data = to_json(data, exclude=('sha1', 'size',
-                                          'modified', 'created',
-                                          'application', 'docid'))
+            data = to_json(json.loads(data), exclude=SHA_EXCLUDED)
             if options.debug:
                 print "Computing sha1 hash from:\n---\n%s\n---" % data
         except ValueError, e:
