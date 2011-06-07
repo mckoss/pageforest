@@ -2416,7 +2416,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
 
     function jsonToString(json) {
         var s;
-        var badProperty;
 
         // TODO: Map Date properties here?
         // How to unmap Dates on callbacks?
@@ -2424,20 +2423,6 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
             // Ignore internal properties of objects
             if (key && key[0] == '_') {
                 return undefined;
-            }
-
-            if (badProperty) {
-                return value;
-            }
-            // Warn about non-generic JavaScript Objects
-            if (typeof value == 'object' && value.constructor != Object &&
-                value.constructor != Array) {
-                console.warn(
-                    format.replaceKeys(errorMessages.invalid_json,
-                                       {key: key,
-                                        ctor:
-                                        value.constructor.toString()}));
-                badProperty = key;
             }
             return value;
         }
