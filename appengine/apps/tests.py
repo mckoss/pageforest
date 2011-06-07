@@ -6,6 +6,7 @@ from mock import Mock
 
 from django.conf import settings
 from django.test import TestCase, Client
+from django.utils import simplejson as json
 
 from auth.models import User
 from apps.models import App
@@ -174,8 +175,10 @@ class AppJsonTest(AppTestCase):
         self.assertContains(response, '"statusText": "Saved"')
         # Retrieve updated meta info.
         response = self.admin_client.get(url)
-        self.assertContains(response, '"title": "My Application"')
-        self.assertContains(response, '"tags": [\n    "test",\n    "myapp"')
+        decoded = json.loads(response.content)
+        self.assertEqual(decoded['title'], "My Application")
+        self.assertTrue('myapp' in decoded['tags'])
+        self.assertTrue('test' in decoded['tags'])
 
     def test_http_method_not_allowed(self):
         """The /doc_id/ URL should report allowed methods."""
@@ -279,7 +282,7 @@ class AppJsonTest(AppTestCase):
             '/app.json', '{"tags": ["newtag", "pf:ignorethis"]}',
             content_type='application/json')
         self.assertEquals(
-            App.get_by_key_name('myapp').tags, ['newtag', 'pf:featured'])
+            App.get_by_key_name('myapp').tags, ['pf:featured', 'newtag'])
 
 
 class HostnameTest(TestCase):
