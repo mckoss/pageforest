@@ -285,8 +285,8 @@ class TestServer(TestPF):
                             "Invalid %s property value %s == None" %
                             (APP_JSON_FILENAME, prop))
 
-        for prop in ['application', 'created', 'modified', 'cloneable', 'owner',
-                     'readers', 'writers', 'referers', 'secureData', 'sha1', 'size', 'tags',
+        for prop in ['application', 'cloneable', 'owner',
+                     'readers', 'writers', 'referers', 'secureData', 'tags',
                      'url', 'title']:
             self.assertTrue(prop in app_json,
                             "%s missing property: %s" % (APP_JSON_FILENAME, prop))
