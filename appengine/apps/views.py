@@ -65,6 +65,8 @@ def app_list(request):
         apps = query.fetch(500)
     else:
         # Get apps owned by the current user.
+        if request.user is None:
+            return AccessDenied(request)
         query = App.all(keys_only=True)
         query.filter('owner', request.user.get_username())
         owner_apps = [key.name() for key in query]
