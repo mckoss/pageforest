@@ -31,8 +31,11 @@ class MirrorMiddleware(object):
             return
         app_id = match.group(1)
         path = match.group(2) or '/'
-        request.META['HTTP_HOST'] = 'admin.%s.%s' % (
-            app_id, settings.DEFAULT_DOMAIN)
+        # Allow mirror access to docs on standard domain - not avail via admin
+        if path.startswith('/docs/'):
+            request.META['HTTP_HOST'] = '%s.%s' % (app_id, settings.DEFAULT_DOMAIN)
+        else:
+            request.META['HTTP_HOST'] = 'admin.%s.%s' % (app_id, settings.DEFAULT_DOMAIN)
         request.META['PATH_INFO'] = path
         request.path_info = path
         request.path = request.META['SCRIPT_NAME'] + path
