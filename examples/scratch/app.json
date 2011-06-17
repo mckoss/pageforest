@@ -9,7 +9,8 @@
   "referers": [],
   "secureData": false,
   "tags": [
-    "sample"
+    "sample",
+    "pf:featured"
   ],
   "title": "Scratch",
   "url": "http://scratch.pageforest.com/",
