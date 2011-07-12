@@ -31,7 +31,7 @@ try:
 except ImportError:
     import simplejson as json  # Please easy_install simplejson
 
-VERSION = '1.10.0'
+VERSION = '1.10.1'
 PF_DIST_SERVER = 'http://dist.pageforest.com'
 PF_DIST_DIRECTORY = '/directory.json'
 PF_FILENAME = 'pf.py'
@@ -1047,12 +1047,12 @@ def closure_compiler(file_names, last_match=None, minify=True):
         if namespace:
             combined += NAMESPACE_PATTERN % (namespace, data)
         else:
-            combined += data
+            combined += data.decode('utf-8')
         params.append(('js_code', data))
     combined += '\n'
 
     # Short circuit if we've already compiled these files
-    signature = hashlib.sha1(combined).hexdigest()
+    signature = hashlib.sha1(combined.encode('utf-8')).hexdigest()
     if not options.force and last_match and last_match == signature:
         return (None, None)
 
@@ -1104,7 +1104,7 @@ def do_make(explicit=False):
             continue
         print "Making combined file: %s" % file_name
         file = open(file_name, 'wb')
-        file.write(combined)
+        file.write(combined.encode('utf-8'))
         file.close()
         update_local_listing(file_name)
         if minify:
