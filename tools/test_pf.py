@@ -224,7 +224,7 @@ class TestServer(TestPF):
                        contains=["Application: %s" % TEST_APP,
                                  "Server: %s" % SERVER,
                                  "Username:",
-                                 "pf.py version: 1.9",
+                                 "pf.py version: 1.10",
                                  ])
 
     def test_info_verbose(self):
