@@ -46,9 +46,12 @@ class Doc(SuperDoc):
         if app is None:
             from apps.models import App
             app = App.get_by_key_name(app_id)
-        hostname = RequestMiddleware.get_request().META.get('HTTP_HOST', settings.DEFAULT_DOMAIN)
-        hostname = hostname.replace('www.', '')
-        return "%s#%s" % (app.url.replace(settings.DEFAULT_DOMAIN, hostname), self.doc_id)
+        url = app.url
+        request = RequestMiddleware.get_request()
+        if request:
+            hostname = request.META.get('HTTP_HOST', settings.DEFAULT_DOMAIN).replace('www.', '')
+            url = url.replace(settings.DEFAULT_DOMAIN, hostname)
+        return "%s#%s" % (url, self.doc_id)
 
     @classmethod
     def create(cls, app_id, doc_id, user):
