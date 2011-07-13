@@ -1,3 +1,4 @@
+import urllib
 import logging
 
 from hashlib import sha1
@@ -76,9 +77,19 @@ def app_docs(request):
         return HttpJSONResponse({'statusText': error.message}, status=400)
 
     query = request.app.all_docs(owner=request.user.get_username(), keys_only=keys_only)
-
     if 'cursor' in request.GET:
         query.with_cursor(request.GET['cursor'])
+
+    def filter_by_tag(doc):
+        """ All tags must match to return false.
+
+        Until all_docs is fixed - can't combine filters in query - do post-query
+        filtering instead.
+        """
+        for tag in request.GET.getlist('tag'):
+            if urllib.unquote_plus(tag) not in doc.tags:
+                return True
+        return False
 
     docs = query.fetch(limit)
     items = {}
@@ -89,12 +100,16 @@ def app_docs(request):
             doc_id = doc.name().split('/')[1]
             items[doc_id] = {}
             continue
-        if doc.deleted:
+
+        if doc.deleted or filter_by_tag(doc):
             continue
+
         info = {'modified': doc.modified,
                 'sha1': doc.sha1,
-                'size': doc.size
+                'size': doc.size,
                 }
+        if doc.tags:
+            info['tags'] = doc.tags
         items[doc.doc_id] = info
     result = {'items': items}
     if (len(docs) == limit):
