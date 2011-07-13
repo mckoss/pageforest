@@ -7,6 +7,7 @@ from google.appengine.ext import db
 
 from docs.supermodels import SuperDoc
 import blobs.models
+from utils.middleware import RequestMiddleware
 
 
 class Doc(SuperDoc):
@@ -42,13 +43,12 @@ class Doc(SuperDoc):
         now to eliminate the circular import.  Is there a better way?
         """
         app_id = self.key().name().split('/')[0]
-        # app = App.get_by_key_name(app_id)
-        # REVIEW: Why do we have this fallback.  Note that DEFAULT_DOMAIN
-        # is not correct for the localhost case.
         if app is None:
-            return 'http://%s.%s/#%s' % (
-                app_id, settings.DEFAULT_DOMAIN, self.doc_id)
-        return app.url + '#' + self.doc_id
+            from apps.models import App
+            app = App.get_by_key_name(app_id)
+        hostname = RequestMiddleware.get_request().META.get('HTTP_HOST', settings.DEFAULT_DOMAIN)
+        hostname = hostname.replace('www.', '')
+        return "%s#%s" % (app.url.replace(settings.DEFAULT_DOMAIN, hostname), self.doc_id)
 
     @classmethod
     def create(cls, app_id, doc_id, user):
