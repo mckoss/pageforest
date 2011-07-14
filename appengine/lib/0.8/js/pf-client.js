@@ -11998,7 +11998,7 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
             this.changeState('loading');
 
             var self = this;
-            this.storage.getDoc(docid, function (doc) {
+            this.storage.getDoc(docid, undefined, function (doc) {
                 // If we're actually loading a blob - there is no docid returned.
                 if (doc.doc_id == undefined) {
                     doc.doc_id = docid;
@@ -12011,7 +12011,7 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
             // BUG: If called by client to force a save - then this
             // is a no-op - but the doc might be dirty - esp if
             // we are not autosaving and polling for dirty state!
-            if (this.isSaved()) {
+            if (!json && this.isSaved()) {
                 return;
             }
 
@@ -12025,7 +12025,7 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
             this.changeState('saving');
 
             var self = this;
-            this.storage.putDoc(docid, json, function(result) {
+            this.storage.putDoc(docid, json, undefined, function(result) {
                 self.onSaveSuccess(result);
             });
         },
