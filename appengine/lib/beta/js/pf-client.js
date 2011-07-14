@@ -11569,12 +11569,13 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         // Save a document to the Pageforest store
         // TODO: Add Tags support here.
         // TODO: Want options here - so we can have error handler
-        putDoc: function(docid, json, fnSuccess) {
+        putDoc: function(docid, json, options, fnSuccess) {
             if (!this.validateArgs('putDoc', docid, undefined, json,
-                                   undefined, fnSuccess)) {
+                                   options, fnSuccess)) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
+            options = options || {};
 
             // Default permissions to be public readable.
             if (!json.readers) {
@@ -11586,23 +11587,24 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 type: 'PUT',
                 url: this.getDocURL(docid),
                 data: data,
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (result, textStatus, xmlhttp) {
                     fnSuccess(result, textStatus, xmlhttp);
                 }
             });
         },
 
-        getDoc: function (docid, fnSuccess) {
+        getDoc: function (docid, options, fnSuccess) {
             if (!this.validateArgs('getDoc', docid, undefined, undefined,
-                                   undefined, fnSuccess)) {
+                                   options, fnSuccess)) {
                 return;
             }
             fnSuccess = fnSuccess || function () {};
+            options = options || {};
             $.ajax({
                 dataType: 'json',
                 url: this.getDocURL(docid),
-                error: this.errorHandler,
+                error: options.error || this.errorHandler,
                 success: function (doc, textStatus, xmlhttp) {
                     fnSuccess(doc, textStatus, xmlhttp);
                 }
@@ -12302,10 +12304,12 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
 
         onError: function(status, message) {
             this.log(message + ' (' + status + ')');
-            this.showError(message);
             if (this.app.onError) {
-                this.app.onError(status, message);
+                if (this.app.onError(status, message)) {
+                    return;
+                }
             }
+            this.showError(message);
         },
 
         onInfo: function(code, message) {
