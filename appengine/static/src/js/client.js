@@ -460,10 +460,12 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
 
         onError: function(status, message) {
             this.log(message + ' (' + status + ')');
-            this.showError(message);
             if (this.app.onError) {
-                this.app.onError(status, message);
+                if (this.app.onError(status, message)) {
+                    return;
+                }
             }
+            this.showError(message);
         },
 
         onInfo: function(code, message) {
