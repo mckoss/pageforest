@@ -107,7 +107,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     client.storage.putDoc('test-storage',
                                           {title: "Test storage document.",
-                                           blob: testBlob},
+                                           blob: testBlob}, undefined,
                                           cont);
                 },
 
@@ -118,7 +118,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 },
 
                 function (ut) {
-                    client.storage.getDoc('test-storage', function(doc) {
+                    client.storage.getDoc('test-storage', undefined, function(doc) {
                         ut.assertEq(doc.title, "Test storage document.");
                         ut.assertEq(doc.blob, testBlob);
                         ut.nextFn();
@@ -127,7 +127,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
 
                 function (ut) {
                     client.app.expectedError("ajax_error/404");
-                    client.storage.getDoc('does-not-exist', function(doc) {
+                    client.storage.getDoc('does-not-exist', undefined, function(doc) {
                         ut.assert(false, "Should never call callback.");
                         ut.nextFn();
                     });
@@ -143,7 +143,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                 function (ut) {
                     // Make sure the doc is really deleted
                     client.app.expectedError("ajax_error/404");
-                    client.storage.getDoc('test-storage', function(doc) {
+                    client.storage.getDoc('test-storage', undefined, function(doc) {
                         ut.assert(false, "Document not actually deleted.");
                         ut.nextFn();
                     });
@@ -163,7 +163,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                     // Create a same-named doc
                     client.storage.putDoc('test-storage',
                                           {title: "Test storage document.",
-                                           blob: testBlob},
+                                           blob: testBlob}, undefined,
                                           cont);
                 },
 
@@ -707,7 +707,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                         client.storage.putDoc('test-storage',
                             {title: "Test storage document - " +
                              "channel update.",
-                             blob: testBlob},
+                             blob: testBlob}, undefined,
                             function (result) {
                                 ut.assertEq(result.status, 200);
                             });
@@ -763,7 +763,7 @@ namespace.lookup('com.pageforest.storage.test').defineOnce(function (ns) {
                                            blob: testBlob,
                                            readers: ['public'],
                                            writers: ['public']
-                                          },
+                                          }, undefined,
                                           cont);
                 },
 
