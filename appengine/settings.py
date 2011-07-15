@@ -34,7 +34,6 @@ USE_APPSTATS = not DEBUG
 
 ADMINS = (
     ('Mike Koss', 'mckoss@pageforest.com'),
-    ('Johann C. Rocholl', 'jcrocholl@pageforest.com'),
 )
 
 MANAGERS = ADMINS
@@ -117,6 +116,7 @@ ADMIN_SUBDOMAIN = 'admin'
 DOMAINS = [
     'pageforest.com',
     'pageforest.appspot.com',
+    'pgfrst.appspot.com',
     'version.latest.pageforest.appspot.com',
     'pgfrst.com',
     'pgfr.st',
