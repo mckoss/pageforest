@@ -22,7 +22,7 @@ def index(request):
         query = Backup.all()
         query.filter('model', model)
         query.order('-youngest')
-        backups = query.fetch(10)
+        backups = query.fetch(1000)
         groups.append((model, backups))
     return render_to_response(request, 'backups/index.html',
                               {'groups': groups})
@@ -60,7 +60,8 @@ def incremental_backup(request, model, limit=400):
     kind = model.kind()
     if hasattr(model, 'to_backup'):
         serialize = model.to_backup
-    elif hasattr(model, 'to_json'):
+    # REVIEW: Some to_json are useless ... e.g. User.
+    elif hasattr(model, 'to_json') and kind != 'User':
         serialize = model.to_json
     elif hasattr(model, 'to_protobuf'):
         serialize = model.to_protobuf
@@ -77,6 +78,7 @@ def incremental_backup(request, model, limit=400):
         youngest = datetime(2010, 1, 1)
     # Find all entities that were modified since the last backup.
     query = model.all()
+    # We don't backup user blobs - just application blobs (marked for backup)
     if kind == 'Blob':
         query.filter('tags', 'pf:backup')
     query.filter('modified >', youngest)
