@@ -248,7 +248,7 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
         // TODO: Compare Sha1 hashes - not modified date to ignore a notify
         onAutoLoad: function (message) {
             if (!this.autoLoad || this.state != 'clean' ||
-                message.key != this.docid + '/' ||
+                message.key != this.docid.toLowerCase() + '/' ||
                 message.data.modified.isoformat == this.meta.modified.isoformat) {
                 this.log(autoLoadError + message.key);
                 return;

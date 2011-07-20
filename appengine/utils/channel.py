@@ -37,6 +37,8 @@ def subscriptions(request, extra):
     """
     Read or write the subscriptions being monitored by the current
     channel.
+
+    Note: docid's in keys should be lower case (case insensitive).
     """
     channel_key = get_channel_key(request)
     channel_data = get_session_channel(channel_key)
@@ -46,7 +48,14 @@ def subscriptions(request, extra):
     assert request.method == 'PUT'
 
     # TODO: Add error checking to format of channel data
-    subs = json.loads(request.raw_post_data)
+    subs_load = json.loads(request.raw_post_data)
+
+    # Ensure that all document keys are canonical (docid lowercase)
+    subs = {}
+    for key in subs_load:
+        docid, path = key.split('/', 1)
+        canonical_key = '/'.join((docid.lower(), path))
+        subs[canonical_key] = subs_load[key]
 
     # Expire any old subscriptions NOT in the new set
     for key in channel_data['subscriptions']:
