@@ -129,7 +129,7 @@ appstats_LOCK_TIMEOUT = 1
 # Timezone offset.  This is used to convert recorded times (which are
 # all in UTC) to local time.  The default is US/Pacific winter time.
 
-appstats_TZOFFSET = 8*3600
+appstats_TZOFFSET = 8 * 3600
 
 # URL path (sans host) leading to the stats UI.  Should match app.yaml.
 # If "builtins: - appstats: on" is used, the path should be /_ah/stats.
@@ -160,27 +160,28 @@ appstats_FILTER_LIST = []
 # implementation returns True iff the request matches FILTER_LIST (see
 # above) *and* random.random() < RECORD_FRACTION.
 
+
 def appstats_should_record(env):
-  if appstats_FILTER_LIST:
-    logging.debug('FILTER_LIST: %r', appstats_FILTER_LIST)
-    for filter_dict in appstats_FILTER_LIST:
-      for key, regex in filter_dict.iteritems():
-        negated = isinstance(regex, str) and regex.startswith('!')
-        if negated:
-          regex = regex[1:]
-        value = env.get(key, '')
-        if bool(re.match(regex, value)) == negated:
-          logging.debug('No match on %r for %s=%r', regex, key, value)
-          break
-      else:
-        logging.debug('Match on %r', filter_dict)
-        break
-    else:
-      logging.debug('Non-empty FILTER_LIST, but no filter matches')
-      return False
-  if appstats_RECORD_FRACTION >= 1.0:
-    return True
-  return random.random() < appstats_RECORD_FRACTION
+    if appstats_FILTER_LIST:
+        logging.debug('FILTER_LIST: %r', appstats_FILTER_LIST)
+        for filter_dict in appstats_FILTER_LIST:
+            for key, regex in filter_dict.iteritems():
+                negated = isinstance(regex, str) and regex.startswith('!')
+                if negated:
+                    regex = regex[1:]
+                value = env.get(key, '')
+                if bool(re.match(regex, value)) == negated:
+                    logging.debug('No match on %r for %s=%r', regex, key, value)
+                    break
+            else:
+                logging.debug('Match on %r', filter_dict)
+                break
+        else:
+            logging.debug('Non-empty FILTER_LIST, but no filter matches')
+            return False
+    if appstats_RECORD_FRACTION >= 1.0:
+        return True
+    return random.random() < appstats_RECORD_FRACTION
 
 # The following functions are called by the UI code only; they don't
 # affect the recorded information.
@@ -191,8 +192,9 @@ def appstats_should_record(env):
 # in an issue tracker might have its own numeric URL), this function
 # can be used to produce more meaningful statistics.
 
+
 def appstats_normalize_path(path):
-  return path
+    return path
 
 # extract_key() is a lower-level function with the same purpose as
 # normalize_key().  It can be used to lump different request methods
@@ -207,11 +209,12 @@ def appstats_normalize_path(path):
 # # Note that the StatsProto argument is loaded only with summary
 # information; this means you cannot access the request headers.
 
+
 def appstats_extract_key(request):
-  key = appstats_normalize_path(request.http_path())
-  if request.http_method() != 'GET':
-    key = '%s %s' % (request.http_method(), key)
-  return key
+    key = appstats_normalize_path(request.http_path())
+    if request.http_method() != 'GET':
+        key = '%s %s' % (request.http_method(), key)
+    return key
 
 
 # ########################################

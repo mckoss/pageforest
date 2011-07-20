@@ -221,6 +221,9 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
                 return;
             }
 
+            // All channel messages are canonicalized to document lower case strings
+            docid = docid.toLowerCase();
+
             options = options || {};
             options.enabled = (fn != undefined);
             options.fn = fn;
@@ -245,6 +248,7 @@ namespace.lookup('com.pageforest.storage').defineOnce(function (ns) {
         },
 
         hasSubscription: function(docid, blobid) {
+            docid = docid.toLowerCase();
             var key = docid + '/';
             if (blobid != undefined) {
                 key += blobid + '/';
