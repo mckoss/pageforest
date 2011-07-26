@@ -7,6 +7,7 @@ urlpatterns = patterns(
     # Static pages.
     (r'^$', direct_to_template, {'template': 'home.html'}),
     (r'^about/$', direct_to_template, {'template': 'about.html'}),
+    (r'^contest/$', direct_to_template, {'template': 'contest.html'}),
     (r'^terms-of-service/$', direct_to_template, {'template': 'tos.html'}),
 
     # Include separate urls.py for Django apps.
