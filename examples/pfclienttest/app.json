@@ -1,0 +1,17 @@
+{
+  "application": "pfclienttest",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "secureData": false,
+  "tags": [
+    "sample"
+  ],
+  "title": "Scratch",
+  "url": "http://scratch.pageforest.com/",
+  "writers": []
+}

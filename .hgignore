@@ -1,0 +1,20 @@
+syntax: glob
+
+*.pyc
+.svn/*
+*.log
+*~
+\#*\#
+*.orig
+*.pass
+TAGS
+nosetests.xml
+coverage.xml
+.coverage
+.passwd
+.pf
+.DS_Store
+pferror.html
+examples/*/docs/
+examples/*/pf.py
+tools/test-pf/
