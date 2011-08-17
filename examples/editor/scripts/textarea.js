@@ -1,4 +1,10 @@
-namespace.lookup('com.pageforest.editor.textarea').define(function (ns) {
+namespace.module('com.pageforest.editor.textarea', function(exports, require) {
+
+    exports.extend({
+        createEditor: createEditor,
+        adjustHeight: adjustHeight,
+        getData: getData
+    });
 
     // Create a textarea and put it in the content div.
     function createEditor(filename, data) {
@@ -26,11 +32,5 @@ namespace.lookup('com.pageforest.editor.textarea').define(function (ns) {
     function getData() {
         return $('textarea').val();
     }
-
-    ns.extend({
-        createEditor: createEditor,
-        adjustHeight: adjustHeight,
-        getData: getData
-    });
 
 });

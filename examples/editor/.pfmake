@@ -1,0 +1,12 @@
+{
+  "files": {
+    "scripts/combined.js": [
+      "scripts/namespace-plus.js",
+      "scripts/codemirror.js",
+      "scripts/main.js",
+      "scripts/textarea.js"
+    ]
+  },
+  "minify": true,
+  "uploadIndividualFiles": false
+}

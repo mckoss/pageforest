@@ -1,6 +1,16 @@
 /*global CodeMirror */
+namespace.module('com.pageforest.editor.codemirror', function(exports, require) {
 
-namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
+    var codemirror;
+
+    exports.extend({
+        isProbablySupported: isProbablySupported,
+        createEditor: createEditor,
+        adjustHeight: adjustHeight,
+        getData: getData,
+        codemirror: codemirror
+    });
+
 
     // Guess if the browser supports this editor.
     function isProbablySupported() {
@@ -47,16 +57,16 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
         }
         var code = $('<textarea id="code"></textarea>');
         $('#content').empty().append(code);
-        ns.codemirror = window.CodeMirror.fromTextArea("code", options);
-        // ns.codemirror.focus();
+        codemirror = window.CodeMirror.fromTextArea("code", options);
+        // codemirror.focus();
     }
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
     function adjustHeight(shrink) {
-        if (!ns.codemirror || !ns.codemirror.editor) {
+        if (!codemirror || !codemirror.editor) {
             return;
         }
-        var body = ns.codemirror.editor.container;
+        var body = codemirror.editor.container;
         var scrollHeight = body.scrollHeight;
         // var offsetHeight = body.offsetHeight;
         // console.log(body, scrollHeight, offsetHeight);
@@ -66,14 +76,7 @@ namespace.lookup('com.pageforest.editor.codemirror').define(function (ns) {
 
     // Get the edited file content from the editor.
     function getData() {
-        return ns.codemirror.getCode();
+        return codemirror.getCode();
     }
-
-    ns.extend({
-        isProbablySupported: isProbablySupported,
-        createEditor: createEditor,
-        adjustHeight: adjustHeight,
-        getData: getData
-    });
 
 });
