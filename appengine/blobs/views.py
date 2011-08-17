@@ -418,10 +418,10 @@ def blob_push(request):
         value = json.loads(value)
     except ValueError:
         pass
-    # Read the old value of the blob.
-    blob = Blob.get_by_key_name(request.key_name)
     # Try to update the blob atomically until it succeeds.
     for attempt in range(MAX_PUSH_ATTEMPTS):
+        # Read the old value of the blob.
+        blob = Blob.get_by_key_name(request.key_name)
         if blob is None:
             old_value = '[]'
             old_sha1 = None
