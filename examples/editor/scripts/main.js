@@ -1,4 +1,27 @@
-namespace.lookup('com.pageforest.editor').define(function (ns) {
+namespace.module('com.pageforest.editor', function(exports, require) {
+    var ns = {};
+/*    var appListing,
+        listing,
+        app_id,
+        filename = '',
+        editor,
+        hash,
+        client;*/
+
+    // Exported functions and variables
+    exports.extend({
+        onReady: onReady,
+        onSave: onSave,
+        onUserChange: onUserChange,
+        onSignInOut: onSignInOut,
+        appListing: ns.appListing,
+        listing: ns.listing,
+        app_id: ns.app_id,
+        filename: ns.filename,
+        editor: ns.editor,
+        hash: ns.hash,
+        client: ns.client
+    });
 
     function keys(obj) {
         var result = [];
@@ -307,13 +330,5 @@ namespace.lookup('com.pageforest.editor').define(function (ns) {
             ns.client.signIn();
         }
     }
-
-    // Exported functions
-    ns.extend({
-        onReady: onReady,
-        onSave: onSave,
-        onUserChange: onUserChange,
-        onSignInOut: onSignInOut
-    });
 
 });
