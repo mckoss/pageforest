@@ -7,7 +7,9 @@
     "public"
   ],
   "referers": [],
+  "secureData": false,
   "tags": [
+    "pf:featured",
     "meta",
     "editor"
   ],
@@ -15,6 +17,7 @@
   "url": "http://editor.pageforest.com/",
   "writers": [
     "mckoss",
-    "jcrocholl"
+    "jcrocholl",
+    "bobbys"
   ]
 }
