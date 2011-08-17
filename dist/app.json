@@ -1,0 +1,14 @@
+{
+  "application": "dist",
+  "cloneable": false,
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "secureData": false,
+  "tags": [],
+  "title": "Pageforest File Distribution Site",
+  "url": "http://dist.pageforest.com/",
+  "writers": []
+}

@@ -1,0 +1,21 @@
+{
+  "application": "mandelbrot",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "mckoss",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "tags": [
+    "demo",
+    "graphics",
+    "distributed"
+  ],
+  "title": "Mandelbrot",
+  "url": "http://mandelbrot.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl"
+  ]
+}

@@ -1,0 +1,30 @@
+div.tab {
+    float: left;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabSelect {
+    font-weight: bold;
+}
+
+div.tab a {
+    text-decoration: none;
+    color: #898989;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tabSelect a {
+    text-decoration: none;
+    color: #4D2500;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tab a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}

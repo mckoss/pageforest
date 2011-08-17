@@ -1,0 +1,247 @@
+/* Begin file: main.css */
+body {
+    font-family: Verdana, Arial, san-serif;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+text-align: center;
+}
+
+h2 {
+padding-top: 5px;
+}
+
+div.spacer {
+    height: 10px;
+}
+
+div.spacer2 {
+    height: 20px;
+    width: 100%;
+}
+
+div.breadcrumb {
+    margin: 0 0 18px 125px;
+    background:url(../../images/nav/rule-horiz.gif) repeat-x bottom left scroll;
+    padding-bottom: 7px;
+    color: #4D2500;
+}
+
+div.breadcrumb a {
+    text-decoration: none;
+    color: #898989;
+    font-weight: bold;
+}
+
+div.breadcrumb a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.footer {
+    color: #898989;
+    font-size: 11px;
+}
+
+div.footer a {
+    text-decoration: none;
+    color: #898989;
+    font-size: 11px;
+}
+
+div.footer a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+
+div.CallToAction {
+    background: url(../../images/sidebar/planting.png) no-repeat scroll;
+    width: 220px;
+    height: 300px;
+}
+
+div.CallToAction p {
+    text-align:center;
+    font-size: 24px;
+    line-height: 26px;
+    font-weight: bold;
+    color: white;
+    margin: 0;
+    padding: 15px;
+}
+
+img.favicon16 {
+    width: 16px;
+    height: 16px;
+    vertical-align: -2px;
+}
+/* Begin file: home.css */
+# Styles used only on the home page
+#home {
+    color: #8C6239;
+    font-size: 16px;
+}
+
+#home p {
+    font-size: 16px;
+    line-height: 22px;
+    margin: 5px 0 5px 0;
+}
+
+#home img.right {
+    float:right;
+    margin: 10px 0 10px 12px;
+}
+
+#home ul {
+    font-size: 16px;
+    line-height: 22px;
+}
+
+#home li {
+    padding-bottom: 5px;
+}
+
+#home li img {
+    display:block;
+    margin: 10px auto 10px auto;
+    border: 2px solid #8C6239;
+}
+
+#home h1 {
+    font-size: 24px;
+    color: #4D2500;
+    line-height: 30px;
+    font-weight: normal;
+    margin: 0;
+    position: relative;
+    top: -4px;
+}
+
+#home h2 {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4D2500;
+    margin: 0;
+    clear: both;
+}
+
+#home div.homeCopy {
+    font-size:14px;
+    width:340px;
+}
+
+#home div.Left {
+    float:left;
+}
+
+#home div.Right {
+    float: right;
+}
+
+#home a {
+    text-decoration: none;
+    color: #598527;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+#home a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+    font-weight: bold;
+}
+
+img.homeScreenLeft {
+    float:left;
+    margin-right: 15px;
+}
+
+img.homeScreenRight {
+    float:right;
+    margin-left:15px;
+}
+/* Begin file: form.css */
+.form-message {
+font-style: italic;
+}
+
+.error {
+color: red;
+}
+
+.success {
+color: green;
+}
+/* Begin file: top-bar.css */
+div.topbar {
+    font-size: 12px;
+    float: right;
+    width: 220px;
+    height: 35px;
+    color: #898989;
+    font-weight: bold;
+}
+
+div.topbarLeft {
+    float: left;
+    width: 10px;
+    margin: 0px;
+}
+
+div.topbarMid {
+    float: left;
+    margin: 0px;
+}
+
+div.topbarRight {
+    float: left;
+    width: 10px;
+    margin: 0px;
+}
+
+div.topbarMid a {
+    text-decoration: none;
+    line-height: 28px;
+    margin: 5px;
+    color: inherit;
+}
+
+div.topbarMid a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}
+/* Begin file: tabs.css */
+div.tab {
+    float: left;
+    height: 30px;
+    margin: 0px;
+}
+
+div.tabSelect {
+    font-weight: bold;
+}
+
+div.tab a {
+    text-decoration: none;
+    color: #898989;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tabSelect a {
+    text-decoration: none;
+    color: #4D2500;
+    line-height: 31px;
+    margin: 5px;
+    font-weight: bold;
+}
+
+div.tab a:hover {
+    text-decoration: underline;
+    color: #FF7F00;
+}

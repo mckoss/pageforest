@@ -1,0 +1,23 @@
+{
+  "application": "editor",
+  "cloneable": false,
+  "icon": "images/icon.png",
+  "owner": "jcrocholl",
+  "readers": [
+    "public"
+  ],
+  "referers": [],
+  "secureData": false,
+  "tags": [
+    "pf:featured",
+    "meta",
+    "editor"
+  ],
+  "title": "App Editor",
+  "url": "http://editor.pageforest.com/",
+  "writers": [
+    "mckoss",
+    "jcrocholl",
+    "bobbys"
+  ]
+}

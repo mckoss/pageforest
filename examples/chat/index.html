@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html manifest="/app.manifest">
+<head>
+<title>Chat - Pageforest</title>
+<link rel="icon" type="image/png" href="/images/icon.png" />
+<link rel="apple-touch-icon" href="/images/touch.png" />
+<link rel="stylesheet" type="text/css" href="/lib/beta/css/client.css" />
+<link rel="stylesheet" type="text/css" href="style.css" />
+<script type="text/javascript"
+        src="http://ajax.googleapis.com/ajax/libs/jquery/1.5/jquery.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/json2.min.js"></script>
+<script type="text/javascript" src="/lib/beta/js/utils.js"></script>
+<script type="text/javascript" src="/main.js"></script>
+
+<script type="text/javascript">
+var chat = namespace.lookup("com.pageforest.chat");
+$(document).ready(chat.onReady);
+</script>
+</head>
+
+<body>
+  <div class="page">
+
+    <fieldset>
+      <legend>Chat Room</legend>
+
+      <form onsubmit="chat.join(); return false">
+        <label for="docid">Room:</label>
+        <input type="text" id="roomid" name="docid" value="entry" />
+        <input type="submit" id="join" name="join" value="Join" />
+      </form>
+
+      <label for="messages">Messages:</label>
+      <textarea id="messages" name="messages"></textarea>
+
+      <form onsubmit="chat.submit(); return false">
+          <input type="text" id="message" name="message" value="" />
+          <input type="submit" id="submit" name="submit" value="Send" />
+      </form>
+    </fieldset>
+
+    <fieldset>
+      <legend>API Status</legend>
+      <div id="status">Loading...</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Data</legend>
+      <p><a target="_blank" id="document-data" href="#">Document Data</a></p>
+      <p><a target="_blank" id="message-data" href="#">Message Data</a></p>
+    </fieldset>
+
+  </div>
+</body>
+</html>
