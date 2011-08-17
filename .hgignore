@@ -16,4 +16,5 @@ coverage.xml
 .DS_Store
 pferror.html
 examples/*/docs/
+examples/*/pf.py
 tools/test-pf/
