@@ -41,6 +41,7 @@ Use '!==' to compare with '0'
 Use '===' to compare with 'null'
 Use '===' to compare with 'false'
 Use '!==' to compare with 'null'
+Use '===' to compare with ' '
 Do not use 'new' for side effects
 Missing radix parameter
 Read only.
