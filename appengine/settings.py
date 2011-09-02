@@ -217,7 +217,7 @@ REAUTH_COOKIE_PATH = '/auth/'
 
 # Name of the session cookie for simple request authentication.
 SESSION_COOKIE_NAME = 'sessionkey'
-SESSION_COOKIE_AGE = 24 * 60 * 60  # 24 hours.
+SESSION_COOKIE_AGE = 30 * 24 * 60 * 60  # 30 days.
 SESSION_COOKIE_PATH = '/'
 
 # The name of the session user cookie. It contains only the username
