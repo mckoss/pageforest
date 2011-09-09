@@ -239,7 +239,7 @@ class SignInTest(AppTestCase):
         self.assertContains(response, '"statusText": "Authenticated"')
         cookie = response.cookies['sessionkey']
         self.assertTrue(cookie.value.startswith('www|peter|1'))
-        self.assertEqual(cookie['max-age'], 86400)
+        self.assertEqual(cookie['max-age'], 30 * 86400)
         self.assertTrue(cookie['httponly'])
 
         # Simulate the redirect after POST
