@@ -17,29 +17,32 @@
   </script>
 </head>
 <body>
-  <div id="left">
-    <span id="breadcrumbs">
-      <a href="#">apps</a>
-    </span>
-    <input type="button" value="Save" onclick="editor.onSave()" />
-    <a href="#more" onclick="$('#more').slideToggle(); return false">More</a>
-  </div>
+  <div class="fixed">
+    <div class="opaque"></div>
+    <div id="left">
+      <span id="breadcrumbs">
+        <a href="#">apps</a>
+      </span>
+      <input type="button" value="Save" onclick="editor.onSave()" />
+      <a href="#more" onclick="$('#more').slideToggle(); return false">More</a>
+    </div>
 
-  <div id="right">
-    <span id="username">anonymous</span>
-    <span class="quiet">|</span>
-    <a onclick="$('#settings').slideToggle(); return false;"
-       href="#">Settings</a>
-    <span class="quiet">|</span>
-    <a href="http://code.google.com/p/pageforest/wiki" target="_blank">Help</a>
-    <span class="quiet">|</span>
-    <a id="signin" target="_blank"
-       href="http://www.pageforest.com/sign-in/editor"
-       onclick="editor.onSignInOut(); return false">Sign in</a>
-  </div>
+    <div id="right">
+      <span id="username">anonymous</span>
+      <span class="quiet">|</span>
+      <a onclick="$('#settings').slideToggle(); return false;"
+         href="#">Settings</a>
+      <span class="quiet">|</span>
+      <a href="http://code.google.com/p/pageforest/wiki" target="_blank">Help</a>
+      <span class="quiet">|</span>
+      <a id="signin" target="_blank"
+         href="http://www.pageforest.com/sign-in/editor"
+         onclick="editor.onSignInOut(); return false">Sign in</a>
+    </div>
 
-  <div id="center">
-    <span id="status"></span>
+    <div id="center">
+      <span id="status"></span>
+    </div>
   </div>
 
   <div id="content">

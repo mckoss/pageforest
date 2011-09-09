@@ -19,7 +19,24 @@ h2 {
   font-size: 18px;
 }
 
+iframe {
+  z-index: 0;
+}
+div.fixed {
+  position: fixed;
+  width: 100%;
+  z-index: 1;
+  background-color: white;
+}
+div.opaque { 
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
 div#left, div#center, div#right {
+  z-index: 10;
   padding: 10px;
 }
 
@@ -67,7 +84,7 @@ textarea {
 }
 
 div.dialog {
-  position: absolute;
+  position: fixed;
   top: 33px;
   z-index: 100;
   margin: 10px;
