@@ -784,7 +784,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
-        ns.client = new clientLib.Client(ns);
+        ns.client = new clientLib.Client(exports);
         ns.client.saveInterval = 0;  // Turn off auto-save.
         ns.client.state = 'clean';   // Turn off beforeUnload.
         ns.hash = '###';  // Not initialized, wait for checkHash to update.
@@ -811,6 +811,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
     // Called when the current user has changed (signed in or out)
     function onUserChange(username) {
+        console.log('onUserChange(' + username + ');');
         if (username == undefined) {
             $('#username').text('anonymous');
             $('#signin').text('Sign in')
