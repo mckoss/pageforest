@@ -3123,6 +3123,9 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
 
         // Load a document as the default document for this running application.
         load: function (docid) {
+            if (!docid) {
+                return;
+            }
             if (this.app.setDoc == undefined) {
                 this.log(noSetDocMessage, {level: 'warn', once: true});
                 return;
@@ -3381,10 +3384,15 @@ namespace.lookup('com.pageforest.client').define(function (exports) {
         // The user is about to navigate away from the page - we want to
         // alert the user if he might lose changes.
         beforeUnload: function(evt) {
+            var message;
             evt = evt || window.event;
             if (this.state != 'clean') {
-                evt.returnValue = unloadMessage;
-                return unloadMessage;
+                message = unloadMessage;
+                if (this.app.beforeUnload) {
+                    message = this.app.beforeUnload();
+                }
+                evt.returnValue = message;
+                return message;
             }
         },
 
