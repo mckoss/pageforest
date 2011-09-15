@@ -269,13 +269,14 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function guessEditor() {
-        // console.log('User-Agent: ' + navigator.userAgent);
+        return namespace.lookup('com.pageforest.editor.ace');
+/*        // console.log('User-Agent: ' + navigator.userAgent);
         var codemirror = namespace.lookup('com.pageforest.editor.codemirror');
         if (codemirror.isProbablySupported()) {
             return codemirror;
         } else {
             return namespace.lookup('com.pageforest.editor.textarea');
-        }
+        }*/
     }
 
     function onReady() {
@@ -290,6 +291,13 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
+        $(window).bind('resize', onResize);
+        onResize();
+    }
+
+    function onResize() {
+        $('#content').css('height', window.innerHeight - 40 + 'px');
+        $('#content').css('width', window.innerWidth + 'px');
     }
 
     function onSave() {
