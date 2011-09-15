@@ -4,7 +4,12 @@
       "scripts/namespace-plus.js",
       "scripts/codemirror.js",
       "scripts/main.js",
-      "scripts/textarea.js"
+      "scripts/textarea.js",
+      "ace/mode-javascript.js",
+      "ace/mode-html.js",
+      "ace/mode-xml.js",
+      "ace/mode-css.js",
+      "scripts/ace.js"
     ]
   },
   "minify": true,
