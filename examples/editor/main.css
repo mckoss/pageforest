@@ -1,8 +1,8 @@
-body {
+body, body.ace_editor {
   margin: 0;
   padding: 0;
-  font-family: Helvetica, sans-serif;
-  font-size: 16px;
+  font-family: Helvetica, sans-serif !important;
+  font-size: 16px !important;
 }
 
 img {
@@ -56,9 +56,9 @@ div#right {
 
 div#content {
   position: absolute;
-/*  left: 0;
-  right: 0;*/
-  top: 40px;
+  left: 0;
+  right: 0;
+  top: 43px;
 }
 
 div.icon {

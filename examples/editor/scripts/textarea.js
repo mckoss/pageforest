@@ -3,7 +3,8 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     exports.extend({
         createEditor: createEditor,
         adjustHeight: adjustHeight,
-        getData: getData
+        getData: getData,
+        type: 'textarea'
     });
 
     // Create a textarea and put it in the content div.

@@ -139,6 +139,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function showFiles() {
+        updateBreadcrumbs();
         var path = ns.filename;
         // Remove trailing slash.
         if (path.substr(-1) == '/') {
@@ -161,6 +162,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         html.push('<iframe class="upload" src="' + iframe_src + '"' +
                   ' style="width:100%; height:100%; border:none"></iframe>');
         html.push('</div>');
+        if (ns.editor.removeEditor) {
+            ns.editor.removeEditor();
+        }
         $('#content').html(html.join('\n'));
         showStatus("Loaded directory: " + ns.app_id + '/' + path);
     }
@@ -172,6 +176,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             url: '/mirror?method=list',
             dataType: 'json',
             success: function(message) {
+                updateBreadcrumbs();
+                if (ns.editor.removeEditor) {
+                    ns.editor.removeEditor();
+                }
                 ns.appListing = message.items;
                 if (!ns.app_id) {
                     showApps();
@@ -197,6 +205,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             dataType: 'json',
             error: onError,
             success: function(message) {
+                updateBreadcrumbs();
+                if (ns.editor.removeEditor) {
+                    ns.editor.removeEditor();
+                }
                 ns.listing = message.items;
                 if (!ns.filename || ns.filename.substr(-1) == '/') {
                     showFiles();
@@ -207,7 +219,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
     function loadFile(filename) {
         ns.filename = filename;
-        updateBreadcrumbs();
         if (filename == '' || filename.substr(-1) == '/') {
             showFiles();
         } else {
@@ -216,6 +227,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
+                    updateBreadcrumbs();
                     ns.editor.createEditor(ns.filename, message);
                     ns.editor.adjustHeight('shrink');
                     showStatus("Loaded file: " + ns.filename);
@@ -296,8 +308,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onResize() {
-        $('#content').css('height', window.innerHeight - 40 + 'px');
-        $('#content').css('width', window.innerWidth + 'px');
+        if (ns.editor && ns.editor.type == 'ace') {
+            $('#content').css('height', window.innerHeight - 43 + 'px');
+            $('#content').css('width', window.innerWidth + 'px');
+        }
     }
 
     function onSave() {
