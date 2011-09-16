@@ -9,14 +9,20 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
 
     exports.extend({
         createEditor: createEditor,
+        removeEditor: removeEditor,
         adjustHeight: adjustHeight,
         getData: getData,
-        editor: editor
+        editor: editor,
+        type: 'ace'
     });
 
     // Create an ace and put it in the content div.
     function createEditor(filename, data) {
+        // absolute size the content div for ace
+        $('#content').css('height', window.innerHeight - 43 + 'px');
+        $('#content').css('width', window.innerWidth + 'px');
         editor = ace.edit('content');
+        editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
 
         var lower = filename.toLowerCase();
         if (lower.substr(-5) == '.html') {
@@ -28,10 +34,16 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
             editor.getSession().setMode(new JavascriptMode());
         } else if (lower.substr(-4) == '.css') {
             editor.getSession().setMode(new CSSMode());
-        }/* else {
+        } else {
             editor.getSession().setMode(new HTMLMode());
-        }*/
+        }
         editor.getSession().setValue(data);
+    }
+
+    // clear content div of ace classes and necessary sizing
+    function removeEditor() {
+        $('#content').attr('style', '');
+        $('#content').attr('class', '');
     }
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.

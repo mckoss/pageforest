@@ -643,6 +643,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function showFiles() {
+        updateBreadcrumbs();
         var path = ns.filename;
         // Remove trailing slash.
         if (path.substr(-1) == '/') {
@@ -665,6 +666,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         html.push('<iframe class="upload" src="' + iframe_src + '"' +
                   ' style="width:100%; height:100%; border:none"></iframe>');
         html.push('</div>');
+        if (ns.editor.removeEditor) {
+            ns.editor.removeEditor();
+        }
         $('#content').html(html.join('\n'));
         showStatus("Loaded directory: " + ns.app_id + '/' + path);
     }
@@ -676,6 +680,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             url: '/mirror?method=list',
             dataType: 'json',
             success: function(message) {
+                updateBreadcrumbs();
+                if (ns.editor.removeEditor) {
+                    ns.editor.removeEditor();
+                }
                 ns.appListing = message.items;
                 if (!ns.app_id) {
                     showApps();
@@ -701,6 +709,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             dataType: 'json',
             error: onError,
             success: function(message) {
+                updateBreadcrumbs();
+                if (ns.editor.removeEditor) {
+                    ns.editor.removeEditor();
+                }
                 ns.listing = message.items;
                 if (!ns.filename || ns.filename.substr(-1) == '/') {
                     showFiles();
@@ -711,7 +723,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
     function loadFile(filename) {
         ns.filename = filename;
-        updateBreadcrumbs();
         if (filename == '' || filename.substr(-1) == '/') {
             showFiles();
         } else {
@@ -720,6 +731,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
+                    updateBreadcrumbs();
                     ns.editor.createEditor(ns.filename, message);
                     ns.editor.adjustHeight('shrink');
                     showStatus("Loaded file: " + ns.filename);
@@ -800,8 +812,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onResize() {
-        $('#content').css('height', window.innerHeight - 40 + 'px');
-        $('#content').css('width', window.innerWidth + 'px');
+        if (ns.editor && ns.editor.type == 'ace') {
+            $('#content').css('height', window.innerHeight - 43 + 'px');
+            $('#content').css('width', window.innerWidth + 'px');
+        }
     }
 
     function onSave() {
@@ -851,7 +865,8 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     exports.extend({
         createEditor: createEditor,
         adjustHeight: adjustHeight,
-        getData: getData
+        getData: getData,
+        type: 'textarea'
     });
 
     // Create a textarea and put it in the content div.
@@ -902,14 +917,20 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
 
     exports.extend({
         createEditor: createEditor,
+        removeEditor: removeEditor,
         adjustHeight: adjustHeight,
         getData: getData,
-        editor: editor
+        editor: editor,
+        type: 'ace'
     });
 
     // Create an ace and put it in the content div.
     function createEditor(filename, data) {
+        // absolute size the content div for ace
+        $('#content').css('height', window.innerHeight - 43 + 'px');
+        $('#content').css('width', window.innerWidth + 'px');
         editor = ace.edit('content');
+        editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
 
         var lower = filename.toLowerCase();
         if (lower.substr(-5) == '.html') {
@@ -921,10 +942,16 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
             editor.getSession().setMode(new JavascriptMode());
         } else if (lower.substr(-4) == '.css') {
             editor.getSession().setMode(new CSSMode());
-        }/* else {
+        } else {
             editor.getSession().setMode(new HTMLMode());
-        }*/
+        }
         editor.getSession().setValue(data);
+    }
+
+    // clear content div of ace classes and necessary sizing
+    function removeEditor() {
+        $('#content').attr('style', '');
+        $('#content').attr('class', '');
     }
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
