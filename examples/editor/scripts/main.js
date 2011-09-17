@@ -124,6 +124,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function showApps() {
+        ns.editor.view('hide');
         var html = [];
         for (var name in ns.appListing) {
             if (ns.appListing.hasOwnProperty(name)) {
@@ -140,6 +141,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
     function showFiles() {
         updateBreadcrumbs();
+        ns.editor.view('hide');
         var path = ns.filename;
         // Remove trailing slash.
         if (path.substr(-1) == '/') {
@@ -162,9 +164,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         html.push('<iframe class="upload" src="' + iframe_src + '"' +
                   ' style="width:100%; height:100%; border:none"></iframe>');
         html.push('</div>');
-        if (ns.editor.removeEditor) {
-            ns.editor.removeEditor();
-        }
         $('#content').html(html.join('\n'));
         showStatus("Loaded directory: " + ns.app_id + '/' + path);
     }
@@ -177,9 +176,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             dataType: 'json',
             success: function(message) {
                 updateBreadcrumbs();
-                if (ns.editor.removeEditor) {
-                    ns.editor.removeEditor();
-                }
                 ns.appListing = message.items;
                 if (!ns.app_id) {
                     showApps();
@@ -206,9 +202,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             error: onError,
             success: function(message) {
                 updateBreadcrumbs();
-                if (ns.editor.removeEditor) {
-                    ns.editor.removeEditor();
-                }
                 ns.listing = message.items;
                 if (!ns.filename || ns.filename.substr(-1) == '/') {
                     showFiles();
@@ -228,8 +221,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 error: onError,
                 success: function(message) {
                     updateBreadcrumbs();
-                    ns.editor.createEditor(ns.filename, message);
+                    $('#content').empty();
+                    ns.editor.loadFile(ns.filename, message);
                     ns.editor.adjustHeight('shrink');
+                    ns.editor.view('show');
                     showStatus("Loaded file: " + ns.filename);
                 }
             });
@@ -281,14 +276,28 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function guessEditor() {
-        return namespace.lookup('com.pageforest.editor.ace');
-/*        // console.log('User-Agent: ' + navigator.userAgent);
-        var codemirror = namespace.lookup('com.pageforest.editor.codemirror');
-        if (codemirror.isProbablySupported()) {
-            return codemirror;
-        } else {
-            return namespace.lookup('com.pageforest.editor.textarea');
-        }*/
+        // in limbo, just defaults to one or the other
+        console.log('User-Agent: ' + navigator.userAgent);
+        var requireTextarea = true;
+        if (requireTextarea) {
+            $('#editor').val('textarea');
+            return ns.textarea;
+        }
+        $('#editor').val('ace');
+        return ns.ace;
+    }
+
+    function setEditor() {
+        console.log('setEditor()');
+        if (!ns.editor.view()) {
+            ns.editor = ns[$('#editor').val()];
+            return;
+        }
+        var data = ns.editor.getData();
+        ns.editor.view('hide');
+        ns.editor = ns[$('#editor').val()];
+        ns.editor.loadFile(ns.filename, data);
+        ns.editor.view('show');
     }
 
     function onReady() {
@@ -297,21 +306,28 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         ns.client.saveInterval = 0;  // Turn off auto-save.
         ns.client.state = 'clean';   // Turn off beforeUnload.
         ns.hash = '###';  // Not initialized, wait for checkHash to update.
-        ns.editor = guessEditor();
         ns.app_id = '';
         ns.filename = '';
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
+        // get textarea and ace namespaces
+        ns.ace = namespace.lookup('com.pageforest.editor.ace');
+        ns.ace.createEditor();
+        ns.ace.view('hide');
+        ns.textarea = namespace.lookup('com.pageforest.editor.textarea');
+        ns.textarea.view('hide');
+        ns.editor = guessEditor();
+
         $(window).bind('resize', onResize);
-        onResize();
+        $('#editor').change(setEditor);
     }
 
     function onResize() {
-        if (ns.editor && ns.editor.type == 'ace') {
-            $('#content').css('height', window.innerHeight - 43 + 'px');
-            $('#content').css('width', window.innerWidth + 'px');
-        }
+        $('#ace').css('height', window.innerHeight - 43 + 'px');
+        $('#ace').css('width', window.innerWidth + 'px');
+        $('#textarea').css('height', window.innerHeight - 43 + 'px');
+        $('#textarea').css('width', window.innerWidth + 'px');
     }
 
     function onSave() {

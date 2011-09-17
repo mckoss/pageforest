@@ -1,21 +1,46 @@
 namespace.module('com.pageforest.editor.textarea', function(exports, require) {
 
+    var visible = false;
+
     exports.extend({
         createEditor: createEditor,
+        loadFile: loadFile,
         adjustHeight: adjustHeight,
         getData: getData,
-        type: 'textarea'
+        view: view
     });
 
+    // hides/shows/returns if visible
+    function view(action) {
+        if (action == 'show') {
+            visible = true;
+            $('#textarea').css('visibility', 'visible');
+            return true;
+        } else if (action == 'hide') {
+            visible = false;
+            $('#textarea').css('visibility', 'hidden');
+            return false;
+        } else {
+            return visible;
+        }
+    }
+
     // Create a textarea and put it in the content div.
-    function createEditor(filename, data) {
+    function createEditor() {
+        return;
+    }
+
+    function loadFile(filename, data) {
+//        $('#textarea').css('height', window.innerHeight - 43 + 'px');
+//        $('#textarea').css('width', window.innerWidth + 'px');
         var code = $('<textarea id="code"></textarea>');
-        $('#content').empty().append(code);
+        $('#textarea').empty().append(code);
         code.val(data).focus();
     }
 
     // Make the textarea shorter or longer, after a new file is loaded.
     function adjustHeight(shrink) {
+        console.log('adjustHeight() within textarea');
         var editor = $('#code');
         var scrollHeight = editor.attr('scrollHeight');
         var offsetHeight = editor.attr('offsetHeight');
