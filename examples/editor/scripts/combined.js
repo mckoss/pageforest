@@ -755,7 +755,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     function checkHash() {
         var hash = window.location.hash;
         if (hash == ns.hash) {
-            ns.editor.adjustHeight();
+            if (ns.editor.view()) {
+                ns.editor.adjustHeight();
+            }
             return;
         }
         ns.hash = hash;
@@ -830,8 +832,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     function onResize() {
         $('#ace').css('height', window.innerHeight - 43 + 'px');
         $('#ace').css('width', window.innerWidth + 'px');
+//        ns.ace.renderer.onResize();
         $('#textarea').css('height', window.innerHeight - 43 + 'px');
-        $('#textarea').css('width', window.innerWidth + 'px');
+        $('#textarea').css('width', window.innerWidth - 15 + 'px');
     }
 
     function onSave() {
@@ -892,11 +895,13 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     function view(action) {
         if (action == 'show') {
             visible = true;
-            $('#textarea').css('visibility', 'visible');
+//            $('#textarea').css('visibility', 'visible');
+            $('#textarea').css('display', 'block');
             return true;
         } else if (action == 'hide') {
             visible = false;
-            $('#textarea').css('visibility', 'hidden');
+//            $('#textarea').css('visibility', 'hidden');
+            $('#textarea').css('display', 'none');
             return false;
         } else {
             return visible;
@@ -934,7 +939,7 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
 
     // Get the edited file content from the textarea.
     function getData() {
-        return $('textarea').val();
+        return $('#textarea').find('textarea').val();
     }
 
 });
@@ -971,10 +976,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
+//            $('#ace').css('display', 'block');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
+//            $('#ace').css('display', 'none');
             return false;
         } else {
             return visible;

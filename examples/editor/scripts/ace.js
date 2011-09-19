@@ -22,10 +22,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
+//            $('#ace').css('display', 'block');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
+//            $('#ace').css('display', 'none');
             return false;
         } else {
             return visible;

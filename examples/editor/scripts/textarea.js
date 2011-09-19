@@ -14,11 +14,13 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     function view(action) {
         if (action == 'show') {
             visible = true;
-            $('#textarea').css('visibility', 'visible');
+//            $('#textarea').css('visibility', 'visible');
+            $('#textarea').css('display', 'block');
             return true;
         } else if (action == 'hide') {
             visible = false;
-            $('#textarea').css('visibility', 'hidden');
+//            $('#textarea').css('visibility', 'hidden');
+            $('#textarea').css('display', 'none');
             return false;
         } else {
             return visible;
@@ -56,7 +58,7 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
 
     // Get the edited file content from the textarea.
     function getData() {
-        return $('textarea').val();
+        return $('#textarea').find('textarea').val();
     }
 
 });

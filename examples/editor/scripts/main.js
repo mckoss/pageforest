@@ -251,7 +251,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     function checkHash() {
         var hash = window.location.hash;
         if (hash == ns.hash) {
-            ns.editor.adjustHeight();
+            if (ns.editor.view()) {
+                ns.editor.adjustHeight();
+            }
             return;
         }
         ns.hash = hash;
@@ -326,8 +328,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     function onResize() {
         $('#ace').css('height', window.innerHeight - 43 + 'px');
         $('#ace').css('width', window.innerWidth + 'px');
+//        ns.ace.renderer.onResize();
         $('#textarea').css('height', window.innerHeight - 43 + 'px');
-        $('#textarea').css('width', window.innerWidth + 'px');
+        $('#textarea').css('width', window.innerWidth - 15 + 'px');
     }
 
     function onSave() {
