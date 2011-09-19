@@ -3,6 +3,7 @@ body {
   padding: 0;
   font-family: Helvetica, sans-serif;
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 img {
@@ -54,20 +55,17 @@ div#right {
   text-align: right;
 }
 
-div#content {
+div#content, div#ace, div#textarea {
   position: absolute;
+  z-index: 0;
   left: 0;
   right: 0;
   top: 43px;
+  bottom: 0;
 }
-div#ace {
-  position: absolute;
-  top: 43px;
-}
-div#textarea {
-  position: absolute;
-  top: 43px;
-}
+div#content {  }
+div#ace {  }
+div#textarea { left: 5px; right: 15px; }
 
 div.icon {
   float: left;
@@ -90,6 +88,8 @@ textarea {
   border: none;
   width: 100%;
   height: 100%;
+  border: none;
+  outline: none;
 }
 
 div.dialog {
@@ -107,7 +107,7 @@ div#open {
 }
 
 div#settings {
-  right: 0;
+  right: 10px;
   width: 30%;
 }
 
