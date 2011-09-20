@@ -511,7 +511,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         editor,
         hash,
         client;*/
-    var file;
+    var latestSave;
     var dirty;
 
     // Exported functions and variables
@@ -726,6 +726,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
+                    latestSave = message;
                     updateBreadcrumbs();
                     $('#content').empty();
                     ns.editor.loadFile(ns.filename, message);
@@ -813,7 +814,9 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         if (dirty || !ns.editor.view()) {
             return;
         }
-
+        if (latestSave != ns.editor.getData()) {
+            dirty = true;
+        }
     }
 
     function onReady() {
