@@ -511,6 +511,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         editor,
         hash,
         client;*/
+    var file;
+    var dirty;
 
     // Exported functions and variables
     exports.extend({
@@ -782,9 +784,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function guessEditor() {
-        // in limbo, just defaults to one or the other
-        console.log('User-Agent: ' + navigator.userAgent);
-        var requireTextarea = true;
+        var requireTextarea = false;
+        if (/Android|iPad|iPod|iPhone/.test(navigator.userAgent)) {
+            requireTextarea = true;
+        }
         if (requireTextarea) {
             $('#editor').val('textarea');
             return ns.textarea;
@@ -806,6 +809,13 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         ns.editor.view('show');
     }
 
+    function checkDirty() {
+        if (dirty || !ns.editor.view()) {
+            return;
+        }
+
+    }
+
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(exports);
@@ -817,6 +827,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
+        setInterval(checkDirty, 5000);
         // get textarea and ace namespaces
         ns.ace = namespace.lookup('com.pageforest.editor.ace');
         ns.ace.createEditor();
@@ -830,11 +841,14 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onResize() {
-        $('#ace').css('height', window.innerHeight - 43 + 'px');
-        $('#ace').css('width', window.innerWidth + 'px');
+        var $ace = $('#ace');
+        var $textarea = $('#textarea');
+        $ace.css('height', window.innerHeight - 43 + 'px');
+        $ace.css('width', window.innerWidth + 'px');
 //        ns.ace.renderer.onResize();
-        $('#textarea').css('height', window.innerHeight - 43 + 'px');
-        $('#textarea').css('width', window.innerWidth - 15 + 'px');
+        $textarea.css('height', window.innerHeight - 43 + 'px');
+//        $('#code').css('height', window.innerHeight - 43 + 'px');
+        $textarea.css('width', window.innerWidth - 15 + 'px');
     }
 
     function onSave() {
@@ -916,9 +930,16 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     function loadFile(filename, data) {
 //        $('#textarea').css('height', window.innerHeight - 43 + 'px');
 //        $('#textarea').css('width', window.innerWidth + 'px');
-        var code = $('<textarea id="code"></textarea>');
+        var code = $('<textarea id="code" spellcheck="false" autocorrect="off" ></textarea>');
         $('#textarea').empty().append(code);
         code.val(data).focus();
+//        code.focus(adjustScroll);
+        code.bind('touchstart', adjustScroll);
+    }
+
+    function adjustScroll(event) {
+        console.log('adjustScroll event: ', event);
+
     }
 
     // Make the textarea shorter or longer, after a new file is loaded.
@@ -976,12 +997,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
-//            $('#ace').css('display', 'block');
+//            $('.ace_print_margin').css('visibility', 'visible');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
-//            $('#ace').css('display', 'none');
+//            $('.ace_print_margin').css('visibility', 'hidden');
             return false;
         } else {
             return visible;
@@ -994,6 +1015,8 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         $('#ace').css('width', window.innerWidth + 'px');
         editor = ace.edit('ace');
         editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
+        $('.ace_print_margin').remove();
+        editor.session.setWrapLimitRange(80, 80);
     }
 
     function loadFile(filename, data) {
@@ -1015,18 +1038,7 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
     }
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
-    function adjustHeight(shrink) {
-        console.log('adjustHeight() from ace');
-/*        if (!codemirror || !codemirror.editor) {
-            return;
-        }
-        var body = codemirror.editor.container;
-        var scrollHeight = body.scrollHeight;
-        // var offsetHeight = body.offsetHeight;
-        // console.log(body, scrollHeight, offsetHeight);
-        var wrapping = $('.CodeMirror-wrapping');
-        wrapping.css('height', scrollHeight + 'px');*/
-    }
+    function adjustHeight() {}
 
     // Get the edited file content from the editor.
     function getData() {

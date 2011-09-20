@@ -7,6 +7,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         editor,
         hash,
         client;*/
+    var latestSave;
+    var dirty;
 
     // Exported functions and variables
     exports.extend({
@@ -220,6 +222,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
+                    latestSave = message;
                     updateBreadcrumbs();
                     $('#content').empty();
                     ns.editor.loadFile(ns.filename, message);
@@ -278,9 +281,10 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function guessEditor() {
-        // in limbo, just defaults to one or the other
-        console.log('User-Agent: ' + navigator.userAgent);
-        var requireTextarea = true;
+        var requireTextarea = false;
+        if (/Android|iPad|iPod|iPhone/.test(navigator.userAgent)) {
+            requireTextarea = true;
+        }
         if (requireTextarea) {
             $('#editor').val('textarea');
             return ns.textarea;
@@ -302,6 +306,15 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         ns.editor.view('show');
     }
 
+    function checkDirty() {
+        if (dirty || !ns.editor.view()) {
+            return;
+        }
+        if (latestSave != ns.editor.getData()) {
+            dirty = true;
+        }
+    }
+
     function onReady() {
         var clientLib = namespace.lookup('com.pageforest.client');
         ns.client = new clientLib.Client(exports);
@@ -313,6 +326,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
+        setInterval(checkDirty, 5000);
         // get textarea and ace namespaces
         ns.ace = namespace.lookup('com.pageforest.editor.ace');
         ns.ace.createEditor();
@@ -326,11 +340,14 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onResize() {
-        $('#ace').css('height', window.innerHeight - 43 + 'px');
-        $('#ace').css('width', window.innerWidth + 'px');
+        var $ace = $('#ace');
+        var $textarea = $('#textarea');
+        $ace.css('height', window.innerHeight - 43 + 'px');
+        $ace.css('width', window.innerWidth + 'px');
 //        ns.ace.renderer.onResize();
-        $('#textarea').css('height', window.innerHeight - 43 + 'px');
-        $('#textarea').css('width', window.innerWidth - 15 + 'px');
+        $textarea.css('height', window.innerHeight - 43 + 'px');
+//        $('#code').css('height', window.innerHeight - 43 + 'px');
+        $textarea.css('width', window.innerWidth - 15 + 'px');
     }
 
     function onSave() {
