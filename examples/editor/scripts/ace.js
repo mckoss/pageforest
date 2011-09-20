@@ -22,12 +22,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
-//            $('#ace').css('display', 'block');
+//            $('.ace_print_margin').css('visibility', 'visible');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
-//            $('#ace').css('display', 'none');
+//            $('.ace_print_margin').css('visibility', 'hidden');
             return false;
         } else {
             return visible;
@@ -40,6 +40,8 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         $('#ace').css('width', window.innerWidth + 'px');
         editor = ace.edit('ace');
         editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
+        $('.ace_print_margin').remove();
+        editor.session.setWrapLimitRange(80, 80);
     }
 
     function loadFile(filename, data) {
@@ -61,18 +63,7 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
     }
 
     // Make the CodeMirror shorter or longer, after a new file is loaded.
-    function adjustHeight(shrink) {
-        console.log('adjustHeight() from ace');
-/*        if (!codemirror || !codemirror.editor) {
-            return;
-        }
-        var body = codemirror.editor.container;
-        var scrollHeight = body.scrollHeight;
-        // var offsetHeight = body.offsetHeight;
-        // console.log(body, scrollHeight, offsetHeight);
-        var wrapping = $('.CodeMirror-wrapping');
-        wrapping.css('height', scrollHeight + 'px');*/
-    }
+    function adjustHeight() {}
 
     // Get the edited file content from the editor.
     function getData() {

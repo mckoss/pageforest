@@ -35,9 +35,16 @@ namespace.module('com.pageforest.editor.textarea', function(exports, require) {
     function loadFile(filename, data) {
 //        $('#textarea').css('height', window.innerHeight - 43 + 'px');
 //        $('#textarea').css('width', window.innerWidth + 'px');
-        var code = $('<textarea id="code"></textarea>');
+        var code = $('<textarea id="code" spellcheck="false" autocorrect="off" ></textarea>');
         $('#textarea').empty().append(code);
         code.val(data).focus();
+//        code.focus(adjustScroll);
+        code.bind('touchstart', adjustScroll);
+    }
+
+    function adjustScroll(event) {
+        console.log('adjustScroll event: ', event);
+
     }
 
     // Make the textarea shorter or longer, after a new file is loaded.
