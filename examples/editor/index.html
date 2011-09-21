@@ -24,8 +24,8 @@
       <span id="breadcrumbs">
         <a href="#">apps</a>
       </span>
-      <input type="button" value="Save" onclick="editor.onSave()" />
-      <a href="#more" onclick="$('#more').slideToggle(); return false">More</a>
+      <input id="save" type="button" value="Saved" onclick="editor.onSave()" disabled="true" />
+<!--      <a href="#more" onclick="$('#more').slideToggle(); return false">More</a>-->
     </div>
 
     <div id="right">
@@ -47,28 +47,27 @@
     </div>
   </div>
 
-  <div id="content">
-  </div>
-  <div id="ace">
-  </div>
-  <div id="textarea">
-  </div>
+  <div id="content" onclick="arguments[0].stopPropagation(); console.log('attempting to stopPropagation', arguments); "></div>
+  <div id="ace"></div>
+  <div id="textarea"></div>
 
-  <div id="more" class="dialog" style="display:none">
+<!--  <div id="more" class="dialog" style="display:none">
     <input type="button" value="Revert" onclick="editor.onRevert()" />
     <input type="button" value="Lint" onclick="editor.onLint()" />
     <input type="button" value="Save as" onclick="editor.onSaveAs()" />
-  </div>
+  </div>-->
 
   <div id="settings" class="dialog" style="display:none">
-    <h2>Editor</h2>
+    <h2>Text Editor</h2>
     <p>
-      <select id="editor">
-        <option value="ace">Ace</option>
-        <option value="textarea">Textarea</option>
-      </select>
+      <div class="form-field">
+        <input type=radio id=radioAce name=editor value=ace checked=true />
+        <label for=radioAce>Ace</label>
+        <input type=radio id=radioTextarea name=editor value=textarea />
+        <label for=radioTextarea>Textarea</label>
+      </div>
     </p>
-    <h2>Font</h2>
+<!--    <h2>Font</h2>
     <p>
       <select id="font">
         <option value="Courier New">Courier New</option>
@@ -80,7 +79,7 @@
       <input type="button" value="Larger" onclick="editor.onLarger()" />
       <br />
       <label for="bold"><input type="checkbox" id="bold" /> <b>Bold</b></label>
-    </p>
+    </p>-->
   </div>
 
   <script type="text/javascript">
