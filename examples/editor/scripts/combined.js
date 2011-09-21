@@ -418,89 +418,6 @@ function strip(s) {
     return (s || "").replace(/^\s+|\s+$/g, "");
 }
 });
-/* Source: scripts/codemirror.js */
-/*global CodeMirror */
-namespace.module('com.pageforest.editor.codemirror', function(exports, require) {
-
-    var codemirror;
-
-    exports.extend({
-        isProbablySupported: isProbablySupported,
-        createEditor: createEditor,
-        adjustHeight: adjustHeight,
-        getData: getData,
-        codemirror: codemirror
-    });
-
-
-    // Guess if the browser supports this editor.
-    function isProbablySupported() {
-        return CodeMirror.isProbablySupported() &&
-            !navigator.userAgent.match(/^Mozilla.5.0 .iPad/);
-    }
-
-    // Create a CodeMirror and put it in the content div.
-    function createEditor(filename, data) {
-        var options = {
-            path: '/codemirror/js/',
-            width: '100%',
-            height: '100px',
-            content: data
-        };
-        var lower = filename.toLowerCase();
-        if (lower.substr(-5) == '.html') {
-            options.stylesheet = ['/codemirror/css/xmlcolors.css',
-                                  '/codemirror/css/jscolors.css',
-                                  '/codemirror/css/csscolors.css'];
-            options.parserfile = ['parsexml.js',
-                                  'parsecss.js',
-                                  'tokenizejavascript.js',
-                                  'parsejavascript.js',
-                                  'parsehtmlmixed.js'];
-            options.parser = 'HTMLMixedParser';
-        } else if (lower.substr(-4) == '.xml') {
-            options.stylesheet = '/codemirror/css/xmlcolors.css';
-            options.parserfile = ['parsexml.js'];
-            options.parser = 'XMLParser';
-        } else if (lower.substr(-3) == '.js' ||
-                   lower.substr(-5) == '.json') {
-            options.stylesheet = '/codemirror/css/jscolors.css';
-            options.parserfile = ['tokenizejavascript.js',
-                                  'parsejavascript.js'];
-            options.parser = 'JSParser';
-        } else if (lower.substr(-4) == '.css') {
-            options.stylesheet = '/codemirror/css/csscolors.css';
-            options.parserfile = 'parsecss.js';
-            options.parser = 'CSSParser';
-        } else {
-            options.parserfile = 'parsedummy.js';
-            options.parser = 'DummyParser';
-        }
-        var code = $('<textarea id="code"></textarea>');
-        $('#content').empty().append(code);
-        codemirror = window.CodeMirror.fromTextArea("code", options);
-        // codemirror.focus();
-    }
-
-    // Make the CodeMirror shorter or longer, after a new file is loaded.
-    function adjustHeight(shrink) {
-        if (!codemirror || !codemirror.editor) {
-            return;
-        }
-        var body = codemirror.editor.container;
-        var scrollHeight = body.scrollHeight;
-        // var offsetHeight = body.offsetHeight;
-        // console.log(body, scrollHeight, offsetHeight);
-        var wrapping = $('.CodeMirror-wrapping');
-        wrapping.css('height', scrollHeight + 'px');
-    }
-
-    // Get the edited file content from the editor.
-    function getData() {
-        return codemirror.getCode();
-    }
-
-});
 /* Source: scripts/main.js */
 namespace.module('com.pageforest.editor', function(exports, require) {
     var ns = {};
@@ -646,7 +563,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function showFiles() {
-        updateBreadcrumbs();
         ns.editor.view('hide');
         var path = ns.filename;
         // Remove trailing slash.
@@ -726,8 +642,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
-                    latestSave = message;
                     updateBreadcrumbs();
+                    latestSave = message;
                     $('#content').empty();
                     ns.editor.loadFile(ns.filename, message);
                     ns.editor.adjustHeight('shrink');
@@ -763,6 +679,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             }
             return;
         }
+
         ns.hash = hash;
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
@@ -771,16 +688,22 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         var filename = parts.join('/');
         console.log('app_id: [' + app_id + ']');
         if (!app_id) {
-            loadAppList();
+            if (confirmQuit()) {
+                loadAppList();
+            }
         } else if (app_id != ns.app_id) {
-            loadApp(app_id);
-            if (filename) {
-                loadFile(filename);
-            } else {
-                ns.filename = '';
+            if (confirmQuit()) {
+                loadApp(app_id);
+                if (filename) {
+                    loadFile(filename);
+                } else {
+                    ns.filename = '';
+                }
             }
         } else if (filename != ns.filename) {
-            loadFile(filename);
+            if (confirmQuit()) {
+                loadFile(filename);
+            }
         }
     }
 
@@ -798,24 +721,69 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function setEditor() {
-        console.log('setEditor()');
+        var radios = $('#settings').find('input');
+        var val;
+        for (var i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                val = radios[i].value;
+            }
+        }
         if (!ns.editor.view()) {
-            ns.editor = ns[$('#editor').val()];
+            ns.editor = ns[val];
             return;
         }
         var data = ns.editor.getData();
         ns.editor.view('hide');
-        ns.editor = ns[$('#editor').val()];
+        ns.editor = ns[val];
         ns.editor.loadFile(ns.filename, data);
         ns.editor.view('show');
     }
 
     function checkDirty() {
-        if (dirty || !ns.editor.view()) {
+        if (ns.client.state == 'dirty') {
+            console.log('checkDirty()   document already dirty, returning...');
             return;
         }
+        if (!ns.editor.view()) {
+            console.log('checkDirty()   not viewing a file');
+            return;
+        }
+/*        if (dirty || !ns.editor.view()) {
+            return;
+        }*/
         if (latestSave != ns.editor.getData()) {
-            dirty = true;
+            console.log('setting doc dirty!');
+            handleSaveButton('save');
+            ns.client.setDirty();
+        } else {
+            console.log('checkDirty()  no changes, document clean');
+        }
+    }
+
+    function confirmQuit() {
+        if (!ns.editor.view() || ns.client.state != 'dirty') {
+            return true;
+        }
+        if (confirm("There is unsaved data that will be lost.  Do you wish to continue?")) {
+            ns.client.setDirty(false);
+            handleSaveButton('saved');
+            return true;
+        }
+        window.location.href = 'http://' + window.location.hostname +
+                               '#' + ns.app_id + '/' + ns.filename;
+        return false;
+    }
+
+    function handleSaveButton(action) {
+        var $save = $('#save');
+        if (action == 'save') {
+            $save.attr('value', 'Save');
+            $save[0].disabled = false;
+        } else if (action == 'saved') {
+            $save.attr('value', 'Saved');
+            $save[0].disabled = true;
+        } else {
+            console.log('handleSaveButton() passed with invalid arguments: ' + action);
         }
     }
 
@@ -830,7 +798,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
-        setInterval(checkDirty, 5000);
+        setInterval(checkDirty, 1000);
         // get textarea and ace namespaces
         ns.ace = namespace.lookup('com.pageforest.editor.ace');
         ns.ace.createEditor();
@@ -841,6 +809,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
         $(window).bind('resize', onResize);
         $('#editor').change(setEditor);
+        $('#settings').find('input').change(setEditor);
+        $('#settings').find('input').click(setEditor);
     }
 
     function onResize() {
@@ -855,13 +825,16 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onSave() {
+        latestSave = ns.editor.getData();
         $.ajax({
             type: 'PUT',
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
-            data: ns.editor.getData(),
+            data: latestSave,
             dataType: 'text',
             success: function(message, status, xhr) {
+                ns.client.setDirty(false);
                 showStatus(message);
+                handleSaveButton('saved');
             },
             error: onError
         });
@@ -986,6 +959,9 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
     var HTMLMode = window.require('ace/mode/html').Mode;
     var XMLMode = window.require('ace/mode/xml').Mode;
 
+    var $ace;
+    var $cursor;
+
     exports.extend({
         createEditor: createEditor,
         loadFile: loadFile,
@@ -1000,12 +976,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
-//            $('.ace_print_margin').css('visibility', 'visible');
+            $cursor.css('visibility', 'visible');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
-//            $('.ace_print_margin').css('visibility', 'hidden');
+            $cursor.css('visibility', 'hidden');
             return false;
         } else {
             return visible;
@@ -1014,12 +990,15 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
 
     // Create an ace and put it in the content div.
     function createEditor() {
-        $('#ace').css('height', window.innerHeight - 43 + 'px');
-        $('#ace').css('width', window.innerWidth + 'px');
+        $ace = $('#ace');
+        $ace.css('height', window.innerHeight - 43 + 'px');
+        $ace.css('width', window.innerWidth + 'px');
         editor = ace.edit('ace');
         editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
         $('.ace_print_margin').remove();
-        editor.session.setWrapLimitRange(80, 80);
+        $cursor = $('.ace_cursor');
+//        editor.session.setWrapLimitRange(80, 80);
+
     }
 
     function loadFile(filename, data) {

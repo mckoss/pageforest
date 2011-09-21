@@ -27,8 +27,12 @@ div.fixed {
   position: fixed;
   width: 100%;
   z-index: 1;
-  background-color: white;
+  background-color: #222;
 }
+div.fixed span { color: #fff; }
+div.fixed a { color: #ccc; text-decoration: none; }
+div.fixed a:hover { color: #fff }
+
 div.opaque { 
   background-color: white;
   width: 100%;
@@ -66,6 +70,7 @@ div#content, div#ace, div#textarea {
 div#content {  }
 div#ace {  }
 div#textarea { left: 5px; right: 15px; }
+div#content.on-top { z-index: 100; }
 
 div.icon {
   float: left;
@@ -98,7 +103,7 @@ div.dialog {
   z-index: 100;
   margin: 10px;
   padding: 10px;
-  background: rgba(240,240,240,0.9);
+  background: #222;
 }
 
 div#open {
@@ -106,20 +111,10 @@ div#open {
   width: 30%;
 }
 
-div#settings {
-  right: 10px;
-  width: 30%;
-}
+div#settings { right: 10px; width: 240px; color: #fff; }
+div#settings label { color: #fff; font-size: 16px; }
+.form-field * { vertical-align: middle; }
 
-div#apps {
-  float: left;
-  margin-right: 10px;
-}
-
-.quiet {
-  color: #ccc;
-}
-
-.error {
-  color: red;
-}
+div#apps { float: left; margin-right: 10px; }
+.quiet { color: #ccc; }
+.error { color: red; }

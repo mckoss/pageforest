@@ -142,7 +142,6 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function showFiles() {
-        updateBreadcrumbs();
         ns.editor.view('hide');
         var path = ns.filename;
         // Remove trailing slash.
@@ -222,8 +221,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
                 dataType: 'text',
                 error: onError,
                 success: function(message) {
-                    latestSave = message;
                     updateBreadcrumbs();
+                    latestSave = message;
                     $('#content').empty();
                     ns.editor.loadFile(ns.filename, message);
                     ns.editor.adjustHeight('shrink');
@@ -259,6 +258,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
             }
             return;
         }
+
         ns.hash = hash;
         // Split hash into app_id and filename.
         var parts = hash.substr(1).split('/');
@@ -267,16 +267,22 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         var filename = parts.join('/');
         console.log('app_id: [' + app_id + ']');
         if (!app_id) {
-            loadAppList();
+            if (confirmQuit()) {
+                loadAppList();
+            }
         } else if (app_id != ns.app_id) {
-            loadApp(app_id);
-            if (filename) {
-                loadFile(filename);
-            } else {
-                ns.filename = '';
+            if (confirmQuit()) {
+                loadApp(app_id);
+                if (filename) {
+                    loadFile(filename);
+                } else {
+                    ns.filename = '';
+                }
             }
         } else if (filename != ns.filename) {
-            loadFile(filename);
+            if (confirmQuit()) {
+                loadFile(filename);
+            }
         }
     }
 
@@ -294,24 +300,69 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function setEditor() {
-        console.log('setEditor()');
+        var radios = $('#settings').find('input');
+        var val;
+        for (var i = 0; i < radios.length; i++) {
+            if (radios[i].checked) {
+                val = radios[i].value;
+            }
+        }
         if (!ns.editor.view()) {
-            ns.editor = ns[$('#editor').val()];
+            ns.editor = ns[val];
             return;
         }
         var data = ns.editor.getData();
         ns.editor.view('hide');
-        ns.editor = ns[$('#editor').val()];
+        ns.editor = ns[val];
         ns.editor.loadFile(ns.filename, data);
         ns.editor.view('show');
     }
 
     function checkDirty() {
-        if (dirty || !ns.editor.view()) {
+        if (ns.client.state == 'dirty') {
+            console.log('checkDirty()   document already dirty, returning...');
             return;
         }
+        if (!ns.editor.view()) {
+            console.log('checkDirty()   not viewing a file');
+            return;
+        }
+/*        if (dirty || !ns.editor.view()) {
+            return;
+        }*/
         if (latestSave != ns.editor.getData()) {
-            dirty = true;
+            console.log('setting doc dirty!');
+            handleSaveButton('save');
+            ns.client.setDirty();
+        } else {
+            console.log('checkDirty()  no changes, document clean');
+        }
+    }
+
+    function confirmQuit() {
+        if (!ns.editor.view() || ns.client.state != 'dirty') {
+            return true;
+        }
+        if (confirm("There is unsaved data that will be lost.  Do you wish to continue?")) {
+            ns.client.setDirty(false);
+            handleSaveButton('saved');
+            return true;
+        }
+        window.location.href = 'http://' + window.location.hostname + 
+                               '#' + ns.app_id + '/' + ns.filename;
+        return false;
+    }
+
+    function handleSaveButton(action) {
+        var $save = $('#save');
+        if (action == 'save') {
+            $save.attr('value', 'Save');
+            $save[0].disabled = false;
+        } else if (action == 'saved') {
+            $save.attr('value', 'Saved');
+            $save[0].disabled = true;
+        } else {
+            console.log('handleSaveButton() passed with invalid arguments: ' + action);
         }
     }
 
@@ -326,7 +377,7 @@ namespace.module('com.pageforest.editor', function(exports, require) {
         // Start polling for window.location.hash changes and iframe.
         setInterval(checkHash, 200);
         setInterval(checkIFrame, 1000);
-        setInterval(checkDirty, 5000);
+        setInterval(checkDirty, 1000);
         // get textarea and ace namespaces
         ns.ace = namespace.lookup('com.pageforest.editor.ace');
         ns.ace.createEditor();
@@ -337,6 +388,8 @@ namespace.module('com.pageforest.editor', function(exports, require) {
 
         $(window).bind('resize', onResize);
         $('#editor').change(setEditor);
+        $('#settings').find('input').change(setEditor);
+        $('#settings').find('input').click(setEditor);
     }
 
     function onResize() {
@@ -351,13 +404,16 @@ namespace.module('com.pageforest.editor', function(exports, require) {
     }
 
     function onSave() {
+        latestSave = ns.editor.getData();
         $.ajax({
             type: 'PUT',
             url: '/mirror/' + ns.app_id + '/' + ns.filename,
-            data: ns.editor.getData(),
+            data: latestSave,
             dataType: 'text',
             success: function(message, status, xhr) {
+                ns.client.setDirty(false);
                 showStatus(message);
+                handleSaveButton('saved');
             },
             error: onError
         });

@@ -8,6 +8,9 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
     var HTMLMode = window.require('ace/mode/html').Mode;
     var XMLMode = window.require('ace/mode/xml').Mode;
 
+    var $ace;
+    var $cursor;
+
     exports.extend({
         createEditor: createEditor,
         loadFile: loadFile,
@@ -22,12 +25,12 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
         if (action == 'show') {
             visible = true;
             $('#ace').css('visibility', 'visible');
-//            $('.ace_print_margin').css('visibility', 'visible');
+            $cursor.css('visibility', 'visible');
             return true;
         } else if (action == 'hide') {
             visible = false;
             $('#ace').css('visibility', 'hidden');
-//            $('.ace_print_margin').css('visibility', 'hidden');
+            $cursor.css('visibility', 'hidden');
             return false;
         } else {
             return visible;
@@ -36,12 +39,15 @@ namespace.module('com.pageforest.editor.ace', function(exports, require) {
 
     // Create an ace and put it in the content div.
     function createEditor() {
-        $('#ace').css('height', window.innerHeight - 43 + 'px');
-        $('#ace').css('width', window.innerWidth + 'px');
+        $ace = $('#ace');
+        $ace.css('height', window.innerHeight - 43 + 'px');
+        $ace.css('width', window.innerWidth + 'px');
         editor = ace.edit('ace');
         editor.renderer.$horizScrollAlwaysVisible = false;   // make horiz scrollbar optional
         $('.ace_print_margin').remove();
-        editor.session.setWrapLimitRange(80, 80);
+        $cursor = $('.ace_cursor');
+//        editor.session.setWrapLimitRange(80, 80);
+        
     }
 
     function loadFile(filename, data) {
