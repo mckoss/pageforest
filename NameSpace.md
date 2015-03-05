@@ -1,0 +1,1 @@
+See http://wiki.pageforest.com/#pageforest-api/namespace
